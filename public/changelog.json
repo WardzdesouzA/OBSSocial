@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.154.0",
+    "titulo": "🧲 Todo botão e toda aba do painel podem ser reorganizados",
+    "itens": [
+      "🐛 A 🎞️ Mídia direta não obedecia ao 🧲 Organizar o painel: você arrastava, ela voltava para o lado do 📋 Área de transferência. O motivo era interno — a lista do que pode ser reordenado vivia em três lugares do programa, e o servidor tinha ficado com uma versão antiga, sem a Mídia direta; ao salvar, ele descartava a chave e o botão caía sempre no fim. Agora ela vai para onde você soltar, como os outros.",
+      "🧲 Para isso não voltar a acontecer com botão nenhum, a lista virou UMA só, compartilhada pelo servidor, pelo painel e pela prévia das configurações. Recurso novo entra nela uma vez e passa a valer nos três — e um teste confere que todo botão de ferramenta e toda aba que existem no painel estão nela."
+    ]
+  },
+  {
     "version": "0.153.0",
     "titulo": "🔒 Atualização de segurança",
     "itens": [

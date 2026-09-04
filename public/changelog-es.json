@@ -1,4 +1,11 @@
 {
+  "0.154.0": {
+    "titulo": "🧲 Todos los botones y pestañas del panel pueden reorganizarse",
+    "itens": [
+      "🐛 El 🎞️ Medio directo no obedecía a 🧲 Organizar el panel: lo arrastrabas y volvía al lado del 📋 Portapapeles. El motivo era interno — la lista de lo que puede reordenarse vivía en tres lugares del programa, y el servidor se había quedado con una versión antigua, sin el Medio directo; al guardar, descartaba la clave y el botón caía siempre al final. Ahora va adonde lo sueltes, como los demás.",
+      "🧲 Para que esto no vuelva a pasar con ningún botón, la lista pasó a ser UNA sola, compartida por el servidor, el panel y la vista previa de la configuración. Una función nueva entra en ella una vez y vale en los tres — y una prueba comprueba que todos los botones de herramienta y todas las pestañas que existen en el panel están en ella."
+    ]
+  },
   "0.153.0": {
     "titulo": "🔒 Actualización de seguridad",
     "itens": [

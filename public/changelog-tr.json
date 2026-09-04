@@ -1,4 +1,11 @@
 {
+  "0.154.0": {
+    "titulo": "🧲 Panelin her düğmesi ve her sekmesi yeniden düzenlenebilir",
+    "itens": [
+      "🐛 🎞️ Doğrudan medya, 🧲 Paneli düzenle’ye uymuyordu: sürüklüyordunuz, 📋 Panonun yanına geri dönüyordu. Sebep içerideydi — yeniden sıralanabilenlerin listesi programın üç yerinde yaşıyordu ve sunucuda Doğrudan medya olmayan eski bir sürüm kalmıştı; kaydederken anahtarı atıyor, düğme hep sona düşüyordu. Artık diğerleri gibi bıraktığınız yere gidiyor.",
+      "🧲 Bu hiçbir düğmenin başına bir daha gelmesin diye liste TEK oldu: sunucu, panel ve ayarların önizlemesi aynı listeyi paylaşıyor. Yeni bir özellik ona bir kez girer ve üçünde de geçerli olur — ve bir test, panelde var olan her araç düğmesinin ve her sekmenin listede olduğunu denetler."
+    ]
+  },
   "0.153.0": {
     "titulo": "🔒 Güvenlik güncellemesi",
     "itens": [

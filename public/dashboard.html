@@ -1678,6 +1678,7 @@
 
 <div id="somBloqueado" title="O navegador só toca som depois de um clique na página">🔇 Clique aqui para liberar o som dos alertas</div>
 
+<script src="/painel-ordem.js"></script>
 <script src="/i18n.js"></script>
 <script src="/render.js"></script>
 <script>
@@ -2987,7 +2988,9 @@ function updatePagerUI(totalPages) {
   document.getElementById('pageOlder').disabled = livePage >= totalPages - 1;
 }
 
-const COL_ORDER = ['youtube', 'twitch', 'kick', 'bilibili', 'telegram', 'whatsapp', 'doacao'];
+// 🧲 v0.154: as redes que viram coluna vêm de /painel-ordem.js (a mesma lista
+// que o servidor aceita em columnsOrder); cópia, para ninguém mexer na fonte
+const COL_ORDER = OBS_PAINEL_ORDEM.COLUNAS.slice();
 const COL_NAMES = { youtube: 'YouTube', twitch: 'Twitch', kick: 'Kick', bilibili: 'Bilibili', telegram: 'Telegram', whatsapp: 'WhatsApp', doacao: 'Doações' };
 
 // Contadores vindos do servidor: total real da live por rede e mensagens
@@ -6807,20 +6810,13 @@ document.getElementById('clearAllBtn').onclick = () => hub.send({ type: 'clearOv
 
 // ---------- Aplicar a personalização do painel (editada em /config) ----------
 const panelStyle = document.getElementById('panel-css');
-const TOOLS_PADRAO = ['qr', 'raffle', 'likemeter', 'aud', 'ws', 'aviso', 'midiaDireta', 'trilhas', 'obs', 'vmix', 'clip'];
-const TABS_PADRAO = ['live', 'saved', 'superchat', 'member', 'whatsapp', 'telegram', 'apoio'];
-// 📋 A Área de transferência fecha a fila por padrão: um botão novo (Labs ou
-// recurso novo) entra ANTES dela. Só fica depois se o usuário a moveu de lugar.
-function ordemDasFerramentas(salvo) {
-  const salvoArr = Array.isArray(salvo) ? salvo : [];
-  const ordem = [...new Set([...salvoArr, ...TOOLS_PADRAO])];
-  const moveuClip = salvoArr.includes('clip') && salvoArr[salvoArr.length - 1] !== 'clip';
-  if (!moveuClip && ordem.includes('clip')) {
-    ordem.splice(ordem.indexOf('clip'), 1);
-    ordem.push('clip');
-  }
-  return ordem;
-}
+// 🧲 v0.154: a lista das ferramentas e das abas (e a regra «o 📋 fecha a
+// fila») mora em /painel-ordem.js — a MESMA que o servidor usa para aceitar
+// a ordem salva e que as configurações usam na prévia. Uma lista, três
+// lugares, nenhum ficando para trás.
+const TOOLS_PADRAO = OBS_PAINEL_ORDEM.FERRAMENTAS;
+const TABS_PADRAO = OBS_PAINEL_ORDEM.ABAS;
+const ordemDasFerramentas = OBS_PAINEL_ORDEM.ordenarFerramentas;
 function applyPanelLayout(panel) {
   const toolbar = document.querySelector('.toolbar');
   const tabsBox = document.querySelector('.tabs');
@@ -6834,7 +6830,7 @@ function applyPanelLayout(panel) {
     if (wrap && spacer) toolbar.insertBefore(wrap, spacer);
   }
   // Abas na ordem escolhida (a busca fica sempre no fim)
-  const ordemAbas = [...new Set([...(Array.isArray(panel.tabOrder) ? panel.tabOrder : []), ...TABS_PADRAO])];
+  const ordemAbas = OBS_PAINEL_ORDEM.ordenarAbas(panel.tabOrder);
   const busca = document.getElementById('searchBox');
   for (const key of ordemAbas) {
     const tab = tabsBox.querySelector(`.tab[data-tab="${key}"]`);
