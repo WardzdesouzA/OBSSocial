@@ -1,0 +1,3756 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<title>OBS Social — Overlay</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; width: 100%; height: 100%; }
+  body {
+    font-family: var(--font-family, 'Segoe UI', system-ui, sans-serif);
+    color: var(--text-color, #fff);
+  }
+
+  /* Moldura em tela inteira (overlay proprio do usuario) */
+  #fullscreenMedia {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; display: none;
+  }
+  #fullscreenMedia img, #fullscreenMedia video {
+    width: 100%; height: 100%; object-fit: fill;
+  }
+
+  #stage {
+    position: fixed;
+    inset: 40px;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    z-index: 1;
+  }
+  #stage.pos-custom         { display: block; }
+  #stage.pos-bottom-left    { justify-content: flex-end; align-items: flex-start; }
+  #stage.pos-bottom-center  { justify-content: flex-end; align-items: center; }
+  #stage.pos-bottom-right   { justify-content: flex-end; align-items: flex-end; }
+  #stage.pos-top-left       { justify-content: flex-start; align-items: flex-start; }
+  #stage.pos-top-center     { justify-content: flex-start; align-items: center; }
+  #stage.pos-top-right      { justify-content: flex-start; align-items: flex-end; }
+
+  .featured {
+    position: relative;
+    overflow: hidden;
+    zoom: var(--f-scale, 1); /* tamanho geral, ajustado no editor de tela */
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    background: var(--card-bg, var(--bg-color, rgba(17, 24, 39, 0.92)));
+    border-left: var(--accent-bar, 0.28em) solid var(--card-accent, var(--accent-color, #7c3aed));
+    border-radius: var(--border-radius, 16px);
+    padding: calc(0.55em * var(--pad-scale, 1)) calc(0.9em * var(--pad-scale, 1));
+    max-width: var(--max-width, 640px);
+    font-size: var(--font-size, 26px);
+  }
+  body.card-shadow .featured { box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55)); }
+  body.text-shadow .featured { text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
+
+  .featured .media-layer {
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%; object-fit: var(--media-fit, cover);
+    opacity: var(--media-opacity, 1);
+  }
+  /* 🖼️ v0.102: no tamanho real, a arte só aparece quando a medida do arquivo
+     chegou (um vídeo mede 300×150 antes da ficha técnica — seria um piscar) */
+  .featured .media-layer.carregando { visibility: hidden; }
+  /* 🖼️ "A arte É o cartão": some o fundo padrão, a barrinha e a sombra —
+     fica só a mídia do usuário, com as peças/conteúdo por cima */
+  .featured.featured--soArte {
+    background: transparent !important;
+    border-left-width: 0 !important;
+  }
+  /* 🖼️ v0.93/v0.94: alguma peça saiu do tamanho do cartão padrão (o streamer
+     esticou ou moveu ela — a arte, o avatar, o nome...) e o cartão para de
+     recortar, senão ela simplesmente sumia. Só entra quando algo realmente
+     escapa: cartão com tudo dentro continua recortado pelo cantinho
+     arredondado, como sempre foi. */
+  .featured.featured--arteSolta { overflow: visible; }
+  body.card-shadow .featured.featured--soArte { box-shadow: none; }
+  .featured > .avatar, .featured > .body { position: relative; z-index: 1; }
+
+  .featured .avatar {
+    width: 1.9em; height: 1.9em; flex-shrink: 0; object-fit: cover;
+  }
+  body.avatar-circle .avatar { border-radius: 50%; }
+  body.avatar-rounded .avatar { border-radius: 0.35em; }
+  body.avatar-square .avatar { border-radius: 0; }
+  .avatar.initials {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 0.9em;
+  }
+  .featured .body { min-width: 0; }
+  .featured .meta {
+    display: flex; align-items: center; gap: 0.35em;
+    font-size: 0.62em; opacity: 0.95; margin-bottom: 0.15em; flex-wrap: wrap;
+  }
+  /* ✍️ v0.100: --card-nome é a cor escolhida para o NOME; sem escolha, ele
+     segue a cor de destaque do cartão, como sempre foi */
+  .featured .author { font-weight: 700; color: var(--card-nome, var(--card-accent, var(--accent-color, #7c3aed))); }
+  .featured .platform-name { opacity: 0.7; }
+  .featured .msg-time { opacity: 0.65; font-size: 0.82em; align-self: center; }
+  .featured .badge {
+    font-size: 0.75em; background: rgba(255,255,255,0.18); border-radius: 0.4em;
+    padding: 0.05em 0.4em;
+  }
+  .featured .sc-amount {
+    font-weight: 800; border-radius: 0.4em; padding: 0.05em 0.45em; color: #000;
+  }
+  /* 💰 v0.109: valor como TEXTO simples — sem a pílula, na cor da peça (como
+     o nome e o texto); cabe no espaço que a arte reserva para ele */
+  .featured .sc-amount.sc-amount--texto {
+    background: none !important; padding: 0; border-radius: 0; color: inherit; font-weight: inherit;
+  }
+  /* 💰 No overlay em peças o valor fica numa linha SÓ: a etiqueta convertida
+     («$5.00 ≈ R$ 27,00») quebrada em duas linhas atropelava a mensagem */
+  .featured--livre .peca-valor { white-space: nowrap; overflow: hidden; }
+  .featured--livre .peca-valor.ajuste-cortar { text-overflow: ellipsis; }
+  .featured--livre .peca-valor.ajuste-vazar { overflow: visible; }
+  /* 🏷️ Distintivos com a arte original da plataforma */
+  .featured .badge-img {
+    background: rgba(255,255,255,0.14); padding: 0.1em 0.22em; line-height: 0;
+    display: inline-block;
+  }
+  .featured .badge-img img { height: 1.1em; width: auto; display: block; }
+  .featured .badge-com-arte {
+    display: inline-flex; align-items: center; gap: 0.24em;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.35);
+  }
+  .featured .badge-com-arte img { height: 1.1em; width: auto; }
+  .featured .badge-extra {
+    font-weight: 700;
+    background: color-mix(in srgb, var(--selo-cor, #fff) 26%, rgba(255,255,255,0.14));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--selo-cor, #fff) 60%, transparent);
+  }
+  .featured .badge-role {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.35);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+  }
+  /* ✍️ v0.145: as quebras de linha da pessoa aparecem também na tela do público */
+  .featured .msg-text { line-height: 1.3; word-wrap: break-word; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .featured .msg-text code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.92em; }
+  /* 🎙️ v0.140: a fala do áudio/vídeo ocupa a região do comentário. Sozinha,
+     ela É o comentário (mesmo tamanho); junto de um texto escrito, entra
+     como um complemento discreto logo abaixo. */
+  .featured .ov-transcricao { line-height: 1.3; word-wrap: break-word; overflow-wrap: anywhere; }
+  .featured .ov-transcricao--extra { font-size: 0.86em; opacity: 0.85; margin-top: 0.15em; }
+  .featured .ov-transcricao--marca { opacity: 0.72; font-style: italic; }
+
+  /* 🧩 Modo peças soltas: cada parte do destaque numa posição própria, em %
+     do cartão. O cartão vira uma caixa de tamanho fixo (largura máxima ×
+     altura escolhida) e recorta o que tentar sair dele. */
+  .featured--livre {
+    display: block;
+    width: var(--max-width, 640px);
+    height: calc(var(--card-h, 4.6) * 1em);
+  }
+  .featured--livre .peca { position: absolute; margin: 0; line-height: 1.2; z-index: 1; }
+  /* Avatar de iniciais: o font-size 0.9em encolheria a caixa (largura em em
+     do PRÓPRIO elemento) — compensa para o tamanho ficar igual ao da foto.
+     E o display: flex volta por cima do display: block da regra geral do
+     avatar livre (mais específica que .avatar.initials): sem ele a letra
+     perdia a centralização e ficava torta no cantinho do círculo */
+  .featured--livre .peca-avatar .avatar.initials {
+    width: calc(1.9em / 0.9); height: calc(1.9em / 0.9);
+    display: flex; line-height: 1;
+  }
+  .featured--livre .peca-avatar .avatar {
+    display: block; box-sizing: border-box;
+    border: calc(var(--pb, 0) * 1px) solid var(--pbc, #ffffff);
+  }
+  /* 📐 v0.98: com largura/altura escolhidas, o conteúdo preenche a caixa —
+     é o que faz o avatar e o ícone da rede obedecerem aos dois seletores */
+  .featured--livre .peca--caixa > .peca-conteudo { width: 100%; height: 100%; }
+  /* 🎯 v0.104: toda peça com caixa escolhida (fora o nome e o texto, que têm
+     a régua própria deles) CENTRALIZA o conteúdo na caixa — distintivos,
+     valor, avatar e ícone ficavam encostados na esquerda/no alto. O avatar e
+     o ícone viram um quadrado do tamanho do lado escolhido (dos dois lados,
+     o menor), centrado — sem esticar em elipse (o tamanho vem do JS). */
+  .featured--livre .peca--caixa:not(.peca-texto) {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+  .featured--livre .peca--caixa:not(.peca-texto) > .peca-conteudo {
+    width: auto; height: auto; max-width: 100%; max-height: 100%;
+  }
+  /* 🎯 v0.107: o NOME também centraliza na caixa. O encaixe dele (encolher,
+     cortar, vazar) passa a valer no conteúdo: é ali que o texto corre. */
+  .featured--livre .peca-nome > .peca-conteudo { white-space: nowrap; overflow: hidden; }
+  .featured--livre .peca-nome.ajuste-cortar > .peca-conteudo { text-overflow: ellipsis; }
+  .featured--livre .peca-nome.ajuste-vazar > .peca-conteudo { overflow: visible; max-width: none; }
+  .featured--livre .peca-avatar.peca--caixa .avatar,
+  .featured--livre .peca-avatar.peca--caixa .avatar.initials { width: var(--quadrado, 100%); height: var(--quadrado, 100%); }
+  .featured--livre .peca-icone.peca--caixa .platform-icon { width: var(--quadrado, 100%); height: var(--quadrado, 100%); }
+  .featured--livre .peca-nome {
+    white-space: nowrap; overflow: hidden; font-weight: 700;
+    color: var(--card-nome, var(--card-accent, var(--accent-color, #7c3aed)));
+  }
+  .featured--livre .peca-nome.ajuste-cortar { text-overflow: ellipsis; }
+  .featured--livre .peca-nome.ajuste-vazar { overflow: visible; }
+  .featured--livre .peca-texto {
+    overflow: hidden; line-height: 1.25;
+    word-wrap: break-word; overflow-wrap: anywhere;
+  }
+  .featured--livre .peca-texto.ajuste-vazar { overflow: visible; }
+  .featured--livre .peca-selos {
+    display: flex; align-items: center; gap: 0.3em;
+    flex-wrap: nowrap; overflow: hidden; max-width: 100%;
+  }
+  /* 🎯 v0.111: os distintivos e a etiqueta do valor ficam CENTRADOS por caixa
+     flex também dentro do conteúdo da peça — como texto em linha eles eram
+     alinhados pela linha de base da letra, e a etiqueta saía ~1 px abaixo/
+     acima do meio da caixa (e o ⌖ centrava a caixa, não o que se vê) */
+  .featured--livre .peca-selos > .peca-conteudo,
+  .featured--livre .peca-valor > .peca-conteudo {
+    display: flex; align-items: center; justify-content: center;
+  }
+  .featured--livre .peca-selos > .peca-conteudo { gap: 0.3em; flex-wrap: nowrap; }
+  /* O conteúdo interno é quem encolhe no ajuste "encolher" */
+  .peca .peca-conteudo { font-size: calc(var(--fit, 1) * 1em); }
+  .emote { height: 1.3em; vertical-align: middle; }
+  /* 🎟️ v0.118: Super Sticker do YouTube — figurinha grande no lugar do texto */
+  .emote.figurinha { height: 3.4em; max-height: 120px; width: auto; display: inline-block; vertical-align: middle; }
+  .platform-icon { width: 1em; height: 1em; flex-shrink: 0; }
+
+  /* ---------- Widgets (QR, likometro, sorteio, winstreak) ---------- */
+  .widget {
+    position: fixed; z-index: 3;
+    background: var(--w-bg, rgba(17,24,39,0.92));
+    color: var(--w-text, #fff);
+    border-radius: var(--w-radius, 16px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    display: none; overflow: hidden;
+  }
+  .widget { transform: var(--pos-tf, none); }
+  /* 🧩 v0.94: o widget recortava as peças dele igual o cartão do destaque —
+     mover ou esticar uma peça para fora fazia ela sumir. Quando alguma
+     escapa, este widget para de recortar (os outros seguem intactos). */
+  .widget.widget--solto { overflow: visible; }
+  .widget.visible { display: flex; }
+  .widget .w-media {
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .widget > :not(.w-media) { position: relative; z-index: 1; }
+
+  .wpos-top-left      { top: 40px; left: 40px; }
+  .wpos-top-center    { top: 40px; left: 50%; --pos-tf: translateX(-50%); }
+  .wpos-top-right     { top: 40px; right: 40px; }
+  .wpos-middle-left   { top: 50%; left: 40px; --pos-tf: translateY(-50%); }
+  .wpos-center        { top: 50%; left: 50%; --pos-tf: translate(-50%, -50%); }
+  .wpos-middle-right  { top: 50%; right: 40px; --pos-tf: translateY(-50%); }
+  .wpos-bottom-left   { bottom: 40px; left: 40px; }
+  .wpos-bottom-center { bottom: 40px; left: 50%; --pos-tf: translateX(-50%); }
+  .wpos-bottom-right  { bottom: 40px; right: 40px; }
+
+  /* QR Code (o principal e os adicionais) */
+  .widget[data-widget="qr"] { flex-direction: column; align-items: center; gap: 8px; padding: 12px; }
+  .widget[data-widget="qr"] canvas { display: block; border-radius: 6px; }
+  .widget[data-widget="qr"] .qr-name {
+    color: var(--w-text, #111); font-weight: 700; font-size: 18px; max-width: 200px;
+    text-align: center; word-wrap: break-word;
+  }
+
+  /* Likometro */
+  #likemeter { flex-direction: column; gap: 6px; min-width: 320px; padding: 10px 22px; font-size: 22px; }
+  #likemeter .lm-row { display: flex; justify-content: space-between; gap: 24px; font-weight: 700; }
+  #likemeter .lm-viewers { color: var(--w-viewers, #ff5c5c); }
+  #likemeter .lm-likes { color: var(--w-likes, #4da3ff); }
+  /* v0.52.1: a % no meio e em destaque (é o número que conta a história) */
+  #likemeter .lm-row { align-items: center; }
+  #likemeter .lm-pct {
+    font-weight: 900; font-size: 1.35em; line-height: 1;
+    letter-spacing: -0.5px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+  #likemeter .lm-bar { height: 10px; border-radius: 6px; background: rgba(255,255,255,0.15); overflow: hidden; }
+  #likemeter .lm-fill {
+    height: 100%; width: 0%; border-radius: 6px;
+    background: linear-gradient(90deg, var(--w-likes, #4da3ff), var(--w-accent, #7c3aed));
+    transition: width 0.8s ease;
+  }
+  #likemeter .lm-label { font-size: 13px; opacity: 0.75; text-align: center; }
+
+  /* Winstreak (o principal e os adicionais) */
+  /* ATENÇÃO: nada de "position: relative" aqui — .widget já é "fixed", que é
+     o que coloca o cartão no canto escolhido. Trocar por relative jogava o
+     widget de volta no fluxo da página e ele virava uma faixa da largura
+     inteira da tela (foi o que aconteceu na v0.26.0). O "fixed" também já
+     serve de âncora para as faíscas, que são absolutas. */
+  .widget[data-widget="winstreak"] {
+    align-items: center; gap: 10px; padding: 10px 20px;
+    font-size: 26px; font-weight: 800;
+  }
+  .widget[data-widget="winstreak"] .ws-label { color: var(--w-text, #fff); }
+  .widget[data-widget="winstreak"] .ws-nums { color: var(--w-accent, #ffd700); }
+
+  /* 🏆 Marcos do winstreak na TELA: o efeito acompanha o número e só sai
+     quando ele deixa o marco. 1 = dezenas, 2 = grandes, 3 = dobras. */
+  .widget[data-widget="winstreak"] .ws-nums.marco-1 {
+    color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.8);
+    animation: ovMarco1 2s ease-in-out infinite;
+  }
+  @keyframes ovMarco1 { 50% { text-shadow: 0 0 18px rgba(255,215,0,1); } }
+
+  .widget[data-widget="winstreak"] .ws-nums.marco-2 {
+    color: #ffcc33; text-shadow: 0 0 12px #ffae00, 0 0 24px rgba(255,110,0,0.75);
+    animation: ovMarco2 1.4s ease-in-out infinite;
+  }
+  @keyframes ovMarco2 { 50% { transform: scale(1.1); text-shadow: 0 0 22px #ffae00, 0 0 40px rgba(255,80,0,0.9); } }
+
+  .widget[data-widget="winstreak"] .ws-nums.marco-3 {
+    color: #fff;
+    text-shadow: 0 0 12px #ff2d95, 0 0 24px #7c3aed, 0 0 36px #22d3ee;
+    animation: ovMarco3 1.1s ease-in-out infinite;
+  }
+  @keyframes ovMarco3 {
+    0%, 100% { transform: scale(1); text-shadow: 0 0 12px #ff2d95, 0 0 24px #7c3aed, 0 0 36px #22d3ee; }
+    50% { transform: scale(1.18); text-shadow: 0 0 20px #ffd700, 0 0 36px #ff2d95, 0 0 56px #22d3ee; }
+  }
+  /* Faíscas: pontinhos que sobem DENTRO do cartão (níveis 2 e 3).
+     O cartão tem overflow:hidden por causa da mídia de fundo, então as
+     faíscas sobem só a altura dele — nada escapa para fora. */
+  .widget[data-widget="winstreak"] .ws-faiscas {
+    position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  }
+  .widget[data-widget="winstreak"] .ws-faiscas i {
+    position: absolute; bottom: 0.1em; width: 0.2em; height: 0.2em; border-radius: 50%;
+    background: #ffd700; box-shadow: 0 0 0.3em #ffd700;
+    opacity: 0; animation: ovFaisca 1.8s ease-out infinite;
+  }
+  /* A subida é em "em" para acompanhar o tamanho da letra do cartão */
+  @keyframes ovFaisca {
+    0% { opacity: 0; transform: translateY(0) scale(0.5); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-1.5em) scale(1.1); }
+  }
+  /* Nas dobras as faíscas ficam coloridas e mais numerosas */
+  .widget[data-widget="winstreak"].marco-nivel-3 .ws-faiscas i:nth-child(3n) { background: #ff2d95; box-shadow: 0 0 10px #ff2d95; }
+  .widget[data-widget="winstreak"].marco-nivel-3 .ws-faiscas i:nth-child(3n+1) { background: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
+  .widget[data-widget="winstreak"].marco-nivel-3 .ws-faiscas i:nth-child(3n+2) { background: #ffd700; box-shadow: 0 0 10px #ffd700; }
+  /* O cartão inteiro ganha um halo nas dobras */
+  .widget[data-widget="winstreak"].marco-nivel-3 {
+    box-shadow: 0 0 22px rgba(255,45,149,0.55), 0 0 44px rgba(124,58,237,0.4), 0 8px 32px rgba(0,0,0,0.45);
+    animation: ovHalo 1.1s ease-in-out infinite;
+  }
+  @keyframes ovHalo { 50% { box-shadow: 0 0 30px rgba(255,215,0,0.7), 0 0 60px rgba(34,211,238,0.5), 0 8px 32px rgba(0,0,0,0.45); } }
+  .widget[data-widget="winstreak"].marco-nivel-2 {
+    box-shadow: 0 0 18px rgba(255,174,0,0.5), 0 8px 32px rgba(0,0,0,0.45);
+  }
+
+  /* Audiencia ao vivo */
+  #audienceWidget { flex-direction: column; gap: 8px; padding: 12px 20px; font-size: 24px; font-weight: 800; }
+  #audienceWidget .aud-total { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  #audienceWidget .aud-total .aud-count { color: var(--w-accent, #ff5c5c); font-size: 1.25em; }
+  #audienceWidget .aud-icons { display: flex; gap: 8px; align-items: center; justify-content: center; }
+  #audienceWidget .aud-icons .platform-icon { width: 0.85em; height: 0.85em; }
+  #audienceWidget .aud-rows { display: flex; flex-direction: column; gap: 6px; }
+  #audienceWidget .aud-row { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+  #audienceWidget .aud-row .platform-icon { width: 1.05em; height: 1.05em; }
+  #audienceWidget .aud-row .aud-count { color: var(--w-accent, #ff5c5c); }
+
+  /* 📢 Avisos */
+  .widget[data-widget="aviso"] {
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: calc(14px * var(--w-pad, 1)) calc(22px * var(--w-pad, 1));
+    max-width: var(--av-max, 900px);
+  }
+  .widget[data-widget="aviso"] .av-texto {
+    color: var(--w-text, #fff);
+    font-family: var(--av-font, inherit);
+    font-size: var(--av-size, 30px);
+    line-height: var(--av-lh, 1.3);
+    text-align: var(--av-align, center);
+    white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+  .widget[data-widget="aviso"].av-negrito .av-texto { font-weight: 800; }
+  .widget[data-widget="aviso"].av-italico .av-texto { font-style: italic; }
+  .widget[data-widget="aviso"].av-sublinhado .av-texto { text-decoration: underline; }
+  .widget[data-widget="aviso"].av-maiusculas .av-texto { text-transform: uppercase; }
+  .widget[data-widget="aviso"].av-sombra .av-texto { text-shadow: 0 2px 8px rgba(0,0,0,0.85); }
+  /* Contagem final do timer: o aviso pisca suavemente (nunca some de vez).
+     A animação vai no texto, e não no quadro inteiro, porque o quadro já usa
+     a sua própria animação de entrada/saída/laço escolhida nas configurações. */
+  .widget[data-widget="aviso"].av-contagem .av-texto { animation: avContagem 1s ease-in-out infinite; }
+  /* Cor da piscada do Aviso: vazia = mantém a cor normal do texto */
+  .widget[data-widget="aviso"].av-contagem.av-cor .av-texto { color: var(--av-cor-pisca, #ffd23f); }
+  @keyframes avContagem { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  /* 🕐 Relógio / cronômetro / timer */
+  .widget[data-widget="relogio"] {
+    flex-direction: column; align-items: center; gap: 2px;
+    padding: calc(10px * var(--w-pad, 1)) calc(20px * var(--w-pad, 1));
+  }
+  .widget[data-widget="relogio"] .rl-hora {
+    color: var(--w-text, #fff);
+    font-family: var(--rl-font, inherit);
+    font-size: var(--rl-size, 44px);
+    font-variant-numeric: tabular-nums; letter-spacing: 1px; line-height: 1.1;
+  }
+  .widget[data-widget="relogio"].rl-negrito .rl-hora { font-weight: 800; }
+  .widget[data-widget="relogio"] .rl-data,
+  .widget[data-widget="relogio"] .rl-rotulo {
+    color: var(--w-accent, #7c3aed); font-size: calc(var(--rl-size, 44px) * 0.32);
+    font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  }
+  /* Reta final (10 segundos): amarelo pulsando devagar — v0.80: os três
+     instrumentos podem dividir o widget, então a piscada mira SÓ o timer */
+  .widget[data-widget="relogio"].rl-final10 .rl-hora.rl-timer { color: var(--rl-cor-final, #ffd23f); animation: rlFinal 1s ease-in-out infinite; }
+  /* Fim do timer: vermelho piscando de forma suave, sem susto */
+  .widget[data-widget="relogio"].rl-fim .rl-hora.rl-timer { color: var(--rl-cor-fim, #ff5c5c); animation: rlPisca 1.8s ease-in-out infinite; }
+  @keyframes rlPisca { 0%, 100% { opacity: 1; } 50% { opacity: 0.32; } }
+  @keyframes rlFinal { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  /* 🔇 Convite para liberar o som quando o overlay é aberto num navegador
+     comum (celular, tablet, outro PC). Dentro do OBS ele nunca aparece. */
+  #somBloqueadoOv {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    z-index: 9000; display: none; cursor: pointer;
+    padding: 10px 16px; border-radius: 12px; font-size: 15px; font-weight: 700;
+    color: #fff; background: rgba(20,20,26,0.88); border: 1px solid #ffd23f;
+  }
+  #somBloqueadoOv.mostrar { display: block; }
+
+  /* Sorteio (podio) */
+  #raffleWidget { flex-direction: column; align-items: center; gap: 20px; padding: 30px 40px; }
+  .raffle-title { font-size: 32px; font-weight: 800; letter-spacing: 1px; }
+  .raffle-spinner { font-size: 52px; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .podium { display: flex; align-items: flex-end; gap: 22px; }
+  .podium.vertical { flex-direction: column; align-items: stretch; gap: 12px; }
+  .winner {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    animation: winnerIn 0.5s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+  }
+  .podium.vertical .winner { flex-direction: row; gap: 14px; justify-content: flex-start; }
+  /* Só o "from": o fim da animação é o estilo natural do card — assim o
+     esmaecido do .perdeu vale mesmo com a animação preenchida (both) */
+  @keyframes winnerIn { from { opacity: 0; transform: translateY(30px); } }
+  /* Atualização de um pódio que JÁ foi revelado: aparece pronto, sem re-animar */
+  .winner.sem-anim { animation: none; }
+  /* 💬⏱ v0.50: resposta do ganhador, "não respondeu" e o timer da vez */
+  .winner.perdeu { opacity: 0.35; filter: grayscale(0.8); }
+  .winner .w-perdeu { font-size: 12px; font-weight: 700; color: #ff5c5c; }
+  .winner .w-reply {
+    font-size: 13px; background: rgba(255, 255, 255, 0.12); border-radius: 10px;
+    padding: 4px 10px; max-width: 220px; word-break: break-word;
+  }
+  .winner .w-timer { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--rl-cor-final, #ffd23f); }
+  .winner .w-timer.final10 { color: #ff5c5c; animation: rfTimerPisca 1s ease-in-out infinite; }
+  @keyframes rfTimerPisca { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) {
+    .winner { animation: none; }
+    .winner .w-timer.final10 { animation: none; }
+  }
+  .winner .medal { font-size: 42px; }
+  .podium.vertical .winner .medal { font-size: 34px; }
+  .winner .w-avatar {
+    width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
+    border: 4px solid var(--m-color, gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; font-weight: 800; color: #fff;
+  }
+  .winner.first .w-avatar { width: 110px; height: 110px; }
+  .podium.vertical .winner .w-avatar { width: 56px; height: 56px; font-size: 24px; }
+  .podium.vertical .winner.first .w-avatar { width: 72px; height: 72px; }
+  .winner .w-name {
+    font-size: 22px; font-weight: 800; max-width: 220px; text-align: center;
+    word-wrap: break-word; color: var(--m-color, gold);
+  }
+  .winner.first .w-name { font-size: 27px; }
+  .podium.vertical .winner .w-name { text-align: left; max-width: 320px; }
+  .winner .w-platform { display: flex; align-items: center; gap: 5px; font-size: 14px; opacity: 0.8; }
+
+  /* ---------- Animações de entrada (comentário em destaque) ---------- */
+  .anim-slide-up { animation: slideUp var(--in-dur, 0.35s) cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } }
+  .anim-slide-down { animation: slideDown var(--in-dur, 0.35s) cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-50px); } }
+  .anim-slide-left { animation: slideLeft var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+  @keyframes slideLeft { from { opacity: 0; transform: translateX(-80px); } }
+  .anim-slide-right { animation: slideRight var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+  @keyframes slideRight { from { opacity: 0; transform: translateX(80px); } }
+  .anim-fade { animation: fadeIn var(--in-dur, 0.45s) ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } }
+  .anim-pop { animation: popIn var(--in-dur, 0.3s) cubic-bezier(0.2, 1.4, 0.4, 1); }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.6); } }
+  .anim-zoom { animation: zoomIn var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1); }
+  @keyframes zoomIn { from { opacity: 0; transform: scale(2.2); } }
+  .anim-bounce { animation: bounceIn var(--in-dur, 0.7s) ease-out; }
+  @keyframes bounceIn {
+    0% { opacity: 0; transform: translateY(-220px); }
+    45% { opacity: 1; transform: translateY(0); }
+    62% { transform: translateY(-32px); }
+    78% { transform: translateY(0); }
+    89% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+  }
+  .anim-flip { animation: flipIn var(--in-dur, 0.5s) cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+  @keyframes flipIn { from { opacity: 0; transform: perspective(700px) rotateY(90deg); } }
+  .anim-spin { animation: spinIn var(--in-dur, 0.5s) cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+  @keyframes spinIn { from { opacity: 0; transform: rotate(-360deg) scale(0.3); } }
+  .anim-blur { animation: blurIn var(--in-dur, 0.55s) ease-out; }
+  @keyframes blurIn { from { opacity: 0; filter: blur(16px); } }
+  .leaving { animation: leave 0.25s ease-in forwards; }
+  @keyframes leave { to { opacity: 0; transform: translateY(20px); } }
+
+  /* ---------- Animações de saída (comentário em destaque) ---------- */
+  .fout-fade { animation: foFade var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes foFade { to { opacity: 0; } }
+  .fout-slide-up { animation: foSlideUp var(--out-dur, 0.35s) ease-in forwards; }
+  @keyframes foSlideUp { to { opacity: 0; transform: translateY(-70px); } }
+  .fout-slide-down { animation: foSlideDown var(--out-dur, 0.35s) ease-in forwards; }
+  @keyframes foSlideDown { to { opacity: 0; transform: translateY(70px); } }
+  .fout-slide-left { animation: foSlideLeft var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes foSlideLeft { to { opacity: 0; transform: translateX(-90px); } }
+  .fout-slide-right { animation: foSlideRight var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes foSlideRight { to { opacity: 0; transform: translateX(90px); } }
+  .fout-pop { animation: foPop var(--out-dur, 0.3s) ease-in forwards; }
+  @keyframes foPop { to { opacity: 0; transform: scale(0.5); } }
+  .fout-zoom { animation: foZoom var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes foZoom { to { opacity: 0; transform: scale(2.2); } }
+  .fout-flip { animation: foFlip var(--out-dur, 0.45s) ease-in forwards; }
+  @keyframes foFlip { to { opacity: 0; transform: perspective(700px) rotateY(90deg); } }
+  .fout-spin { animation: foSpin var(--out-dur, 0.5s) ease-in forwards; }
+  @keyframes foSpin { to { opacity: 0; transform: rotate(360deg) scale(0.3); } }
+  .fout-bounce { animation: foBounce var(--out-dur, 0.6s) ease-in forwards; }
+  @keyframes foBounce {
+    0% { transform: translateY(0); }
+    25% { transform: translateY(-30px); }
+    100% { opacity: 0; transform: translateY(240px); }
+  }
+  .fout-blur { animation: foBlur var(--out-dur, 0.5s) ease-in forwards; }
+  @keyframes foBlur { to { opacity: 0; filter: blur(16px); } }
+
+  /* ---------- Animações de saída dos widgets (compostas com --pos-tf) ---------- */
+  .widget.visible.wout-fade { animation: foFade var(--out-dur, 0.4s) ease-in forwards; }
+  .widget.visible.wout-slide-up { animation: woSlideUp var(--out-dur, 0.35s) ease-in forwards; }
+  @keyframes woSlideUp { to { opacity: 0; transform: var(--pos-tf, none) translateY(-70px); } }
+  .widget.visible.wout-slide-down { animation: woSlideDown var(--out-dur, 0.35s) ease-in forwards; }
+  @keyframes woSlideDown { to { opacity: 0; transform: var(--pos-tf, none) translateY(70px); } }
+  .widget.visible.wout-slide-left { animation: woSlideLeft var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes woSlideLeft { to { opacity: 0; transform: var(--pos-tf, none) translateX(-90px); } }
+  .widget.visible.wout-slide-right { animation: woSlideRight var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes woSlideRight { to { opacity: 0; transform: var(--pos-tf, none) translateX(90px); } }
+  .widget.visible.wout-pop { animation: woPop var(--out-dur, 0.3s) ease-in forwards; }
+  @keyframes woPop { to { opacity: 0; transform: var(--pos-tf, none) scale(0.5); } }
+  .widget.visible.wout-zoom { animation: woZoom var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes woZoom { to { opacity: 0; transform: var(--pos-tf, none) scale(2.2); } }
+  .widget.visible.wout-flip { animation: woFlip var(--out-dur, 0.45s) ease-in forwards; }
+  @keyframes woFlip { to { opacity: 0; transform: var(--pos-tf, none) perspective(700px) rotateY(90deg); } }
+  .widget.visible.wout-spin { animation: woSpin var(--out-dur, 0.5s) ease-in forwards; }
+  @keyframes woSpin { to { opacity: 0; transform: var(--pos-tf, none) rotate(360deg) scale(0.3); } }
+  .widget.visible.wout-bounce { animation: woBounce var(--out-dur, 0.6s) ease-in forwards; }
+  @keyframes woBounce {
+    0% { transform: var(--pos-tf, none) translateY(0); }
+    25% { transform: var(--pos-tf, none) translateY(-30px); }
+    100% { opacity: 0; transform: var(--pos-tf, none) translateY(240px); }
+  }
+  .widget.visible.wout-blur { animation: foBlur var(--out-dur, 0.5s) ease-in forwards; }
+
+  /* ---------- Animações de entrada dos widgets ----------
+     Compostas com a transformação de posição (--pos-tf) para os
+     widgets centralizados não pularem durante a animação. */
+  .widget.visible.wanim-fade { animation: fadeIn var(--in-dur, 0.45s) ease-out; }
+  .widget.visible.wanim-slide-up { animation: wSlideUp var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+  @keyframes wSlideUp { from { opacity: 0; transform: var(--pos-tf, none) translateY(60px); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-slide-down { animation: wSlideDown var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+  @keyframes wSlideDown { from { opacity: 0; transform: var(--pos-tf, none) translateY(-60px); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-slide-left { animation: wSlideLeft var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+  @keyframes wSlideLeft { from { opacity: 0; transform: var(--pos-tf, none) translateX(-80px); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-slide-right { animation: wSlideRight var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+  @keyframes wSlideRight { from { opacity: 0; transform: var(--pos-tf, none) translateX(80px); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-pop { animation: wPop var(--in-dur, 0.3s) cubic-bezier(0.2, 1.4, 0.4, 1); }
+  @keyframes wPop { from { opacity: 0; transform: var(--pos-tf, none) scale(0.6); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-zoom { animation: wZoom var(--in-dur, 0.4s) cubic-bezier(0.2, 0.9, 0.3, 1); }
+  @keyframes wZoom { from { opacity: 0; transform: var(--pos-tf, none) scale(2.2); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-bounce { animation: wBounce var(--in-dur, 0.7s) ease-out; }
+  @keyframes wBounce {
+    0% { opacity: 0; transform: var(--pos-tf, none) translateY(-220px); }
+    45% { opacity: 1; transform: var(--pos-tf, none) translateY(0); }
+    62% { transform: var(--pos-tf, none) translateY(-32px); }
+    78% { transform: var(--pos-tf, none) translateY(0); }
+    89% { transform: var(--pos-tf, none) translateY(-10px); }
+    100% { transform: var(--pos-tf, none) translateY(0); }
+  }
+  .widget.visible.wanim-flip { animation: wFlip var(--in-dur, 0.5s) cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+  @keyframes wFlip { from { opacity: 0; transform: var(--pos-tf, none) perspective(700px) rotateY(90deg); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-spin { animation: wSpin var(--in-dur, 0.5s) cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+  @keyframes wSpin { from { opacity: 0; transform: var(--pos-tf, none) rotate(-360deg) scale(0.3); } to { transform: var(--pos-tf, none); } }
+  .widget.visible.wanim-blur { animation: blurIn var(--in-dur, 0.55s) ease-out; }
+
+  /* ---------- Animações em loop (sai e volta, repetindo) ---------- */
+  .loop-pulse { animation: loopPulse var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+  .loop-glow { animation: loopGlow var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.45) drop-shadow(0 0 14px rgba(255,255,255,0.55)); }
+  }
+  .loop-breathe { animation: loopBreathe var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+  .loop-float { animation: loopFloat var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+  .loop-sway { animation: loopSway var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopSway { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(10px); } 75% { transform: translateX(-10px); } }
+  .loop-wiggle { animation: loopWiggle var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopWiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(2deg); } 75% { transform: rotate(-2deg); } }
+  .loop-bounce { animation: loopBounce var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopBounce {
+    0%, 25%, 55%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-18px); }
+    68% { transform: translateY(-8px); }
+  }
+  .loop-spin { animation: loopSpin var(--loop-dur, 3s) linear infinite; }
+  @keyframes loopSpin { to { transform: rotate(360deg); } }
+  .loop-flip { animation: loopFlip var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopFlip {
+    0%, 55% { transform: perspective(700px) rotateY(0deg); }
+    100% { transform: perspective(700px) rotateY(360deg); }
+  }
+  .loop-blur { animation: loopBlur var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopBlur { 0%, 100% { filter: blur(0); } 50% { filter: blur(5px); } }
+  .loop-shake { animation: loopShake var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes loopShake {
+    0%, 62%, 100% { transform: translateX(0); }
+    66% { transform: translateX(-7px); } 70% { transform: translateX(7px); }
+    74% { transform: translateX(-5px); } 78% { transform: translateX(5px); }
+    82% { transform: translateX(-3px); } 86% { transform: translateX(3px); }
+  }
+
+  /* Versões dos widgets: compostas com a posição (--pos-tf) e declaradas por
+     último para ganharem da animação de entrada quando o loop assume */
+  .widget.visible.loop-pulse { animation: loopPulse var(--loop-dur, 3s) ease-in-out infinite; }
+  .widget.visible.loop-glow { animation: loopGlow var(--loop-dur, 3s) ease-in-out infinite; }
+  .widget.visible.loop-breathe { animation: wLoopBreathe var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes wLoopBreathe { 0%, 100% { transform: var(--pos-tf, none) scale(1); } 50% { transform: var(--pos-tf, none) scale(1.07); } }
+  .widget.visible.loop-float { animation: wLoopFloat var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes wLoopFloat { 0%, 100% { transform: var(--pos-tf, none) translateY(0); } 50% { transform: var(--pos-tf, none) translateY(-14px); } }
+  .widget.visible.loop-sway { animation: wLoopSway var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes wLoopSway { 0%, 100% { transform: var(--pos-tf, none) translateX(0); } 25% { transform: var(--pos-tf, none) translateX(10px); } 75% { transform: var(--pos-tf, none) translateX(-10px); } }
+  .widget.visible.loop-wiggle { animation: wLoopWiggle var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes wLoopWiggle { 0%, 100% { transform: var(--pos-tf, none) rotate(0deg); } 25% { transform: var(--pos-tf, none) rotate(2deg); } 75% { transform: var(--pos-tf, none) rotate(-2deg); } }
+  .widget.visible.loop-bounce { animation: wLoopBounce var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes wLoopBounce {
+    0%, 25%, 55%, 80%, 100% { transform: var(--pos-tf, none) translateY(0); }
+    40% { transform: var(--pos-tf, none) translateY(-18px); }
+    68% { transform: var(--pos-tf, none) translateY(-8px); }
+  }
+  .widget.visible.loop-spin { animation: wLoopSpin var(--loop-dur, 3s) linear infinite; }
+  @keyframes wLoopSpin { to { transform: var(--pos-tf, none) rotate(360deg); } }
+  .widget.visible.loop-flip { animation: wLoopFlip var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes wLoopFlip {
+    0%, 55% { transform: var(--pos-tf, none) perspective(700px) rotateY(0deg); }
+    100% { transform: var(--pos-tf, none) perspective(700px) rotateY(360deg); }
+  }
+  .widget.visible.loop-blur { animation: loopBlur var(--loop-dur, 3s) ease-in-out infinite; }
+  .widget.visible.loop-shake { animation: wLoopShake var(--loop-dur, 3s) ease-in-out infinite; }
+  @keyframes wLoopShake {
+    0%, 62%, 100% { transform: var(--pos-tf, none) translateX(0); }
+    66% { transform: var(--pos-tf, none) translateX(-7px); } 70% { transform: var(--pos-tf, none) translateX(7px); }
+    74% { transform: var(--pos-tf, none) translateX(-5px); } 78% { transform: var(--pos-tf, none) translateX(5px); }
+    82% { transform: var(--pos-tf, none) translateX(-3px); } 86% { transform: var(--pos-tf, none) translateX(3px); }
+  }
+  /* 🔍 Avatar em destaque (botão direito num avatar do painel) */
+  #avatarZoom {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    z-index: 6; display: none; text-align: center; pointer-events: none;
+  }
+  /* 🎬 v0.81: entrada/saída padrão ÚNICO em todos os overlays — o fade do
+     relógio (fadeIn 0.45s na entrada, foFade 0.4s na saída) */
+  #avatarZoom.on { display: block; animation: fadeIn 0.45s ease-out; }
+  .avatarZoomExtra {
+    position: fixed; transform: translate(-50%, -50%);
+    z-index: 6; display: block; text-align: center; pointer-events: none;
+    animation: fadeIn 0.45s ease-out;
+  }
+  #avatarZoom.on.saindo, .avatarZoomExtra.saindo, #midiaPublico.on.saindo,
+  #midiaTrilha.on.saindo, #midiaDireta.on.saindo {
+    animation: foFade 0.4s ease-in forwards;
+  }
+  .avatarZoomExtra .av-big, .avatarZoomExtra img,
+  #avatarZoom .av-big, #avatarZoom img {
+    width: var(--avsize, 30vmin); height: var(--avsize, 30vmin);
+    border-radius: 50%; border: 0.5vmin solid #fff; object-fit: cover;
+    /* ✨ v0.86: a sombra dos overlays é uma só — esta daqui é o PADRÃO dela */
+    box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55));
+  }
+  #avatarZoom .av-big {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: calc(var(--avsize, 30vmin) * 0.4);
+  }
+  #avatarZoom .av-name {
+    margin-top: 1vmin; color: #fff; font-weight: 800;
+    font-size: calc(var(--avsize, 30vmin) * 0.13);
+    text-shadow: 0 0.3vmin 1.2vmin rgba(0,0,0,0.8);
+  }
+
+  /* 📎 v0.70: mídia do inscrito na tela do público */
+  #midiaPublico { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%);
+    z-index: 60; display: none; flex-direction: column; align-items: center; gap: 0.5em;
+    pointer-events: none; }
+  #midiaPublico.on { display: flex; animation: fadeIn 0.45s ease-out; }
+  #midiaPublico img, #midiaPublico video { max-width: 92vw; max-height: var(--midia-alt, 45vh);
+    border-radius: 14px; box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55)); }
+  #midiaPublico .midia-rotulo { font-size: 1.3em; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.55); padding: 0.25em 0.7em; border-radius: 0.6em; }
+  #midiaPublico.telaCheia { left: 0; top: 0; right: 0; bottom: 0; transform: none;
+    background: rgba(0,0,0,0.78); justify-content: center; z-index: 220; }
+  #midiaPublico.telaCheia img, #midiaPublico.telaCheia video { max-width: 100vw; max-height: 100vh; border-radius: 0; box-shadow: none; }
+  /* 🎧 v0.73: reprodutor bonito de áudio para o público (espelho do painel).
+     v0.73.1: no cartão CLÁSSICO ele mora DENTRO do comentário (como no
+     WhatsApp); a versão flutuante fica para os moldes/peças. */
+  .audio-player { display: flex; align-items: center; gap: 0.55em;
+    background: rgba(0, 0, 0, 0.62); border-radius: 999px;
+    padding: 0.5em 1.1em 0.5em 0.5em; }
+  #midiaPublico .audio-player { width: min(34em, 88vw); box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55)); }
+  .featured .audio-player { width: 100%; margin-top: 0.35em; background: rgba(0, 0, 0, 0.3); }
+  .ap-play { width: 2.4em; height: 2.4em; min-width: 2.4em; border-radius: 50%;
+    background: var(--card-accent, var(--accent-color, #7c3aed)); color: #fff; line-height: 1;
+    display: flex; align-items: center; justify-content: center; }
+  /* v0.140.1: a onda é a ÚNICA parte elástica da pílula. Sem o min-width: 0
+     ela se recusa a encolher abaixo das 48 barrinhas somadas, e quem paga a
+     conta é o relógio, empurrado para fora da pílula (e cortado pelo cartão,
+     que recorta o que sai dele). Agora a onda cede espaço e o tempo fica
+     sempre inteiro, dentro da pílula. */
+  .ap-onda { flex: 1 1 auto; min-width: 0; overflow: hidden;
+    display: flex; align-items: center; gap: 0.15em; height: 2.2em; }
+  .ap-onda i { flex: 1 1 auto; min-width: 2px; border-radius: 2px; background: rgba(255, 255, 255, 0.35); }
+  .ap-onda i.tocada { background: #fff; }
+  .ap-tempo { color: #fff; font-size: 0.95em; white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8); }
+  .audio-player audio { display: none; }
+  /* 🎟️ v0.119: figurinha guardada como imagem (Super Sticker) na régua de escala */
+  #midiaPublico img.figurinha-midia { height: var(--midia-alt, 45vh); width: auto; max-width: 92vw; object-fit: contain; }
+  /* 🌀 v0.74: figurinha animada (Lottie) acompanha a régua de escala */
+  #midiaPublico .figurinha-animada { width: var(--midia-alt, 45vh); height: var(--midia-alt, 45vh);
+    max-width: 92vw; filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.45)); }
+  #midiaPublico .figurinha-animada svg { width: 100%; height: 100%; }
+
+  /* 🖼️🎞️ v0.86: mídia de uma TECLA da Mesa de Trilhas — camada própria
+     (não briga com a mídia do inscrito), fade padrão e a sombra dos
+     overlays no modo janela; a tela cheia escurece o fundo */
+  #midiaTrilha { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%);
+    z-index: 62; display: none; flex-direction: column; align-items: center;
+    pointer-events: none; }
+  #midiaTrilha.on { display: flex; animation: fadeIn 0.45s ease-out; }
+  #midiaTrilha img, #midiaTrilha video { max-width: 92vw; max-height: var(--mtr-alt, 45vh);
+    border-radius: 14px; box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55)); }
+  #midiaTrilha.telaCheia { left: 0; top: 0; right: 0; bottom: 0; transform: none;
+    background: rgba(0,0,0,0.78); justify-content: center; z-index: 222; }
+  #midiaTrilha.telaCheia img, #midiaTrilha.telaCheia video { max-width: 100vw; max-height: 100vh; border-radius: 0; box-shadow: none; }
+
+  /* 🎞️ v0.129: «Mídia direta» — imagem/vídeo/áudio/embed que o apresentador
+     mostra ao público direto de um link (YouTube, TikTok, Instagram…) ou de
+     um arquivo do computador. Camada própria (acima da mídia da tecla), fade
+     padrão, sombra dos overlays na janela; a tela cheia escurece o fundo */
+  #midiaDireta { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%);
+    z-index: 63; display: none; flex-direction: column; align-items: center; gap: 0.5em;
+    pointer-events: none; }
+  #midiaDireta.on { display: flex; animation: fadeIn 0.45s ease-out; }
+  #midiaDireta img, #midiaDireta video { max-width: 92vw; max-height: var(--md-alt, 45vh);
+    border-radius: 14px; box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55)); background: #000; }
+  /* 📐 v0.132: --md-prop é a proporção do site (o Instagram e o TikTok são de
+     pé); sem ela tudo entrava numa caixa 16:9, com tarja preta e rolagem */
+  #midiaDireta iframe { width: min(92vw, calc(var(--md-alt, 45vh) * var(--md-prop, 1.7778))); height: var(--md-alt, 45vh);
+    border: 0; border-radius: 14px; box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55)); background: #000; }
+  #midiaDireta .audio-player { width: min(34em, 88vw); box-shadow: var(--ov-sombra, 0 1.5vmin 6vmin rgba(0,0,0,0.55)); }
+  #midiaDireta .midia-rotulo { font-size: 1.3em; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.55); padding: 0.25em 0.7em; border-radius: 0.6em; }
+  /* 🏷️ v0.136: o crédito de fonte, logo abaixo da mídia — a pílula que a
+     camada já usa, com o negrito do nome que fica sob o avatar ampliado */
+  #midiaDireta .md-credito { font-size: 1.15em; font-weight: 800; color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8); background: rgba(0,0,0,0.55);
+    padding: 0.22em 0.7em; border-radius: 0.6em; max-width: 92vw;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #midiaDireta.telaCheia { left: 0; top: 0; right: 0; bottom: 0; transform: none;
+    background: rgba(0,0,0,0.78); justify-content: center; z-index: 224; }
+  #midiaDireta.telaCheia img, #midiaDireta.telaCheia video { max-width: 100vw; max-height: 100vh; border-radius: 0; box-shadow: none; }
+  #midiaDireta.telaCheia iframe { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+</style>
+<style id="custom-css"></style>
+</head>
+<body>
+<div id="avatarZoom"></div>
+<div id="fullscreenMedia"></div>
+<!-- 📎 v0.70: mídia do inscrito para o PÚBLICO — camada própria, funciona em
+     qualquer modo do destaque; escala e tela cheia comandadas pelo painel -->
+<div id="midiaPublico"></div>
+<div id="midiaTrilha"></div>
+<!-- 🎞️ v0.129: mídia direta (link/arquivo) para o PÚBLICO — o painel comanda -->
+<div id="midiaDireta"></div>
+<div id="stage" class="pos-bottom-left">
+  <div id="featuredSlot"></div>
+</div>
+
+<div id="qrWidget" class="widget" data-widget="qr">
+  <canvas id="qrCanvas" width="200" height="200"></canvas>
+  <div class="qr-name" id="qrName"></div>
+</div>
+
+<div id="likemeter" class="widget" data-widget="likemeter">
+  <!-- v0.52.1: a % é a estrela do likômetro — fica no MEIO e em destaque -->
+  <div class="lm-row">
+    <span class="lm-viewers">👀 <span id="lmViewers">—</span></span>
+    <span class="lm-pct" id="lmPct">—</span>
+    <span class="lm-likes">👍 <span id="lmLikes">—</span></span>
+  </div>
+  <div class="lm-bar"><div class="lm-fill" id="lmFill"></div></div>
+  <div class="lm-label">assistindo agora × likes da live</div>
+</div>
+
+<div id="winstreak" class="widget" data-widget="winstreak">
+  <span class="ws-icon">🏆</span>
+  <span class="ws-label">Solo</span>
+  <span class="ws-nums"><span class="ws-wins">0</span>/<span class="ws-record">0</span></span>
+</div>
+
+<div id="audienceWidget" class="widget" data-widget="audience"></div>
+<div id="avisoWidget" class="widget" data-widget="aviso"></div>
+<div id="relogioWidget" class="widget" data-widget="relogio"></div>
+<div id="somBloqueadoOv" title="Toque uma vez para o navegador liberar o som">🔇 Toque aqui para liberar o som dos alertas</div>
+
+<div id="raffleWidget" class="widget" data-widget="raffle"><div id="raffleBox" style="display:flex;flex-direction:column;align-items:center;gap:20px"></div></div>
+
+<script src="/i18n.js"></script>
+<script src="/render.js"></script>
+<script>
+'use strict';
+
+const stage = document.getElementById('stage');
+const featuredSlot = document.getElementById('featuredSlot');
+const fullscreenMedia = document.getElementById('fullscreenMedia');
+const customStyle = document.getElementById('custom-css');
+
+let settings = null;
+let hideTimer = null;
+let currentFeaturedId = null;
+let currentFeaturedMessage = null;
+
+function hexToRgba(hex, alpha) {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!match) return hex;
+  const n = parseInt(match[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+function mediaElement(url, className) {
+  url = String(url || ''); // 🔒 v0.127.1: sem endereço não há mídia
+  if (!url) return null;
+  const lower = url.toLowerCase().split('?')[0];
+  const isVideo = /\.(mp4|webm|ogg|ogv|mov|m4v|avi|mkv)$/.test(lower);
+  let el;
+  if (isVideo) {
+    el = document.createElement('video');
+    el.autoplay = true;
+    el.loop = true;
+    el.muted = true;
+    el.playsInline = true;
+    el.src = url;
+  } else {
+    el = document.createElement('img');
+    el.src = url;
+  }
+  if (className) el.className = className;
+  return el;
+}
+
+function applySettings(next) {
+  settings = next;
+  // 📺 v0.50: esta é a tela do PÚBLICO (fonte do OBS) — ela segue o idioma
+  // escolhido nas configurações, sem tocar na escolha pessoal do navegador
+  if (window.OBS_I18N) OBS_I18N.seguir(settings.idioma);
+  const root = document.documentElement.style;
+  root.setProperty('--accent-color', settings.accentColor);
+  root.setProperty('--bg-color', hexToRgba(settings.bgColor, settings.bgOpacity));
+  root.setProperty('--text-color', settings.textColor);
+  root.setProperty('--font-family', settings.fontFamily);
+  root.setProperty('--font-size', settings.fontSize + 'px');
+  root.setProperty('--max-width', settings.maxWidth + 'px');
+  root.setProperty('--border-radius', settings.borderRadius + 'px');
+  root.setProperty('--pad-scale', (Number(settings.paddingScale) || 100) / 100);
+  root.setProperty('--f-scale', (Number(settings.scale) || 100) / 100);
+  // Velocidades do destaque so valem dentro do palco (nao vazam para os widgets)
+  if (Number(settings.animationSeconds) > 0) stage.style.setProperty('--in-dur', clampSecs(settings.animationSeconds, 1, 15) + 's');
+  else stage.style.removeProperty('--in-dur');
+  if (Number(settings.animationOutSeconds) > 0) stage.style.setProperty('--out-dur', clampSecs(settings.animationOutSeconds, 1, 15) + 's');
+  else stage.style.removeProperty('--out-dur');
+  root.setProperty('--accent-bar', (Number(settings.accentBarWidth) || 0) + 'px');
+  root.setProperty('--media-opacity', Number.isFinite(Number(settings.mediaOpacity)) ? settings.mediaOpacity : 1);
+  stage.className = 'pos-' + (settings.position || 'bottom-left');
+  // Posicao livre (arrastada no editor de tela do painel). O ponto salvo é o
+  // canto da caixinha do editor; o cartão real ancora pelo CENTRO dela, para
+  // uma mensagem longa crescer para os lados sem sair do lugar escolhido.
+  if (settings.position === 'custom') {
+    // fixed (e não absolute): o #stage tem 40px de respiro, mas a posição
+    // livre é % da TELA INTEIRA — igualzinho à caixinha do editor. O left
+    // fica no CANTO (senão o shrink-to-fit encolheria o cartão perto da
+    // borda direita); o translate leva o centro do cartão ao centro da
+    // caixinha, e o vw/px vivo acompanha resize sem re-render.
+    const m = obsMeiaCaixaCss('featured', settings, true);
+    featuredSlot.style.position = 'fixed';
+    featuredSlot.style.left = (Number(settings.posX) || 0) + '%';
+    featuredSlot.style.top = (Number(settings.posY) || 0) + '%';
+    featuredSlot.style.transform = `translate(calc(${m.x} - 50%), calc(${m.y} - 50%))`;
+  } else {
+    featuredSlot.style.position = '';
+    featuredSlot.style.left = '';
+    featuredSlot.style.top = '';
+    featuredSlot.style.transform = '';
+  }
+
+  document.body.classList.toggle('card-shadow', !!settings.cardShadow);
+  document.body.classList.toggle('text-shadow', !!settings.textShadow);
+
+  // ✨ v0.86: a sombra que contorna os overlays flutuantes é UMA só, com
+  // tipo e opacidade ajustáveis — o padrão é a do 🔍 mostrar avatar
+  {
+    const sb = settings.sombra || {};
+    const op = Math.max(0, Math.min(100, Number(sb.opacidade ?? 55))) / 100;
+    const tipos = {
+      suave: `0 1.5vmin 6vmin rgba(0,0,0,${op})`,
+      contorno: `0 0 0 0.45vmin rgba(0,0,0,${op}), 0 0.8vmin 2.5vmin rgba(0,0,0,${Math.round(op * 60) / 100})`,
+      nenhuma: 'none',
+    };
+    document.documentElement.style.setProperty('--ov-sombra', tipos[sb.tipo] || tipos.suave);
+  }
+  document.body.classList.remove('avatar-circle', 'avatar-rounded', 'avatar-square');
+  document.body.classList.add('avatar-' + (settings.avatarShape || 'circle'));
+
+  // Moldura em tela inteira (posicao e tamanho livres, ajustados no editor 🖱️)
+  fullscreenMedia.innerHTML = '';
+  // 🖼️ v0.55: a arte própria é recurso de primeira — sem interruptor
+  if (settings.mediaFullscreen) {
+    fullscreenMedia.appendChild(mediaElement(settings.mediaFullscreen));
+  }
+  fullscreenMedia.style.left = (Number(settings.mediaX) || 0) + '%';
+  fullscreenMedia.style.top = (Number(settings.mediaY) || 0) + '%';
+  fullscreenMedia.style.width = (Number(settings.mediaScale) || 100) + '%';
+  fullscreenMedia.style.height = (Number(settings.mediaScale) || 100) + '%';
+  updateFullscreenVisibility();
+
+  applyWidgets();
+
+  const widgetCSS = Object.values(settings.widgets || {}).map((w) => String(w.customCSS || '')).join('\n');
+  customStyle.textContent = String(settings.customCSS || '') + '\n' + widgetCSS;
+
+  renderMidiaPublico(); // 📎 escala/tela cheia da mídia acompanham na hora
+
+  // Redesenha o destaque que ja esta na tela para refletir a mudanca na hora
+  if (currentFeaturedId && currentFeaturedMessage) {
+    const card = buildFeatured(currentFeaturedMessage);
+    if (currentFeaturedMessage.previa === true) card.classList.add('featured--previa'); // 📺 v0.103
+    card.classList.remove(...ANIMATIONS.map((a) => 'anim-' + a));
+    featuredSlot.innerHTML = '';
+    featuredSlot.appendChild(card);
+    startFeaturedLoop(card);
+  }
+}
+
+// ---------- Loop do comentario em destaque ----------
+let featuredLoopTimers = [];
+function startFeaturedLoop(card) {
+  featuredLoopTimers.forEach(clearTimeout);
+  featuredLoopTimers = [];
+  const loop = settings?.loopAnimation || 'none';
+  if (loop === 'none' || !LOOPS.includes(loop)) return;
+  const entryMs = settings.animation && settings.animation !== 'none' ? customMs(settings.animationSeconds, 700) : 0;
+  featuredLoopTimers.push(setTimeout(() => {
+    if (!card.parentNode) return;
+    card.classList.remove(...ANIMATIONS.map((a) => 'anim-' + a));
+    card.style.setProperty('--loop-dur', clampSecs(settings.loopSeconds || 3, 1, 15) + 's');
+    card.classList.add('loop-' + loop);
+    const total = clampSecs(settings.loopDurationSeconds, 0, 3600);
+    if (total > 0) featuredLoopTimers.push(setTimeout(() => card.classList.remove('loop-' + loop), total * 1000));
+  }, entryMs + 60));
+}
+
+// ---------- Estilo dos widgets (posicao, cores, escala, midia, CSS) ----------
+const WPOS = ['top-left','top-center','top-right','middle-left','center','middle-right','bottom-left','bottom-center','bottom-right'];
+// Vocabulário único de animações: entrada e saída oferecem exatamente os
+// mesmos efeitos, e o loop tem a lista completa. Vale para o destaque, para
+// os widgets e para o chat ao vivo fixo (public/chat.html usa as mesmas).
+const ANIMATIONS = ['fade','slide-up','slide-down','slide-left','slide-right','pop','zoom','bounce','flip','spin','blur'];
+const ANIM_OUT = ANIMATIONS;
+const LOOPS = ['pulse','glow','breathe','float','sway','wiggle','bounce','spin','flip','blur','shake'];
+
+// Duracao escolhida pelo usuario (1-15s) ou o padrao rapido quando 0
+const clampSecs = (v, min, max) => Math.max(min, Math.min(max, Number(v) || 0));
+function customMs(value, fallbackMs) {
+  const secs = clampSecs(value, 0, 15);
+  return secs > 0 ? secs * 1000 : fallbackMs;
+}
+
+// ---------- Animacao em loop (sai e volta, repetindo) ----------
+const loopTimers = new WeakMap();
+
+function clearWidgetLoop(el) {
+  delete el.dataset.loopArmed;
+  for (const t of loopTimers.get(el) || []) clearTimeout(t);
+  loopTimers.delete(el);
+  el.classList.remove(...LOOPS.map((l) => 'loop-' + l));
+}
+
+function armWidgetLoop(el, kind) {
+  const conf = confFor(el) || {};
+  const loop = conf.loopAnimation || 'none';
+  if (loop === 'none' || !LOOPS.includes(loop)) { clearWidgetLoop(el); return; }
+  if (el.dataset.loopArmed) return; // ja esta rodando (ou agendado)
+  el.dataset.loopArmed = '1';
+  const timers = [];
+  // Espera a animacao de entrada terminar antes de comecar o loop
+  const entryMs = conf.animation && conf.animation !== 'none' ? customMs(conf.animationSeconds, 700) : 0;
+  timers.push(setTimeout(() => {
+    el.style.setProperty('--loop-dur', clampSecs(conf.loopSeconds || 3, 1, 15) + 's');
+    el.classList.add('loop-' + loop);
+    const total = clampSecs(conf.loopDurationSeconds, 0, 3600);
+    if (total > 0) timers.push(setTimeout(() => el.classList.remove('loop-' + loop), total * 1000));
+  }, entryMs + 60));
+  loopTimers.set(el, timers);
+}
+
+// ---------- Esconder widgets com animacao de saida ----------
+function clearWidgetLeaving(el) {
+  delete el.dataset.leaving;
+  // 🔒 v0.127.1: a saída anterior (ainda no meio) não pode esconder o widget que voltou
+  if (el._hideTimer) { clearTimeout(el._hideTimer); el._hideTimer = null; }
+  el.classList.remove(...ANIM_OUT.map((a) => 'wout-' + a));
+}
+
+function showWidgetEl(el, kind) {
+  clearWidgetLeaving(el);
+  el.classList.add('visible');
+  if (kind) armWidgetLoop(el, kind);
+  // 🧩 v0.96: agora que ele tem tamanho de verdade, dá para saber se alguma
+  // peça dele passa da borda (e o recorte precisa cair)
+  requestAnimationFrame(() => atualizarRecorteDoWidget(el));
+}
+
+function hideWidgetEl(el, kind) {
+  clearWidgetLoop(el);
+  if (!el.classList.contains('visible')) { clearWidgetLeaving(el); return; }
+  if (el.dataset.leaving) return;
+  const conf = confFor(el) || {};
+  const anim = conf.animationOut || 'fade';
+  if (anim === 'none' || !settings) {
+    el.classList.remove('visible');
+    return;
+  }
+  el.dataset.leaving = '1';
+  el.classList.add('wout-' + anim);
+  el._hideTimer = setTimeout(() => {
+    el._hideTimer = null;
+    clearWidgetLeaving(el);
+    el.classList.remove('visible');
+  }, customMs(conf.animationOutSeconds, 520) + 80);
+}
+
+// Configuracao efetiva de um widget: a da familia, e nos adicionais o
+// estilo proprio da instancia por cima (100% independente quando editado).
+function confFor(el) {
+  const family = (settings?.widgets || {})[el.dataset.widget];
+  if (!family) return null;
+  if (el.dataset.extra === '1') {
+    // 📢 v0.128: o aviso também tem adicionais com estilo próprio
+    const listas = { qr: qrList, winstreak: winstreakList, aviso: avisoList };
+    const list = listas[el.dataset.widget];
+    const inst = (list || []).find((o) => o.id === el.dataset.instance);
+    return { ...family, ...(inst?.style || {}) };
+  }
+  return family;
+}
+
+// 🪟 Camadas: a ordem de empilhamento é escolhida no 🖱️ Organizar a tela
+// (aba Camadas). O padrão reproduz o comportamento de sempre: a moldura do
+// usuário embaixo, o destaque em cima dela e os widgets por cima de tudo.
+const CAMADAS_PADRAO = ['media', 'featured', 'qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'aviso', 'relogio'];
+function ordemDasCamadas() {
+  const bruta = Array.isArray(settings?.layers?.ordem) ? settings.layers.ordem : [];
+  const ordem = bruta.filter((c) => CAMADAS_PADRAO.includes(c));
+  for (const c of CAMADAS_PADRAO) if (!ordem.includes(c)) ordem.push(c);
+  return ordem; // de baixo para cima
+}
+function aplicarCamadas() {
+  const ordem = ordemDasCamadas();
+  const zDe = (chave) => 10 + ordem.indexOf(chave);
+  fullscreenMedia.style.zIndex = zDe('media');
+  stage.style.zIndex = zDe('featured');
+  for (const el of document.querySelectorAll('.widget')) {
+    el.style.zIndex = zDe(el.dataset.widget);
+  }
+}
+
+// 🧩 Widgets desmontados: com "peças soltas" ligado num widget, ele vira uma
+// caixa fixa e cada parte dele é posicionada/ajustada por conta própria. As
+// regras entram numa folha de estilo dinâmica — assim elas sobrevivem aos
+// re-desenhos dos widgets (relógio, sorteio e cia. reescrevem o próprio HTML).
+const PECAS_WIDGETS_SEL = {
+  qr: { codigo: 'canvas', titulo: '.qr-name' },
+  likemeter: { numeros: '.lm-row', barra: '.lm-bar', rotulo: '.lm-label' },
+  winstreak: { icone: '.ws-icon', rotulo: '.ws-label', numeros: '.ws-nums' },
+  audience: { total: '.aud-total', redes: '.aud-rows' },
+  relogio: { hora: '.rl-hora', legenda: '.rl-data, .rl-rotulo' },
+  raffle: { titulo: '.raffle-title', podio: '.podium, .raffle-spinner' },
+};
+// 🎯 v0.104: como cada peça de widget centraliza o conteúdo quando ganha uma
+// caixa — 'flex' = vira uma caixa centrada (textos, ícone, números);
+// 'coluna' = as fileiras centram na horizontal (já é coluna flex); 'linha' =
+// os degraus do pódio centram (já é linha flex, base alinhada). O QR (canvas),
+// a barra e a fileira de números do likômetro (que espalha 👀 e 👍 pelas
+// pontas) preenchem a caixa e ficam como estão.
+const PECAS_WIDGETS_CENTRO = {
+  'qr.titulo': 'flex', 'likemeter.rotulo': 'flex', 'winstreak.icone': 'flex', 'winstreak.rotulo': 'flex',
+  'winstreak.numeros': 'flex', 'relogio.hora': 'flex', 'relogio.legenda': 'flex', 'raffle.titulo': 'flex',
+  'audience.total': 'flex', 'audience.redes': 'coluna', 'raffle.podio': 'linha',
+};
+const pecasWidgetsCss = document.createElement('style');
+document.head.appendChild(pecasWidgetsCss);
+
+// O ajuste fino de qualquer peça, como declarações CSS
+// ✍️ v0.109: a formatação de TEXTO (formatoDaPeca) mora no render.js desde a
+// v0.110 — o chat fixo usa a mesma régua.
+function finoDaPeca(p, comEscala) {
+  const d = [];
+  const t = [];
+  if (Number(p.rotacao)) t.push(`rotate(${Number(p.rotacao)}deg)`);
+  if (p.espelhar === true) t.push('scaleX(-1)');
+  if (comEscala && Number(p.escala) && Number(p.escala) !== 100) t.push(`scale(${Number(p.escala) / 100})`);
+  if (t.length) d.push(`transform: ${t.join(' ')}`, 'transform-origin: center');
+  if (Number(p.opacidade) > 0 && Number(p.opacidade) < 100) d.push(`opacity: ${Number(p.opacidade) / 100}`);
+  if (p.sombra === true) d.push('filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8))');
+  return d;
+}
+
+function aplicarPecasDosWidgets() {
+  const regras = [];
+  // ✍️ v0.112: a formatação de texto entra com !important e desce aos filhos
+  // (fonte, peso, itálico, maiúsculas, espaçamento, contorno, cor) — o CSS
+  // próprio de cada widget (#relogioWidget .rl-hora { font-weight: 800 },
+  // a cor dos 👀/👍 do likômetro...) vencia a regra da peça, e «Negrito: Não»
+  // ou a cor escolhida não chegavam à letra. Alinhar/sublinhar ficam só na
+  // caixa da peça.
+  const regrasDeTexto = (p, corOk) => {
+    const fmt = formatoDaPeca(p);
+    const deCaixa = fmt.filter((x) => /^(text-align|justify-content|text-decoration)/.test(x));
+    const herd = fmt.filter((x) => !/^(text-align|justify-content|text-decoration)/.test(x));
+    const cor = corOk ? [`color: ${corOk}`] : [];
+    const imp = (arr) => arr.map((x) => x + ' !important');
+    return { noEl: imp([...herd, ...deCaixa, ...cor]), nosFilhos: imp([...herd, ...cor]) };
+  };
+  for (const [kind, sels] of Object.entries(PECAS_WIDGETS_SEL)) {
+    const conf = settings?.widgets?.[kind];
+    if (!conf) continue;
+    const livre = conf.pecasLivre === true;
+    const alvo = `.widget[data-widget="${kind}"]`;
+    // 🐛 v0.96: a caixa das peças só vale para o widget que ESTÁ na tela
+    // (.visible). Sem isso, ligar o 🧩 «Overlay em peças» punha um display
+    // block em todo widget com peças soltas e fazia até os DESLIGADOS
+    // aparecerem na live — 8 de uma vez, no meio da transmissão.
+    if (livre) regras.push(`${alvo}.visible { display: block; box-sizing: border-box; width: ${Number(conf.pecasLargura) || 300}px; height: ${Number(conf.pecasAltura) || 200}px; }`);
+    for (const [chave, sel] of Object.entries(sels)) {
+      const p = (conf.pecas || {})[chave] || {};
+      const seletores = sel.split(',').map((x) => `${alvo} ${x.trim()}`).join(', ');
+      const corOk = /^#[0-9a-f]{6}$/i.test(String(p.cor || '')) ? p.cor : '';
+      // ✍️ v0.110: fora do modo peças (o widget nos presets de sempre) a
+      // formatação da letra e a cor da peça VALEM do mesmo jeito — só a
+      // posição, a caixa e o mostrar/esconder são coisa do modo solto
+      const seletoresFilhos = sel.split(',').map((x) => `${alvo} ${x.trim()} *`).join(', ');
+      const texto = regrasDeTexto(p, corOk);
+      if (!livre) {
+        if (texto.noEl.length) regras.push(`${seletores} { ${texto.noEl.join('; ')}; }`);
+        if (texto.nosFilhos.length) regras.push(`${seletoresFilhos} { ${texto.nosFilhos.join('; ')}; }`);
+        continue;
+      }
+      if (p.mostrar === false) { regras.push(`${seletores} { display: none; }`); continue; }
+      const d = ['position: absolute', `left: ${Number(p.x) || 0}%`, `top: ${Number(p.y) || 0}%`, 'margin: 0', `z-index: ${1 + (Number(p.z) || 0)}`, ...finoDaPeca(p, true)];
+      // 📐 v0.98: a altura também vale — antes só a largura era aplicada, e
+      // por isso o seletor de altura das peças dos widgets não fazia nada
+      if (Number(p.larg)) d.push(`width: ${Number(p.larg)}%`);
+      if (Number(p.alt)) d.push(`height: ${Number(p.alt)}%`);
+      // 🎯 v0.104: peça com caixa escolhida centraliza o conteúdo nela (texto
+      // e filhos), em vez de encostar na esquerda/no alto
+      if (Number(p.larg) || Number(p.alt)) {
+        const modo = PECAS_WIDGETS_CENTRO[`${kind}.${chave}`];
+        if (modo === 'flex') d.push('display: flex', 'align-items: center', 'justify-content: center', 'text-align: center');
+        else if (modo === 'coluna') d.push('align-items: center', 'text-align: center');
+        else if (modo === 'linha') d.push('justify-content: center');
+      }
+      // a formatação (e a cor) por ÚLTIMO, com !important: vence a
+      // centralização de cima (text-align) e o CSS próprio do widget
+      d.push(...texto.noEl);
+      regras.push(`${seletores} { ${d.join('; ')}; }`);
+      // Cor e letra escolhidas vencem as dos filhos (👀 e 👍, contagens...)
+      if (texto.nosFilhos.length) regras.push(`${seletoresFilhos} { ${texto.nosFilhos.join('; ')}; }`);
+    }
+  }
+  pecasWidgetsCss.textContent = regras.join('\n');
+  // 🧩 v0.94: a mesma correção do cartão vale para TODOS os overlays — cada
+  // widget para de recortar quando uma peça dele passa da borda. É medido no
+  // quadro seguinte (a folha de estilo acabou de mudar) e widget por widget:
+  // quem está com tudo dentro continua recortando, como sempre foi.
+  requestAnimationFrame(() => {
+    for (const el of document.querySelectorAll('.widget')) atualizarRecorteDoWidget(el);
+  });
+}
+
+// v0.96: a conta precisa ser refeita quando o widget ENTRA na tela, não só
+// quando os ajustes mudam — um widget escondido mede 0×0 e nunca "escapava"
+function atualizarRecorteDoWidget(el) {
+  if (!el || !el.isConnected) return;
+  const kind = el.dataset.widget;
+  const solto = settings?.widgets?.[kind]?.pecasLivre === true && pecaEscapaDoWidget(el);
+  el.classList.toggle('widget--solto', solto);
+}
+
+// Alguma peça deste widget passou da borda dele? (o recorte não muda o
+// tamanho de layout das peças, então o retângulo delas conta a verdade)
+function pecaEscapaDoWidget(el) {
+  const r = el.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return false;
+  for (const filho of el.children) {
+    const f = filho.getBoundingClientRect();
+    if (f.width < 1 && f.height < 1) continue;
+    if (f.left < r.left - 1 || f.top < r.top - 1
+      || f.right > r.right + 1 || f.bottom > r.bottom + 1) return true;
+  }
+  return false;
+}
+
+function applyWidgets() {
+  aplicarCamadas();
+  aplicarPecasDosWidgets();
+  for (const el of document.querySelectorAll('.widget')) {
+    const conf = confFor(el);
+    if (!conf) continue;
+    for (const pos of WPOS) el.classList.remove('wpos-' + pos);
+    if (el.dataset.extra === '1') {
+      // Widgets adicionais tem posicao propria (por instancia), aplicada
+      // pelo renderizador — aqui so herdam cores, escala e animacao. A
+      // meia-caixa da ancora acompanha a familia (escala/pecas) a cada
+      // settings, senao mudar o tamanho da familia deixaria o adicional
+      // ancorado na conta velha ate o proximo evento qr/winstreak.
+      const m = obsMeiaCaixaCss(el.dataset.widget, settings, false);
+      el.style.setProperty('--pos-tf', `translate(calc(${m.x} - 50%), calc(${m.y} - 50%))`);
+    } else if (conf.position === 'custom') {
+      // Posicao livre em % da tela (arrastada no editor): o left fica no
+      // CANTO da caixinha (shrink-to-fit usa o left — centrar por left
+      // encolheria o widget na metade direita da tela) e o translate leva o
+      // centro do widget ao centro da caixinha. A meia-caixa sai SEM escala:
+      // o zoom do proprio widget multiplica o transform (centro final =
+      // left + zoom × meiaCaixa), e vw/px vivos acompanham o resize.
+      const m = obsMeiaCaixaCss(el.dataset.widget, settings, false);
+      el.style.left = (Number(conf.x) || 0) + '%';
+      el.style.top = (Number(conf.y) || 0) + '%';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+      el.style.transform = '';
+      el.style.setProperty('--pos-tf', `translate(calc(${m.x} - 50%), calc(${m.y} - 50%))`);
+    } else {
+      el.classList.add('wpos-' + (conf.position || 'top-left'));
+      el.style.left = '';
+      el.style.top = '';
+      el.style.right = '';
+      el.style.bottom = '';
+      el.style.transform = '';
+      el.style.removeProperty('--pos-tf');
+    }
+    for (const anim of ANIMATIONS) el.classList.remove('wanim-' + anim);
+    const entryAnim = conf.animation || 'fade';
+    if (entryAnim !== 'none') el.classList.add('wanim-' + entryAnim);
+    el.style.setProperty('--w-bg', hexToRgba(conf.bgColor, conf.bgOpacity));
+    el.style.setProperty('--w-text', conf.textColor);
+    el.style.setProperty('--w-accent', conf.accentColor);
+    el.style.setProperty('--w-radius', (Number(conf.borderRadius) || 0) + 'px');
+    if (conf.viewersColor) el.style.setProperty('--w-viewers', conf.viewersColor);
+    if (conf.likesColor) el.style.setProperty('--w-likes', conf.likesColor);
+    el.style.zoom = (Number(conf.scale) || 100) / 100;
+    // Velocidades escolhidas pelo usuario (0 = padrao rapido)
+    if (Number(conf.animationSeconds) > 0) el.style.setProperty('--in-dur', clampSecs(conf.animationSeconds, 1, 15) + 's');
+    else el.style.removeProperty('--in-dur');
+    if (Number(conf.animationOutSeconds) > 0) el.style.setProperty('--out-dur', clampSecs(conf.animationOutSeconds, 1, 15) + 's');
+    else el.style.removeProperty('--out-dur');
+    el.style.setProperty('--loop-dur', clampSecs(conf.loopSeconds || 3, 1, 15) + 's');
+    // Loop pode ter sido ligado/desligado nas configuracoes agora
+    if ((conf.loopAnimation || 'none') === 'none') clearWidgetLoop(el);
+    else if (el.classList.contains('visible') && !el.dataset.leaving && !el.dataset.loopArmed) armWidgetLoop(el, el.dataset.widget);
+
+    const oldMedia = el.querySelector('.w-media');
+    if (oldMedia) oldMedia.remove();
+    if (conf.mediaUrl) {
+      el.prepend(mediaElement(conf.mediaUrl, 'w-media'));
+    }
+  }
+}
+
+function updateFullscreenVisibility() {
+  const show = !!(settings && settings.mediaFullscreen && currentFeaturedId);
+  fullscreenMedia.style.display = show ? 'block' : 'none';
+}
+
+function accentFor(message) {
+  if (isSuperchat(message) && corHexOk(message.superchat?.color)) return corHexOk(message.superchat.color);
+  if (settings.accentMode === 'custom') return settings.accentColor;
+  return platformColor(message.platform);
+}
+
+// ✍️ v0.100 — a cor do NOME de quem comentou, separada da cor de destaque.
+// Devolve null no modo 'padrao' (aí o nome segue o destaque, como sempre foi).
+// 'author' é a cor que o PRÓPRIO SERVIÇO manda: Twitch e Kick mandam a cor
+// que a pessoa escolheu no chat; as outras redes não mandam nada, e nesse
+// caso o nome usa a cor da rede em vez de ficar sem cor nenhuma.
+function nomeColorFor(message, conf) {
+  const c = conf || settings || {};
+  const modo = c.nameColorMode || 'padrao';
+  if (modo === 'custom') return c.nameColor || '#ffffff';
+  if (modo === 'author') return message?.authorColor || platformColor(message?.platform);
+  if (modo === 'platform') return platformColor(message?.platform);
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// 🎙️ v0.140: o que o inscrito FALOU vira o comentário na tela do público.
+// O áudio ou o vídeo continua na tela como sempre (do mesmo jeito que a
+// imagem); a região do comentário é que passa a mostrar a transcrição. Sem
+// transcrição pronta, fica só a marca do tipo de arquivo — assim quem assiste
+// sabe o que está tocando em vez de olhar para um cartão vazio.
+//
+// Aqui só chega o rascunho do que ESTÁ no ar: o servidor manda a transcrição
+// do destaque junto do destaque (init/featured) e avisa ao vivo quando uma
+// fica pronta. A lista inteira nunca vem para cá.
+// ---------------------------------------------------------------------------
+const MARCA_DA_MIDIA = { audio: '[mensagem de áudio]', video: '[mensagem de vídeo]' };
+const TRANSCRICOES_MAX = 50;
+const transcricoesNaTela = new Map(); // url → texto pronto
+function guardarTranscricao(info) {
+  const url = info && info.url;
+  if (!url) return;
+  const texto = info.estado === 'ok' ? String(info.texto || '').trim() : '';
+  if (!texto) { transcricoesNaTela.delete(url); return; }
+  transcricoesNaTela.delete(url); // reentra no fim da fila
+  transcricoesNaTela.set(url, texto);
+  while (transcricoesNaTela.size > TRANSCRICOES_MAX) {
+    transcricoesNaTela.delete(transcricoesNaTela.keys().next().value);
+  }
+}
+// (temComentarioEscrito mora no render.js — o painel usa a MESMA regra)
+// A caixa da região do comentário para um áudio/vídeo. Devolve null quando a
+// mensagem não traz áudio nem vídeo — aí nada muda no cartão.
+function caixaDaTranscricao(message) {
+  const mid = message && message.midia;
+  const tipo = mid && MARCA_DA_MIDIA[mid.tipo] ? mid.tipo : null;
+  if (!tipo || !String(mid.url || '').startsWith('/midia-inscritos/')) return null;
+  const el = document.createElement('div');
+  el.className = 'ov-transcricao';
+  el.dataset.turl = String(mid.url);
+  el.dataset.tipo = tipo;
+  if (temComentarioEscrito(message)) el.dataset.comTexto = '1';
+  pintarTranscricaoNaTela(el);
+  return el;
+}
+function pintarTranscricaoNaTela(el) {
+  const texto = transcricoesNaTela.get(el.dataset.turl) || '';
+  const comTexto = el.dataset.comTexto === '1';
+  el.classList.toggle('ov-transcricao--extra', comTexto && !!texto);
+  el.classList.toggle('ov-transcricao--marca', !texto);
+  if (texto) {
+    // fala de quem assiste: nunca traduzir (o atributo antes do texto, para o
+    // motor de idiomas já achar a zona proibida montada)
+    el.setAttribute('data-no-i18n', '');
+    el.hidden = false;
+    el.textContent = texto;
+    return;
+  }
+  // Com um texto escrito junto, o cartão já tem o que ler: sem transcrição
+  // pronta a caixa fica só esperando, sem marca nenhuma na tela.
+  if (comTexto) { el.hidden = true; el.textContent = ''; return; }
+  el.removeAttribute('data-no-i18n'); // a marca é NOSSA: essa, sim, traduz
+  el.hidden = false;
+  el.textContent = MARCA_DA_MIDIA[el.dataset.tipo] || '';
+}
+// A transcrição ficou pronta com o cartão já no ar: repinta só a caixa dela —
+// remontar o cartão reiniciaria a animação de entrada e o reprodutor do áudio.
+function aplicarTranscricaoQueChegou(url) {
+  if (!url) return 0;
+  let trocados = 0;
+  for (const el of Array.from(document.querySelectorAll('.ov-transcricao'))) {
+    if (el.dataset.turl !== url) continue;
+    pintarTranscricaoNaTela(el);
+    trocados += 1;
+    // no modo peças, o texto que cresceu precisa caber de novo na caixa
+    const peca = el.closest('.peca-texto');
+    if (peca) ajustarPeca(peca, (settings.pecas?.texto || {}).ajuste);
+  }
+  return trocados;
+}
+
+// 🧩 Modo peças soltas: monta o cartão como uma caixa fixa com cada peça
+// (avatar, ícone, nome, distintivos, valor e texto) na posição escolhida no
+// 🖱️ Organizar a tela. O nome e o texto têm o "ajuste": encolher a letra até
+// caber, cortar na borda, ou vazar (o cartão ainda recorta o que sair dele).
+function buildFeaturedLivre(message, card) {
+  card.classList.add('featured--livre');
+  card.style.setProperty('--card-h', String(Number(settings.cardAlturaEm) || 4.6));
+  const addPeca = (chave, montar) => {
+    const p = (settings.pecas || {})[chave];
+    if (!p || p.mostrar === false) return null;
+    const el = document.createElement('div');
+    el.className = 'peca peca-' + chave;
+    el.style.left = (Number(p.x) || 0) + '%';
+    el.style.top = (Number(p.y) || 0) + '%';
+    el.style.fontSize = (Math.max(25, Math.min(1000, Number(p.escala) || 100)) / 100) + 'em';
+    // 🖼️ v0.94: a largura escolhida vale como escolhida — o teto antigo
+    // (`maxWidth: 100% - x`) espremia qualquer peça que passasse da borda
+    if (p.larg) el.style.width = p.larg + '%';
+    if (p.alt) el.style.height = p.alt + '%';
+    // 📐 v0.98: caixa escolhida = o conteúdo preenche a caixa. Sem isto, o
+    // avatar e o ícone (que têm tamanho em "em") ignoravam largura e altura
+    if (p.larg || p.alt) el.classList.add('peca--caixa');
+    if (p.ajuste) el.classList.add('ajuste-' + p.ajuste);
+    // Ajuste fino da peça: rotação, espelhar, opacidade, cor, sombra e borda
+    const fino = [];
+    if (Number(p.rotacao)) fino.push(`rotate(${Number(p.rotacao)}deg)`);
+    if (p.espelhar === true) fino.push('scaleX(-1)');
+    if (fino.length) { el.style.transform = fino.join(' '); el.style.transformOrigin = 'center'; }
+    if (Number(p.opacidade) > 0 && Number(p.opacidade) < 100) el.style.opacity = String(Number(p.opacidade) / 100);
+    if (p.sombra === true) el.style.filter = 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))';
+    if (p.cor) el.style.color = p.cor;
+    if (Number(p.borda)) el.style.setProperty('--pb', String(Number(p.borda)));
+    if (p.bordaCor) el.style.setProperty('--pbc', p.bordaCor);
+    // ✍️ v0.109: formatação de texto da peça (fonte, negrito, contorno...)
+    for (const decl of formatoDaPeca(p)) {
+      const i = decl.indexOf(':');
+      el.style.setProperty(decl.slice(0, i).trim(), decl.slice(i + 1).trim());
+    }
+    el.style.zIndex = String(1 + (Number(p.z) || 0)); // 🥞 quem fica por cima
+    const conteudo = document.createElement('div');
+    conteudo.className = 'peca-conteudo';
+    montar(conteudo);
+    el.appendChild(conteudo);
+    card.appendChild(el);
+    return el;
+  };
+  const avatarEl = addPeca('avatar', (c) => c.appendChild(avatarElement(message, true))); // foto em alta
+  const iconeEl = addPeca('icone', (c) => c.appendChild(platformIcon(message.platform)));
+  // 🎯 v0.104: avatar e ícone com caixa escolhida viram um QUADRADO centrado —
+  // um lado escolhido = esse lado; os dois = o menor deles. Medido em px de
+  // layout (clientWidth/Height ignoram o zoom do cartão), no quadro seguinte.
+  const quadrar = (el, chave) => {
+    if (!el || !el.isConnected) return;
+    const p = (settings.pecas || {})[chave] || {};
+    if (!p.larg && !p.alt) { el.style.removeProperty('--quadrado'); return; }
+    const W = el.clientWidth, H = el.clientHeight;
+    const lado = (p.larg && p.alt) ? Math.min(W, H) : (p.larg ? W : H);
+    if (lado > 0) el.style.setProperty('--quadrado', lado + 'px');
+  };
+  const nomeEl = addPeca('nome', (c) => { c.textContent = message.author; });
+  addPeca('selos', (c) => badgeRow(message, (el) => c.appendChild(el), { semValor: true }));
+  let valorEl = null;
+  if (message.superchat?.amount) {
+    valorEl = addPeca('valor', (c) => {
+      const amount = document.createElement('span');
+      // 💰 v0.109: 'texto' = só o número, sem a pílula colorida
+      const comoTexto = ((settings.pecas || {}).valor || {}).estilo === 'texto';
+      amount.className = 'sc-amount' + (comoTexto ? ' sc-amount--texto' : '');
+      amount.textContent = message.superchat.amount
+        + (message.superchat.converted ? ` ≈ ${message.superchat.converted}` : '');
+      if (!comoTexto) amount.style.background = corHexOk(message.superchat.color) || '#ffb300';
+      // ✍️ v0.112: a formatação e a cor da peça valem também NA PÍLULA — ela
+      // tem negrito 800 e preto fixos no CSS, e «Negrito: Não» ou a cor
+      // própria não chegavam nela só pela herança
+      aplicarFormatoInline(amount, (settings.pecas || {}).valor);
+      c.appendChild(amount);
+    });
+  }
+  const textoEl = addPeca('texto', (c) => {
+    c.appendChild(renderRuns(message.runs));
+    // 🎙️ v0.140: a fala do áudio/vídeo entra na MESMA peça do comentário —
+    // ela é o comentário desta mensagem, e anda junto com ele pela tela
+    const fala = caixaDaTranscricao(message);
+    if (fala) c.appendChild(fala);
+  });
+  // O encaixe precisa medir o cartão JÁ na tela: roda no quadro seguinte
+  requestAnimationFrame(() => {
+    quadrar(avatarEl, 'avatar');
+    quadrar(iconeEl, 'icone');
+    ajustarPeca(nomeEl, (settings.pecas?.nome || {}).ajuste);
+    ajustarPeca(textoEl, (settings.pecas?.texto || {}).ajuste);
+    ajustarValor(valorEl, (settings.pecas?.valor || {}).ajuste);
+    soltarSeAlgumaPecaEscapa(card);
+  });
+  return card;
+}
+
+// 🖼️ v0.94 — alguma peça (o avatar, o nome, a arte...) passou da borda do
+// cartão? Então o cartão para de recortar, senão o que sai dele sumia. É
+// medido de verdade, depois do encaixe: o recorte não muda o tamanho de
+// layout das peças, então o retângulo delas conta a história certa. Cartão
+// com tudo dentro continua recortando (o cantinho arredondado de sempre).
+function soltarSeAlgumaPecaEscapa(card) {
+  if (!card || !card.isConnected || card.classList.contains('featured--arteSolta')) return;
+  const rc = card.getBoundingClientRect();
+  if (rc.width < 2 || rc.height < 2) return;
+  for (const peca of card.children) {
+    const r = peca.getBoundingClientRect();
+    if (r.width < 1 && r.height < 1) continue;
+    if (r.left < rc.left - 1 || r.top < rc.top - 1
+      || r.right > rc.right + 1 || r.bottom > rc.bottom + 1) {
+      card.classList.add('featured--arteSolta');
+      return;
+    }
+  }
+}
+
+// Encolhe o conteúdo da peça até caber na caixa dela (ajuste "encolher").
+// Desce em degraus de 7% e para em 30% — abaixo disso não dá para ler.
+function ajustarPeca(el, modo) {
+  if (!el || !el.isConnected || modo !== 'encolher') return;
+  const conteudo = el.querySelector('.peca-conteudo');
+  if (!conteudo) return;
+  let fator = 1;
+  el.style.setProperty('--fit', '1');
+  for (let i = 0; i < 20; i++) {
+    // 🎯 v0.107: com o conteúdo centrado (caixa flex), o que transborda é o
+    // conteúdo dentro da própria caixinha dele — mede os dois
+    const cabe = el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1
+      && conteudo.scrollWidth <= conteudo.clientWidth + 1 && conteudo.scrollHeight <= conteudo.clientHeight + 1;
+    if (cabe || fator <= 0.3) break;
+    fator = Math.max(0.3, fator * 0.93);
+    el.style.setProperty('--fit', String(fator));
+  }
+}
+
+// 💰 A etiqueta do valor, quando é do tamanho do conteúdo (largura e altura
+// no automático), pode passar da borda direita do cartão numa linha só
+// («$5.00 ≈ R$ 27,00») — no encaixe "encolher" a letra diminui até caber.
+// 📐 v0.98: isso era feito SEMPRE, e brigava com o Tamanho escolhido no
+// editor: a peça crescia e voltava a encolher sozinha. Agora obedece ao
+// encaixe da peça, e quem tem caixa própria segue a régua das outras peças.
+function ajustarValor(el, modo) {
+  if (!el || !el.isConnected) return;
+  el.style.setProperty('--fit', '1');
+  const p = (settings.pecas || {}).valor || {};
+  // 💰 v0.107: valor COM caixa escolhida cabe SEMPRE nela — a caixa é o
+  // espaço da arte para o valor, e «$5.00 ≈ R$ 25,88» tem de caber onde
+  // «R$ 20,00» coube: a letra encolhe até caber, seja qual for o encaixe
+  if (Number(p.larg) || Number(p.alt)) { ajustarPeca(el, 'encolher'); return; }
+  if (modo && modo !== 'encolher') return; // "cortar"/"vazar": o tamanho é o pedido
+  const card = el.closest('.featured');
+  if (!card) return;
+  let fator = 1;
+  el.style.setProperty('--fit', '1');
+  for (let i = 0; i < 20; i++) {
+    const borda = card.getBoundingClientRect().right;
+    if (el.getBoundingClientRect().right <= borda - 2 || fator <= 0.3) break;
+    fator = Math.max(0.3, fator * 0.93);
+    el.style.setProperty('--fit', String(fator));
+  }
+}
+
+function buildFeatured(message) {
+  // ☎️ v0.64: no ar, autor que pareça telefone entra mascarado (o número
+  // real fica só no painel) — vale para o cartão padrão e o modo em peças
+  message = mensagemParaTela(message);
+  const card = document.createElement('div');
+  card.className = 'featured';
+  if (settings.animation && settings.animation !== 'none') card.classList.add('anim-' + settings.animation);
+
+  const accent = accentFor(message);
+  card.style.setProperty('--card-accent', accent);
+  // ✍️ v0.100: a cor escolhida para o nome (vazia = segue o destaque)
+  const corDoNome = nomeColorFor(message);
+  if (corDoNome) card.style.setProperty('--card-nome', corDoNome);
+  if (isSuperchat(message) && corHexOk(message.superchat?.color)) {
+    card.style.setProperty('--card-bg', `color-mix(in srgb, ${corHexOk(message.superchat.color)} 35%, var(--bg-color))`);
+  }
+
+  // 🖼️ v0.56.1: arte escolhida = o cartão É a arte, sempre. Ela entra como a
+  // PEÇA arte (settings.pecas.arte): posição, tamanho, rotação, opacidade...
+  // ajustados no 🖱️ Organizar a tela.
+  // 🖼️ v0.102: a arte é uma peça DE VERDADE — nasce no TAMANHO REAL do
+  // arquivo (largura e altura no automático = 0), como o avatar e os
+  // distintivos nascem do tamanho do próprio conteúdo. Um lado escolhido: o
+  // outro segue a proporção. Os dois escolhidos: aí sim ela estica para a
+  // caixa (foi pedido). Nada aqui depende do tamanho do cartão padrão nem
+  // das outras peças — mover um distintivo não mexe na arte.
+  if (settings.mediaCard) {
+    const arte = (settings.pecas || {}).arte || {};
+    if (arte.mostrar !== false) {
+      const el = mediaElement(settings.mediaCard, 'media-layer peca-arte carregando');
+      const num = (v, padrao) => (Number.isFinite(Number(v)) ? Number(v) : padrao);
+      const larg = Math.max(0, num(arte.larg, 0));
+      const alt = Math.max(0, num(arte.alt, 0));
+      const esc = Math.max(25, Math.min(1000, num(arte.escala, 100))) / 100;
+      el.style.inset = 'auto';
+      el.style.maxWidth = 'none';
+      el.style.left = num(arte.x, 0) + '%';
+      el.style.top = num(arte.y, 0) + '%';
+      // Tamanho (%): a mesma régua das outras peças, ancorada no canto da
+      // peça. Com caixa escolhida ele multiplica a caixa; no automático
+      // (tamanho real) ele amplia o próprio arquivo
+      el.style.width = larg > 0 ? (larg * esc) + '%' : 'auto';
+      el.style.height = alt > 0 ? (alt * esc) + '%' : 'auto';
+      if (!larg && !alt && esc !== 1) el.style.zoom = String(esc);
+      const tf = [];
+      if (num(arte.rotacao, 0)) tf.push(`rotate(${num(arte.rotacao, 0)}deg)`);
+      if (arte.espelhar === true) tf.push('scaleX(-1)');
+      if (tf.length) { el.style.transform = tf.join(' '); el.style.transformOrigin = 'center'; }
+      const op = num(arte.opacidade, 100);
+      if (op > 0 && op < 100) {
+        // combina com a "Opacidade da mídia" geral (a régua do Seus overlays)
+        const geral = Number.isFinite(Number(settings.mediaOpacity)) ? Number(settings.mediaOpacity) : 1;
+        el.style.opacity = String((op / 100) * geral);
+      }
+      if (arte.sombra === true) el.style.filter = 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))';
+      // A arte entra no empilhamento de camadas como qualquer outra peça
+      el.style.zIndex = String(1 + (num(arte.z, 0)));
+      card.appendChild(el);
+      // A arte no tamanho real quase sempre passa do cartão padrão: o recorte
+      // sai assim que a medida do arquivo chega (o vídeo só sabe o tamanho
+      // depois da ficha técnica; a imagem, depois de carregar)
+      const pronta = () => { el.classList.remove('carregando'); soltarSeAlgumaPecaEscapa(card); };
+      if (el.tagName === 'VIDEO') {
+        if (el.readyState >= 1) pronta(); else el.addEventListener('loadedmetadata', pronta, { once: true });
+      } else if (el.complete && el.naturalWidth) pronta();
+      else el.addEventListener('load', pronta, { once: true });
+      el.addEventListener('error', () => el.classList.remove('carregando'), { once: true });
+      // 🖼️ v0.93: caixa desenhada fora do cartão padrão? O cartão para de
+      // recortar já — senão a arte sumia ao ser mexida
+      const x0 = num(arte.x, 0);
+      const y0 = num(arte.y, 0);
+      if (x0 < 0 || y0 < 0 || (larg > 0 && x0 + larg * esc > 100) || (alt > 0 && y0 + alt * esc > 100)) {
+        card.classList.add('featured--arteSolta');
+      }
+    }
+    // Com os dois lados escolhidos a arte preenche exatamente a caixa (estica
+    // se precisar) e o cartão padrão sai de cena: sem fundo, sem barrinha,
+    // sem sombra
+    card.style.setProperty('--media-fit', 'fill');
+    card.classList.add('featured--soArte');
+  }
+
+  // 🧩 Peças soltas ligadas OU arte escolhida: o cartão é montado peça a
+  // peça — a montagem padrão (avatar, nome, selos em linha) não entra
+  if (destaqueEmPecas(settings)) return buildFeaturedLivre(message, card);
+
+  if (settings.showAvatar) card.appendChild(avatarElement(message, true)); // foto em alta
+
+  const body = document.createElement('div');
+  body.className = 'body';
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  if (settings.showPlatformIcon) meta.appendChild(platformIcon(message.platform));
+  const author = document.createElement('span');
+  author.className = 'author';
+  author.textContent = message.author;
+  // ✍️ v0.110: a formatação das peças nome/texto/valor vale também no cartão
+  // padrão — não só no overlay em peças (é o MESMO ajuste da aba 🎨)
+  const pecasFmt = settings.pecas || {};
+  aplicarFormatoInline(author, pecasFmt.nome);
+  meta.appendChild(author);
+  const platformMeta = PLATFORMS[message.platform];
+  if (settings.showPlatformIcon && platformMeta) {
+    const name = document.createElement('span');
+    name.className = 'platform-name';
+    name.textContent = '· ' + platformMeta.name;
+    meta.appendChild(name);
+  }
+  // 🕐 v0.50: a hora exata em que o comentário foi feito, para o público
+  if (message.timestamp) {
+    const hora = document.createElement('span');
+    hora.className = 'msg-time';
+    hora.textContent = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    meta.appendChild(hora);
+  }
+  if (message.superchat?.amount) {
+    const amount = document.createElement('span');
+    amount.className = 'sc-amount';
+    amount.textContent = message.superchat.amount
+      + (message.superchat.converted ? ` ≈ ${message.superchat.converted}` : '');
+    // 💰 v0.110: «Texto simples» também vale no cartão padrão
+    if ((pecasFmt.valor || {}).estilo === 'texto') amount.classList.add('sc-amount--texto');
+    else amount.style.background = corHexOk(message.superchat.color) || '#ffb300';
+    aplicarFormatoInline(amount, pecasFmt.valor);
+    meta.appendChild(amount);
+  } else if (settings.showBadges) {
+    badgeRow(message, (el) => meta.appendChild(el));
+  }
+  body.appendChild(meta);
+
+  const text = document.createElement('div');
+  text.className = 'msg-text';
+  text.appendChild(renderRuns(message.runs));
+  aplicarFormatoInline(text, pecasFmt.texto);
+  body.appendChild(text);
+
+  // 🎙️ v0.140: áudio/vídeo do inscrito? Então a região do comentário mostra o
+  // que ele falou (ou a marca do tipo, enquanto não houver transcrição). Vem
+  // com a mesma formatação do texto — é o comentário desta mensagem.
+  const fala = caixaDaTranscricao(message);
+  if (fala) {
+    aplicarFormatoInline(fala, pecasFmt.texto);
+    body.appendChild(fala);
+  }
+
+  // 📎 v0.70: imagem e vídeo vivem na camada própria #midiaPublico (escala e
+  // tela cheia comandadas pelo painel). 🎧 v0.73.1: o ÁUDIO volta para dentro
+  // do cartão — o comentário vira a bolha com o reprodutor, como no WhatsApp
+  // (nos moldes/peças ele segue na camada flutuante).
+  const mid = message.midia;
+  if (mid && mid.tipo === 'audio' && String(mid.url || '').startsWith('/midia-inscritos/')) {
+    body.appendChild(montarAudioBonito(mid));
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+// 📱 Overlay vertical: /overlay?tela=vertical usa as POSIÇÕES do perfil
+// vertical (layoutV); todo o resto (conteúdo, cores, tamanhos) é o mesmo
+// do horizontal — linkado de fábrica.
+const TELA_V = /[?&]tela=v/i.test(location.search);
+// 🎭 v0.55: /overlay?perfil=NOME veste SEMPRE esse molde (ignora o automático).
+// É a prévia do modo edição do 🖱️ Organizar — e também serve para quem quer
+// uma cena do OBS com um visual fixo, escolhido pela própria URL.
+const PERFIL_URL = new URLSearchParams(location.search).get('perfil');
+// 📺 v0.103: /overlay?previa=1 é a PRÉVIA do editor (o iframe do 🖱️ Organizar).
+// Sem nada no ar, ela mostra um exemplo LOCAL — o comentário que o editor
+// entrega por previaExemplo() e, nos widgets desligados, dados de exemplo —
+// para o mapa ter sempre o overlay DE VERDADE por baixo das caixinhas. Nada
+// disso vai para a live: a tela do OBS abre sem o parâmetro e não sabe de nada.
+const PREVIA = /[?&]previa=1/.test(location.search);
+let exemploPrevia = null;  // o comentário de exemplo que o editor mandou
+let destaqueReal = null;   // o que o servidor diz estar no ar (a live)
+let exemploQrPrevia = null; // a matriz do QR de exemplo (vem no init)
+const EXEMPLO_PREVIA = {
+  aviso: { visible: true, texto: 'Exemplo de aviso na tela 📢 — ajuste a posição e o tamanho por aqui' },
+  likemeter: { enabled: true, viewers: 1234, likes: 567, error: null },
+  raffle: {
+    visible: true, drawnAt: 1, origem: 'exemplo', vez: null, prazoAte: null,
+    winners: [
+      { author: 'Exemplo da Live', platform: 'twitch', avatar: null, weight: 1 },
+      { author: 'Segundo Lugar', platform: 'youtube', avatar: null, weight: 1 },
+      { author: 'Terceiro Lugar', platform: 'kick', avatar: null, weight: 1 },
+    ],
+    respostas: [null, null, null], expirados: [false, false, false],
+  },
+  audience: { visible: true, platforms: { youtube: { count: 1240 }, twitch: { count: 380 }, kick: { count: 95 } } },
+};
+function destaqueParaMostrar() {
+  if (destaqueReal) return destaqueReal;
+  return (PREVIA && exemploPrevia) ? exemploPrevia : null;
+}
+function mostrarDestaqueAtual() {
+  const m = destaqueParaMostrar();
+  destaqueNoAr = m;
+  aplicarComPerfil(false);
+  showFeatured(m);
+}
+window.previaExemplo = (msg) => {
+  exemploPrevia = (PREVIA && msg && typeof msg === 'object') ? { ...msg, previa: true } : null;
+  if (PREVIA && settingsBase && !destaqueReal) mostrarDestaqueAtual();
+};
+function comTela(s) {
+  if (!TELA_V || !s) return s;
+  const lv = s.layoutV || {};
+  const out = JSON.parse(JSON.stringify(s));
+  if (lv.featured) {
+    if (lv.featured.position) out.position = lv.featured.position;
+    if ('posX' in lv.featured) out.posX = lv.featured.posX;
+    if ('posY' in lv.featured) out.posY = lv.featured.posY;
+  }
+  if (lv.media) {
+    if ('x' in lv.media) out.mediaX = lv.media.x;
+    if ('y' in lv.media) out.mediaY = lv.media.y;
+  }
+  for (const [chave, v] of Object.entries(lv.widgets || {})) {
+    if (!out.widgets?.[chave] || !v) continue;
+    if (v.position) out.widgets[chave].position = v.position;
+    if ('x' in v) out.widgets[chave].x = v.x;
+    if ('y' in v) out.widgets[chave].y = v.y;
+  }
+  return out;
+}
+
+// 🎭 Perfis de overlay (v0.54): a tela guarda as settings CRUAS do servidor
+// e, na hora de aplicar, veste o molde do perfil que vale para o destaque
+// atual. Tudo síncrono: o navegador só pinta o resultado final, sem piscar.
+let settingsBase = null;   // as settings como vieram do servidor
+let perfisOverlay = [];    // os moldes salvos
+let destaqueNoAr = null;   // a mensagem em destaque (decide o perfil)
+let perfilChave = null;    // o snap aplicado por último (para não re-aplicar à toa)
+
+// 🎭 v0.105: na PRÉVIA do editor sem molde aberto, o 🎭 automático NÃO veste
+// molde nenhum — a prévia mostra o visual que está sendo editado (o ao vivo),
+// senão o mapa editava uma coisa e a tela mostrava outra ("não consigo mover
+// o distintivo": o comentário de teste vestia um molde pelo automático). O
+// molde que a live vestiria fica disponível para o editor avisar.
+const SEM_AUTO_NA_PREVIA = PREVIA && !PERFIL_URL;
+window.perfilQueVestiria = () => {
+  try {
+    const p = settingsBase ? perfilDoDestaque(perfisOverlay, settingsBase.perfilAuto, destaqueNoAr) : null;
+    return p ? p.nome : null;
+  } catch { return null; }
+};
+function aplicarComPerfil(forcar) {
+  if (!settingsBase) return;
+  const perfil = PERFIL_URL
+    ? (perfisOverlay.find((p) => p && p.nome === PERFIL_URL) || null)
+    : (SEM_AUTO_NA_PREVIA ? null : perfilDoDestaque(perfisOverlay, settingsBase.perfilAuto, destaqueNoAr));
+  const chave = perfil ? perfil.nome + '|' + JSON.stringify(perfil.snap) : '';
+  // Sem mudança de molde, nada a fazer — um destaque novo não pode reiniciar
+  // a arte em vídeo da moldura nem re-desenhar os widgets sem motivo
+  if (!forcar && chave === perfilChave) return;
+  perfilChave = chave;
+  let pronto = comTela(aplicarPerfilNoDestaque(settingsBase, perfil));
+  // 📱 v0.62: na tela VERTICAL um molde tem posição PRÓPRIA (posXV/posYV,
+  // gravadas na aba 📱 do editor) — ela vence a posição compartilhada do
+  // layoutV. Molde sem posição vertical se auto-encaixa: centrado na
+  // largura e encostado embaixo, sempre inteiro na tela.
+  if (TELA_V && perfil && perfil.snap && destaqueEmPecas(pronto)) {
+    const s = perfil.snap;
+    pronto.position = 'custom';
+    const xv = Number(s.posXV), yv = Number(s.posYV);
+    if (Number.isFinite(xv) && Number.isFinite(yv)) {
+      pronto.posX = xv; pronto.posY = yv;
+    } else {
+      const esc = (Number(pronto.scale) || 100) / 100;
+      const sw = window.innerWidth || 1080, sh = window.innerHeight || 1920;
+      const wPct = (Number(pronto.maxWidth) || 640) * esc / sw * 100;
+      const hPct = (Number(pronto.cardAlturaEm) || 4.6) * (Number(pronto.fontSize) || 26) * esc / sh * 100;
+      pronto.posX = Math.max(0, (100 - wPct) / 2);
+      pronto.posY = Math.max(0, 96 - hPct);
+    }
+  }
+  applySettings(pronto);
+}
+
+// 🔍 Avatar em destaque: foto ampliada no centro da tela (ou inicial colorida)
+// 🪟 v0.79: o miolo do avatar ampliado (foto/inicial + nome) — usado pelo
+// principal e pelas instâncias EXTRAS do modo «várias instâncias»
+function montarAvatarZoomEm(box, az) {
+  // ☎️ v0.64: o nome ampliado também respeita a máscara de telefone
+  if (pareceTelefone(az.author)) az = { ...az, author: nomeParaTela(az.author) };
+  box.innerHTML = '';
+  box.style.setProperty('--avsize', `${Math.max(10, Math.min(70, Number(az.size) || 30))}vmin`);
+  // 🔍 v0.146: https OU foto local (Telegram/WhatsApp e amostras) — antes só
+  // o https passava e a foto baixada pelo programa virava inicial colorida
+  if (avatarUrlOk(az.url)) {
+    const img = document.createElement('img');
+    img.alt = '';
+    box.appendChild(img);
+    // v0.53: desce a escada de qualidades (original → grande → a que veio) e,
+    // só se nenhuma carregar, cai na inicial colorida — nunca fica vazio
+    avatarComQualidade(img, az.url, () => {
+      img.remove();
+      const div = document.createElement('div');
+      div.className = 'av-big';
+      const primeira = Array.from(String(az.author || '?').trim())[0] || '?';
+      div.textContent = primeira.toUpperCase();
+      div.style.background = colorForName(az.author);
+      box.prepend(div);
+    });
+  } else {
+    const div = document.createElement('div');
+    div.className = 'av-big';
+    const primeira = Array.from(String(az.author || '?').trim())[0] || '?';
+    div.textContent = primeira.toUpperCase();
+    div.style.background = colorForName(az.author);
+    box.appendChild(div);
+  }
+  const nome = document.createElement('div');
+  nome.className = 'av-name';
+  nome.textContent = az.author || '';
+  // ✍️ v0.100: o nome do avatar em alta segue a mesma cor de nome do destaque
+  const corDoNome = nomeColorFor(az);
+  if (corDoNome) nome.style.color = corDoNome;
+  box.appendChild(nome);
+}
+
+// 🎬 v0.81: saída PADRÃO de todo overlay — some com o mesmo fade da entrada
+// (nada mais desaparece seco da tela)
+function cancelarFade(el) {
+  clearTimeout(el._fadeTimer);
+  delete el.dataset.saindo;
+  el.classList.remove('saindo');
+}
+function sumirComFade(el, aoFim) {
+  if (el.dataset.saindo) return;
+  if (!el.classList.contains('on')) { if (aoFim) aoFim(); return; }
+  el.dataset.saindo = '1';
+  el.classList.add('saindo');
+  el._fadeTimer = setTimeout(() => {
+    delete el.dataset.saindo;
+    el.classList.remove('saindo', 'on');
+    if (aoFim) aoFim();
+  }, 430);
+}
+
+function showAvatarZoom(az) {
+  const box = document.getElementById('avatarZoom');
+  if (!az || !az.visible) { sumirComFade(box, () => { box.innerHTML = ''; }); return; }
+  cancelarFade(box);
+  montarAvatarZoomEm(box, az);
+  // Reinicia a animação de entrada
+  box.classList.remove('on');
+  void box.offsetWidth;
+  box.classList.add('on');
+}
+
+// 🪟 v0.79: instâncias EXTRAS do 🔍 avatar («várias instâncias» ligado) —
+// entram em cascata ao lado do principal, cada uma com o próprio tamanho
+function showAvatarZooms(lista) {
+  const atuais = new Set((lista || []).map((a) => a.id));
+  for (const el of document.querySelectorAll('.avatarZoomExtra')) {
+    // 🎬 v0.81: a instância fechada sai com o fade padrão, não some seca
+    if (atuais.has(el.dataset.azid) || el.dataset.saindo) continue;
+    el.dataset.saindo = '1';
+    el.classList.add('saindo');
+    setTimeout(() => el.remove(), 430);
+  }
+  (lista || []).forEach((az, i) => {
+    let el = document.querySelector(`.avatarZoomExtra[data-azid="${az.id}"]:not(.saindo)`);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'avatarZoomExtra';
+      el.dataset.azid = az.id;
+      document.body.appendChild(el);
+    }
+    el.style.left = `calc(50% + ${(i + 1) * 8}vmin)`;
+    el.style.top = `calc(50% + ${(i + 1) * 6}vmin)`;
+    montarAvatarZoomEm(el, az);
+  });
+}
+
+// 🎭 O molde do perfil só devolve o visual de sempre quando o cartão SAIU da
+// tela de verdade (depois da animação de saída) — senão o público via o
+// cartão trocar de roupa antes de sumir, e o auto-esconder deixava o CSS e a
+// arte do molde aplicados na tela inteira sem cartão nenhum.
+// 📎 v0.70: a mídia que o apresentador mandou para a tela vive numa camada
+// própria (independente do modo do cartão — clássico ou molde/peças): assim
+// o público sempre vê/ouve, e o painel comanda a escala e a tela cheia.
+let midiaPublicoUrl = null;
+// 🎛️ v0.71: o overlay NUNCA toca sozinho — o estado do player vem do painel
+let midiaPlayerState = { estado: 'pausado', posicao: 0, em: Date.now(), volume: 100 };
+function posicaoDoPlayer() {
+  const p = midiaPlayerState || {};
+  const base = Number(p.posicao) || 0;
+  // 🚀 v0.87: o relógio anda no ritmo da velocidade escolhida no painel
+  const ritmo = Number(p.velocidade) > 0 ? Number(p.velocidade) : 1;
+  return Math.max(0, base + (p.estado === 'tocando' ? ((Date.now() - (Number(p.em) || Date.now())) / 1000) * ritmo : 0));
+}
+function aplicarMidiaPlayer() {
+  const box = document.getElementById('midiaPublico');
+  // 🎧 v0.73.1: o áudio pode morar DENTRO do cartão de destaque (modo
+  // clássico) — o motor é o mesmo, onde quer que ele esteja
+  const el = (box && (box.querySelector('video') || box.querySelector('audio')))
+    || featuredSlot.querySelector('.audio-player audio');
+  if (!el) return;
+  const vol = Number(midiaPlayerState.volume);
+  el.volume = Math.max(0, Math.min(1, (Number.isFinite(vol) ? vol : 100) / 100));
+  // 🚀 v0.87: velocidade e 🎭 distorção de voz vindas do painel — o
+  // navegador pode limitar o teto da velocidade; o try segura o excesso
+  const vel = Number(midiaPlayerState.velocidade);
+  try { el.playbackRate = Number.isFinite(vel) && vel > 0 ? vel : 1; } catch {}
+  try { el.preservesPitch = midiaPlayerState.semDistorcao !== false; } catch {}
+  const alvo = posicaoDoPlayer();
+  // corrige a posição só quando saiu de sincronia (senão o vídeo engasga)
+  if (Math.abs((el.currentTime || 0) - alvo) > 0.7) { try { el.currentTime = alvo; } catch {} }
+  if (midiaPlayerState.estado === 'tocando') { const p = el.play?.(); if (p?.catch) p.catch(() => {}); }
+  else el.pause?.();
+}
+// 🎧 v0.73: forma de onda real do áudio (decodificada uma vez por arquivo)
+const ondasCache = new Map(); // url -> Promise<[alturas 0..1]|null>
+// 🔒 v0.127.1: os caches por arquivo têm teto — o mais antigo sai
+const CACHE_MIDIA_MAX = 100;
+function guardarNoCache(cache, chave, valor) {
+  cache.set(chave, valor);
+  while (cache.size > CACHE_MIDIA_MAX) cache.delete(cache.keys().next().value);
+}
+const ONDA_MAX_BYTES = 12 * 1024 * 1024;
+function ondaDoAudio(url, barras, m) {
+  // 🔒 v0.127.1: áudio de mais de 10 min (ou sem duração conhecida e pesado)
+  // fica com as barras neutras — decodificar inteiro travaria a tela
+  const duracao = Number(m && m.duracao) || 0;
+  if (duracao > 600) return Promise.resolve(null);
+  if (!ondasCache.has(url)) guardarNoCache(ondasCache, url, (async () => {
+    try {
+      if (!duracao) {
+        const cabeca = await fetch(url, { method: 'HEAD' }).catch(() => null);
+        if (cabeca && Number(cabeca.headers.get('content-length')) > ONDA_MAX_BYTES) return null;
+      }
+      const resp = await fetch(url);
+      const bruto = await resp.arrayBuffer();
+      if (bruto.byteLength > ONDA_MAX_BYTES) return null;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const som = await ctx.decodeAudioData(bruto);
+      const dados = som.getChannelData(0);
+      ctx.close();
+      const bloco = Math.max(1, Math.floor(dados.length / barras));
+      const picos = [];
+      for (let i = 0; i < barras; i++) {
+        let pico = 0;
+        for (let j = i * bloco, fim = Math.min(dados.length, (i + 1) * bloco); j < fim; j += 32) {
+          const v = Math.abs(dados[j]);
+          if (v > pico) pico = v;
+        }
+        picos.push(pico);
+      }
+      const teto = Math.max(0.01, ...picos);
+      return picos.map((v) => Math.max(0.14, v / teto));
+    } catch { return null; }
+  })());
+  return ondasCache.get(url);
+}
+const fmtTempoAudio = (s) => {
+  const t = Math.max(0, Math.round(Number(s) || 0));
+  return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+};
+
+// 🌀 v0.74: figurinha animada do Telegram (.tgs = Lottie compactado) — o
+// reprodutor embutido (/vendor/lottie.min.js) é carregado só quando a
+// primeira figurinha aparece; o arquivo é descompactado no navegador.
+let lottiePromessa = null;
+function carregarLottie() {
+  if (window.lottie) return Promise.resolve(window.lottie);
+  if (!lottiePromessa) lottiePromessa = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = '/vendor/lottie.min.js';
+    s.onload = () => res(window.lottie);
+    s.onerror = () => rej(new Error('lottie não carregou'));
+    document.head.appendChild(s);
+  });
+  return lottiePromessa;
+}
+const tgsCache = new Map(); // url -> Promise<animationData>
+function lottieDoTgs(url) {
+  if (!tgsCache.has(url)) guardarNoCache(tgsCache, url, (async () => {
+    const resp = await fetch(url);
+    const bruto = await resp.arrayBuffer();
+    const b = new Uint8Array(bruto);
+    let texto;
+    if (b[0] === 0x1f && b[1] === 0x8b) { // gzip: o normal dos .tgs
+      const ds = new DecompressionStream('gzip');
+      texto = await new Response(new Blob([bruto]).stream().pipeThrough(ds)).text();
+    } else {
+      texto = new TextDecoder().decode(bruto);
+    }
+    // 🔒 v0.127.1: figurinha grande demais não desenha; o resto passa pelo filtro (render.js)
+    if (texto.length > LOTTIE_MAX_TEXTO) throw new Error('figurinha grande demais');
+    const dados = limparLottie(JSON.parse(texto));
+    if (!dados) throw new Error('figurinha inválida');
+    return dados;
+  })());
+  return tgsCache.get(url);
+}
+function montarFigurinhaAnimada(m) {
+  const caixa = document.createElement('div');
+  caixa.className = 'figurinha-animada';
+  Promise.all([carregarLottie(), lottieDoTgs(m.url)])
+    .then(([lot, dados]) => {
+      if (!caixa.isConnected) return; // a mídia já saiu da tela
+      caixa._anim = lot.loadAnimation({ container: caixa, renderer: 'svg', loop: true, autoplay: true, animationData: dados });
+    })
+    .catch(() => { caixa.textContent = '🌀'; });
+  return caixa;
+}
+// v0.140.1: o relógio nunca sai da pílula. A onda cede o espaço dela primeiro
+// (é a única parte elástica, pelo CSS); se ainda faltar, a letra do tempo
+// encolhe; e no aperto de verdade o relógio passa a mostrar só o tempo
+// corrido, sem o total — metade da largura. Número cortado na tela, nunca.
+// Um cartão bem estreito com um áudio de horas era o caso que estourava.
+// Devolve false quando ainda não deu para medir (a pílula nem está na tela):
+// aí quem chamou NÃO guarda a medida, e tenta de novo no próximo quadro.
+function encaixarRelogioDoAudio(caixa, tempo, corrido) {
+  if (!caixa.isConnected || !caixa.clientWidth) return false;
+  const sobrando = () => caixa.scrollWidth - caixa.clientWidth > 1;
+  tempo.style.fontSize = '';
+  caixa.classList.remove('ap-so-corrido');
+  if (!sobrando()) return true;
+  for (const tam of ['0.85em', '0.75em', '0.65em', '0.55em']) {
+    tempo.style.fontSize = tam;
+    if (!sobrando()) return true;
+  }
+  caixa.classList.add('ap-so-corrido');
+  tempo.textContent = corrido;
+  return true;
+}
+// O reprodutor do público: só mostra (quem toca/pausa/pula é o painel)
+function montarAudioBonito(m) {
+  const N = 48;
+  const caixa = document.createElement('div');
+  caixa.className = 'audio-player';
+  const botao = document.createElement('span');
+  botao.className = 'ap-play';
+  botao.textContent = '▶';
+  const onda = document.createElement('div');
+  onda.className = 'ap-onda';
+  const barras = [];
+  for (let i = 0; i < N; i++) {
+    const b = document.createElement('i');
+    b.style.height = '30%';
+    onda.appendChild(b);
+    barras.push(b);
+  }
+  const tempo = document.createElement('span');
+  tempo.className = 'ap-tempo';
+  const au = document.createElement('audio');
+  au.src = m.url; au.preload = 'auto';
+  const duracaoDe = () => (Number.isFinite(au.duration) && au.duration > 0) ? au.duration : (Number(m.duracao) || 0);
+  let formaDoRelogio = ''; // só remede quando o relógio muda de tamanho
+  const pintar = () => {
+    const d = duracaoDe();
+    const corrido = fmtTempoAudio(au.currentTime);
+    const cheio = corrido + ' / ' + fmtTempoAudio(d);
+    tempo.textContent = caixa.classList.contains('ap-so-corrido') ? corrido : cheio;
+    const ate = d > 0 ? Math.floor((au.currentTime / d) * N) : 0;
+    barras.forEach((b, i) => b.classList.toggle('tocada', i < ate));
+    const forma = cheio.length + '|' + caixa.clientWidth;
+    if (forma !== formaDoRelogio && encaixarRelogioDoAudio(caixa, tempo, corrido)) formaDoRelogio = forma;
+  };
+  ondaDoAudio(m.url, N, m).then((picos) => {
+    if (picos) barras.forEach((b, i) => { b.style.height = Math.round(14 + picos[i] * 86) + '%'; });
+  });
+  au.addEventListener('play', () => { botao.textContent = '⏸'; });
+  au.addEventListener('pause', () => { botao.textContent = '▶'; });
+  au.addEventListener('timeupdate', pintar);
+  au.addEventListener('loadedmetadata', pintar);
+  pintar();
+  caixa.appendChild(botao);
+  caixa.appendChild(onda);
+  caixa.appendChild(tempo);
+  caixa.appendChild(au);
+  // a pílula só tem largura DEPOIS de entrar na tela: o encaixe do relógio
+  // acontece no quadro seguinte. E se a pílula mudar de largura depois (o
+  // streamer mexeu no tamanho do cartão, a tela virou), ele se refaz — quem
+  // decide é a "forma" do relógio, que inclui a largura, então nada roda à toa.
+  requestAnimationFrame(pintar);
+  if (typeof ResizeObserver === 'function') new ResizeObserver(pintar).observe(caixa);
+  return caixa;
+}
+
+// 🧲 v0.73.2: nos moldes/peças (o cartão desmontado não recebe o reprodutor
+// por dentro), a pílula do áudio anda GRUDADA no cartão — colada logo abaixo
+// dele, ou logo acima quando o cartão está rente ao pé da tela. O timer segue
+// o cartão durante a animação de entrada e em redimensionamentos.
+let midiaAncoraTimer = null;
+function pararAncoraDoAudio(box) {
+  if (midiaAncoraTimer) { clearInterval(midiaAncoraTimer); midiaAncoraTimer = null; }
+  if (box) {
+    box.style.left = '';
+    box.style.top = '';
+    const ap = box.querySelector('.audio-player');
+    if (ap) ap.style.width = '';
+  }
+}
+function ancorarAudioNoCartao() {
+  const box = document.getElementById('midiaPublico');
+  if (!box || !box.classList.contains('on') || box.classList.contains('telaCheia')) return;
+  const ap = box.querySelector('.audio-player');
+  if (!ap) return;
+  const card = featuredSlot.querySelector('.featured');
+  if (!card) { box.style.left = ''; box.style.top = ''; ap.style.width = ''; return; }
+  const r = card.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  ap.style.width = Math.max(240, Math.min(r.width, 720)) + 'px';
+  const alt = box.offsetHeight || 60;
+  box.style.left = (r.left + r.width / 2) + 'px';
+  const abaixo = r.bottom + alt / 2 + 12;
+  const acima = r.top - alt / 2 - 12;
+  box.style.top = ((abaixo + alt / 2 <= window.innerHeight - 6) ? abaixo : Math.max(alt / 2 + 6, acima)) + 'px';
+}
+// 🎬 v0.81: a mídia sai da tela com o fade padrão — mas o SOM para na hora
+// (só o visual sai de fininho; áudio e vídeo não podem vazar depois do fim)
+function esconderMidiaPublico(box) {
+  pararAncoraDoAudio(box);
+  midiaPublicoUrl = null;
+  if (!box.classList.contains('on')) { box.classList.remove('telaCheia'); destruirLotties(box); box.innerHTML = ''; return; }
+  for (const av of box.querySelectorAll('audio, video')) { try { av.pause(); } catch {} }
+  if (box.dataset.saindo) return;
+  box.dataset.saindo = '1';
+  box.classList.add('saindo');
+  box._fadeTimer = setTimeout(() => {
+    delete box.dataset.saindo;
+    box.classList.remove('saindo', 'on', 'telaCheia');
+    destruirLotties(box); // 🔒 v0.127.1: a figurinha para de desenhar junto
+    box.innerHTML = '';
+  }, 430);
+}
+// 🖼️🎞️ v0.86: mídia de uma TECLA da Mesa de Trilhas na tela — só a imagem
+// ou o vídeo aparecem (nada de moldura); janela redimensionável (escala da
+// tecla, com a sombra dos overlays) ou tela cheia. O vídeo toca sozinho —
+// numa aba comum o navegador pode exigir mudo, na fonte do OBS toca com som.
+let trilhaTelaAtual = null;
+// 🚀 v0.87: aplica os ajustes do player vindos do painel — velocidade,
+// 🎭 distorção de voz e a nitidez de exibição (o arquivo local tem UMA
+// qualidade de codificação; aqui muda o acabamento na tela)
+function aplicarAjustesMidiaTrilha(box, t) {
+  const el = box.querySelector('video, img');
+  if (!el) return;
+  el.style.filter = t.qualidade === 'suave' ? 'blur(0.7px)' : '';
+  el.style.imageRendering = t.qualidade === 'pixelada' ? 'pixelated' : '';
+  const vi = box.querySelector('video');
+  if (!vi) return;
+  vi.loop = t.loop === true;
+  const vel = Number(t.velocidade);
+  try { vi.playbackRate = Number.isFinite(vel) && vel > 0 ? vel : 1; } catch {}
+  try { vi.preservesPitch = t.semDistorcao !== false; } catch {}
+}
+function esconderMidiaTrilha(box) {
+  delete box.dataset.chave;
+  if (!box.classList.contains('on')) { box.classList.remove('telaCheia'); box.innerHTML = ''; return; }
+  for (const v of box.querySelectorAll('video')) { try { v.pause(); } catch {} }
+  if (box.dataset.saindo) return;
+  box.dataset.saindo = '1';
+  box.classList.add('saindo');
+  box._fadeTimer = setTimeout(() => {
+    delete box.dataset.saindo;
+    box.classList.remove('saindo', 'on', 'telaCheia');
+    box.innerHTML = '';
+  }, 430);
+}
+function renderMidiaTrilha() {
+  const box = document.getElementById('midiaTrilha');
+  if (!box) return;
+  const t = trilhaTelaAtual;
+  if (!t || !t.url || settings?.labs?.trilhas !== true) { esconderMidiaTrilha(box); return; }
+  cancelarFade(box);
+  box.style.setProperty('--mtr-alt', Math.max(20, Math.min(100, Number(t.escala) || 45)) + 'vh');
+  box.classList.toggle('telaCheia', t.modo === 'cheia');
+  const chave = t.id + '|' + t.url;
+  if (box.dataset.chave !== chave) {
+    box.innerHTML = '';
+    if (t.tipo === 'video') {
+      const vi = document.createElement('video');
+      vi.src = t.url;
+      vi.playsInline = true;
+      vi.loop = t.loop === true;
+      vi.volume = Math.max(0, Math.min(1, (Number.isFinite(Number(t.volume)) ? Number(t.volume) : 70) / 100));
+      // O fim do vídeo avisa o servidor: a tecla apaga e a mídia sai da tela
+      vi.onended = () => { if (!vi.loop) hubOv.send({ type: 'trilhaTelaFim', id: t.id }); };
+      box.appendChild(vi);
+      const p = vi.play();
+      if (p && p.catch) p.catch(() => { vi.muted = true; vi.play().catch(() => {}); });
+    } else {
+      const img = document.createElement('img');
+      img.src = t.url;
+      img.alt = '';
+      box.appendChild(img);
+    }
+    box.dataset.chave = chave;
+  }
+  aplicarAjustesMidiaTrilha(box, t); // 🚀 v0.87
+  box.classList.add('on');
+}
+
+function renderMidiaPublico() {
+  const box = document.getElementById('midiaPublico');
+  if (!box) return;
+  const m = currentFeaturedMessage && currentFeaturedMessage.midia;
+  if (!m || !String(m.url || '').startsWith('/midia-inscritos/')) {
+    esconderMidiaPublico(box);
+    return;
+  }
+  // 🎧 v0.73.1: se o cartão clássico já carrega o reprodutor do áudio, a
+  // camada flutuante sai de cena — fica um motor de som só, o do cartão
+  if (m.tipo === 'audio' && featuredSlot.querySelector('.audio-player')) {
+    esconderMidiaPublico(box);
+    aplicarMidiaPlayer();
+    return;
+  }
+  cancelarFade(box);
+  const conf = (settings && settings.midiaTela) || {};
+  const escala = Math.max(20, Math.min(100, Number(conf.escala) || 45));
+  box.style.setProperty('--midia-alt', escala + 'vh');
+  box.classList.toggle('telaCheia', conf.telaCheia === true);
+  // Só reconstrói quando a MÍDIA muda — mexer na escala não reinicia o vídeo
+  if (midiaPublicoUrl !== m.url) {
+    destruirLotties(box); // 🔒 v0.127.1
+    box.innerHTML = '';
+    if (m.tipo === 'imagem') {
+      const img = document.createElement('img');
+      img.src = m.url; img.alt = m.nome || 'imagem';
+      // 🎟️ v0.119: figurinha (Super Sticker) ocupa a régua de escala inteira,
+      // como a figurinha animada do Telegram — a miniatura do YouTube é
+      // pequena e, sem isto, ficaria um selo minúsculo na tela
+      if (m.figurinha === true) img.classList.add('figurinha-midia');
+      box.appendChild(img);
+    } else if (m.tipo === 'lottie') {
+      // 🌀 v0.74: figurinha animada tocando em loop para o público
+      box.appendChild(montarFigurinhaAnimada(m));
+    } else if (m.tipo === 'video') {
+      // 🎛️ sem autoplay: só toca quando o apresentador der play no painel
+      const vi = document.createElement('video');
+      vi.src = m.url; vi.playsInline = true; vi.preload = 'auto';
+      box.appendChild(vi);
+    } else if (m.tipo === 'audio') {
+      // 🎧 v0.73: reprodutor bonito para o público — espelho visual do
+      // player remoto do painel (o público só assiste; quem comanda é o
+      // apresentador). O <audio> escondido segue sendo o motor do som.
+      box.appendChild(montarAudioBonito(m));
+      const selo = document.createElement('span');
+      selo.className = 'midia-rotulo';
+      selo.textContent = '🎙️ ' + (m.nome || 'áudio');
+      box.appendChild(selo);
+    } else {
+      const selo = document.createElement('span');
+      selo.className = 'midia-rotulo';
+      selo.textContent = '📎 ' + (m.nome || 'arquivo');
+      box.appendChild(selo);
+    }
+    midiaPublicoUrl = m.url;
+  }
+  box.classList.add('on');
+  aplicarMidiaPlayer();
+  // 🧲 v0.73.2: áudio flutuante (moldes/peças) fica colado no cartão
+  pararAncoraDoAudio(null);
+  if (m.tipo === 'audio') {
+    ancorarAudioNoCartao();
+    midiaAncoraTimer = setInterval(ancorarAudioNoCartao, 200);
+  } else {
+    box.style.left = '';
+    box.style.top = '';
+  }
+}
+
+// 🎞️ v0.129: «Mídia direta» — o apresentador mostra ao público uma imagem,
+// um vídeo, um áudio ou um embed (YouTube, TikTok, Instagram…) direto de um
+// link ou de um arquivo do computador. Camada própria, e o overlay NUNCA toca
+// sozinho: espelha o player remoto do servidor (mesma regra da mídia do
+// inscrito). Formato do estado: { item, visible, escala, telaCheia, player }.
+let midiaDiretaState = null;
+// Memória do espelho do YouTube (comandos via postMessage da IFrame API —
+// sem carregar script externo): o que já foi mandado e onde o vídeo está
+// 🔇 mudoForcado: o navegador (fora do OBS) só deixa começar sem som antes do
+// primeiro toque na página — aí tocamos no mudo e devolvemos o som no toque
+const midiaDiretaYt = { pronto: false, tempo: null, assinatura: '', pegou: false, mudoForcado: false, convite: false };
+let ytDesbloqueioTimer = null;
+function posicaoDaMidiaDireta() {
+  const p = (midiaDiretaState && midiaDiretaState.player) || {};
+  const base = Number(p.posicao) || 0;
+  const ritmo = Number(p.velocidade) > 0 ? Number(p.velocidade) : 1;
+  return Math.max(0, base + (p.estado === 'tocando' ? ((Date.now() - (Number(p.em) || Date.now())) / 1000) * ritmo : 0));
+}
+// Sai com o fade padrão — mas o SOM para na hora; o iframe (YouTube, TikTok…)
+// só some depois do fade, e é a remoção dele que cala o som do embed
+function esconderMidiaDireta(box) {
+  delete box.dataset.chave;
+  midiaDiretaYt.pronto = false; midiaDiretaYt.tempo = null; midiaDiretaYt.assinatura = ''; zerarConviteYt();
+  if (!box.classList.contains('on')) { box.classList.remove('telaCheia'); box.innerHTML = ''; return; }
+  for (const av of box.querySelectorAll('audio, video')) { try { av.pause(); } catch {} }
+  comandarYtDireta(box, 'pauseVideo');
+  if (box.dataset.saindo) return;
+  box.dataset.saindo = '1';
+  box.classList.add('saindo');
+  box._fadeTimer = setTimeout(() => {
+    delete box.dataset.saindo;
+    box.classList.remove('saindo', 'on', 'telaCheia');
+    box.innerHTML = ''; // o iframe vai embora aqui: fim do som do embed
+  }, 430);
+}
+function renderMidiaDireta() {
+  const box = document.getElementById('midiaDireta');
+  if (!box) return;
+  const st = midiaDiretaState;
+  const item = st && st.item;
+  // 📺 Na prévia do editor esta camada fica de fora (não suja o mapa)
+  // 🚫 v0.135: o site avisou que não aceita ser aberto dentro de um quadro.
+  // Montar o iframe só mandaria a caixa de «página bloqueada» para a live —
+  // o público não vê nada, e o painel explica o que houve para quem transmite.
+  if (PREVIA || !item || !item.url || st.visible !== true || (item.tipo === 'embed' && item.semQuadro)) { esconderMidiaDireta(box); return; }
+  cancelarFade(box);
+  box.style.setProperty('--md-alt', Math.max(20, Math.min(100, Number(st.escala) || 45)) + 'vh');
+  // 📐 v0.132: a proporção que o site pede (retrato no Instagram e no TikTok)
+  const prop = Number(item.embed && item.embed.proporcao);
+  box.style.setProperty('--md-prop', String(Number.isFinite(prop) && prop > 0.2 && prop < 4 ? prop : 16 / 9));
+  box.classList.toggle('telaCheia', st.telaCheia === true);
+  const chave = item.id + '|' + item.url;
+  // Só reconstrói quando a MÍDIA muda — escala/tela cheia/player não recarregam
+  if (box.dataset.chave !== chave) {
+    box.innerHTML = '';
+    midiaDiretaYt.pronto = false; midiaDiretaYt.tempo = null; midiaDiretaYt.assinatura = ''; zerarConviteYt();
+    if (item.tipo === 'imagem') {
+      const img = document.createElement('img');
+      img.src = item.url; img.alt = item.nome || 'imagem';
+      box.appendChild(img);
+    } else if (item.tipo === 'video') {
+      // 🎛️ sem autoplay nem controles: quem dá play é o painel
+      const vi = document.createElement('video');
+      vi.src = item.url; vi.playsInline = true; vi.preload = 'auto';
+      avisarFimDaMidiaDireta(vi);
+      box.appendChild(vi);
+    } else if (item.tipo === 'audio') {
+      // 🎧 o mesmo reprodutor bonito do público; o <audio> escondido é o motor
+      const ap = montarAudioBonito({ url: item.url, nome: item.nome, duracao: item.duracao });
+      const au = ap.querySelector('audio');
+      if (au) avisarFimDaMidiaDireta(au);
+      box.appendChild(ap);
+      const selo = document.createElement('span');
+      selo.className = 'midia-rotulo';
+      selo.textContent = '🎙️ ' + (item.nome || 'áudio');
+      box.appendChild(selo);
+    } else if (item.tipo === 'embed' && item.embed && item.embed.src) {
+      const ifr = document.createElement('iframe');
+      let src = String(item.embed.src);
+      // A Twitch exige o domínio de quem embute
+      if (item.embed.provedor === 'twitch') src += (src.includes('?') ? '&' : '?') + 'parent=' + encodeURIComponent(location.hostname || 'localhost');
+      ifr.src = src;
+      ifr.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
+      ifr.setAttribute('allowfullscreen', '');
+      ifr.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      ifr.setAttribute('scrolling', 'no'); // sem barra de rolagem no embed
+      // (sem sandbox: YouTube/TikTok precisam de scripts)
+      if (item.embed.provedor === 'youtube') {
+        ifr.dataset.yt = '1';
+        ifr.addEventListener('load', () => {
+          // Assina os eventos do player do YouTube e aplica o estado atual
+          try { ifr.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'md', channel: 'widget' }), '*'); } catch {}
+          midiaDiretaYt.assinatura = '';
+          aplicarMidiaDiretaPlayer();
+        });
+      }
+      box.appendChild(ifr);
+    } else {
+      const selo = document.createElement('span');
+      selo.className = 'midia-rotulo';
+      selo.textContent = '🎞️ ' + (item.nome || 'mídia');
+      box.appendChild(selo);
+    }
+    box.dataset.chave = chave;
+  }
+  // 🏷️ v0.136: o crédito de fonte vive fora da reconstrução — ele muda
+  // enquanto a mídia continua a mesma (o streamer digitando no painel)
+  aplicarCreditoMidiaDireta(box, st.credito);
+  box.classList.add('on');
+}
+
+// O crédito é o último da coluna, logo abaixo da mídia. Texto vazio ou
+// «mostrar» desligado = ninguém vê; e ele nunca reconstrói a mídia.
+function aplicarCreditoMidiaDireta(box, credito) {
+  const texto = credito && credito.mostrar !== false ? String(credito.texto || '').trim() : '';
+  let selo = box.querySelector('.md-credito');
+  if (!texto) { if (selo) selo.remove(); return; }
+  if (!selo) {
+    selo = document.createElement('span');
+    selo.className = 'md-credito';
+    box.appendChild(selo);
+  } else if (selo !== box.lastElementChild) {
+    box.appendChild(selo); // a mídia foi refeita: o crédito volta para o fim
+  }
+  if (selo.textContent !== texto) selo.textContent = texto;
+}
+// 🏁 O fim de um <video>/<audio> sem loop avisa o servidor (que pausa no
+// fim) — UMA vez por reprodução: um seek para o fim dispara 'ended' de novo
+function avisarFimDaMidiaDireta(el) {
+  el.addEventListener('play', () => { el._fimAvisado = false; });
+  el.addEventListener('ended', () => {
+    if (el.loop || el._fimAvisado) return;
+    el._fimAvisado = true;
+    hubOv.send({ type: 'midiaDiretaFim' });
+  });
+}
+// Manda um comando para o iframe do YouTube (IFrame API por postMessage)
+function comandarYtDireta(box, func, args) {
+  const ifr = box && box.querySelector('iframe[data-yt]');
+  if (!ifr || !ifr.contentWindow) return;
+  try { ifr.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args: args || [] }), '*'); } catch {}
+}
+// Espelho do player: volume, velocidade, distorção, loop, posição e
+// play/pause vindos do servidor. `doRelogio` = chamada do resync de 500 ms
+// (só para <video>/<audio>; o YouTube só recebe comando quando o estado muda)
+function aplicarMidiaDiretaPlayer(doRelogio) {
+  const box = document.getElementById('midiaDireta');
+  const st = midiaDiretaState;
+  if (!box || !st || !st.item || st.visible !== true || box.dataset.saindo) return;
+  const pl = st.player || {};
+  const vol = Number(pl.volume);
+  const volume = Math.max(0, Math.min(100, Number.isFinite(vol) ? vol : 100));
+  const vel = Number(pl.velocidade);
+  const velocidade = Number.isFinite(vel) && vel > 0 ? vel : 1;
+  const alvo = posicaoDaMidiaDireta();
+  const el = box.querySelector('video') || box.querySelector('audio');
+  if (el) {
+    el.volume = volume / 100;
+    try { el.playbackRate = velocidade; } catch {}
+    try { el.preservesPitch = pl.semDistorcao !== false; } catch {}
+    el.loop = pl.loop === true;
+    // 🏁 no tick do relógio, o vídeo que acabou (sem loop) fica quieto: o
+    // servidor já foi avisado e vai pausar — buscar posição de novo faria o
+    // 'ended' disparar outra vez, e um play() recomeçaria do zero
+    if (doRelogio && el.ended && !el.loop) return;
+    // corrige a posição só quando saiu de sincronia (senão o vídeo engasga)
+    if (Math.abs((el.currentTime || 0) - alvo) > 0.7) { try { el.currentTime = alvo; } catch {} }
+    if (pl.estado === 'tocando') { const p = el.play?.(); if (p?.catch) p.catch(() => {}); }
+    else el.pause?.();
+    return;
+  }
+  // ▶️ YouTube: mesmo espelho, por mensagens — e só quando algo mudou
+  if (doRelogio) return;
+  const ifr = box.querySelector('iframe[data-yt]');
+  if (!ifr) return;
+  const assinatura = [pl.estado, pl.posicao, pl.em, volume, velocidade, pl.loop === true].join('|');
+  if (assinatura === midiaDiretaYt.assinatura) return;
+  midiaDiretaYt.assinatura = assinatura;
+  if (volume <= 0 || midiaDiretaYt.mudoForcado) comandarYtDireta(box, 'mute');
+  else { comandarYtDireta(box, 'unMute'); comandarYtDireta(box, 'setVolume', [Math.round(volume)]); }
+  comandarYtDireta(box, 'setPlaybackRate', [velocidade]);
+  const conhecida = Number(midiaDiretaYt.tempo);
+  if (!Number.isFinite(conhecida) || Math.abs(conhecida - alvo) > 0.7) comandarYtDireta(box, 'seekTo', [alvo, true]);
+  comandarYtDireta(box, pl.estado === 'tocando' ? 'playVideo' : 'pauseVideo');
+  if (pl.estado === 'tocando') conferirSeYtPegou(box, volume);
+  else clearTimeout(ytDesbloqueioTimer);
+}
+// 🔇 v0.132: dentro do OBS o vídeo começa com som; num navegador comum, o
+// «play» sem um toque na página é recusado em silêncio e o YouTube fica
+// parado no cartaz. Se em 1,4 s ele não engatou, tocamos no MUDO (isso o
+// navegador sempre permite) e acendemos o convite 🔇 — o primeiro toque na
+// tela devolve o som, do ponto em que estiver.
+function conferirSeYtPegou(box, volume) {
+  clearTimeout(ytDesbloqueioTimer);
+  if (midiaDiretaYt.mudoForcado) return;
+  ytDesbloqueioTimer = setTimeout(() => {
+    const pl = (midiaDiretaState && midiaDiretaState.player) || {};
+    if (pl.estado !== 'tocando' || midiaDiretaYt.pegou) return;
+    midiaDiretaYt.mudoForcado = true;
+    comandarYtDireta(box, 'mute');
+    comandarYtDireta(box, 'playVideo');
+    const convite = document.getElementById('somBloqueadoOv');
+    if (volume > 0 && convite && !window.obsstudio) { convite.classList.add('mostrar'); midiaDiretaYt.convite = true; }
+  }, 1400);
+}
+// O primeiro toque (ou tecla) na página: o navegador libera o som e o vídeo
+// que estava tocando mudo volta a ter voz
+function liberarSomDaMidiaDireta() {
+  if (!midiaDiretaYt.mudoForcado) return;
+  midiaDiretaYt.mudoForcado = false;
+  zerarConviteYt();
+  const box = document.getElementById('midiaDireta');
+  const pl = (midiaDiretaState && midiaDiretaState.player) || {};
+  const vol = Number(pl.volume);
+  const volume = Math.max(0, Math.min(100, Number.isFinite(vol) ? vol : 100));
+  if (volume <= 0) return;
+  comandarYtDireta(box, 'unMute');
+  comandarYtDireta(box, 'setVolume', [Math.round(volume)]);
+}
+function zerarConviteYt() {
+  clearTimeout(ytDesbloqueioTimer);
+  midiaDiretaYt.pegou = false;
+  midiaDiretaYt.mudoForcado = false;
+  if (!midiaDiretaYt.convite) return;
+  midiaDiretaYt.convite = false;
+  const convite = document.getElementById('somBloqueadoOv');
+  if (convite) convite.classList.remove('mostrar');
+}
+document.addEventListener('pointerdown', liberarSomDaMidiaDireta, true);
+document.addEventListener('keydown', liberarSomDaMidiaDireta, true);
+// Os eventos do player do YouTube chegam como mensagens da janela do iframe
+window.addEventListener('message', (ev) => {
+  if (ev.origin !== 'https://www.youtube-nocookie.com' && ev.origin !== 'https://www.youtube.com') return;
+  let dados = null;
+  try { dados = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data; } catch { return; }
+  if (!dados || typeof dados !== 'object') return;
+  const box = document.getElementById('midiaDireta');
+  const ifr = box && box.querySelector('iframe[data-yt]');
+  if (!ifr || ev.source !== ifr.contentWindow) return;
+  const pl = (midiaDiretaState && midiaDiretaState.player) || {};
+  if (dados.event === 'onReady') {
+    // O player ficou pronto: reaplica o estado (comandos antes disso se perdem)
+    midiaDiretaYt.pronto = true;
+    midiaDiretaYt.assinatura = '';
+    aplicarMidiaDiretaPlayer();
+  } else if (dados.event === 'infoDelivery' && dados.info && typeof dados.info === 'object') {
+    if (Number.isFinite(Number(dados.info.currentTime))) midiaDiretaYt.tempo = Number(dados.info.currentTime);
+    // 1 = tocando, 3 = carregando: os dois querem dizer que o «play» pegou
+    const est = Number(dados.info.playerState);
+    if (est === 1 || est === 3) midiaDiretaYt.pegou = true;
+  } else if (dados.event === 'onStateChange' && (Number(dados.info) === 1 || Number(dados.info) === 3)) {
+    midiaDiretaYt.pegou = true;
+  } else if (dados.event === 'onStateChange' && Number(dados.info) === 0) {
+    // 🏁 acabou: em loop volta ao começo; senão avisa o servidor (ele pausa no fim)
+    if (pl.loop === true) { comandarYtDireta(box, 'seekTo', [0, true]); comandarYtDireta(box, 'playVideo'); }
+    else hubOv.send({ type: 'midiaDiretaFim' });
+  }
+});
+// Resync barato do relógio do <video>/<audio> enquanto toca
+setInterval(() => {
+  const pl = midiaDiretaState && midiaDiretaState.player;
+  if (pl && pl.estado === 'tocando' && midiaDiretaState.visible === true) aplicarMidiaDiretaPlayer(true);
+}, 500);
+
+function perfilAposSaida() {
+  if (currentFeaturedId) return; // um destaque novo chegou no meio: ele manda
+  destaqueNoAr = null;
+  aplicarComPerfil(false);
+}
+
+function showFeatured(message) {
+  clearTimeout(hideTimer);
+  if (!message) {
+    const card = featuredSlot.firstChild;
+    currentFeaturedId = null;
+    currentFeaturedMessage = null;
+    updateFullscreenVisibility();
+    renderMidiaPublico();
+    if (card) {
+      featuredLoopTimers.forEach(clearTimeout);
+      featuredLoopTimers = [];
+      const animOut = settings?.animationOut || 'fade';
+      if (animOut === 'none') {
+        card.remove();
+        perfilAposSaida();
+      } else {
+        card.classList.remove(...ANIMATIONS.map((a) => 'anim-' + a), ...LOOPS.map((l) => 'loop-' + l));
+        card.classList.add('fout-' + animOut);
+        setTimeout(() => {
+          if (card.parentNode) card.remove();
+          perfilAposSaida();
+        }, customMs(settings?.animationOutSeconds, 570) + 80);
+      }
+    } else {
+      perfilAposSaida();
+    }
+    return;
+  }
+  if (message.id === currentFeaturedId) return;
+  currentFeaturedId = message.id;
+  currentFeaturedMessage = message;
+  featuredSlot.innerHTML = '';
+  const newCard = buildFeatured(message);
+  if (message.previa === true) newCard.classList.add('featured--previa'); // 📺 v0.103: é o exemplo local
+  featuredSlot.appendChild(newCard);
+  startFeaturedLoop(newCard);
+  updateFullscreenVisibility();
+  renderMidiaPublico();
+  const seconds = Number(settings.autoHideSeconds) || 0;
+  if (seconds > 0) {
+    hideTimer = setTimeout(() => {
+      // 📺 v0.103: na prévia, o tempo de tela esgotado devolve o exemplo local
+      if (PREVIA && exemploPrevia) { destaqueReal = null; mostrarDestaqueAtual(); } else showFeatured(null);
+    }, seconds * 1000);
+  }
+}
+
+// ---------- QR Codes (o principal + adicionais) ----------
+const qrWidget = document.getElementById('qrWidget');
+let qrList = [];
+
+// Posicao padrao dos adicionais quando ainda nao foram arrastados no editor
+const extraDefaultPos = (idx) => ({ x: 6 + idx * 5, y: 8 + idx * 5 });
+
+// Cria (ou acha) o elemento de um widget adicional, herdando o estilo da familia
+function extraWidgetElement(kind, id, buildInner) {
+  let el = document.querySelector(`.widget[data-widget="${kind}"][data-instance="${id}"]`);
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'widget';
+    el.dataset.widget = kind;
+    el.dataset.instance = id;
+    el.dataset.extra = '1';
+    buildInner(el);
+    document.body.appendChild(el);
+    if (settings) applyWidgets(); // cores/escala/animacao da familia
+  }
+  return el;
+}
+
+function positionExtra(el, inst, idx) {
+  const baseX = TELA_V && inst.vx != null ? inst.vx : inst.x;
+  const baseY = TELA_V && inst.vy != null ? inst.vy : inst.y;
+  const pos = { x: baseX ?? extraDefaultPos(idx).x, y: baseY ?? extraDefaultPos(idx).y };
+  // Ancora central: left no canto + translate com a meia-caixa (sem escala —
+  // o zoom do elemento multiplica); applyWidgets mantem o --pos-tf em dia
+  const m = obsMeiaCaixaCss(el.dataset.widget, settings, false);
+  el.style.left = pos.x + '%';
+  el.style.top = pos.y + '%';
+  el.style.right = 'auto';
+  el.style.bottom = 'auto';
+  el.style.setProperty('--pos-tf', `translate(calc(${m.x} - 50%), calc(${m.y} - 50%))`);
+}
+
+// 📱 v0.139 — a pintura do QR.
+// A matriz vem pronta do servidor e não muda: tudo aqui é decisão de desenho.
+// O que faz um QR ser lido é o CONTRASTE entre módulo e fundo, então as cores
+// passam pelo corHexOk (v0.127.1) e caem no escuro-sobre-claro se vierem
+// estranhas — nunca fica um código invisível na live por causa de um valor
+// torto que chegou pela rede.
+const QR_FORMAS_MODULO = ['quadrado', 'arredondado', 'ponto', 'losango'];
+const QR_FORMAS_OLHO = ['quadrado', 'arredondado', 'circulo'];
+
+function estiloDoQr(conf) {
+  const c = conf || {};
+  const entre = (v, min, max, padrao) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : padrao;
+  };
+  const daLista = (v, lista) => (lista.includes(v) ? v : lista[0]);
+  const corModulo = corHexOk(c.qrCorModulo) || '#000000';
+  return {
+    modulo: daLista(c.qrModulo, QR_FORMAS_MODULO),
+    olho: daLista(c.qrOlho, QR_FORMAS_OLHO),
+    corModulo,
+    // Os cantos só ganham cor própria quando o streamer desliga o "igual"
+    corOlho: c.qrOlhoIgual === false ? (corHexOk(c.qrCorOlho) || corModulo) : corModulo,
+    corFundo: corHexOk(c.qrCorFundo) || '#ffffff',
+    fundoOpacidade: entre(c.qrFundoOpacidade, 0, 1, 1),
+    margem: Math.round(entre(c.qrMargem, 0, 8, 2)),
+    respiro: entre(c.qrRespiro, 0, 30, 0),
+  };
+}
+
+// Quadrado de cantos redondos sem depender do roundRect: o navegador embutido
+// do OBS nem sempre é novo o bastante para ele
+function caminhoQuadradoRedondo(ctx, x, y, lado, raio) {
+  const r = Math.max(0, Math.min(raio, lado / 2));
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + lado, y, x + lado, y + lado, r);
+  ctx.arcTo(x + lado, y + lado, x, y + lado, r);
+  ctx.arcTo(x, y + lado, x, y, r);
+  ctx.arcTo(x, y, x + lado, y, r);
+  ctx.closePath();
+}
+
+// Um módulo, na forma escolhida, somado ao caminho aberto
+function caminhoDoModulo(ctx, x, y, lado, forma) {
+  const r = lado / 2;
+  if (forma === 'ponto') {
+    ctx.moveTo(x + lado, y + r);
+    ctx.arc(x + r, y + r, r, 0, Math.PI * 2);
+    return;
+  }
+  if (forma === 'losango') {
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + lado, y + r);
+    ctx.lineTo(x + r, y + lado);
+    ctx.lineTo(x, y + r);
+    ctx.closePath();
+    return;
+  }
+  if (forma === 'arredondado') { caminhoQuadradoRedondo(ctx, x, y, lado, lado * 0.3); return; }
+  ctx.rect(x, y, lado, lado);
+}
+
+// Um dos três cantos: o anel de 7×7 (com o miolo vazado pelo evenodd, para o
+// fundo transparente continuar transparente) e o quadradinho 3×3 do meio
+function desenharOlhoDoQr(ctx, x, y, lado, forma, cor) {
+  const m = lado / 7; // um módulo
+  ctx.fillStyle = cor;
+  ctx.beginPath();
+  if (forma === 'circulo') {
+    ctx.moveTo(x + lado, y + lado / 2);
+    ctx.arc(x + lado / 2, y + lado / 2, lado / 2, 0, Math.PI * 2);
+    ctx.moveTo(x + lado - m, y + lado / 2);
+    ctx.arc(x + lado / 2, y + lado / 2, lado / 2 - m, 0, Math.PI * 2);
+  } else if (forma === 'arredondado') {
+    caminhoQuadradoRedondo(ctx, x, y, lado, m * 2);
+    caminhoQuadradoRedondo(ctx, x + m, y + m, lado - m * 2, m * 1.4);
+  } else {
+    ctx.rect(x, y, lado, lado);
+    ctx.rect(x + m, y + m, lado - m * 2, lado - m * 2);
+  }
+  ctx.fill('evenodd');
+  const l3 = m * 3, x3 = x + m * 2, y3 = y + m * 2;
+  ctx.beginPath();
+  if (forma === 'circulo') {
+    ctx.moveTo(x3 + l3, y3 + l3 / 2);
+    ctx.arc(x3 + l3 / 2, y3 + l3 / 2, l3 / 2, 0, Math.PI * 2);
+  } else if (forma === 'arredondado') {
+    caminhoQuadradoRedondo(ctx, x3, y3, l3, m);
+  } else {
+    ctx.rect(x3, y3, l3, l3);
+  }
+  ctx.fill();
+}
+
+function drawQrCanvas(canvas, qr, conf) {
+  const e = estiloDoQr(conf);
+  const count = qr.matrix.length;
+  const scale = Math.max(2, Math.floor(200 / count));
+  const size = count * scale;
+  const margin = scale * e.margem;
+  canvas.width = size + margin * 2;
+  canvas.height = size + margin * 2;
+  const ctx = canvas.getContext('2d');
+  // Começa limpo: sem fundo pintado, o cenário da live aparece atrás
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (e.fundoOpacidade > 0) {
+    ctx.save();
+    ctx.globalAlpha = e.fundoOpacidade;
+    ctx.fillStyle = e.corFundo;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+  // Os três cantos têm forma e cor próprias: saem do laço dos módulos
+  const ehOlho = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
+  const folga = scale * (e.respiro / 100);
+  const lado = Math.max(1, scale - folga);
+  ctx.fillStyle = e.corModulo;
+  ctx.beginPath();
+  for (let r = 0; r < count; r++) {
+    for (let c = 0; c < count; c++) {
+      if (qr.matrix[r][c] !== '1' || ehOlho(r, c)) continue;
+      caminhoDoModulo(ctx, margin + c * scale + folga / 2, margin + r * scale + folga / 2, lado, e.modulo);
+    }
+  }
+  ctx.fill();
+  for (const [r, c] of [[0, 0], [0, count - 7], [count - 7, 0]]) {
+    desenharOlhoDoQr(ctx, margin + c * scale, margin + r * scale, scale * 7, e.olho, e.corOlho);
+  }
+}
+
+function updateQrElement(el, qr) {
+  if (!qr.visible || !Array.isArray(qr.matrix)) {
+    hideWidgetEl(el, 'qr');
+    return;
+  }
+  // confFor já funde a família com o estilo próprio do adicional
+  drawQrCanvas(el.querySelector('canvas'), qr, confFor(el));
+  const nameEl = el.querySelector('.qr-name');
+  nameEl.textContent = qr.name || '';
+  nameEl.style.display = qr.name ? '' : 'none';
+  showWidgetEl(el, 'qr');
+}
+
+function showQrs(qrs) {
+  if (Array.isArray(qrs)) qrList = qrs;
+  if (settings) applyWidgets(); // reaplica estilos (adicionais podem ter mudado)
+  // Remove adicionais que nao existem mais
+  for (const el of document.querySelectorAll('.widget[data-widget="qr"][data-extra]')) {
+    if (!qrList.some((q, i) => i > 0 && q.id === el.dataset.instance)) el.remove();
+  }
+  qrList.forEach((qr, idx) => {
+    let el;
+    if (idx === 0) {
+      el = qrWidget;
+    } else {
+      el = extraWidgetElement('qr', qr.id, (root) => {
+        root.appendChild(document.createElement('canvas'));
+        const name = document.createElement('div');
+        name.className = 'qr-name';
+        root.appendChild(name);
+      });
+      positionExtra(el, qr, idx);
+    }
+    // 📺 v0.103: na prévia do editor o QR desligado aparece como exemplo
+    const mostrar = (PREVIA && !qr.visible && exemploQrPrevia)
+      ? { ...qr, visible: true, name: 'Exemplo', matrix: exemploQrPrevia } : qr;
+    updateQrElement(el, mostrar);
+  });
+}
+
+// ---------- Likometro ----------
+const likemeterEl = document.getElementById('likemeter');
+
+function formatCount(n) {
+  if (n === null || n === undefined) return '—';
+  return Number(n).toLocaleString('pt-BR');
+}
+
+function showLikemeter(data) {
+  if (PREVIA && (!data || !data.enabled)) data = EXEMPLO_PREVIA.likemeter; // 📺 v0.103
+  if (!data || !data.enabled) {
+    hideWidgetEl(likemeterEl, 'likemeter');
+    return;
+  }
+  document.getElementById('lmViewers').textContent = formatCount(data.viewers);
+  document.getElementById('lmLikes').textContent = formatCount(data.likes);
+  const temDados = data.viewers > 0 && data.likes !== null && data.likes !== undefined;
+  const ratio = temDados ? Math.min(100, Math.round((data.likes / data.viewers) * 100)) : 0;
+  document.getElementById('lmFill').style.width = ratio + '%';
+  // 📊 v0.50: a porcentagem de likes em relação a quem está assistindo
+  document.getElementById('lmPct').textContent = temDados ? ratio + '%' : '—';
+  showWidgetEl(likemeterEl, 'likemeter');
+}
+
+// ---------- Winstreaks (o principal + adicionais) ----------
+const winstreakEl = document.getElementById('winstreak');
+let winstreakList = [];
+
+function updateWinstreakElement(el, data) {
+  if (PREVIA && !data.visible) { // 📺 v0.103: exemplo na prévia do editor
+    const wins = Number(data.wins) || 7;
+    data = { ...data, visible: true, wins, record: Math.max(Number(data.record) || 0, wins), label: data.label || 'Vitórias' };
+  }
+  if (!data.visible) {
+    hideWidgetEl(el, 'winstreak');
+    return;
+  }
+  el.querySelector('.ws-label').textContent = data.label + ':';
+  el.querySelector('.ws-wins').textContent = data.wins;
+  el.querySelector('.ws-record').textContent = data.record;
+  // ✨ Marco na tela: o efeito acompanha o RECORDE e fica enquanto ele
+  // estiver no número — sai sozinho quando o recorde passa dali
+  const nivel = nivelDoMarco(data.record);
+  const nums = el.querySelector('.ws-nums');
+  for (const n of [1, 2, 3]) {
+    nums.classList.toggle('marco-' + n, nivel === n);
+    el.classList.toggle('marco-nivel-' + n, nivel === n);
+  }
+  // Faíscas nos marcos grandes e nas dobras
+  let faiscas = el.querySelector('.ws-faiscas');
+  // Mudou de nível (ex.: 50 → 80)? refaz as faíscas com a quantidade certa
+  if (faiscas && Number(faiscas.dataset.nivel) !== nivel) { faiscas.remove(); faiscas = null; }
+  if (nivel >= 2) {
+    if (!faiscas) {
+      faiscas = document.createElement('div');
+      faiscas.className = 'ws-faiscas';
+      // posições e tempos fixos por índice: nada de sorteio (o overlay
+      // precisa ser igual em qualquer tela que abrir)
+      const quantas = nivel === 3 ? 9 : 5;
+      for (let i = 0; i < quantas; i++) {
+        const p = document.createElement('i');
+        // espalha as faíscas por toda a largura do cartão
+        p.style.left = (10 + (i * (80 / Math.max(1, quantas - 1)))).toFixed(1) + '%';
+        p.style.animationDelay = (i * 0.22).toFixed(2) + 's';
+        p.style.animationDuration = (1.5 + (i % 3) * 0.3).toFixed(2) + 's';
+        faiscas.appendChild(p);
+      }
+      faiscas.dataset.nivel = String(nivel);
+      el.appendChild(faiscas);
+    }
+  } else if (faiscas) {
+    faiscas.remove();
+  }
+  showWidgetEl(el, 'winstreak');
+}
+
+function showWinstreaks(winstreaks) {
+  if (Array.isArray(winstreaks)) winstreakList = winstreaks;
+  if (settings) applyWidgets(); // reaplica estilos (adicionais podem ter mudado)
+  for (const el of document.querySelectorAll('.widget[data-widget="winstreak"][data-extra]')) {
+    if (!winstreakList.some((w, i) => i > 0 && w.id === el.dataset.instance)) el.remove();
+  }
+  winstreakList.forEach((data, idx) => {
+    let el;
+    if (idx === 0) {
+      el = winstreakEl;
+    } else {
+      el = extraWidgetElement('winstreak', data.id, (root) => {
+        const trophy = document.createElement('span');
+        trophy.textContent = '🏆';
+        const label = document.createElement('span');
+        label.className = 'ws-label';
+        const nums = document.createElement('span');
+        nums.className = 'ws-nums';
+        const wins = document.createElement('span');
+        wins.className = 'ws-wins';
+        const record = document.createElement('span');
+        record.className = 'ws-record';
+        nums.appendChild(wins);
+        nums.appendChild(document.createTextNode('/'));
+        nums.appendChild(record);
+        root.appendChild(trophy);
+        root.appendChild(label);
+        root.appendChild(nums);
+      });
+      positionExtra(el, data, idx);
+    }
+    updateWinstreakElement(el, data);
+  });
+}
+
+// ---------- 📢 Avisos (o principal + adicionais) ----------
+// 📢 v0.128: o aviso virou multi-instância igual ao QR/winstreak — o [0] da
+// lista é o principal (o #avisoWidget fixo); os demais ganham um elemento
+// próprio com posição e estilo por instância.
+const avisoEl = document.getElementById('avisoWidget');
+let avisoList = [];
+let avisoAtual = null; // o principal — quem já lia daqui continua achando
+
+// A instância que um elemento de aviso representa (o fixo = principal)
+function avisoInstanciaDoEl(el) {
+  if (el.dataset.extra === '1') return avisoList.find((a) => a.id === el.dataset.instance) || null;
+  return avisoAtual;
+}
+
+function renderAvisoEl(el, inst) {
+  let dados = inst;
+  // 📺 v0.103: na prévia do editor o aviso desligado aparece como exemplo (só o principal)
+  if (PREVIA && el === avisoEl && (!dados || !dados.visible || !String(dados.texto || '').trim())) dados = EXEMPLO_PREVIA.aviso;
+  if (!dados || !dados.visible || !String(dados.texto || '').trim()) {
+    el.classList.remove('av-contagem');
+    hideWidgetEl(el, 'aviso');
+    return;
+  }
+  // confFor: a família e, nos adicionais, o estilo próprio da instância por cima
+  const conf = confFor(el) || settings?.widgets?.aviso || {};
+  el.innerHTML = '';
+  const texto = document.createElement('div');
+  texto.className = 'av-texto';
+  texto.textContent = String(dados.texto).slice(0, 1000); // sempre como texto puro
+  // ✍️ v0.110: a peça de texto do aviso tem a mesma formatação das outras
+  // (fonte, contorno, espaçamento, cor própria...) por cima dos ajustes de sempre
+  aplicarFormatoInline(texto, (conf.pecas || {}).texto);
+  el.appendChild(texto);
+  // Formatação escolhida nas configurações
+  el.style.setProperty('--av-size', (Number(conf.fontSize) || 30) + 'px');
+  el.style.setProperty('--av-lh', String(Number(conf.lineHeight) || 1.3));
+  el.style.setProperty('--av-align', ['left', 'center', 'right', 'justify'].includes(conf.align) ? conf.align : 'center');
+  el.style.setProperty('--av-max', (Number(conf.maxWidth) || 900) + 'px');
+  el.style.setProperty('--av-font', conf.fontFamily ? `'${String(conf.fontFamily).replace(/['"\\]/g, '')}', 'Segoe UI', sans-serif` : 'inherit');
+  el.classList.toggle('av-negrito', conf.bold !== false);
+  el.classList.toggle('av-italico', !!conf.italic);
+  el.classList.toggle('av-sublinhado', !!conf.underline);
+  el.classList.toggle('av-maiusculas', !!conf.uppercase);
+  el.classList.toggle('av-sombra', conf.textShadow !== false);
+  showWidgetEl(el, 'aviso');
+}
+
+// Recebe a lista de avisos (null = só re-renderiza, ex.: settings novas).
+// Aceita o formato antigo também: [aviso] com um único principal.
+function showAvisos(lista) {
+  if (Array.isArray(lista)) avisoList = lista.filter(Boolean);
+  avisoAtual = avisoList[0] || null;
+  if (settings) applyWidgets(); // reaplica estilos (adicionais podem ter mudado)
+  for (const el of document.querySelectorAll('.widget[data-widget="aviso"][data-extra]')) {
+    if (!avisoList.some((a, i) => i > 0 && a.id === el.dataset.instance)) el.remove();
+  }
+  if (!avisoList.length) { renderAvisoEl(avisoEl, null); return; }
+  avisoList.forEach((inst, idx) => {
+    let el;
+    if (idx === 0) {
+      el = avisoEl;
+    } else {
+      // O miolo (.av-texto) é montado a cada render — o elemento nasce vazio
+      el = extraWidgetElement('aviso', inst.id, () => {});
+      positionExtra(el, inst, idx);
+    }
+    renderAvisoEl(el, inst);
+  });
+}
+
+// ---------- 🕐 Relógio / cronômetro / timer ----------
+const relogioEl = document.getElementById('relogioWidget');
+document.getElementById('somBloqueadoOv').onclick = () => {
+  OBS_SOM.liberar();
+  document.getElementById('somBloqueadoOv').classList.remove('mostrar');
+};
+let relogioAtual = null;
+let relogioDeltaOv = 0;
+let relogioBaseOv = { cron: 0, restante: 0, em: Date.now() };
+
+function fusoOverlay() {
+  const f = settings?.relogio?.fuso;
+  return (f && f !== 'auto') ? f : undefined;
+}
+function fmtTempoOv(ms, comDecimos) {
+  const total = Math.max(0, ms);
+  const dias = Math.floor(total / 86400000); // v0.80: o timer aceita dias
+  const h = Math.floor(total / 3600000) % 24;
+  const m = Math.floor(total / 60000) % 60;
+  const sec = Math.floor(total / 1000) % 60;
+  // O cronômetro mostra o décimo de segundo, igual ao do painel
+  const dec = comDecimos && dias === 0 ? '.' + Math.floor((total % 1000) / 100) : '';
+  if (dias > 0) return `${dias}d ${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}${dec}`
+    : `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}${dec}`;
+}
+
+// v0.80: os três instrumentos são independentes — qualquer combinação pode
+// estar na tela ao mesmo tempo, empilhada dentro do mesmo widget
+function algumRelogioVisivel() {
+  return !!(relogioAtual && (relogioAtual.relogio?.visible
+    || relogioAtual.cronometro?.visible || relogioAtual.timer?.visible));
+}
+function showRelogio(relogio) {
+  if (relogio) {
+    relogioAtual = relogio;
+    relogioDeltaOv = relogio.agora - Date.now();
+    relogioBaseOv = {
+      cron: relogio.cronometro?.corrido || 0,
+      restante: relogio.timer?.restante || 0,
+      em: Date.now(),
+    };
+  }
+  if (!algumRelogioVisivel()) {
+    if (!PREVIA) {
+      hideWidgetEl(relogioEl, 'relogio');
+      return;
+    }
+    // 📺 v0.103: na prévia do editor o relógio desligado mostra a hora, de exemplo
+    relogioAtual = { ...(relogioAtual || { cronometro: {}, timer: {} }), relogio: { visible: true } };
+  }
+  pintarRelogioOverlay();
+  showWidgetEl(relogioEl, 'relogio');
+}
+
+function tempoCronOv() {
+  const passado = relogioAtual?.cronometro?.rodando ? Date.now() - relogioBaseOv.em : 0;
+  return relogioBaseOv.cron + passado;
+}
+function tempoTimerOv() {
+  const passado = relogioAtual?.timer?.rodando ? Date.now() - relogioBaseOv.em : 0;
+  return Math.max(0, relogioBaseOv.restante - passado);
+}
+
+function pintarRelogioOverlay() {
+  if (!algumRelogioVisivel()) return;
+  const conf = settings?.widgets?.relogio || {};
+  relogioEl.innerHTML = '';
+
+  const bloco = (principal, rotulo, classeSub, classeHora) => {
+    const hora = document.createElement('div');
+    hora.className = 'rl-hora' + (classeHora ? ' ' + classeHora : '');
+    hora.textContent = principal;
+    relogioEl.appendChild(hora);
+    if (rotulo) {
+      const sub = document.createElement('div');
+      sub.className = classeSub;
+      sub.textContent = rotulo;
+      relogioEl.appendChild(sub);
+    }
+  };
+  let acabou = false;
+  if (relogioAtual.relogio?.visible) {
+    const d = new Date(Date.now() + relogioDeltaOv);
+    const opcoes = { hour: '2-digit', minute: '2-digit', hour12: conf.formato24h === false, timeZone: fusoOverlay() };
+    if (conf.mostrarSegundos !== false) opcoes.second = '2-digit';
+    const data = conf.mostrarData !== false
+      ? d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', timeZone: fusoOverlay() })
+      : '';
+    bloco(d.toLocaleTimeString('pt-BR', opcoes), data, 'rl-data');
+  }
+  if (relogioAtual.cronometro?.visible) {
+    bloco(fmtTempoOv(tempoCronOv(), conf.mostrarDecimos !== false),
+      conf.mostrarRotulo !== false ? 'Cronômetro' : '', 'rl-rotulo');
+  }
+  if (relogioAtual.timer?.visible) {
+    const ms = tempoTimerOv();
+    acabou = ms === 0;
+    bloco(fmtTempoOv(ms, false), conf.mostrarRotulo !== false ? 'Timer' : '', 'rl-rotulo', 'rl-timer');
+  }
+  relogioEl.style.setProperty('--rl-size', (Number(conf.fontSize) || 44) + 'px');
+  relogioEl.style.setProperty('--rl-font', conf.fontFamily ? `'${String(conf.fontFamily).replace(/['"\\]/g, '')}', 'Segoe UI', sans-serif` : 'inherit');
+  relogioEl.classList.toggle('rl-negrito', conf.bold !== false);
+  const confRel = settings?.relogio || {};
+  relogioEl.style.setProperty('--rl-cor-final', confRel.piscarFinalCor || '#ffd23f');
+  relogioEl.style.setProperty('--rl-cor-fim', confRel.piscarNoFimCor || '#ff5c5c');
+  relogioEl.classList.toggle('rl-fim', relogioAtual.timer?.visible && noFimOv(acabou && !relogioAtual.timer.rodando));
+  relogioEl.classList.toggle('rl-final10', naRetaOv());
+}
+
+// ⏳ Reta final: os últimos segundos antes de o timer acabar.
+// Quantos segundos e se vale para o número ou para o Aviso saem das
+// configurações — cada um tem o seu tempo.
+function faltamOv() {
+  if (!relogioAtual?.timer?.rodando) return -1;
+  const passado = Date.now() - relogioBaseOv.em;
+  return Math.max(0, relogioBaseOv.restante - passado);
+}
+function segundosDaReta(valor, padrao) {
+  const n = Number(valor);
+  return (Number.isFinite(n) ? Math.max(1, Math.min(60, n)) : padrao) * 1000;
+}
+function naRetaOv() {
+  const conf = settings?.relogio || {};
+  if (conf.piscarFinal === false) return false;
+  const faltam = faltamOv();
+  return faltam > 0 && faltam <= segundosDaReta(conf.piscarFinalSegundos, 10);
+}
+// 🔴 A piscada do fim pode parar sozinha depois de alguns segundos
+function noFimOv(zerado) {
+  const conf = settings?.relogio || {};
+  if (!zerado || conf.piscarNoFim === false) return false;
+  const limite = Number(conf.piscarNoFimSegundos);
+  if (!Number.isFinite(limite) || limite <= 0) return true; // 0 = pisca sem parar
+  const desde = Number(relogioAtual?.timer?.tocouFim) || 0;
+  if (!desde) return true;
+  return (Date.now() + relogioDeltaOv) - desde < Math.min(300, limite) * 1000;
+}
+// 🎵 Mesa de trilhas (Labs): o overlay é quem põe a música NA LIVE — ele é
+// uma fonte de navegador do OBS, então o áudio dele entra na transmissão,
+// no mesmo mixer das outras fontes. Só toca o que tem destino live/ambos.
+let trilhasOv = [];
+function tocarTrilhaNaLive(id, desde) {
+  if (settings?.labs?.trilhas !== true) return;
+  const t = trilhasOv.find((x) => x && x.id === id);
+  if (!t || !t.url) return;
+  const solo = t.modo === 'solo' || t.modo === 'loop' || !t.modo;
+  if (t.destino === 'painel') {
+    // Só para os ouvidos do streamer — mas se for a trilha de BASE, a live
+    // cala a antiga (a base é uma só, em todas as telas)
+    if (solo && TRILHA_PLAYER.tocando()) TRILHA_PLAYER.parar();
+    return;
+  }
+  TRILHA_PLAYER.tocar(t, desde);
+}
+// Num navegador comum (fora do OBS), trilha presa por falta de toque também
+// acende o convite 🔇 — dentro do OBS toca direto
+TRILHA_PLAYER.quandoBloquear((preso) => {
+  const convite = document.getElementById('somBloqueadoOv');
+  if (convite && preso && !window.obsstudio) convite.classList.add('mostrar');
+  if (convite && !preso && !OBS_SOM.estaBloqueado()) convite.classList.remove('mostrar');
+});
+
+// 🔊 Alerta do fim do timer NA LIVE: o overlay é uma fonte do OBS, então
+// o som entra no áudio da transmissão (quem assiste também ouve).
+function tocarSomNaLive() {
+  const conf = settings?.relogio || {};
+  dispararFimOv('relogio'); // 🔊 v0.77: som de finalização do widget
+  if (!conf.somUrl) return;
+  if (conf.somOnde === 'painel') return; // o streamer escolheu só o painel
+  OBS_SOM.tocar(conf.somUrl, conf.somVolume, 20000);
+}
+
+// Dentro do OBS o som toca sozinho. Num navegador comum (celular, tablet,
+// outro PC), é preciso um toque na tela antes — então deixamos tudo pronto
+// e, se ainda assim estiver bloqueado, convidamos a pessoa a tocar uma vez.
+function prepararSomNaLive() {
+  // Vale para os dois sons que podem tocar na live: o alerta do timer e o
+  // dado do sorteio. Destravar um já destrava o outro.
+  const rel = settings?.relogio || {};
+  const sor = settings?.raffle || {};
+  const chave = (rel.somOnde !== 'painel' && rel.somUrl)
+    || (sor.somOnde !== 'painel' && sor.somUrl)
+    || '';
+  if (!chave) return;
+  OBS_SOM.preparar(chave, (estado) => {
+    const convite = document.getElementById('somBloqueadoOv');
+    if (!convite) return;
+    const precisa = !!estado.bloqueado && !estado.liberado && !window.obsstudio;
+    convite.classList.toggle('mostrar', precisa);
+  });
+}
+
+// ⏳ Contagem final: nos 10 segundos que faltam, o Aviso pisca suavemente
+// para o público perceber que o tempo está acabando. Vale mesmo com o
+// relógio fora da tela — quem manda é o timer, não o widget.
+// ⏰ v0.80: nos mesmos moldes, o Aviso também pisca quando está chegando a
+// data/hora do «sumir pelo relógio» ou o tempo do «sumir pelo timer».
+let fmtPartesOv = { fuso: '§', f: null }; // formatador com fuso, reaproveitado
+function partesNoFusoOv(d) {
+  const fuso = fusoOverlay() || '';
+  if (fmtPartesOv.fuso !== fuso) {
+    try {
+      fmtPartesOv = {
+        fuso,
+        f: new Intl.DateTimeFormat('en-GB', {
+          timeZone: fuso || undefined, day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+        }),
+      };
+    } catch { fmtPartesOv = { fuso, f: null }; }
+  }
+  if (!fmtPartesOv.f) {
+    return { dia: d.getDate(), mes: d.getMonth() + 1, ano: d.getFullYear(), hora: d.getHours(), min: d.getMinutes(), seg: d.getSeconds() };
+  }
+  const g = {};
+  for (const p of fmtPartesOv.f.formatToParts(d)) g[p.type] = p.value;
+  return { dia: +g.day, mes: +g.month, ano: +g.year, hora: +g.hour, min: +g.minute, seg: +g.second };
+}
+// Quantos ms faltam para o relógio bater com os campos preenchidos do
+// «sumir sozinho» (procura só na próxima janela de ~70s; -1 = longe/desligado)
+// 📢 v0.128: cada instância tem o seu «sumir» — o cache da busca é por instância
+const avisoRelCache = new Map(); // id → { em, valor }
+function avisoRelogioFaltamMs(inst) {
+  const alvo = inst?.sumir?.relogio;
+  if (!alvo || !Object.values(alvo).some((v) => v > 0)) return -1;
+  const chave = inst.id || 'principal';
+  const cache = avisoRelCache.get(chave);
+  if (cache && Date.now() - cache.em < 900) {
+    // reusa a busca por até 1s, descontando o que já passou
+    return cache.valor < 0 ? -1 : Math.max(0, cache.valor - (Date.now() - cache.em));
+  }
+  let valor = -1;
+  for (let k = 0; k <= 70; k++) {
+    const g = partesNoFusoOv(new Date(Date.now() + relogioDeltaOv + k * 1000));
+    const bate = Object.entries(alvo).every(([campo, v]) => !(v > 0) || g[campo] === v);
+    if (bate) { valor = k * 1000; break; }
+  }
+  avisoRelCache.set(chave, { em: Date.now(), valor });
+  return valor;
+}
+function msDoSumirTimerOv(t) {
+  if (!t) return 0;
+  return ((Number(t.dias) || 0) * 86400 + (Number(t.horas) || 0) * 3600
+    + (Number(t.min) || 0) * 60 + (Number(t.seg) || 0)) * 1000;
+}
+function atualizarContagemDoAviso() {
+  if (!avisoEl) return;
+  const conf = settings?.relogio || {};
+  const cor = String(conf.piscarAvisoCor || '').trim();
+  const pisca = conf.piscarAvisoNoFinal !== false;
+  const reta = pisca ? segundosDaReta(conf.piscarAvisoSegundos, 10) : 0;
+  const faltam = pisca ? faltamOv() : -1;
+  // 📢 v0.128: cada aviso na tela (principal e adicionais) pisca pelo SEU «sumir»
+  for (const el of document.querySelectorAll('.widget[data-widget="aviso"]')) {
+    const inst = avisoInstanciaDoEl(el);
+    let piscando = false;
+    if (pisca) {
+      piscando = faltam > 0 && faltam <= reta;
+      // «sumir pelo timer»: pisca quando o restante se aproxima do tempo marcado
+      const alvoTimer = msDoSumirTimerOv(inst?.sumir?.timer);
+      if (!piscando && alvoTimer > 0 && faltam >= 0) {
+        const ate = faltam - alvoTimer;
+        piscando = ate > 0 && ate <= reta;
+      }
+      // «sumir pelo relógio»: pisca quando a data/hora marcada está chegando
+      if (!piscando) {
+        const ate = avisoRelogioFaltamMs(inst);
+        piscando = ate > 0 && ate <= reta;
+      }
+    }
+    el.style.setProperty('--av-cor-pisca', cor || '#ffd23f');
+    el.classList.toggle('av-cor', !!cor);
+    el.classList.toggle('av-contagem', piscando && el.classList.contains('visible'));
+  }
+}
+setInterval(atualizarContagemDoAviso, 200);
+
+// O relógio da tela anda sozinho entre as mensagens do servidor.
+// 100ms para o cronômetro mostrar o décimo de segundo sem engasgo.
+setInterval(() => { if (algumRelogioVisivel()) pintarRelogioOverlay(); }, 100);
+
+// ---------- Audiencia ao vivo ----------
+const audienceEl = document.getElementById('audienceWidget');
+let lastAudience = null;
+
+// Monta o par logo+numero com o numero do lado escolhido pelo usuario:
+// direita, esquerda, em cima ou embaixo da logo.
+function arrangeAudPair(container, logoEl, countEl) {
+  const side = settings?.widgets?.audience?.numbersSide || 'right';
+  container.style.flexDirection = (side === 'top' || side === 'bottom') ? 'column' : 'row';
+  container.style.alignItems = 'center';
+  const countFirst = side === 'left' || side === 'top';
+  container.appendChild(countFirst ? countEl : logoEl);
+  container.appendChild(countFirst ? logoEl : countEl);
+}
+
+function showAudience(audience) {
+  if (audience) lastAudience = audience;
+  let data = lastAudience;
+  if (PREVIA && (!data || !data.visible)) data = EXEMPLO_PREVIA.audience; // 📺 v0.103
+  if (!data || !data.visible) {
+    hideWidgetEl(audienceEl, 'audience');
+    return;
+  }
+  const entries = Object.entries(data.platforms || {}).filter(([, info]) => Number.isFinite(info?.count));
+  // Dinamico: a rede com maior audiencia aparece primeiro
+  entries.sort((a, b) => b[1].count - a[1].count);
+  audienceEl.innerHTML = '';
+  const mode = settings?.widgets?.audience?.mode || 'perPlatform';
+
+  if (!entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'aud-total';
+    empty.textContent = settings?.widgets?.audience?.showIcon !== false ? '👥 —' : '—';
+    audienceEl.appendChild(empty);
+  } else if (mode === 'total') {
+    // Soma geral: o numero fica do lado escolhido DAS LOGOS (direita,
+    // esquerda, em cima ou embaixo); o icone 👥 e opcional e vive junto
+    // das logos.
+    const total = entries.reduce((sum, [, info]) => sum + info.count, 0);
+    const totalRow = document.createElement('div');
+    totalRow.className = 'aud-total';
+    const icons = document.createElement('div');
+    icons.className = 'aud-icons';
+    if (settings?.widgets?.audience?.showIcon !== false) {
+      const eye = document.createElement('span');
+      eye.textContent = '👥';
+      icons.appendChild(eye);
+    }
+    for (const [platform] of entries) icons.appendChild(platformIcon(platform));
+    const count = document.createElement('span');
+    count.className = 'aud-count';
+    count.textContent = total.toLocaleString('pt-BR');
+    arrangeAudPair(totalRow, icons, count);
+    audienceEl.appendChild(totalRow);
+  } else {
+    // Cada plataforma com sua propria audiencia: so a logo e o numero
+    const rows = document.createElement('div');
+    rows.className = 'aud-rows';
+    for (const [platform, info] of entries) {
+      const row = document.createElement('div');
+      row.className = 'aud-row';
+      const count = document.createElement('span');
+      count.className = 'aud-count';
+      count.textContent = info.count.toLocaleString('pt-BR');
+      arrangeAudPair(row, platformIcon(platform), count);
+      rows.appendChild(row);
+    }
+    audienceEl.appendChild(rows);
+  }
+  showWidgetEl(audienceEl, 'audience');
+}
+
+// ---------- Sorteio ----------
+const raffleEl = document.getElementById('raffleWidget');
+const raffleBox = document.getElementById('raffleBox');
+const MEDALS = [
+  { emoji: '🥇', color: '#ffd700', label: '1º' },
+  { emoji: '🥈', color: '#c0c0c0', label: '2º' },
+  { emoji: '🥉', color: '#cd7f32', label: '3º' },
+];
+let raffleShownAt = 0;
+
+function winnerCard(winner, place, delayMs, raffle) {
+  // ☎️ v0.64: telefone não sobe ao pódio — o vencedor aparece mascarado
+  winner = mensagemParaTela(winner);
+  const medal = MEDALS[place];
+  const card = document.createElement('div');
+  card.className = 'winner' + (place === 0 ? ' first' : '');
+  card.style.animationDelay = delayMs + 'ms';
+  card.style.setProperty('--m-color', medal.color);
+
+  const medalEl = document.createElement('div');
+  medalEl.className = 'medal';
+  medalEl.textContent = medal.emoji;
+  card.appendChild(medalEl);
+
+  const avatar = avatarElement(winner);
+  avatar.classList.add('w-avatar');
+  card.appendChild(avatar);
+
+  const name = document.createElement('div');
+  name.className = 'w-name';
+  name.textContent = winner.author;
+  card.appendChild(name);
+
+  const platformRow = document.createElement('div');
+  platformRow.className = 'w-platform';
+  platformRow.appendChild(platformIcon(winner.platform, 15));
+  const platformName = document.createElement('span');
+  platformName.textContent = PLATFORMS[winner.platform]?.name || winner.platform;
+  platformRow.appendChild(platformName);
+  card.appendChild(platformRow);
+
+  // 💬⏱ v0.50: a 1ª resposta do ganhador, o "não respondeu" e o timer da vez
+  const resposta = raffle?.respostas?.[place];
+  if (resposta && settings?.raffle?.respostaTela !== false) {
+    const balao = document.createElement('div');
+    balao.className = 'w-reply';
+    balao.textContent = resposta.texto || '💬';
+    card.appendChild(balao);
+  } else if (raffle?.expirados?.[place]) {
+    card.classList.add('perdeu');
+    const tag = document.createElement('div');
+    tag.className = 'w-perdeu';
+    tag.textContent = '⌛ Não respondeu a tempo';
+    card.appendChild(tag);
+  } else if (raffle?.vez === place && raffle?.prazoAte) {
+    const timer = document.createElement('div');
+    timer.className = 'w-timer';
+    timer.dataset.prazo = String(raffle.prazoAte);
+    timer.textContent = '⏱';
+    card.appendChild(timer);
+  }
+
+  return card;
+}
+
+// ⏱ Contagem viva dos timers de resposta (os 10s finais piscam em vermelho,
+// como no Timer do relógio). Um relógio só atualiza todos os .w-timer.
+setInterval(() => {
+  for (const el of document.querySelectorAll('.w-timer[data-prazo]')) {
+    const resta = Math.max(0, Math.ceil((Number(el.dataset.prazo) - Date.now()) / 1000));
+    const m = Math.floor(resta / 60);
+    const s = resta % 60;
+    el.textContent = '⏱ ' + (m ? `${m}:${String(s).padStart(2, '0')}` : `${s}s`);
+    el.classList.toggle('final10', resta <= 10);
+  }
+}, 250);
+
+// 🎲 Tempo do dado na tela: das configurações (0 = vai direto para o pódio)
+function tempoDoDado() {
+  const n = Number(settings?.raffle?.dadoSegundos);
+  if (!Number.isFinite(n)) return 3000;
+  return Math.max(0, Math.min(15, n)) * 1000;
+}
+
+// 🔊 Som do dado NA LIVE (mesma regra do alerta do timer)
+function tocarSomDoDado() {
+  const conf = settings?.raffle || {};
+  dispararFimOv('raffle'); // 🔊 v0.77: som de finalização do sorteio
+  if (!conf.somUrl || conf.somOnde === 'painel') return;
+  OBS_SOM.tocar(conf.somUrl, conf.somVolume, 20000);
+}
+
+// 🎲 O suspense do dado sobrevive a updates: um broadcast no meio do giro
+// (uma resposta capturada, por exemplo) não pode nem revelar o pódio antes
+// da hora nem deixar um setTimeout órfão duplicando o pódio depois.
+let raffleRevealTimer = null; // o reveal agendado do sorteio atual
+let raffleRevealAte = 0;      // epoch ms de quando o dado do sorteio atual acaba
+let raffleRevelado = 0;       // drawnAt do último pódio efetivamente revelado
+function showRaffle(raffle, animateNew) {
+  if (raffleRevealTimer) { clearTimeout(raffleRevealTimer); raffleRevealTimer = null; }
+  // 📺 v0.103: na prévia do editor, sem sorteio no ar, o pódio de exemplo (já revelado)
+  if (PREVIA && (!raffle || !raffle.visible || !raffle.winners?.length)) { raffle = EXEMPLO_PREVIA.raffle; animateNew = false; }
+  if (!raffle || !raffle.visible || !raffle.winners?.length) {
+    hideWidgetEl(raffleEl, 'raffle');
+    return;
+  }
+  showWidgetEl(raffleEl, 'raffle');
+  raffleBox.innerHTML = '';
+  // Pódio que JÁ foi revelado (só chegou resposta/timer): aparece pronto
+  const jaRevelado = raffle.drawnAt === raffleRevelado;
+
+  const title = document.createElement('div');
+  title.className = 'raffle-title';
+  title.textContent = '🎁 SORTEIO';
+  raffleBox.appendChild(title);
+
+  const reveal = () => {
+    raffleRevealTimer = null;
+    raffleRevelado = raffle.drawnAt || 0;
+    const spinner = raffleBox.querySelector('.raffle-spinner');
+    if (spinner) spinner.remove();
+    const podium = document.createElement('div');
+    const vertical = (settings?.widgets?.raffle?.layout || 'vertical') === 'vertical';
+    podium.className = 'podium' + (vertical ? ' vertical' : '');
+    // Vertical: 1º, 2º, 3º um embaixo do outro. Horizontal: 2º, 1º, 3º (1º no meio).
+    const order = vertical || raffle.winners.length < 3
+      ? raffle.winners.map((_, i) => i)
+      : [1, 0, 2];
+    let delay = 0;
+    for (const place of order) {
+      if (!raffle.winners[place]) continue;
+      const cardDelay = vertical ? (delay += 300) - 300 : (place === 0 ? 900 : delay += 300);
+      const card = winnerCard(raffle.winners[place], place, cardDelay, raffle);
+      if (jaRevelado) card.classList.add('sem-anim');
+      podium.appendChild(card);
+    }
+    raffleBox.appendChild(podium);
+  };
+
+  // 🎲 Quanto tempo o dado roda antes do pódio (configurável; 0 = direto)
+  if (raffle.drawnAt !== raffleShownAt) {
+    // Sorteio NOVO: o dado começa agora (só com animação; no init vai direto)
+    raffleShownAt = raffle.drawnAt || 0;
+    const dadoMs = tempoDoDado();
+    raffleRevealAte = animateNew && dadoMs > 0 ? Date.now() + dadoMs : 0;
+    if (raffleRevealAte) tocarSomDoDado();
+  }
+  const resta = raffleRevealAte - Date.now();
+  if (!jaRevelado && resta > 60) {
+    // O dado ainda está girando: mantém (ou remonta) o 🎲 e reagenda o reveal
+    const spinner = document.createElement('div');
+    spinner.className = 'raffle-spinner';
+    spinner.textContent = '🎲';
+    raffleBox.appendChild(spinner);
+    raffleRevealTimer = setTimeout(reveal, resta);
+  } else {
+    reveal();
+  }
+}
+
+// ---------- 🔊 v0.77: áudios dos overlays (entrada/saída/tempo/fim) ----------
+// O overlay é quem VÊ a tela: um vigia percebe cada widget aparecendo e
+// sumindo, toca a parte dele aqui (o OBS captura) e avisa o servidor para o
+// painel tocar a dele. Na prévia do editor (iframe) o motor fica mudo.
+const AUDIO_OV_EM_PREVIA = (() => { try { return window.self !== window.top; } catch { return true; } })();
+const motorAudioOv = criarMotorAudioOv((chave, momento) => {
+  const c = settings?.audiosOverlay?.[chave]?.[momento];
+  return (c && c.onde !== 'painel') ? c : null;
+});
+const audioOvNoPainel = (chave, momento) => {
+  const c = settings?.audiosOverlay?.[chave]?.[momento];
+  return !!(c && c.url && c.onde !== 'overlay');
+};
+function dispararFimOv(chave) {
+  if (AUDIO_OV_EM_PREVIA) return;
+  motorAudioOv.tocar(chave, 'fim');
+  if (audioOvNoPainel(chave, 'fim')) hubOv.send({ type: 'audioOverlayMomento', chave, momento: 'fim' });
+}
+const elOvVisivel = (id) => {
+  const el = document.getElementById(id);
+  return !!el && getComputedStyle(el).display !== 'none';
+};
+const VISORES_OV = {
+  featured: () => !!featuredSlot.querySelector('.featured'),
+  midia: () => document.getElementById('midiaPublico').classList.contains('on')
+    || !!featuredSlot.querySelector('.audio-player'),
+  qr: () => elOvVisivel('qrWidget'),
+  raffle: () => elOvVisivel('raffleWidget'),
+  likemeter: () => elOvVisivel('likemeter'),
+  audience: () => elOvVisivel('audienceWidget'),
+  winstreak: () => elOvVisivel('winstreak'),
+  aviso: () => elOvVisivel('avisoWidget'),
+  relogio: () => elOvVisivel('relogioWidget'),
+};
+const presencaOvAtual = new Map();
+setInterval(() => {
+  if (!settings || AUDIO_OV_EM_PREVIA) return;
+  for (const [chave, ver] of Object.entries(VISORES_OV)) {
+    let visivel = false;
+    try { visivel = !!ver(); } catch { /* widget ainda montando */ }
+    const antes = presencaOvAtual.get(chave);
+    if (antes === undefined) { presencaOvAtual.set(chave, visivel); continue; } // 1ª leitura: sem tocar
+    if (visivel === antes) continue;
+    presencaOvAtual.set(chave, visivel);
+    motorAudioOv.presenca(chave, visivel);
+    // avisa o painel: os momentos que tocam lá — e a saída SEMPRE que algo
+    // do widget toca no painel (para calar os loops de entrada/tempo)
+    if (visivel) {
+      for (const momento of ['entrada', 'tempo']) {
+        if (audioOvNoPainel(chave, momento)) hubOv.send({ type: 'audioOverlayMomento', chave, momento });
+      }
+    } else if (['entrada', 'tempo', 'saida'].some((m) => audioOvNoPainel(chave, m))) {
+      hubOv.send({ type: 'audioOverlayMomento', chave, momento: 'saida' });
+    }
+  }
+}, 400);
+
+const hubOv = connectHub((event) => {
+  switch (event.type) {
+    case 'init':
+      // 🔄 v0.75.1: o programa foi ATUALIZADO com esta tela aberta (fonte
+      // do OBS ou aba do navegador): a versão do servidor mudou desde o
+      // carregamento — recarrega para rodar o código novo (senão recursos
+      // novos não aparecem, ex.: figurinha animada virando 📎 arquivo)
+      if (!window.versaoDoPrograma) window.versaoDoPrograma = event.version || 'x';
+      else if (event.version && window.versaoDoPrograma !== event.version) { location.reload(); break; }
+      settingsBase = event.settings;
+      perfisOverlay = Array.isArray(event.perfisOverlay) ? event.perfisOverlay : [];
+      destaqueReal = event.featured || null;
+      // 🎙️ v0.140: a fala do que já está no ar chega junto (a tela pode ter
+      // sido aberta bem depois de a transcrição ficar pronta)
+      guardarTranscricao(event.transcricaoDestaque);
+      if (Array.isArray(event.exemploQr)) exemploQrPrevia = event.exemploQr; // 📺 v0.103
+      destaqueNoAr = destaqueParaMostrar(); // 📺 na prévia, sem nada no ar, é o exemplo
+      if (event.midiaPlayer) midiaPlayerState = event.midiaPlayer; // 🎛️ antes do cartão montar
+      aplicarComPerfil(true);
+      showFeatured(destaqueNoAr);
+      showAvatarZoom(event.avatarZoom);
+      showAvatarZooms(event.avatarZooms || []);
+      showQrs(event.qrs);
+      showLikemeter(event.likemeter);
+      showRaffle(event.raffle, false);
+      showWinstreaks(event.winstreaks);
+      showAudience(event.audience);
+      showAvisos(event.avisos || [event.aviso]); // 📢 v0.128: lista (ou o formato antigo)
+      showRelogio(event.relogio);
+      prepararSomNaLive();
+      trilhasOv = Array.isArray(event.trilhas) ? event.trilhas : [];
+      // Quem abre no meio de uma trilha entra tocando junto (sincronizado)
+      if (event.trilhaTocando) tocarTrilhaNaLive(event.trilhaTocando.id, event.trilhaTocando.desde);
+      // 🖼️🎞️ v0.86: mídia de tecla que já estava na tela entra junto
+      trilhaTelaAtual = event.trilhaTela || null;
+      renderMidiaTrilha();
+      // 🎞️ v0.129: mídia direta que já estava na tela entra junto (servidor
+      // antigo não manda o campo → nada na tela)
+      midiaDiretaState = event.midiaDireta || null;
+      renderMidiaDireta();
+      aplicarMidiaDiretaPlayer();
+      break;
+    case 'settings':
+      settingsBase = event.settings;
+      aplicarComPerfil(true);
+      showAudience(null); // re-renderiza com o modo novo
+      showAvisos(null);    // idem para os avisos (fonte, cores, tamanho)
+      showRelogio(null);
+      showQrs(null);       // 📱 v0.139: o código é repintado com o estilo novo
+      prepararSomNaLive();
+      // 🎵 Desligar o Labs das trilhas cala a live na hora
+      if (settings?.labs?.trilhas !== true) TRILHA_PLAYER.parar();
+      renderMidiaTrilha(); // ✨ sombra nova / Labs desligado saem na hora
+      renderMidiaDireta(); // 🎞️ v0.129: idem para a mídia direta
+      break;
+    case 'midiaDireta':
+      // 🎞️ v0.129: o painel comanda a mídia direta (mostrar/esconder, escala,
+      // tela cheia e o player) — o overlay só espelha
+      midiaDiretaState = event.midiaDireta || null;
+      renderMidiaDireta();
+      aplicarMidiaDiretaPlayer();
+      break;
+    case 'trilhas':
+      trilhasOv = Array.isArray(event.trilhas) ? event.trilhas : [];
+      break;
+    case 'trilhaPlay':
+      tocarTrilhaNaLive(event.id, event.desde);
+      break;
+    case 'trilhaStop':
+      TRILHA_PLAYER.parar();
+      break;
+    case 'trilhaTela':
+      // 🖼️🎞️ v0.86: a mídia da tecla entra/sai da tela do público
+      trilhaTelaAtual = event.tela || null;
+      renderMidiaTrilha();
+      break;
+    case 'featured':
+      destaqueReal = event.featured || null;
+      guardarTranscricao(event.transcricaoDestaque); // 🎙️ v0.140: antes de montar o cartão
+      if (event.featured) {
+        // 🎭 Primeiro o molde certo, depois o cartão — tudo no mesmo tick
+        destaqueNoAr = event.featured;
+        aplicarComPerfil(false);
+        showFeatured(event.featured);
+      } else if (PREVIA && exemploPrevia) {
+        // 📺 v0.103: na prévia do editor, saiu o de verdade, volta o exemplo
+        mostrarDestaqueAtual();
+      } else {
+        // Tirou do ar: o cartão sai com a roupa que estava; o molde só
+        // devolve o visual de sempre depois da animação (perfilAposSaida)
+        showFeatured(null);
+      }
+      break;
+    // 🖼️ v0.138: a foto do autor foi descoberta depois que o comentário já
+    // estava no ar. O cartão NÃO é remontado (a animação de entrada e a mídia
+    // tocando continuam) — só as iniciais viram foto, aqui e no pódio 🎁.
+    case 'avatarFix': {
+      const chave = String(event.login || '').toLowerCase();
+      if (!chave || !avatarUrlOk(event.avatar)) break;
+      const combina = (m) => !!m && m.platform === event.platform && !m.avatar
+        && (String(m.authorLogin || '').toLowerCase() === chave || String(m.author || '').toLowerCase() === chave);
+      // guardado também no modelo: se o cartão for remontado (troca de molde,
+      // mudança de ajuste), ele já nasce com a foto
+      if (combina(currentFeaturedMessage)) currentFeaturedMessage.avatar = event.avatar;
+      if (combina(destaqueReal)) destaqueReal.avatar = event.avatar;
+      if (combina(destaqueNoAr)) destaqueNoAr.avatar = event.avatar;
+      aplicarFotoQueChegou(document.body, event.platform, chave, event.avatar);
+      break;
+    }
+    // 🎙️ v0.140: a transcrição ficou pronta com o áudio/vídeo já na tela —
+    // a região do comentário troca a marca pela fala sem remontar o cartão
+    case 'transcricao':
+      guardarTranscricao(event);
+      aplicarTranscricaoQueChegou(event.url);
+      break;
+    // 🎛️ v0.71: o painel comanda o player da mídia na tela
+    case 'midiaPlayer':
+      midiaPlayerState = event.player || midiaPlayerState;
+      aplicarMidiaPlayer();
+      break;
+    case 'perfisOverlay':
+      perfisOverlay = Array.isArray(event.perfis) ? event.perfis : [];
+      aplicarComPerfil(false);
+      break;
+    case 'avatarZooms':
+      showAvatarZooms(event.lista);
+      break;
+    case 'avatarZoom':
+      showAvatarZoom(event.avatarZoom);
+      break;
+    case 'qr':
+      showQrs(event.qrs);
+      break;
+    case 'likemeter':
+      showLikemeter(event.likemeter);
+      break;
+    case 'raffle':
+      showRaffle(event.raffle, true);
+      break;
+    case 'winstreak':
+      showWinstreaks(event.winstreaks);
+      break;
+    case 'aviso':
+      showAvisos(event.avisos || [event.aviso]); // 📢 v0.128: lista (ou o formato antigo)
+      break;
+    case 'relogio':
+      showRelogio(event.relogio);
+      if (event.fim) tocarSomNaLive();
+      break;
+    case 'audience':
+      showAudience(event.audience);
+      break;
+  }
+});
+</script>
+</body>
+</html>

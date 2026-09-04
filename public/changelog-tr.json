@@ -1,0 +1,1865 @@
+{
+  "0.153.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.152.1": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.152.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.151.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.150.0": {
+    "titulo": "🔗 Güncelleme araması doğrudan doğru adrese gidiyor",
+    "itens": [
+      "🔗 Program güncellemeyi iki adreste arıyordu. İkincisi artık yanıt vermeyen eski bir adresti ve oraya yapılan her deneme, program çalışan adrese ulaşmadan önce zaman aşımının tamamını bekliyordu — kötü bağlantıda bu, güncellemenin yavaş olmasıyla donmuş görünmesi arasındaki farktı. Artık doğrudan resmî adrese gidiyor; GitHub’ın indirme sunucusunu engelleyen ağlar için her zamanki yedek yol duruyor."
+    ]
+  },
+  "0.149.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.148.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.147.0": {
+    "titulo": "🧱 Her platformun sütunu, yorumu olduğunda görünür",
+    "itens": [
+      "🧱 Sütunlar kipinde bir platformun sütunu, platform bağlanır bağlanmaz beliriyor — ve orada boş duruyor, gerçekten konuşanlarla ekran genişliğini paylaşıyordu. Artık o platformun İLK yorumuyla doğuyor. Altı platform bağlıyken ikisi konuşuyorsa, altı dar sütun yerine iki geniş sütun oluyor.",
+      "⏳ Şimdiye kadar gelen her şey yorum sayılır: programın tuttuğu günlük toplam, ekrandakiler ve sütunun kendi temposunda (🌊 Sütun başına) hâlâ sırasını bekleyen bile — sütun ⏳ ile birlikte görünür, ondan sonra değil. Ve yorum geldiği anda kendiliğinden doğar: sekme değiştirmek de, sayfayı yenilemek de gerekmez.",
+      "🔇 Eskisini yeğleyen «💬 + Birleşik» yanındaki «🔇 + Sessizler»i açar — bağlı ama sessiz platformlar yeniden sütun kazanır. Hiç konuşmadan takılıp kalmış bir platformun 🔄 düğmesine de oradan ulaşılır. Kimse konuşmadığı sürece ekran, ilk yorum geldiğinde sütunun kendiliğinden görüneceğini söyler."
+    ]
+  },
+  "0.146.0": {
+    "titulo": "🔍 Avatarı büyütmek yeniden herkes için çalışıyor",
+    "itens": [
+      "🔍 Telegram ya da WhatsApp’tan yazan birinin avatarını büyütmek, kişinin fotoğrafı yokmuş gibi renkli baş harfi gösteriyordu. Vardı: v0.72’den beri program bu iki ağın profil fotoğrafını İNDİRİYOR ve bilgisayarda tutuyor. Sorun şuydu: büyütme yalnızca internet adreslerini (https) kabul ediyor ve tam da programın kaydettiği o fotoğrafı çöpe atıyordu. Artık geçiyor — panelde de, seyirci ekranında da. 🧪 örnekleri de.",
+      "🛡️ Hiçbir şey gevşetilmedi: yerel adres yalnızca programın kendi iki klasöründen ve temiz bir dosya adıyla kabul ediliyor, harf harf denetleniyor — klasörden dışarı çıkmak yok, ortada bölü işareti yok. Başka türden adresler (http, javascript:, data:, file:) eskisi gibi engelli.",
+      "🖼️ Kalite de ağ ağ denetlendi: büyütme önce her servisin tuttuğu EN İYİ görseli deniyor, yoksa bir basamak iniyor — YouTube’un orijinali, Twitch’in 600×600’ü, Kick’in «fullsize»ı, Bilibili’nin kırpılmamışı. Telegram ve WhatsApp’ta program zaten ağın verdiği en büyüğünü alıyor. Hiçbiri yüklenmezse renkli baş harf devreye giriyor: ekran hiçbir zaman boş kalmıyor."
+    ]
+  },
+  "0.145.0": {
+    "titulo": "✍️ Metin, yazıldığı gibi geliyor ve yazıldığı gibi gidiyor",
+    "itens": [
+      "✍️ İzleyicinin mesajı artık panele onun kullandığı BİÇİMLENDİRMEYLE geliyor: *kalın* kalın, _italik_ italik, ~üstü çizili~ çizili ve `eş aralıklı` kod yazı tipiyle. WhatsApp’ta bu, onun yazdığı işaretlerden gelir; Telegram’da ise uygulamanın metnin yanında gönderdiği biçimli aralık listesinden — o liste şimdiye kadar öylece çöpe atılıyordu.",
+      "↩️ SATIR SONLARI da kurtuldu. Üç satır yazılmış bir mesaj panelde, sabit sohbette ve seyirci ekranında tek satıra yapışık geliyordu. Artık yazıldığı gibi üç satır görünüyor.",
+      "🧮 Sıradan metin ise el değmemiş kalıyor: «2*3=6», «dosya_adı» ve «12/07» kazara biçime dönüşmüyor — WhatsApp’ın kendi kuralının aynısı.",
+      "✒️ Panelin yanıt kutusuna bir biçimlendirme çubuğu geldi: metni seçin ve K, İ, S ya da M’ye basın (Ctrl+B ve Ctrl+I de olur). Yeniden basmak işareti üst üste koymak yerine kaldırır. İsteyen *böyle* elle yazmayı sürdürebilir. WhatsApp bunu doğrudan anlar; Telegram için program gönderirken çevirir ve yazılan her şeyi kaçışlar, böylece hiçbir şey kazara işaretlemeye dönüşmez.",
+      "🖋️ Sunucunun adı da yanıtta artık iki biçimden biri: üstte, duyurarak («Filanca diyor ki:», mesajdan önce boş bir satırla) ya da sonda, imzalayarak («— imza: Filanca»). Seçim hatırlanıyor — imzanın kendisi zaten öyleydi."
+    ]
+  },
+  "0.144.0": {
+    "titulo": "💬 Panelden gönderilen yanıt WhatsApp’ta mesajı yine alıntılıyor",
+    "itens": [
+      "💬 Yerel kitaplık kipinde (ağ geçidi istemeyen ücretsiz bağlayıcı), panelden birine yanıt vermek mesajı BAŞIBOŞ gönderiyordu: sohbetin sonuna düşüyor, yanıtlanan yoruma yapışmıyordu. Ağ geçidi kipinde bu hep çalışıyordu. Artık ikisi de aynı — yanıt, kişinin WhatsApp’ına tam olarak seçilen mesajı alıntılayarak, orijinalin baloncuğu üstte olacak şekilde ulaşıyor.",
+      "📎 Ekli yanıt için de geçerli: panelden gönderilen fotoğraf, ses, video ya da dosya, yanıtladığı mesajı alıntılayarak varıyor.",
+      "✂️ Programın parçalara böldüğü uzun bir yanıtta yalnızca İLK parça alıntılıyor — ağ geçidi kipindeki gibi. Alıntıyı her parçada yinelemek sohbeti kalabalıklaştırmaktan başka işe yaramıyor.",
+      "🛟 Özgün mesaj artık elde değilse (program yeniden başladı ya da sohbet eski), yanıt yine de gidiyor, sadece alıntısız. Alıntısız varmak, hiç varmamaktan iyidir."
+    ]
+  },
+  "0.143.0": {
+    "titulo": "💬 Kişi, etkinlik, anket ve katalog panele ulaşıyor",
+    "itens": [
+      "💬 WhatsApp’ın özel kartları — çoğu WhatsApp Business’tan — panele hiç ulaşmıyordu: kişi, etkinlik, anket, katalog ürünü, sipariş, grup daveti ve canlı konum. Hiçbirinde metin ya da dosya yok; boş mesajları eleyen kural da hepsini iz bırakmadan çöpe atıyordu. Artık her biri okunur bir karta dönüşüyor: 👤 kişinin adı, 📅 tarihi ve yeri olan etkinlik, 📊 sorusu ve bütün seçenekleriyle anket, 🛍️ başlığı ve fiyatıyla ürün, 🧾 kalemleri ve toplamıyla sipariş.",
+      "🛍️ Katalog ürünü artık FOTOĞRAFINI da getiriyor. WhatsApp kitaplığı onu tek başına indiremiyordu (adresi yanlış yerde arıyordu); artık fotoğraf ona gerçekte olduğu görsel olarak veriliyor ve kartta diğerleri gibi görünüyor.",
+      "💵 Fiyat, para biriminin ülkesinin yazdığı gibi yazılıyor — R$4,500.00 değil, R$ 4.500,00. WhatsApp’ın gösterdiği ve satıcının ilan ettiği biçim bu.",
+      "☎️ Kişi kartı, içinde telefon numarası olan bir vCard taşır. Ondan yalnızca AD çıkar: numara ne panele ne ekrana girer — v0.64’ten beri her şey için geçerli olan ev kuralı.",
+      "📨 Telegram’da da aynı hikâye: anket, kişi ve zar artık geliyor. WhatsApp’ın ağ geçidi kipinde ise, programın henüz çizemediği bir mesaj türü en azından bir şeyin geldiğini DUYURUYOR; sessizce kaybolmuyor."
+    ]
+  },
+  "0.142.0": {
+    "titulo": "🧾 Gelmeyen ek artık nedenini söylüyor",
+    "itens": [
+      "🧾 Bir WhatsApp eki indirilemediğinde, paneldeki kart artık nedenini gösteriyor; altında teknik künye, yanında da hepsini bir kerede kopyalayan bir 📋 var. Neden zaten vardı — ama yalnızca programın konsolunda, orayı da kimse açmıyor. Bu künyede sadece platforma ait bilgiler yer alır (mesaj türü, biçim, boyut, hareketli mi, adres ve anahtar geldi mi): kişinin yazdığından hiçbir şey ve hiçbir telefon numarası yok.",
+      "🔄 Gelmeyen çıkartmalar ve dosyalar için kökten bir düzeltme: indirme başarısız olduğunda, program artık ikinci denemeden önce eşleşmiş telefondan dosyayı yeniden yüklemesini İSTİYOR. Kitaplık bu isteği yalnızca WhatsApp sunucusu «yok» dediğinde yapıyordu — oysa yaygın arıza (süresi geçmiş dosya ya da tutmayan bir şifre çözme) o durum değil. Bir çıkartmanın gelip ötekinin gelmemesinin sebebi bu.",
+      "📏 20 MB tavanı yine her zaman geçerli. Bildirilen boyut protokolün büyük sayılarından biri olarak geliyor ve eski hesap onu okuyamıyordu — sınır basitçe hiç devreye girmiyordu.",
+      "🧭 Bir mesaj dosyanın adresi ya da onu açacak anahtar olmadan geldiğinde, kart bunu açık sözle söylüyor; kitaplığın yine de deneyip ürettiği karmakarışık hata yerine."
+    ]
+  },
+  "0.141.0": {
+    "titulo": "👥 İsterseniz yalnızca birebir sohbet",
+    "itens": [
+      "👥 🔌 Bağlantılar’daki 📨 Telegram ve 💬 WhatsApp kartlarına yeni bir anahtar geldi: «Gruplardan, kanallardan ve topluluklardan gelen mesajları kabul et». Kapatın, yalnızca birebir sohbet girsin — botla (Telegram) ya da yayın numarasıyla (WhatsApp); gerisi panele hiç ulaşmaz. Fabrikadan açık geliyor, yani halihazırda kullananlar için hiçbir şey değişmiyor.",
+      "⚡ Anahtar anında geçerli: çevirdiğiniz anda bir sonraki mesaj yeni seçime göre ölçülür. Yayının ortasında bağlantıyı kesip yeniden kurmaya gerek yok.",
+      "🕳️ Bu arada bir delik de kapandı: WhatsApp’ın kanalları ve yayın listeleri «birebir sohbet» diye geçip her zaman içeri giriyordu, alana belirli bir grup yazılmış olsa bile. Artık ne iseler o sayılıyor ve anahtara uyuyorlar.",
+      "💤 Anahtar kapalıyken grup alanı dinlenmeye çekiliyor ve nedenini de söylüyor — bir grup yazıp, daha kapıda çevrilmiş mesajları beklemek yok artık."
+    ]
+  },
+  "0.140.4": {
+    "titulo": "💬 Eki inmeyince WhatsApp mesajı artık kaybolmuyor",
+    "itens": [
+      "💬 Bir WhatsApp mesajının dosyası indirilemediğinde mesajın TAMAMI çöpe gidiyordu — kart yok, uyarı yok, iz yok. Sunan kişi birinin yazdığını hiç öğrenmiyordu. Artık kart çıkıyor ve «[gelmeyen çıkartma]» (ya da fotoğraf, video, ses; duruma göre) diyor; teknik sebep de programın siyah penceresine yazılıyor.",
+      "🔁 Üstelik pes etmeden önce indirmeyi bir kez daha deniyor: WhatsApp’ın şifre çözmesi ve sunucuları arada tökezliyor, ikinci deneme genelde işi bitiriyor.",
+      "📦 Kaybolan mesajlar, «bir kez görüntüle» ve düzenlenmiş mesajlar bir zarfın içinde geliyor — program bu zarfı açmıyordu, dolayısıyla ne metni ne eki buluyordu ve mesaj kayboluyordu. Artık açıyor."
+    ]
+  },
+  "0.140.3": {
+    "titulo": "💬 WhatsApp kitaplığı git olmadan iniyor",
+    "itens": [
+      "💬 Baileys kendi parçalarından birini (libsignal) bir git adresi üzerinden istiyor — ve git, Windows’ta kurulu gelmiyor. O olmayınca npm «An unknown git error occurred» diyerek duruyordu; kartta görünen hata tam olarak buydu. AYNI libsignal, aynı yazarlardan ve aynı depodan, npm’de de yayımlanmış: program artık oradan alıyor. Kimsenin git kurmasına gerek yok.",
+      "🩹 Daha önce denemiş olanlar da onarılıyor: yönlendirme klasörde zaten olana ekleniyor ve eski bağımlılık listesi (hâlâ git’i gösteren) yoldan çekiliyor ki npm her şeyi baştan çözsün.",
+      "🔍 git programdan gizlenmiş hâlde baştan sona denendi: Baileys 6.7.24 ve 92 bağımlılığı yerine oturuyor, kitaplık yükleniyor ve kimlik bilgilerini imzalıyor — ki libsignal’in işi tam olarak bu."
+    ]
+  },
+  "0.140.2": {
+    "titulo": "💬 WhatsApp kitaplığını indirmek yeniden çalışıyor",
+    "itens": [
+      "💬 WhatsApp’ın yerel kitaplığını indirmek (ağ geçidi istemeyen ücretsiz bağlayıcı) hiçbir şey açıklamayan bir «4294963238 hatası» ile başarısız oluyordu. Sebebi: hedef klasörde npm’in istediği package.json yoktu — o olmadan npm pes ediyor, üstelik bir üst klasörde aramaya çıkıp programın kendi klasörüne kadar gidiyor. Artık klasör önceden hazırlanıyor: yalnızca kitaplığa ait, kapalı bir küçük proje olarak; npm de onun içinde çalışıyor.",
+      "🗣️ Bir şey ters gittiğinde mesaj artık ne olduğunu söylüyor. Önceden npm çıktısının KUYRUĞU görünüyordu («tam kayıt şurada…» diye biten dipnot), yani tam da hiçbir şey açıklamayan kısım; artık npm’in sorunu açıkladığı satır geliyor, sonunda da raporun yolu. Üstelik mesaj 10 dilde, sizin dilinizde konuşuyor.",
+      "⏱️ Takılan bir npm artık kartı sonsuza kadar döndürmüyor: 10 dakikayı geçince kurulum dürüst bir uyarıyla sonlandırılıyor.",
+      "🩺 npm bilgisayarda yoksa, mesaj artık nereden bulunacağını da söylüyor: Node.js ile birlikte geliyor, nodejs.org’da."
+    ]
+  },
+  "0.140.1": {
+    "titulo": "🎧 Sesin dakikaları artık kapsülün dışına taşmıyor",
+    "itens": [
+      "🎧 Seyirci ekranında ses oynatıcısının saati kapsülün dışına itilip kartın kenarında kesilebiliyordu. Dalganın 48 çubuğu küçülmeyi reddediyordu ve hesabı saat ödüyordu. Artık önce dalga yerini bırakıyor; yine yetmezse saatin yazısı küçülüyor; iş gerçekten sıkışırsa yalnızca geçen süreyi, toplam olmadan gösteriyor. Ekranda kesik rakam, bir daha asla.",
+      "📋 Panelde hesap aynıydı: dar bir sütunda süre ile hız seçicisini medyanın kırpması yiyordu. Dalga orada da küçülmeye başladı."
+    ]
+  },
+  "0.140.0": {
+    "titulo": "🎙️ Kişinin söyledikleri ekrandaki yorum oluyor",
+    "itens": [
+      "🎙️ Bir izleyicinin sesi ya da videosu seyirci ekranında: dosya her zamanki gibi görünmeye devam ediyor, yorumun olduğu yerde ise artık deşifre çıkıyor — kişinin söyledikleri, izleyenler okusun diye yazılı olarak. (🧪 Labs’ın yerel deşifresi; kendi bilgisayarınızda çalışır.)",
+      "🔈 Deşifre hazır değilken ekran artık dilsiz kalmıyor: çalan dosyaya göre «[sesli mesaj]» ya da «[video mesajı]» yazıyor — seyirci boş bir karta bakmak yerine ne olduğunu biliyor.",
+      "✍️ Kişi sesin yanına bir de yazı yazdıysa, o yazı her zamanki yerinde kalıyor ve konuşma hemen altına, sessiz sedasız giriyor. Bu durumda deşifre yoksa kartı hiçbir işaret meşgul etmiyor: okunacak şey zaten var.",
+      "⚡ Yorum ZATEN yayındayken hazır olan deşifre kendiliğinden giriyor: yalnızca yorumun alanı yeniden çiziliyor — kart baştan kurulmuyor, ses de başa sarmıyor.",
+      "📋 Panelde taslak, ses tek başına geldiyse oynatıcının altında açık kalıyor; yanında yazılı bir mesaj geldiyse toplu geliyor — «✍️ Deşifre»ye bir tık onu açıyor ve açık kalıyor."
+    ]
+  },
+  "0.139.0": {
+    "titulo": "📱 QR kodun artık kendi yüzü var",
+    "itens": [
+      "📱 Temalar sayfasında 📱 QR bileşeni seçiliyken yeni bir bölüm çıktı: «Kodun kendisi». Kareciklerin biçimini (kare, yuvarlak köşe, nokta ya da baklava), üç köşenin biçimini ve rengini, kodun rengini, arka planının rengini ve saydamlığını, çevresindeki boşluğu ve karecikler arasındaki aralığı değiştirebilirsiniz.",
+      "🫥 Arka plan tamamen kaybolabilir: saydamlık sıfırken kodun arkasında yayının sahnesi görünür — o beyaz kare yok artık.",
+      "🎨 Beş hazır ayar tek tıkla işi bitiriyor: Klasik, Yumuşak, Noktalar, Baklava ve Arka plansız. İnce ayarlar hemen altta, uğraşmak isteyenler için.",
+      "✅ Ve program okunurluk konusunda doğruyu söylüyor: yanındaki uyarı, karşıtlık düştüğünde, renkler ters çevrildiğinde, boşluk fazla dar kaldığında ya da saydam arka plan QR’ı sahnenin insafına bıraktığında haber veriyor.",
+      "🔍 Her görünüm gerçek bir QR okuyucuyla denendi: beş hazır ayarın hepsi hâlâ taranıyor. Hiçbir şeye dokunmayan da hiçbir fark görmüyor — varsayılan, her zamanki beyaz üstüne siyah."
+    ]
+  },
+  "0.138.0": {
+    "titulo": "🖼️ Geç gelen profil fotoğrafı artık görünüyor",
+    "itens": [
+      "🖼️ Twitch, Kick ve Bilibili yazanın fotoğrafını yorumla birlikte göndermiyor: program onu ayrıca almaya gidiyor ve bu birkaç saniye sürüyor. O sırada yorum çoktan izleyici ekranında olabiliyordu — ve orada sonsuza dek baş harfleriyle kalıyordu. Artık fotoğraf geldiği anda öne çıkan karta kendiliğinden giriyor, hiçbir şey yeniden kurulmadan: giriş animasyonu ve çalan ses kesilmiyor.",
+      "📌 Aynısı sıra için de geçerliydi: fotoğraf gelmeden 📌 sırasına gönderilen yorum fotoğrafsız kalıyor — ve öyle diske yazılıp programı kapatıp açsanız bile fotoğrafsız kalıyordu. Artık sıra da fotoğrafı geri kalan her şeyle birlikte alıyor.",
+      "🔁 Ve fotoğraf servisi tam o anda takılırsa — yayının ilk saniyelerinde, kanalın botu (StreamElements, Nightbot ve benzerleri) ile izleyici hep birlikte geldiğinde çok oluyor — program arada bir kendiliğinden yeniden arıyor. Önce bir kez yazan biri yayının geri kalanında baş harfleriyle kalıyordu."
+    ]
+  },
+  "0.137.0": {
+    "titulo": "🧹 Tek tıkla bütün test yorumları siliniyor",
+    "itens": [
+      "🧹 💬 «test yorumu gönder»in yanına bir 🧹 geldi. Gönderdiğiniz TÜM sahte yorumları bir kerede kaldırıyor: sütunlardan, sıradan, kaydedilenlerden ve izleyici ekranındaki öne çıkan yorumdan.",
+      "🎁 Çekilişte oluşturdukları fişler de onlarla gidiyor — sahte adlar artık 🎁 çekilişinize girmiyor. Önceki testlerden kalan fişler dahil.",
+      "👀 Yayında hiç test yorumu yokken 🧹 saklı duruyor: hiç test etmeyen birinin varlığını bilmesine bile gerek yok. Ve gerçek olan hiçbir şeye dokunulmuyor — etten kemikten insanların yorumları tam olduğu yerde kalıyor.",
+      "🎛️ Dış denetimden de (Stream Deck ve benzerleri) «Test yorumlarını sil» eylemiyle yapılabiliyor."
+    ]
+  },
+  "0.136.0": {
+    "titulo": "🏷️ Doğrudan medyada kaynak künyesi — «Kaynak: @profil · site»",
+    "itens": [
+      "🏷️ 🎞️ Doğrudan medya artık kaynak künyesini izleyici ekranına da götürüyor: ortamın hemen altında bir hap biçiminde, büyütülmüş avatarın altındaki adla aynı görünümde. Görsel, video, ses, site çerçevesi ve tam ekranda da geçerli.",
+      "✍️ Adresten doldurulmuş geliyor: bağlantı profili taşıyorsa (x.com/biri/status/…, tiktok.com/@biri/video/…) künye «Kaynak: @biri · x.com» olur; adreste profil yoksa yalnızca site. Açılış sözcüğü seçtiğiniz dili izler. Metin sizin: ne isterseniz, nasıl isterseniz yazın.",
+      "👁️ 🏷️ anahtarı künyeyi anında açıp kapatır, yazdığınızı silmeden — ve ona dokunmak yayındaki ortamı asla yeniden yüklemez. Her yeni ortam kendi künyesiyle gelir, öncekini devralmaz.",
+      "🎛️ Dış denetimden de (Stream Deck ve benzerleri) «Doğrudan medya: kaynak künyesi» eylemiyle yazılabilir ve açılıp kapatılabilir."
+    ]
+  },
+  "0.135.0": {
+    "titulo": "🐦 Ekranda X — ve site çerçeveyi reddettiğinde dürüst bir söz",
+    "itens": [
+      "🐦 🎞️ Doğrudan medyadaki X (Twitter) bağlantısı artık gönderinin RESMÎ çerçevesini açıyor — blogların kullandığının aynısı. X’in kendi sayfası bir çerçeve içinde açılmayı reddediyor (bu sitenin kendi kuralı); «sayfa engellendi» kutusu bu yüzden çıkıyordu. Resmî çerçeve kabul ediyor ve gönderi videosuyla birlikte düzgün görünüyor.",
+      "🚫 Çerçeveyi reddeden diğer siteler için (Reddit, Facebook ve benzerleri) OBS Social artık hiçbir şey kurmadan ÖNCE siteye soruyor. Yanıt «hayır» ise panel bunu açık açık söylüyor — sizi gri bir kutuya baktırmak yerine — ve iki çıkışı gösteriyor: 🧪 Labs’taki 🎬 çıkarıcı ya da bilgisayardan bir 📂 dosya.",
+      "📺 Ve izleyici ekranı, engelleneceği zaten bilinen bir çerçeveyi artık almıyor: hata kutusunu yayına göndermek yerine, o katman hiç görünmüyor."
+    ]
+  },
+  "0.134.0": {
+    "titulo": "🎬 İsteğe bağlı çıkarıcı: Instagram ve TikTok bile kendi oynatıcımızda videoya dönüşüyor",
+    "itens": [
+      "🎬 🧪 Labs’ta yeni: «Doğrudan medya çıkarıcı». Bazı siteler video dosyasını hiçbir yerde yayımlamaz (Instagram, TikTok ve benzerleri) — çıkarıcı açıkken OBS Social o videoyu buluyor ve KENDİ oynatıcımızda gösteriyor: oynat/duraklat, konum çubuğu, ses, hız, 🔁 yinele ve ⛶ tam ekran.",
+      "⬇️ Bunu yapan program (özgür ve tanınmış yt-dlp) programla birlikte GELMİYOR: 🔌 Bağlantılar’da tek tık, tek dosyayı (~30 MB) indiriyor — deşifre motorunda olduğu gibi. İstediğiniz zaman güncelleyip silebilirsiniz ve videodan hiçbir şey diske yazılmaz: yalnızca adres bulunur, video kaynaktan gelmeye devam eder.",
+      "🔎 Arama sürerken panel susmak yerine ne olduğunu anlatıyor. Site hiçbir şey vermezse (örneğin yalnızca giriş yapanlara oynayan bir video), bağlantı eskisi gibi sitenin çerçevesi olarak kalır.",
+      "⚖️ Her sitenin kendi kullanım koşulları vardır: yayında başkasının içeriğini göstermek yayıncının sorumluluğundadır."
+    ]
+  },
+  "0.133.0": {
+    "titulo": "🎬 «Sadece videoyu al»: bağlantı bizim videomuz oluyor, tüm denetimlerle",
+    "itens": [
+      "🎬 Birçok site videonun DOSYASINI kendi meta etiketlerinde yayımlar — WhatsApp ve Discord önizlemelerini oradan alır. Artık bir adres yüklenince OBS Social o dosyayı arıyor (og:video, twitter:player:stream ve JSON-LD’nin contentUrl’ü). Bulursa ortam artık sitenin çerçevesi değil, bizim videomuz oluyor: oynat/duraklat, konum çubuğu, ses, hız, 🔁 yinele, 🎭 ses bozma ve ⛶ tam ekran — hepsi panelden.",
+      "🔎 Program ayrıca, sonuna bakıp tahmin etmek yerine, o adresin gerçekte ne olduğunu siteye soruyor. Bu çirkin bir durumu düzeltiyor: sonu dosya gibi biten bir SAYFA (…/File:birsey.ogv) video sanılıyor ve hiçbir şey oynamıyordu. Artık düzgün açılıyor — dosya bulunursa video, bulunmazsa sitenin çerçevesi olarak.",
+      "🔒 Bu sorgu gözetim altında: yalnızca http(s), en fazla üç yönlendirme (her biri yeniden denetlenir), sekiz saniye, yarım megabayt ve asla kendi makinenizin ya da ağınızın adreslerine — bulut sağlayıcılarının kullandığı 169.254.169.254 dahil.",
+      "🅼 Instagram ve TikTok sitenin çerçevesi olarak kalıyor: ne dosyayı yayımlıyorlar (sayfa yalnızca kabuk ve giriş duvarı) ne de YouTube’unki gibi bir denetim API’si sunuyorlar. O durumlarda denetim için videoyu indirip 📂 Bilgisayarda dosya ara’yı kullanın."
+    ]
+  },
+  "0.132.0": {
+    "titulo": "🎞️ Doğrudan medya: video gerçekten oynuyor, her site kendi biçiminde ve gerçek bir «Gözat»",
+    "itens": [
+      "▶️ YouTube ekranda oynamıyordu. OBS dışında tarayıcı, sayfaya dokunulmadan sesli bir videonun başlamasını sessizce reddediyor — gömülü oynatıcı afişinde kalırken paneldeki önizleme sorunsuz oynuyordu. Artık 1,4 saniyede oynatma tutmadıysa program videoyu SESSİZ başlatıyor (tarayıcı buna her zaman izin verir) ve ekranda 🔇 davetini yakıyor; ilk dokunuş sesi bulunduğu yerden geri veriyor. OBS içinde hiçbir şey değişmiyor: her zamanki gibi sesle başlıyor.",
+      "📐 Her site kendi biçiminde. Instagram ve TikTok dikey, ama 16:9 bir kutuya konuyordu — yanlarda siyah bantlar, kesik başlık ve kaydırma çubuğu. Artık ekran ve önizleme her sitenin istediği oranı kullanıyor (YouTube, Vimeo ve Twitch 16:9 yatay kalıyor) ve hiçbir gömülü içerik kaydırma çubuğu göstermiyor.",
+      "📂 Bilgisayardaki dosya için «Gözat» gerçek oldu. Dropbox, Google Drive ve OneDrive klasörleri listeden kayboluyordu: Windows’ta bunlar birleşim noktası ve program yalnızca «klasör» ya da «dosya» tanıyordu. Artık sisteme soruyor ve görünüyorlar. Üstteki kısayollara 📄 Belgeler ve bulut klasörleri eklendi; bilinen klasörler (Masaüstü, İndirilenler, Belgeler…) Windows’un sık sık taşıdığı OneDrive içinde de aranıyor.",
+      "🔎 Kullanımı da kolaylaştı: açık klasörü daraltmak için yazılan bir süzgeç, içindekilerin sayısı (kaç klasör, kaç ortam), daha uzun bir liste ve klasörde yalnızca alt klasör varken daha iyi bir mesaj. Yol kutusuna bir KLASÖR yazmak artık şikâyet etmek yerine onu açıyor."
+    ]
+  },
+  "0.131.1": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.131.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.130.3": {
+    "titulo": "🌙 Varsayılan tema renklerini yeniden gösteriyor",
+    "itens": [
+      "🎨 🎨 Temalar galerisinde 🌙 Varsayılan kartının dört şeridi de griydi ve hiçbir rengi göstermiyordu. Renk saklamayan tek tema odur — onu seçmek sizinkileri siler ve program fabrika renklerine döner —, kartı suskun bırakan da buydu. Artık şeritler onun gerçekten giydiği fabrika renklerini gösteriyor: arka plan, kartlar, mor vurgu ve metin. Diğer on kart aynı kaldı ve Varsayılan’ı yüklemek eskisi gibi renklerinizi temizlemeye devam ediyor."
+    ]
+  },
+  "0.130.2": {
+    "titulo": "🖱️ Yorum penceresi panelin kendi satırını gösteriyor",
+    "itens": [
+      "🖱️ Sol tıkla açılan pencere artık yorumu listedeki HALİYLE gösteriyor: aynı satır, ağın renkli şeridi, yuvarlak avatar, adın önündeki platform simgesi, rozetler (üye, moderatör, Super Chat), metin ve medya. Yalnızca satırın kendi düğmeleri gizleniyor — artık pencerenin düğmeleri iş görüyor."
+    ]
+  },
+  "0.130.1": {
+    "titulo": "🖱️ Yorum penceresi OBS Social görünümünde + tüm sekmelerde kuyruk",
+    "itens": [
+      "🎨 Sol tıkla açılan pencere artık programın görünümünü kullanıyor: simgeli başlık, seçilen temanın renklerinde kart ve panelin düğmeleri — ana düğme temanın vurgu renginde, diğerleri sade, kuyruktan kaldıran ise kırmızı. 10 temanın her biri pencereyi kendi renkleriyle giydiriyor (arka plan, kenarlık, metin ve vurgu).",
+      "📥 «Kuyruğa gönder» artık TÜM sekmelerde ve sütunlarda görünüyor — Super Chat’ler ve üye yorumları da sıralarını bekleyebilir. Önceden yalnızca sıradan yorumlarda vardı; pencerede de, sağ tık menüsünde de, satırın 📥 düğmesinde de. 📥 Kuyruk sekmesi kendi takımını koruyor (gönder ve kaldır, gönder, kaldır, iptal).",
+      "🪟 Pencere ayrıca programın diğer pencereleriyle aynı katmana çıktı: artık hiçbir şey üstünü örtmüyor."
+    ]
+  },
+  "0.130.0": {
+    "titulo": "🖱️ Yorumlarda fare tuşları — sol tık pencereyi, sağ tık menüyü açar",
+    "itens": [
+      "🖱️ Herhangi bir yoruma sol tıklamak (tüm sekmelerde) o yorumun penceresini açar: avatar, ad, metin, medya, ağ ve saat ile birlikte 📺 Ekrana gönder, 📥 Kuyruğa gönder ve İptal düğmeleri. 📥 Kuyruk sekmesinde düğmeler «Ekrana gönder ve kuyruktan kaldır», «Ekrana gönder», «Kuyruktan kaldır» ve «İptal» olur.",
+      "🖱️ Sağ tık yine menüyü açıyor — ve menüye 🔍 Avatarı büyüt eklendi; Ekrana gönder, kuyruk seçenekleri ve (Telegram/WhatsApp’ta) yanıtlama, timeout ve yasaklamanın yanında. Fotoğrafın kendisine sağ tıklamak eskisi gibi doğrudan büyütür.",
+      "✨ Pencere Esc ile, İptal ile ya da dışına tıklayarak kapanır ve siz söylemeden hiçbir şey gönderilmez. Satırdaki 📺 ve 📥 düğmeleri eskisi gibi çalışmaya devam eder."
+    ]
+  },
+  "0.129.0": {
+    "titulo": "🎞️ Doğrudan medya — bir URL’den veya bilgisayardan görsel, video ya da ses, yükleme yok",
+    "itens": [
+      "🎞️ Panelde yeni düğme: «Doğrudan medya». Bir görselin, videonun veya sesin URL’sini yapıştırın (YouTube, TikTok, Instagram, Vimeo, Twitch klibi, Discord eki, tek dosya…) ya da bilgisayardan bir dosya seçin — OBS Social kitaplığına hiçbir şey gönderilmez: dosya bulunduğu yerden gösterilir.",
+      "👁️ Diğer araçlardaki gibi göster/kaldır, 🖼️ ekrandaki boyut ve ⛶ izleyici için tam ekran — WhatsApp ve Telegram’dan gelen medyayla aynı biçimde.",
+      "🎛️ Eksiksiz uzaktan oynatıcı: oynat/duraklat, ⏮ baştan, konum çubuğu, 🔊 ses, 🚀 hız (0,05× – 32×), 🎭 ses bozma ve 🔁 tekrar — panel yönetir, izleyici ekranı yansıtır. YouTube’da oynatıcı da uyar (oynat, duraklat, konum, ses); diğer gömülü sitelerde göster/kaldır, boyut ve tam ekran geçerlidir.",
+      "📂 «Bilgisayarda ara» yalnızca görsel, video ve sesleri listeleyen bir klasör gezgini açar (sürücüler, Masaüstü, İndirilenler, Videolar, Resimler, Müzik) — yalnızca programın çalıştığı bilgisayarda açılan panelde kullanılabilir; ağ üzerinden bir URL kullanın.",
+      "🕹️ Dış kontrol: yeni eylemler midiaDireta/url, mostrar, esconder, alternar, fechar, tocar, pausar, reiniciar, volume ve telaCheia; /estado yayındaki medyayı anlatır. 🧹 Ekranı temizle de onu yayından alır."
+    ]
+  },
+  "0.128.0": {
+    "titulo": "📢 Çoklu Duyuru — ana duyuru + ek duyurular, her biri kendi yerinde",
+    "itens": [
+      "📢 Duyurular: Artık QR kodu ve galibiyet serisi gibi ekranda aynı anda birden fazla duyuru olabilir. Paneldeki 📢 kartına duyurular arasında gezmek için ◀ ▶ okları, bir tane daha oluşturmak için ➕ (30’a kadar — kaydedilir) ve ek bir duyuruyu silmek için 🗑️ eklendi. Ana duyuru asla gitmez.",
+      "✍️ Her duyurunun kendi metni, kendi 👁️ göster/kaldır düğmesi ve kendi ⏰ «kendiliğinden kaybol» ayarı (saate veya zamanlayıcıya göre) var — biri belirlenen saatte giderken diğerleri kalır.",
+      "🖱️ Görsel düzenleyicide (Temalar) her ek duyuru haritada ve widget seçicide kendi öğesi olarak görünür («📢 Duyuru 2 (ek)»…): yatayda ve dikeyde kendi konumu, boyutu ve stili. OBS ekranı her duyuru için bir öğe çizer.",
+      "🕹️ Dış kontrol: aviso/texto, aviso/mostrar, aviso/esconder ve aviso/alternar eylemleri hangi duyurunun seçileceğini belirten «id» parametresini kazandı (boş = eskisi gibi ana duyuru); /estado tüm duyuruları listeler. Yedekleme, geri yükleme, «her şeyi sil» ve 🧹 ekranı temizle hepsini kapsar."
+    ]
+  },
+  "0.127.3": {
+    "titulo": "📐 Temalar sayfasında yatay kaydırma yok + dar ekranda pencerelerin ↘ tutamacı",
+    "itens": [
+      "📐 Ayarlar: Daha küçük pencerelerde (~1430px altı) sayfaya yatay kaydırma geliyordu — ana blok pencere yerine içeriğin genişliğini alıyordu. Artık pencereyi asla aşmıyor; çubuklar ve metinler içeride uyum sağlıyor.",
+      "🪟 Panel pencereleri (🎁 çekiliş, 🔍 avatar ve yerleşik araç kartları): Dar bir pencerede zaten ekranın %92 tavanında doğuyor ve ↘ tutamacı yana gitmiyordu (alçak ekranda aşağı da). Tavan artık yalnızca ilk boyutlandırmaya kadar geçerli: sonrasında pencere, ayrılmış pencerelerin zaten yaptığı gibi serbestçe büyüyor."
+    ]
+  },
+  "0.127.2": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.127.1": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.127.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.126.0": {
+    "titulo": "🕹️ Harici kontrol: Stream Deck ve benzerleri OBS Social’ı yönetiyor (Labs)",
+    "itens": [
+      "🕹️ 🧪 Labs’ta yeni (deneysel): ağınızda bir adres açabilen her cihaz veya program OBS Social’ı yönetir — Stream Deck (bir HTTP istek eklentisi veya «Web sitesi» eylemiyle), Loupedeck, Razer Stream Controller, Bitfocus Companion, Touch Portal, Macro Deck, Streamer.bot, iPhone Kestirmeler uygulaması, Android’de HTTP Shortcuts, Node-RED... Her eylem token’lı bir adrese dönüşür; cihaz adresi açar ve eylem gerçekleşir. Kurulacak bir şey yok ve ağın dışından hiçbir şey giremez.",
+      "📖 Ayarlarda yeni «🕹️ Harici Kontrol» sayfası (anahtar açıkken görünür): token (📋 kopyala ve 🔄 yenisini oluştur ile), temel adres, cihaz başına adım adım anlatım ve gruplanmış tam eylem listesi — her biri kopyalamaya hazır adresi, doldurulacak parametreleri (adres kendiliğinden güncellenir) ve eylemi gerçekten tetikleyen bir ▶ ile; cihaza kaydetmeden önce kontrol edin.",
+      "🧰 Neler yönetilebilir: ekranı temizle, son yorumu (herhangi bir ağdan veya tek birinden) ya da kayıtlı bir yorumu öne çıkar, öne çıkarmayı kaldır, kuyruğu serbest bırak/atla, medya oynatıcı, çekiliş (yap, gizle, sıfırla), likemetre, izleyici, winstreak, QR kodu, duyurular, saat, kronometre ve zamanlayıcı (başlat, duraklat, sıfırla, süre, göster), her bağlantıyı aç/kapat/yeniden başlat, Soundboard’un herhangi bir tuşu (id veya adla), OBS Studio ve vMix’in her eylemi (tuşlarla aynı, sahneler ve girişler listelenmiş), test yorumu ve pano. Programlar için: «catalogo» (JSON liste), «estado» (Companion geri bildirimleri için anlık durum) ve «op» (serbest işlem — panelin herhangi bir işlemi adıyla).",
+      "🔐 Token panel şifresi kadar değerlidir ve aynı kapılardan geçer: yalnızca yerel bilgisayarın yaptıkları (şifre, güncellemeler, yeniden başlatma, veri silme, yedekler, kimlik bilgileri) token’la bile dışarıda kalır; yerel ağın dışından hiçbir şey giremez; 20 yanlış deneme cihazı 10 dakika engeller. Panel, alınan her eylem için bir 🕹️ bildirimi gösterir."
+    ]
+  },
+  "0.125.0": {
+    "titulo": "🧪 Labs sayfası düzenlendi: her öğe daralıp genişliyor",
+    "itens": [
+      "🧪 Labs sayfasındaki her işlev, Temalar sayfasındaki kartlar gibi daraltılabilir bir öğe oldu: daraltıldığında yalnızca anahtar satırı kalır (açıp kapatmaya devam eder); yanındaki ▸/▾ oku o işlevin adımlarını ve alanlarını açar. Her şey daraltılmış başlar ve her tarayıcı neyi açık bıraktığınızı hatırlar."
+    ]
+  },
+  "0.124.0": {
+    "titulo": "💬📨 Her birine bir sekme: panelde WhatsApp ve Telegram ayrı",
+    "itens": [
+      "💬📨 v0.123'teki tek sekme 👑 Üyeler'den sonra yan yana İKİ sekme oldu: 💬 WhatsApp ve 📨 Telegram, her biri kendi gerçek günlük sayacı, kendi listesi ve kendi Labs anahtarıyla (bir ağın sekmesi o ağın anahtarıyla görünüp kaybolur). Özen aynı: medya, yanıt ve moderasyonlu sütun kartı, arama, rozetler, öğe tavanı, moderasyonla temizlik ve 🧲 Paneli düzenle'de sürüklenebilir sıra."
+    ]
+  },
+  "0.123.0": {
+    "titulo": "💬 Panelde WhatsApp/Telegram sekmesi, 👑 Üyeler'in yanında",
+    "itens": [
+      "💬 WhatsApp ve Telegram mesajları panelde kendi sekmesine kavuştu, 👑 Üyeler'in hemen yanında — diğer sekmelerle aynı özenle: sunucunun saydığı gerçek günlük sayaç (yalnızca bellektekiler değil), sütunlarla aynı kart (profil fotoğrafı, önizleme ve yakınlaştırmalı medya, sağ tıkla yanıt ve moderasyon), 🔎 arama, yeniden çizilen rozetler, öğe tavanı ve moderasyonla temizlik. Sekme yalnızca 🧪 Labs'ta 📨 Telegram veya 💬 WhatsApp açıkken görünür ve 🧲 Paneli düzenle'de sürüklenebilir — 🎛️ vMix aracı da o sıraya girdi."
+    ]
+  },
+  "0.122.0": {
+    "titulo": "🎛️ Panelden vMix (Labs, deneysel) — 🎬 OBS Studio ile aynı kalıpta",
+    "itens": [
+      "🎛️ 🧪 Labs → Panelden vMix yeni anahtarı: OBS Social, vMix'in fabrikadan açık gelen TCP API'siyle (port 8099, şifresiz) konuşur — eklenti yok, her şey kendi ağınızda. «🎛️ Uzak vMix» sayfasında (🎬 OBS Studio Uzak'tan hemen sonra) adım adım anlatım, adres/port ve her kontrol bloğunun aç/kapa anahtarları var.",
+      "🎛️ Paneldeki 🎛️ aracı şunları yönetir: 📡 yayın ve ⏺ kayıt (onaylı), 📤 harici çıkış, 🎞 MultiCorder, ⛶ tam ekran, ⬛ karartma, 📸 anlık görüntü ve 🔖 işaret; 📺 girişler (tıklama önizlemeyi 👁 seçer, 🔴 vMix tally'siyle yayındakini gösterir); 🔀 4 geçiş düğmesi, kes ve fade; 🧩 overlay 1–4; 🔊 master ve giriş başına sessiz/ses mikseri; ⏯ medya kontrolü; 🔤 başlık (GT/XAML) metinleri anında düzenlenebilir; ve 🧰 gelişmiş blokta replay, preset'ler, betikler, kısayol tuşu ve adıyla herhangi bir vMix işlevi.",
+      "🎵 Parça Masası'nda «🎛️ vMix eylemi» tuşu, OBS tuşunun ikizi: eylemi, girişi (bağlı vMix'ten önerilerle) ve modu seçin, ▶ Şimdi test et ile deneyin. Tuş kendiliğinden yanar (yayında, önizlemede, kayıtta, sessiz, overlay açık, medya oynuyor), 🎛️ çoklu eylem düğmesinin kuyruğuna girer ve 🎵 kartındaki tuş oluşturucu birçoğunu tek seferde kurar.",
+      "🔒 Kısıtlı modda ağdan girenler vMix'i yalnızca Güvenlik'te OBS ile aynı 🎬 anahtarı açıksa yönetir. Deneyseldir, değişebilir."
+    ]
+  },
+  "0.121.0": {
+    "titulo": "🧪 Her ağ için eksiksiz örnekler + 🎭 otomatikte özel @tanımlayıcı",
+    "itens": [
+      "🧪 Test düğmesi artık her ağın gönderebileceği HER ayrıntı için bir örnek yorum dolaşıyor: YouTube'da sahip, moderatör, doğrulanmış, yeni/6 ay/1 yıl/2 yıl üye (seviye adıyla), kanal emojisi, 7 renkte Super Chat, metinsiz Super Chat, yabancı para ve Super Sticker; Twitch'te Tier 1/2/3 abone, Prime, kurucu, yayıncı, moderatör, VIP, bit, ortak, bot, ad rengi, emote ve Twitch'in kendi rozetleri; Kick'te kurucu, OG, doğrulanmış, moderatör, abone, yayıncı, VIP ve bot, ad rengiyle; Bilibili'de normal yorum ve Super Chat; Desteklerde bağış ve Pix; Telegram'da @kullanıcı, profil fotoğrafı, kaynak grup, konum ve her tür medya (fotoğraf, ses, video, sabit/animasyonlu/video çıkartma, dosya); WhatsApp'ta kayıtlı adı olan ve olmayan numara (ekranda 📱 Misafir olur), profil fotoğrafı, grup ve medya (fotoğraf, ses, video, çıkartma, belge). Örnek medyası gerçek medyayla aynı karantinadan geçer. Böylece öne çıkan yorum, şablonlar ve 🎭 otomatiğin aralıkları yayını beklemeden denetlenebilir.",
+      "🎯 \"@\" ile başlayan 🔤 addaki kelime aralığı artık bir TANIMLAYICI: yalnızca tam olarak o kişiyse — ağın gönderdiği @ (Telegram, Twitch/Kick girişi) ya da görünen adın tamamı ile — uygulanır, adın bir parçasıyla asla. \"@\" olmayan kelimeler eskisi gibi parça olarak geçerli (Üye, Altın…).",
+      "🖼️ Telegram ve WhatsApp profil fotoğrafı (yerel karantinada saklanır) panelde, öne çıkanda ve sabit sohbette yeniden görünüyor — renkli baş harflere düşüyordu."
+    ]
+  },
+  "0.120.0": {
+    "titulo": "🎨 Temalar: renk satırı artık üst üste binmiyor",
+    "itens": [
+      "🎨 🎨 Temalar → Renkler bölümünde her rengin ↺ düğmesi yandaki rengin etiketine taşıyor, \"İç kutular\" ve \"Yumuşak metin\" gibi adlar iki satıra bölünüyordu. Artık her renk etiket, renk kutusu, kod alanı ve ↺ için yeterince geniş bir hücre alıyor — hiçbir şey üst üste binmiyor ve dar ekranlarda renkler hiçbir şey kesilmeden alt satıra iniyor."
+    ]
+  },
+  "0.119.0": {
+    "titulo": "🎟️ YouTube Super Sticker ekranda Telegram ve WhatsApp çıkartmaları gibi görünür",
+    "itens": [
+      "🎟️ Super Sticker görseli (sabit ya da animasyonlu) artık Telegram/WhatsApp çıkartmalarıyla aynı yolu izliyor: program onu yerel karantinaya indirir ve abone medyası olarak gelir — panelde önizleme ve yakınlaştırmayla, izleyici ekranında ise 📎 Abone medyası bloğu üzerinden, orada belirlenen ölçek ve tam ekrana uyarak büyük şekilde. Tutar, renkler ve 🎭 otomatiğin aralıkları bir Super Chat'inki olarak kalır. İndirme başarısız olursa çıkartma v0.118'deki gibi kartta satır içinde kalır. 🧪 Super Sticker örneği de aynısını yapar."
+    ]
+  },
+  "0.118.0": {
+    "titulo": "🎟️ YouTube Super Sticker'lar ekranda + 🎭 otomatikte 🕒 üyelik süresi aralığı",
+    "itens": [
+      "🎟️ YouTube Super Sticker'lar (ücretli çıkartmalar, sabit ya da animasyonlu) artık programa giriyor: daha önce bağlayıcı onları düpedüz atıyordu. Her çıkartma tutar, YouTube renkleri ve metnin yerinde büyük görselle bir Super Chat olarak gelir — panelde, 💰 Super Chat sekmesinde, sabit sohbette ve öne çıkan yorumda görünür ve 🎭 otomatiğin 💰 tutar ile 🎨 renk aralıklarında herhangi bir Super Chat gibi sayılır.",
+      "🕒 🎭 otomatikte yeni \"üyelik süresi\" aralığı: \"YouTube üyesi olarak N aydan itibaren\" seçilen şablonu giyer — süre, YouTube'un 1, 2, 6, 12, 24 ayda... değiştirdiği üye rozetinden gelir (0 = yeni üye). Ulaşılan en yüksek aralık geçerlidir; normal yorumlar ve kendi aralığı olmayan Super Chat/Sticker'lar için. Sıra: renk → tutar → kelime → üyelik süresi → normal. Aralığın 🧪'si o ay sayısında bir test üyesini yayına koyar."
+    ]
+  },
+  "0.117.0": {
+    "titulo": "🗂️ Temalar sayfası yeniden düzenlendi — görsel düzenleyici üstte, öne çıkan ve sohbet hemen altında, geri kalanı açılır/kapanır",
+    "itens": [
+      "🗂️ 🎨 Temalar sayfasının yeni sırası: 🎨 Görsel overlay düzenleyicisi üstte kalır; hemen altında 🎨 Öne çıkan yorum, sonra 📺 Ekrana sabit canlı sohbet; ancak ondan sonra diğer bloklar (🧩 widget'lar, 🕐 saat, 🎁 çekiliş, 🔊 sesler, 🎨 panel temaları).",
+      "▸ Görsel düzenleyici hariç her blok bir aç/kapa menüsü oldu: açmak ya da kapatmak için başlığa tıklayın (▸ kapalı, ▾ açık). Bloklar sayfa düzenli kalsın diye kapalı başlar ve tarayıcı hangilerini açık bıraktığınızı hatırlar. Başlıktaki ◀▶↺ düğmeleri bloğu açmadan çalışmaya devam eder; içerideki bir alana ulaşmak (Tab) bloğu kendiliğinden açar."
+    ]
+  },
+  "0.116.0": {
+    "titulo": "🎁 Katılım kelimeleri, ◀▶↺ geçmişi ve en yüksek ağırlıklı kurucuyla çekiliş",
+    "itens": [
+      "🔑 Katılım kelimeleri: paneldeki 🎁 düğmesinde ve 🎨 Temalar → 🎁 Çekiliş'te bir metin kutusu ile ➕ (ya da Enter) listeyi oluşturur — en fazla 30 kelime, her birinin kendi ✖'i var. Listede kelime varsa çekilişe yalnızca sohbette bunlardan BİRİNİ yazan katılır: kelimenin tamamı, büyük/küçük harf fark etmez (\"#çekiliş\" ile \"çekiliş\" aynıdır; bir cümle parça olarak eşleşir). Boş liste = her zamanki gibi konuşan herkes katılır.",
+      "◀▶↺ Çekiliş geçmişi: ayarlardaki 🎁 Çekiliş kartına Geri, İleri ve Varsayılan düğmeleri geldi ve çekilişin TAMAMINI kapsıyorlar — kelimeler, seviyeye göre biletler, YouTube seviyeleri, zar, ses, kazananların yanıtı ve mesajlaşma ağları. Paneldeki 🎁 düğmesinde değiştirdikleriniz de geçmişe girer.",
+      "👑 En yüksek varsayılan ağırlıklı kurucu: Twitch kurucusu ve Kick founder 3'ten 5 bilete çıkıyor (4 olan Tier 3'ün üstünde). Fabrika ayarı 3'te kalan kendiliğinden yükselir; sayıyı değiştirmiş olan olduğu gibi kalır."
+    ]
+  },
+  "0.115.0": {
+    "titulo": "📏 Ölçüm modu noktalı çizgisi daha belirgin yapılabilir",
+    "itens": [
+      "📏 Yayıncının isteği: 🖱️ Ekranı düzenle'nin 📐 panelindeki yeni \"Ölçüm modu noktalı çizgisi\" seçicisinin üç düzeyi var — Normal (eskisi gibi), Daha belirgin ve Çok belirgin (açık renkli görsel üzerinde görünmesi için koyu haleli daha kalın çizgi). Her şey kutunun İÇİNE doğru büyür: dış kenar gerçek boyut olarak kalır. Yakınlaştırma ve tema gibi bu tarayıcının tercihidir."
+    ]
+  },
+  "0.114.0": {
+    "titulo": "📐 Manuel boyut kutusuna yazdınız mı? Harita yalnızca gerçek boyutun beyaz noktalı çizgisini gösterir",
+    "itens": [
+      "📐 Yayıncının isteği: 🖱️ Ekranı düzenle'nin 📐 panelinde Konum, Genişlik, Yükseklik ya da Boyut yazınca mor sürükleme tutamaçları ve seçimin mor parlaması kaybolur — yalnızca beyaz noktalı çerçeve kalır, böylece parçanın ya da overlay'in gerçek boyutunu üzerinde hiçbir şey olmadan görürsünüz. Tutamaçlar parçaya/overlay'e bir sonraki tıklamada (haritada ya da Öğe seç kartında) geri gelir."
+    ]
+  },
+  "0.113.0": {
+    "titulo": "📺 Her ağın kendi normal yorum şablonu — ve canlı görünüm artık ekran dışı görsel giymiyor",
+    "itens": [
+      "🐛 Gerçek vaka: yalnızca YouTube için yedi şablon (normal + renk aralıkları) ve \"yalnızca ilk ikisi çalışıyordu; Twitch ve Kick bozuk ve görselsiz görünüyordu\". Şablonlar doğruydu — görünen canlı görünümdü: karta bağlı gerçek boyutta bir görsel taşıyordu (neredeyse tamamen ekranın altında) ve hiçbir şablona uymayan HER ŞEYİ giydiriyordu: Twitch, Kick, bağışlar ve aralıksız mavi/camgöbeği Super Chat. Artık 🎭 otomatik bloğu canlı görünüm bir görsel taşıdığında uyarır (adı ve yanında ↺ Varsayılan öne çıkan düğmesiyle) ve kimsenin konumlandırmadığı, merkezi ekran dışında kalan bir görsel 🖱️ Ekranı düzenle açıldığında ekranın ortasında doğar (zaten konumlandırdığınız şablonlara dokunulmaz).",
+      "📺 🎭 otomatikte yeni: \"Ağa göre\" — YouTube, Twitch, Kick ve Bilibili, her biri kendi normal yorum şablonuyla (yalnızca o ağın giyebileceği şablonlar listelenir: kendisininkiler ve 🌐 paylaşılanlar). Her seçici \"normal yorumla aynı\", \"canlı görünüm (şablonsuz)\" ya da yalnızca o ağa ait bir şablon kabul eder — Twitch ve Kick böylece YouTube şablonlarına dokunmadan kendi overlay/görsellerine kavuşur.",
+      "💰 Yeni: \"Hiçbir aralığa uymayan Super Chat ya da bağış şunu giyer\" — varsayılan olarak ağın normal yorumuyla aynı şablon (mavi Super Chat artık canlı görünüme düşmek yerine \"Comentário base\" giyer); canlı görünüm ya da belirli bir şablon da seçilebilir."
+    ]
+  },
+  "0.112.0": {
+    "titulo": "🎭 🎨 sekmesi neyi düzenlediğini söylüyor — ve yayın başka bir şablon giyince uyarıyor",
+    "itens": [
+      "🐛 Gerçek olay: tutar, şablon açık değilken 🎨 Öne çıkan yorum'da biçimlendirildi ve \"uygulanmadı\" — ayar canlı görünüme gitti ama yayındaki yorum 🎭 otomatik ile sanatlı şablonu giyiyordu. Artık 🎨 sekmesinin üstünde \"🎭 Düzenlenen\" seçici var (🖱️ Ekranı düzenle'dekinin aynısı, yansıtılmış) ve bu sekmedeki her şey — renkler, yazı tipi, 💰 tutar, ✍️ biçimlendirme — orada seçilene gider.",
+      "⚠️ Yayındaki yorum düzenlediğinizden farklı bir şablon giyiyorsa sekme hangisi olduğunu söyler ve \"🎭 \"şablon\"u aç\" düğmesini sunar: bir tıkla tam olarak ekrandakini ayarlarsınız (Düzenle önizlemesi eşlik eder).",
+      "✍️ TÜM metin alanları × tüm kontroller canlıda ölçülerek denetlendi: tutar parçasının biçimi ve rengi artık hapa ulaşıyor (kalın \"Hayır\" ve kendi rengi hapın sabit kalın/siyahını yenemiyordu); widget'larda biçimlendirme öncelik kazanıyor ve alt öğelere iniyor — saatin zamanı ve beğeni sayacının sayıları (👀/👍) seçilen kalınlığı, rengi ve aralığı yok sayıyordu; ve \"Hizala\" artık serbest parçaların ortalanması tarafından ezilmiyor."
+    ]
+  },
+  "0.111.0": {
+    "titulo": "🎯 Kusursuz ortalama: harita kutusu = gerçek parça, içerik kutunun tam ortasında",
+    "itens": [
+      "🐛 🖱️ Ekranı düzenle haritası kenarlığın içinde tam 16:9 değildi: (genişliğe göre ölçeklenen) önizleme haritadan 0,9 px daha yüksekti ve ekranın altına yakın her şey dikeyde ~1,5 px kayıyordu. Önizleme ölçeği genişliği de tam sayıya yuvarlıyordu (kenarda 0,85 px'e kadar hata). Artık harita ve önizleme tüm ekranda ±0,05 px içinde örtüşüyor.",
+      "🐛 Önizleme açıkken parça kutularının en küçük genişliği/yüksekliği vardı: beğeni sayacının çubuğu (10 px) 7 px fazla kazanıyor ve merkezi aşağı iniyordu. Kutu artık tam olarak gerçek dikdörtgen; ölçüm iki ondalık basamaklı (%0,1 yerine %0,01).",
+      "🐛 Parçanın içinde rozetler ve tutar hapı yazının taban çizgisine göre hizalanıyordu, kutu merkezinden ~1 px sapmayla. Artık flex ile ortalanıyor — ve ⌖ yalnızca kutuyu değil görüneni ortalıyor: konumlar iki ondalıkla kaydediliyor (ekranın %0,1'i 1,9 px idi). Her parçada ve her overlay'de test edildi: merkez ve boyut ±0,05 px, ⌖ ±0,3 px."
+    ]
+  },
+  "0.110.0": {
+    "titulo": "✍️ Overlay'lerin TÜM metinlerinde biçimlendirme + ✍️ satırı her zaman görünür",
+    "itens": [
+      "✍️ Metin biçimlendirme (yazı tipi, kalın, italik, altı çizili, büyük harf, hizalama, kendi rengi, kontur ve aralık) artık her modda TÜM metinlerde geçerli: öne çıkanın standart kartı, sanatlı şablonlar, her zamanki ön ayarlardaki widget'lar (yalnızca parçalara ayrılmışken değil), 📢 duyuru ve 📺 sabit sohbet (yorum yapanın adı ve yorum metni). Tutarın 💰 \"Düz metin\"i standart kartta da geçerli.",
+      "🎨 Aynı \"✍️ Metin biçimlendirme\" bloğu sekmelerde görünür: 🎨 Öne çıkan yorum (ad, metin, tutar), 🧩 Widget'ları özelleştir (seçilen widget'ın metinleri, duyuru dahil) ve 📺 Sabit sohbet (ad, metin) — \"Hangi metin\" seçici ve her biri için ↺ ile. 🖱️ Ekranı düzenle'deki ✍️ satırıyla aynı biçimlendirmedir.",
+      "🐛 v0.109'un ayarları yana kayan parça çubuğunun SONUNA girmişti — ve ekran dışında kalıyordu (\"biçimlendirme seçenekleri nerede?\"). Artık çubuğun hemen altında kendi satırları var; kaymak yerine alt satıra geçer: hiçbir şey gizli kalmaz. Satır çubuğun kuralına uyar: her zaman sayfadadır (boşken ipucu; avatar ve sanat gibi harfsiz bir parçada uyarı) ve harita zıplamaz."
+    ]
+  },
+  "0.109.0": {
+    "titulo": "✍️ Her parçada metin biçimlendirme + 💰 tutar hap ya da düz metin olarak",
+    "itens": [
+      "💰 🎨 Öne çıkan yorum sekmesinde (ve parça çubuğunda) yeni \"Öne çıkandaki tutar\" seçici: her zamanki \"Renkli hap\" ya da ad ve metin gibi \"Düz metin\" — yalnızca sayı, parçanın renginde; sanatınızın ona ayırdığı alana sığar.",
+      "✍️ Metin içeren her parça (ad, metin, tutar ve widget parçaları: başlıklar, etiketler, sayılar, saat, açıklama, podyum, izleyici) parça çubuğunda kendi biçimlendirmesini kazandı: yazı tipi, kalın, italik, altı çizili, büyük harf, hizalama, harf konturu (kalınlık ve renk) ve harf aralığı — zaten var olan renk, gölge, döndürme ve saydamlığa ek olarak. \"Olduğu gibi\" her parçanın fabrika görünümünü korur.",
+      "🔒 Her şey aynı sunucu temizliğinden geçer (tırnak ya da noktalı virgül içermeyen yazı tipleri, aralıklar korunur) ve canlı görünümde, şablonlarda ve 📋 ayarları kopyala'da geçerlidir."
+    ]
+  },
+  "0.108.0": {
+    "titulo": "⌖ Her overlay ve parça kartında ekranda ortalama düğmesi",
+    "itens": [
+      "\"Öğe seç\" çubuğundaki her kart, 👁 ile 🔒 arasında bir ⌖ düğmesi kazandı: tek tıkla overlay (ya da parça) ekranın ORTASINA gider. Overlay gerçek kutusuna göre (özel sanat varsa çapa olan sanata göre), parça ise önizlemedeki gerçek ölçüsüne göre gider. Kilitli kart ortalanmaz."
+    ]
+  },
+  "0.107.0": {
+    "titulo": "💰 Tutar her zaman kutusuna sığar; ad da ortalanır",
+    "itens": [
+      "💰 Genişliği/yüksekliği seçilmiş bir tutar, uyum modu ne olursa olsun kutuya SIĞANA kadar yazıyı küçültür: kutu, sanatın tutar için ayırdığı yerdir ve \"$5.00 ≈ R$ 25,88\", \"R$ 20,00\"ın sığdığı yere sığmalıdır — önceden uzun tutar o yerden taşıyordu.",
+      "🎯 Yorumun adı da diğer parçalar gibi kutusunda ortalanır. Uyum modu (küçült, üç noktayla kes ya da taşır) geçerli olmaya devam eder, artık ortalanmış içeriğe uygulanır."
+    ]
+  },
+  "0.106.0": {
+    "titulo": "🎯 Yeni özel sanat ekranın ortasında doğar",
+    "itens": [
+      "Yeni seçilen her özel sanat (yüklenen ya da seçicide değiştirilen, canlı görünümde ya da düzenlenen şablonda) ekranın ORTASINDA, gerçek boyutta ve döndürmesiz doğar. Ortadan istediğiniz yere sürüklemek, her sanat türünün nerede doğması gerektiğini tahmin etmekten daha kolaydır. Yerine koyduktan sonra bıraktığınız yerde kalır."
+    ]
+  },
+  "0.105.0": {
+    "titulo": "🖼️ Özel sanat varken sanat, Öne Çıkan'ın çapası olur — ve önizleme her zaman düzenlediğinizi gösterir",
+    "itens": [
+      "🖼️ Özel bir sanat etkinken haritadaki \"Öne Çıkan\" dikdörtgeni SANATIN KENDİSİ olur: bütünün çapasıdır. Öne Çıkan'ı taşımak sanatı ve tüm parçaları birlikte taşır; varsayılan kartın görünmez kutusu (OBS Social varsayılan overlay'inin parçası) haritadan kalkar — tutamaç yok, 📐 panelinde Genişlik/Yükseklik yok. Sanatı 🖼️ Sanatınız parçası boyutlandırır.",
+      "🐛 \"Rozeti taşıyamıyorum\": 🎭 otomatik açıkken yayındaki bir test yorumu (üye, Super Chat) önizlemede bir ŞABLON giyerken harita canlı görünümü düzenliyordu — kutu bir yerde, rozet başka yerdeydi ve sürüklemek hiçbir şeyi oynatmıyordu. Şablon açık değilken önizleme artık her zaman düzenlediğiniz görünümü gösterir; bir satır, canlı yayının o yorumda hangi şablonu giyeceğini söyler — ayarlamak isterseniz 🎭 Düzenleniyor seçicisinde açın.",
+      "📏 Bir overlay veya parçayı tutarken editör anında yeniden ölçer: sürükleme, önizlemede ŞU AN olduğu yerden başlar (yeni yüklenen sanat, değişen örnek...), ilk harekette zıplama olmaz."
+    ]
+  },
+  "0.104.0": {
+    "titulo": "🎯 Her parçanın kutusunda içerik ortalanıyor",
+    "itens": [
+      "Genişliği veya yüksekliği seçilmiş her parça (kendi kuralını izleyen yorum adı ve metni hariç) artık içeriğini kutuda ORTALAR: rozetler, tutar, avatar ve platform simgesi yeniden boyutlandırılabilir seçimin sol üstüne yapışık kalıyordu.",
+      "👤 Kutusu olan avatar ve platform simgesi ortalanmış bir KARE olur — seçilen bir kenar boyutu belirler; ikisi seçiliyse küçük olan kazanır. Önceden kutuyu doldurmak için uzuyor ve elipse dönüşüyordu.",
+      "🧩 Parçalara ayrılmış widget'larda aynı kural: QR başlığı, beğeni ölçer ve winstreak etiketleri ve sayıları, saatin zamanı ve açıklaması, çekilişin başlığı ve podyumu, izleyici toplamı ve satırları kutularında ortalanır. QR kodun kendisi ve beğeni ölçer çubuğu kutuyu doldurmaya devam eder."
+    ]
+  },
+  "0.103.0": {
+    "titulo": "🗺️ Parçalar ekranın her yerine gidebiliyor, önizleme her zaman gerçek örnekle, harita kutuları tam boyutta",
+    "itens": [
+      "🐛 Sanat (ve herhangi bir parça) ekranın her yerine GİDEMİYORDU: konum kartın yüzdesidir ve −200 %/+300 % ile sınırlıydı — 120 px yüksekliğindeki bir kartta sanat en fazla 240 px yükseliyor ve asla üste ulaşmıyordu. Sınır kalktı: her overlay'in her parçası fareyle ya da 📐 paneliyle ekranın her yerine (ve ötesine) gider.",
+      "📺 Editör önizlemesi HER ZAMAN gerçek overlay'i gösterir: yayında hiçbir şey yokken YEREL bir örnek yorum koyar (tür Super Chat ise 💰 tutarla) ve kapalı tüm widget'lar örnek verilerle görünür — saat, duyuru, QR, beğeni ölçer, çekiliş, winstreak ve izleyici. Bunların hiçbiri canlı yayına gitmez: 🧪 örneği yayına koyan düğme olmaya devam eder (OBS'de de). ✍️ harf sayacı her zaman önizleme için geçerlidir.",
+      "📏 Haritadaki HER overlay'in ve HER parçanın kutusu önizlemedeki gerçek ölçüdür — konum ve boyut — daha önce tahmini bir dikdörtgen kullanan widget'lar ve ek örnekler (QR 2, Winstreak 2) dahil. Sürükleme, tutamaçla uzatma ve 📐 paneline yazma gerçek overlay ile piksel piksel eşleşir.",
+      "🐛 Serbest konumlu bir widget'ı sağ/alt tutamaçtan uzatmak sol köşesini kaydırıyordu (overlay tahmini kutunun merkezine sabitlenir): konum artık tüm tutamaçlarda telafi edilir ve karşı köşe yerinde kalır.",
+      "🏷️ Her parçanın etiketi yalnızca fareyle üzerine gelince ya da seçili parçada görünür, diğerleri ise silik bir çerçeve alır — haritanın içinde gördüğünüz gerçek parçadır (avatar, ad, rozetler, tutar, metin) ve ayarladığınız şeyi hiçbir şey örtmez."
+    ]
+  },
+  "0.102.0": {
+    "titulo": "🖼️ Sanat gerçek bir parça oluyor — gerçek boyut, bozulma yok, rozetle birlikte kaymıyor — ve editör artık zıplamıyor",
+    "itens": [
+      "🐛 Öne çıkan yorumun sanatı (görsel veya video) UZAMIŞ görünüyordu: Varsayılan kart kutusunun (maksimum genişlik × kart yüksekliği) yüzdesi olarak çiziliyor ve zorla o kutuyu dolduruyordu — 1840×586’lık bir alt bant, 640×120’lik ezilmiş bir şerite dönüşüyordu. Görsel de video da.",
+      "Artık sanat diğerleri gibi bir parça: Dosyanın GERÇEK BOYUTUNDA doğar (genişlik ve yükseklik otomatikte), Boyut (%) tüm dosyayı büyütür, tek bir kenar seçilirse oran korunur ve yalnızca İKİ kenar da seçildiğinde kutuya göre uzar — siz istediğinizde. Sanatı değiştirmek kutuyu sıfırlar, yenisi kendi boyutunda gelir.",
+      "🔁 Eski varsayılanda (kartın %100 × %100’ü) sanatı olanlar, ayarlarda ve kayıtlı şablonlarda bir kez gerçek boyuta geçirilir. Sonrasında yapılan seçimler olduğu gibi kalır.",
+      "🐛 “Rozeti oynatıyorum, sanat da oynuyor”: Haritada seçili sanat tüm parçaların üstüne çıkıyor ve kartın tamamını kapladığı için rozetin, adın, her şeyin tıklamasını çalıyordu — rozeti sürüklediğinizi sanıp sanatı sürüklüyordunuz. Seçili sanat artık parçaların altında kalır (tutamaçları üstte).",
+      "📌 Editör tuvali NE boyut NE de yer değiştirir: 📐 paneli, parça çubuğu, boyut kaydırıcısı, örnek harf alanı, profil durumu, düzenlenen şablon uyarısı ve sanat küçük resmi artık her zaman yer ayrılmış durumda — görünüp kaybolmaları haritayı itmez ya da daraltmaz. (Her tıklamada overlay’i “beliren bir şeyin değiştirmesine” neden olan buydu.)",
+      "📐 Taşıma ve boyutlandırmada doğru izleme: Öne çıkanın X/Y konumu parça modunda da önizlemedeki GERÇEK ölçümden gelir (önceden köşe tahmini: gerçek 640/920 yerine 653/907); önizlemede kart yokken tahmin overlay’in 40 px boşluğunu kullanır; iki “Genişlik” alanı “Maksimum genişlik” (klasik kart) ve Genişlik × Yükseklik (parçalı kart) oldu; harita dikdörtgenlerinden yüzdeleri bozan kenarlık/iç boşluk kaldırıldı.",
+      "🏷️ Önizleme açıkken harita yalnızca dış çizgilerden oluşur: overlay ve her parça dikdörtgenlerin içinde GERÇEKTEN görünür (sanatta olduğu gibi) ve etiketler dış köşede küçük etiketlere dönüşür — emojiye değil gerçek şeye bakarak uzatır ve yerleştirirsiniz.",
+      "📏 Önizlemede kart yokken (örnek yayında değil) Öne çıkan kutusu artık yanlış bir tahmine zıplamaz: sanat son ölçümünü saklar ve köşe, parçalı kartın gerçek boyutuyla hesaplanır."
+    ]
+  },
+  "0.101.1": {
+    "titulo": "🎬 Video uyarısı artık render .mov dosyalarını (ProRes/alfa) yakalıyor — açıklamasız siyah kalan o dosyaları",
+    "itens": [
+      "🐛 Geçen sürümde gelen uyarı dosyayı fazla erken iyi sayıyordu: yalnızca tarayıcının videonun künyesini OKUMASINI bekliyordu. Bir render .mov (ProRes ya da alfa'lı QuickTime, After Effects'in varsayılan çıktısı) bu sınavı geçer — süre ve boyut gelir — yine de tek kare çözülmez. Sonuç: ekranda siyah görsel, hem de hiçbir uyarı olmadan.",
+      "Artık sınav GERÇEK BİR KARE görünene kadar bekliyor. Hiç kare gelmezse uyarı ne yapılacağını söylüyor: arka plan saydam olmalıysa WEBM (alfa'lı VP9), gerekmiyorsa MP4 (H.264).",
+      "❓ SSS'ye de aynı açıklamayla bir soru girdi — \"Görsel olarak bir video yükledim ama ekranda siyah çıktı. Neden?\" — aynı yerde takılan kişi sormadan yanıtı bulsun diye."
+    ]
+  },
+  "0.101.0": {
+    "titulo": "🎬 Video görsel: editörler artık her medya biçimini kabul ediyor — ve dosya açılmıyorsa uyarıyor",
+    "itens": [
+      "🐛 Özel görseli video olarak yüklemek \"Dosya türü kabul edilmiyor\" ile geri dönebiliyordu ve hangisinin işe yaradığını söylemiyordu: yükleme biçim listesi kısaydı ve .mpeg, .mpg, .wmv, .asf, .flv, .f4v, .3gp, .3g2, .ts, .mts, .m2ts ve .vob dışarıda kalıyordu — görsellerde de .svg, .tif, .tiff, .heic, .heif ve .jxl.",
+      "Artık gerçek her medya biçimi giriyor (görsel, video ve ses); her biri tarayıcının oynatabilmesi için doğru türle sunuluyor. Medya olmayanlar — programlar ve sayfalar — her zamanki gibi engelli kalıyor.",
+      "⚠️ Ve en önemlisi: her video tarayıcıda OYNAMAZ (OBS overlay'leri bir tarayıcının içinde gösterir). Önce bir .avi ya da .wmv hiçbir açıklama olmadan siyah bir karta dönüşüyordu. Artık editör dosyayı gelir gelmez deniyor ve söylüyor: \"tarayıcı bu dosyayı açamıyor — MP4 (H.264) ya da WEBM biçimine dönüştür\".",
+      "🎭 Kalıp çubuğunda, açılmayan bir görsel giydirilmiyor: uyarı çıkıyor ve kart olduğu gibi kalıyor; hazırladığın şey silinmiyor.",
+      "Aynı kural 🎵 Parça Masası için de geçerli: alışılmadık biçimdeki bir video 🎞️ video tuşu oluyor (önce yanlışlıkla ses parçası oluyordu) ve uyarı aynı."
+    ]
+  },
+  "0.100.0": {
+    "titulo": "✍️ Yorum yazanın İSİM rengi — öne çıkanda, parçalarda, panelde ve büyük avatarda",
+    "itens": [
+      "Yorum metninin rengi her yerde seçilebiliyordu ama İSİM rengi yalnızca 💬 sabit canlı sohbette vardı. Artık 🎨 Öne çıkan yorumda (standart kartta VE parçalı overlay'de) ve 🖥️ panelde de var (Temalar → Panel).",
+      "🎨 Üç yerde de aynı dört seçenek: o ekranın her zamanki rengi, sosyal ağın rengi, \"servisin kendisinin gönderdiği renk\" ve senin seçtiğin tek bir renk.",
+      "\"Servisin kendisinin gönderdiği renk\", kişinin sohbette seçtiği renktir: bunu yalnızca Twitch ve Kick gönderir — diğer ağlarda isim renksiz kalmak yerine ağın rengini alır.",
+      "🖥️ Panel ayrıca yorum METNİNİN rengini kazandı (önce yalnızca temanınki vardı); yanındaki ✖ ile istediğin an tema rengine dönersin. Sadece panelde: yayında hiçbir şey değişmez.",
+      "🔍 Büyük avatardaki isim, öne çıkan için seçilen rengi izler ve isim rengi 🎭 kalıbın içinde de yolculuk eder — her kalıbın kendi rengi olabilir. Hiçbir şeye dokunmayan için her şey aynı kalır."
+    ]
+  },
+  "0.99.0": {
+    "titulo": "🧪 Örnek artık HERHANGİ bir overlay için — hangisi olduğunu sen seçiyorsun",
+    "itens": [
+      "🧪 Örnek yalnızca öne çıkan bir yorumu ekrana koymayı biliyordu. Artık yanında bir seçici var: 💬 Öne çıkan, 🕐 Saat, 📢 Duyuru, 🔲 QR Kodu, 👍 Beğeni ölçer, 🎁 Çekiliş, 🏆 Galibiyet serisi ve 👥 İzleyici — her biri uydurma içerikle gelir; yayın olmadan da konumu, boyutu ve parçaları ayarlayabilirsin.",
+      "🎯 \"Düzenlediğim şey\" hazır seçili gelen seçenek: 🧪 haritada seçili olan overlay'i ekrana koyar (ek olanlar — QR 2, Seri 2... — kendi ailelerini izler). Editörde overlay değiştirmek, butonun göstereceğini de değiştirir.",
+      "Örneği kaldırınca yayında olan GERİ GELİR: duyuru metnin, QR kodun, galibiyet serin ve izleyici sayıların önce saklanır ve harfi harfine geri verilir — bir deneme hazırladığını silmez.",
+      "Aynı anda tek örnek olur ve buton her sekmede doğruyu söyler: biri yayındayken \"🧪 Ekrandan kaldır\" olarak kalır; sayfayı yenilesen de, editörü başka bir tarayıcıda açsan da. Hiçbir şey yanlışlıkla yayında unutulmaz.",
+      "📺 sabit sohbetin ve 🖼️ tam ekran medyanın örneği yoktur (gerçek medya gösterirler): biri seçiliyken buton soluklaşır ve bunu açıklar; bir şey yapmış gibi davranmaz."
+    ]
+  },
+  "0.98.1": {
+    "titulo": "🐛 🧩 \"Overlay parçalara\" açmak artık odağı öne çıkan yoruma kaçırmıyor",
+    "itens": [
+      "🎯 \"Sadece düzenlediğim\" açıkken 🧩 \"Overlay parçalara\"ya tıklamak bütün ekranı öne çıkan kartına götürüyordu: saati, çekilişi ya da beğeni ölçeri düzenleyen kişi öne çıkan yoruma düşüyor ve yaptığını kaybediyordu.",
+      "Artık seçtiğin overlay seçili kalıyor — ve parçalarına ayrılmış olarak, parçaları haritada ve \"Öğe seç\" çubuğunda görünüyor. Öne çıkan yalnızca hiçbir şey seçili değilken kendiliğinden seçiliyor; böylece parçalar hemen görünüyor, hep olduğu gibi."
+    ]
+  },
+  "0.98.0": {
+    "titulo": "📐 Overlay'in her parçasında gerçek genişlik, yükseklik ve boyut — 💰 Tutar'dan başlayarak",
+    "itens": [
+      "🐛 💰 Tutar hiçbir şeye uymuyordu: ne genişlik ne yükseklik ayarı vardı, Boyut da işe yaramıyordu — etiket karta sığsın diye ZORLA küçültülüyor, böylece kendiliğinden eski boyutuna dönüyordu. Artık Tutar \"taşsın\" olarak doğuyor: boyut, senin seçtiğin boyut. Eski davranışı isteyen, parçanın oturma ayarında \"küçült\"ü seçer.",
+      "📐 Genişlik ve yükseklik artık TÜM parçalarda var — öne çıkan yorumda ve bütün widget'larda — sadece görselde, adda ve metinde değil. 0 = otomatik (parça kendi içeriğinin boyutunda olur), hepsinin doğduğu hâl budur: her şeyi ayarlamış olanların ekranında hiçbir şey kaymaz.",
+      "🐛 Widget parçaları yalnızca genişliği uyguluyordu: yükseklik kaydediliyor ama çizim anında çöpe gidiyordu. Artık ikisi de geçerli — editörde de yayında da.",
+      "🧑 Bir kutu seçilince içerik kutuyu doldurur — boyutu \"em\" ile sabitlenmiş olan avatarın ve ağ simgesinin iki ayara da nihayet uymasını sağlayan şey budur.",
+      "📏 🖱️ Ekranı düzenle haritasında, otomatik bir parçanın dikdörtgeni artık önizlemedeki GERÇEK ölçüsünü taşıyor. Önce etiketin (\"💰 Tutar\") boyutundaydı ve ekrandaki etiketle hiçbir ilgisi yoktu — tutamaklar yalancı bir dikdörtgeni geriyordu."
+    ]
+  },
+  "0.97.0": {
+    "titulo": "🎯 Odak artık öğe çubuğunu da temizliyor — çapraz noktalar orantılı büyütüyor",
+    "itens": [
+      "🎯 \"Sadece düzenlediğim\" açıkken \"Öğe seç\" çubuğu HER overlay'in parçalarını listelemeye devam ediyordu — önceki düzeltmeden sonra da görünen buydu. Artık yalnızca odaktaki overlay kendi parça fişlerini açıyor.",
+      "Diğer overlay'lerin fişleri tümden kaybolmuyor: soluk ve kesik çizgili kenarlıkla duruyor, üzerlerine tıklayınca odak oraya geçiyor. Böylece 🎯 kapatıp açmadan overlay değiştirebiliyorsun.",
+      "📐 Yeniden boyutlandırmanın 4 çapraz noktası (köşeler) artık genişlik ile yüksekliği BİRLİKTE, aynı oranda büyütüyor — köşeden çekince tasarım eğrilmiyor. Kenar noktaları (üst, alt, sol, sağ) tek bir yanı germek için serbest kalıyor.",
+      "Oran, kutusu olan her şeyde geçerli: öne çıkan yorumun parçaları, parçalarına ayrılmış öne çıkan kart, parçalı widget'lar ve sabit sohbet — ve sonuna kadar korunuyor: bir yan sınırına dayandığında ikisi birlikte duruyor, biri tek başına devam edip tasarımı bozmuyor."
+    ]
+  },
+  "0.91.0": {
+    "titulo": "🪟 Her pencere bıraktığın yeri hatırlıyor",
+    "itens": [
+      "🪟 OBS Social’ın herhangi bir yerinde taşıdığın, esnettiğin, büyüttüğün ya da küçülttüğün her pencere, sayfayı yenilediğinde ve programı kapatıp açtığında TAM olarak bıraktığın yere geri gelir. Hafıza her tarayıcıya aittir: paneli açan herkesin (bilgisayarın, telefon, ikinci makine) kendi düzeni olur, kimse kimseninkini bozmaz.",
+      "🖼️ Paneldeki Parça masası medya penceresi her seferinde ekranın ortasına dönen tek pencereydi: artık bıraktığın yerde ve boyutta doğuyor. 💬 yanıt penceresi de gerçek bir pencere oldu — başlık şeridinden sürükle, seçtiğin köşeyi hatırlamaya başlasın.",
+      "🗕 Küçültülmüş olan ertesi gün de küçültülmüş kalır (bu, program kapanınca kayboluyordu) ve açık bırakılan serbest pencere açık olarak geri gelir — gerçek bir pencere ortamındaki gibi.",
+      "↺ Her pencerede fabrika yerine dönüş var: küçük pencerelerin ⚙’sinde, araç kartlarının ↩’sinde ve tuş düzenleyici penceresindeki yeni düğmede. Monitör ya da çözünürlük değiştirirsen, kayıtlı yer ekranın içine geri getirilir — dışarıda kaybolmaz."
+    ]
+  },
+  "0.90.1": {
+    "titulo": "🛡️ v0.90 güvenlik denetimi — önemli düzeltmeler",
+    "itens": [
+      "📋 CİDDİ DÜZELTME: pano geçmişi program kapanıp açıldıktan sonra geri gelmiyordu — üstelik ilk yeni mesaj kayıtlı olanı siliyordu. Artık tümüyle geri geliyor, sahipsiz dosyalar kendiliğinden temizleniyor ve dosyası kaybolmuş kayıtlar ölü bağlantıya dönüşmüyor.",
+      "🔑 🔌 bağlantılar yedeğini başka bir bilgisayarda geri yüklemek OBS parolasını ve jetonları uyarısızca BOŞ döndürüyordu: sırları açan anahtar artık yedeğin içinde yolculuk ediyor ve kasadaki her aksaklık sessizce geçmek yerine siyah pencereye yazılıyor.",
+      "🛡️ Kapılar kapandı: dışarıdaki bir site artık programınıza geri yükleme/içe aktarma gönderemiyor (köken denetimi programın geri kalanındaki güçlü denetimin aynısı oldu); geri yükleme kitaplığa yalnızca programın gerçekten kullandığı dosya türlerini alıyor ve bir alan bütçesi var; indirmenin tam o anında silinen bir dosya da artık programı düşürmüyor.",
+      "🕒 Ağdan parolayla girmek paneli artık dondurmuyor: kaba kuvvete karşı bilerek çok daha pahalı yapılan doğrulama ana hattan çıktı — program doğrularken yanıt vermeyi sürdürüyor — ve ağ üzerinden dosya göndermenin bir sınırı var; \"sınırsız\" yayıncının bilgisayarında kalıyor.",
+      "📋 Ağda panosu KAPALI olan kişiye artık geçmiş gitmiyor (önce içerik geliyor, yalnızca tıklama engelleniyordu). İndirme başarısız olduğunda panel de kaybolmuyor, gönderim reddedildiğinde metin yitmiyor ve yeni iletiler 9 dile çevrildi."
+    ]
+  },
+  "0.90.0": {
+    "titulo": "🔐 Geçmişli pano, Masanın kendi yedeği ve güçlü şifreleme",
+    "itens": [
+      "📋 Pano, paylaşılan ve sayfalanan bir GEÇMİŞ oldu: gönderilen her metin bir kayıt (boyut sınırı yok — ekranlar önizlemeyi görür, 📄 tamamını kopyalar) ve artık HER dosya paylaşılabilir, her tür ve boyutta, doğrudan ⬇ indirme ve kayıt başına 🗑️ ile.",
+      "💾 Parça Masası KENDİ yedeğine kavuştu: 📄 basit (yalnızca tuşları içeren .json) ya da 📦 tam (tuşlar + kitaplık dosyalarını içeren .zip). Geri yükleme ikisini de anlar, dosyaları yerine koyar ve her Stream Deck yedeğini kabul etmeye devam eder (her zamanki gibi ekleme olarak girer).",
+      "🎛️ Stream Deck içe aktarıcı denetlendi ve güçlendirildi: Stream Deck klasörleri gerçek iç içe klasörlere, her Multi Action adımları içinde bir 🎛️ çoklu eylem tuşuna (beklemeler ⏱ olur), OBS Studio eylemleri 🎬 tuşlara dönüşür; her tuşun ızgaradaki KONUMU korunur ve 🖼️ görseli yedekten birlikte gelir.",
+      "🔐 Programın sakladığı her parola artık şifreli: OBS parolası, bot jetonları (Telegram/WhatsApp) ve Pix sırları diske AES-256-GCM ile, yalnızca bilgisayarınızda var olan bir anahtarla yazılır (yalnız dosyaları kopyalayan hiçbir şey okuyamaz). Ağ parolası scrypt karması olmaya devam eder — yenileri kaba kuvvete karşı çok daha yüksek maliyetle doğar."
+    ]
+  },
+  "0.89.0": {
+    "titulo": "🪆 Parça Masasının büyük reformu — 7 istek bir arada",
+    "itens": [
+      "🪆 Klasör içinde klasör: her düğme/klasör, istediğiniz kadar derin, herhangi bir 🎛️/📁 içinde yaşayabilir (yalnız döngü yasak). Yan ızgara içeri gider, ⬅ bir seviye çıkar ve 🎛️ çoklu eylem sırası iç klasörlerdekileri de sırayla, ⏱ beklemelere uyarak çalar.",
+      "🧭 ➕ artık orada HANGİ tuşun doğacağını soruyor (ses, görsel, video, OBS, çoklu eylem, klasör) — sağ tık bağlam menüsünü açıyor: 📋 kopyala (içindekilerle çoğaltır), ✂️ taşı (kes) ve 📌 yapıştır (boş hücreye veya klasörün içine).",
+      "🔊 Klasörde toplu ses: 🎛️/📁 ayarlarındaki kutu (kaydırıcısız) istenen sesi belirler ve «✔ İçindeki her şeye uygula» bunu oradaki TÜM ses ve videolara (alt klasörler dahil) tek tıkla yazar. Genel ses değil: her tuş bireysel kalır.",
+      "🪟 Tuş düzenleyici gerçek bir PENCERE oldu: çubuktan sürükle, köşeden uzat, 🗖 büyüt, yerini hatırlar. Geri/kapat bağımsızlaştı — hücre 0 ayarlarda da panelde de yine işe yarar bir yer (⬅ çubukta). Düğme yazısının ortalanması denetlendi: tam (2px altı)."
+    ]
+  },
+  "0.88.0": {
+    "titulo": "📚 Herkesin kendi kitaplığı — Parça Masası ≠ Overlayler",
+    "itens": [
+      "🎵 Parça Masasından yüklediğiniz şey artık SADECE ona bağlı: dosyalar kendi kitaplığında (uploads/trilhas) yaşar ve yalnız Masanın seçicilerinde görünür — tuşların sesleri, görselleri ve videoları. Stream Deck içe aktarıcısının eşleştirdiği sesler de oraya gider.",
+      "🖼️ Medya sayfası özel Overlaylerin kitaplığı olmaya devam eder (arka planlar, çerçeveler, artlar, çekiliş/zamanlayıcı/overlay sesleri) — ve artık Masanın seçicilerinde görünmez. Oradaki dosyaları kullanan eski tuşlar çalışmaya devam eder.",
+      "⬆️ Masanın kendi yüklemesi artık ses, GÖRSEL ve VİDEO kabul ediyor: görsel/video anında tıklanmaya hazır medya tuşu olur. Silme iki kitaplıkta da çalışır, «her şeyi sil» ikisini de temizler.",
+      "🧰 Uzantı denetimi yapıldı: .avi ve .mkv kabul ediliyordu ama türsüzdü — tarayıcı oynatmayı reddediyordu; artık doğru MIME’ları var. .jfif (WhatsApp fotoğrafları) ve .apng eklendi; .html engelli kalıyor. Ses, görsel ve video listeleri Masa ve Overlayler için aynıdır."
+    ]
+  },
+  "0.87.0": {
+    "titulo": "🚀 Panelde tam video ve ses kontrolü — ince hız ve 🎭 ses",
+    "itens": [
+      "🎞️ Masa tuşlarının videosu panelde tam bir oynatıcı kazandı: oynat/duraklat/atlamanın yanında İNCE HIZ — 0.01 adımlı − ve + düğmeleri, kaydırıcı VE tam değeri yazacağınız kutu, 0.05× ile 32× arası. Ayarladığınız şey izleyici ekranında da anında geçerli.",
+      "🎭 «Sesi boz» anahtarı: işaretsizken (varsayılan) ses her hızda doğal kalır; işaretliyken hız tonu değiştirir — hızlıda çizgi film sesi, yavaşta kalın ses. Ayrıca görüntü kalitesi seçici (keskin, yumuşatılmış, pikselli) — yerel dosyanın tek kalitesi var; bu doku panelde ve overlayde geçerli.",
+      "📺 Abone medyasının uzak oynatıcısı («Ekrana gönder») aynı kontrolleri kazandı: panelden komut edilen ince hız ve bozulma, izleyici ekranında geçerli — konum saati doğru tempoda ilerliyor.",
+      "🎧 Paneldeki sesler de (artık WhatsApp ve Telegram varken): ses hapı, ince ayarları açan ×N düğmesini kazandı — aynı 0.01 adımlı hız ve 🎭 bozma anahtarı."
+    ]
+  },
+  "0.86.0": {
+    "titulo": "🖼️🎞️ Masada görsel ve video tuşları + ✨ tek overlay gölgesi",
+    "itens": [
+      "🖼️🎞️ Parça Masası iki yeni tuş türü kazandı: «Ekranda görsel» ve «Ekranda video». Ses tuşlarıyla aynı kaynaklara kendi kategorilerinde sahipler — ad, emoji/yüz, renk, kendi hücresi, ⏱ bekleme ve hatta 🎛️ çoklu eylem sırası. Tıklama medyayı panelde VE overlayde gösterir; tekrar tıklamak kaldırır.",
+      "🪟⛶ Her tuş İKİ yerde nasıl görüneceğini seçer: boyutlandırılabilir pencere (panelde sürükle/uzat; overlayde boyut tuştan gelir) veya tam ekran. Overlay yalnız görseli/videoyu gösterir — çerçevesiz.",
+      "✨ Pencere modunda overlay, medyayı 🔍 avatarı gösterinkine eşit bir gölgeyle çevreler. Videonun kendi sesi, isteğe bağlı 🔁 tekrarı vardır ve bitince kendiliğinden çıkar.",
+      "🎚️ Denetim yapıldı: her overlayin gölgesi farklıydı ve hiçbiri ayarlanamıyordu. Artık yüzen overlayler TEK gölgeyi paylaşıyor — 🔍 avatar, 📎 abone medyası, 🎧 ses hapı, 🖼️🎞️ Masa medyaları ve 💬 öne çıkan kart — 🎨 Görünümden tür (yumuşak, belirgin kontur veya yok) ve opaklık ayarlanabilir. Hepsinin varsayılanı «avatarı göster» gölgesi."
+    ]
+  },
+  "0.85.3": {
+    "titulo": "🎛️➡ Klasör ızgarasını kapatmak için tek düğme",
+    "itens": [
+      "✖ Klasör ızgarasında aynı şeyi kapatan İKİ düğme vardı (başlıktaki ✖ ve ilk hücredeki ✖). Artık yalnızca başlıktaki ✖ kapatır — ilk hücre soluk ⬅ hatırlatıcısı oldu (paneldeki gibi, o yer geri dönüşün yeridir) ve bir tuşu klasörden çıkarmak için bırakma hedefi olmaya devam ediyor."
+    ]
+  },
+  "0.85.2": {
+    "titulo": "🎛️➡ Masanın iki ızgarası aynı hizada",
+    "itens": [
+      "📐 YANDA açılan klasör ızgarası, başlık şeridi yüzünden ana ızgaradan daha aşağıda başlıyordu — artık sol sütuna aynı yükseklikte «ana düğmeler» ayna şeridi eklendi ve iki ızgaranın sıraları tam olarak aynı hizada başlıyor."
+    ]
+  },
+  "0.85.1": {
+    "titulo": "🎛️➡ Yan yana ızgara düzeltmeleri (ekran görüntünüzden)",
+    "itens": [
+      "📏 Ana ızgaranın düğmeleri her zamanki boyutuna döndü — v0.85.0 değişikliği, yeni yan yana alanda ızgarayı küçültüyordu.",
+      "🖱️ Artık 📁 klasöre veya 🎛️ çoklu eylem düğmesine TEK tıklama yeter: içindeki düğmeler hemen YANDA açılır (çift tıklama gerekmiyor).",
+      "🧹 Düzenleyicinin İÇİNDEKİ eski ızgara (altta, her şeyi bir kerede gösteren) kaldırıldı — yan ızgara klasörün tek ızgarası oldu ve alttaki düzenleyici yine sadece düğme ayarlarını gösteriyor.",
+      "🔢 Klasör ızgarası «sayfada kaç düğme» ayarına (15, 10…) uyar ve kendi sayfa noktalarına sahiptir — tıpkı ana ızgara gibi."
+    ]
+  },
+  "0.85.0": {
+    "titulo": "🎛️➡ Klasörün içindeki düğmeler Parça Masasında YANDA açılıyor",
+    "itens": [
+      "🖥️ Ayarlardaki 🎵 Parça Masası sayfasında bir 📁 klasöre veya 🎛️ çoklu eylem düğmesine çift tıklamak, içindeki düğmelerin ızgarasını ana ızgaranın SAĞ YANINDA açar — ekrandaki boş alanı kullanır. İki ızgara aynı anda görünür: ana ızgara artık kaybolmaz.",
+      "🖱️ Tuşları bir ızgaradan diğerine sürükleyebilirsiniz: diğer ızgaranın boş bir hücresine bırakın, tuş taşınır (klasöre girer ya da çıkar) ve tam o hücreye yerleşir. Yan ızgaranın ✖ işaretine bırakmak da tuşu köke geri gönderir.",
+      "🔢 Her ızgaranın kendi sayfalaması var (ayrı 1 2 3 noktaları ve ◀ ▶), boş hücrelerdeki ➕ düğmeyi doğru yerde oluşturur — kökte ya da açık klasörün içinde.",
+      "✏️ Alttaki düzenleyici tek kalır ve iki ızgaraya da hizmet eder: herhangi bir tuşa tıklayın — ana ya da klasör içi — ayarları altta görünür."
+    ]
+  },
+  "0.84.0": {
+    "titulo": "🎬 OBS’nin her kaynağı Parça Masasında GERÇEK bir tuş oluyor",
+    "itens": [
+      "🧲 🎵 Parça Masası sayfasında yeni oluşturucu: «Masada OBS tuşları oluştur». Bağlı OBS’nizde olan HER ŞEYİ listeler — çıkışlar (yayın, kayıt, duraklat, sanal kamera, replay, ekran görüntüsü, stüdyo…), sahneler, her sesin sessizi, medya, filtreler, koleksiyonlar, profiller ve hatta ⌨️ kısayollar — her biri için bir kutucukla. İstediğinizi işaretleyin, ➕ basın; her öğe Masada bir TUŞ olur.",
+      "🖱️ Ayna sahne tuşlarının (deneysel anahtardan, sona yapışık) aksine bunlar gerçek tuşlar: istediğiniz hücreye TAŞIRSINIZ, adlandırır, emoji/renk/görsel değiştirir ve silersiniz. Zaten tuş olanlar «zaten Masada» diye görünür — kopya yok.",
+      "⌨️ «OBS kısayolunu tetikle» eylemi de tuş editörüne girdi: OBS’nin herhangi bir kısayolu (eklentilerden bile) artık seçtiğiniz yerde bir tuş olabilir.",
+      "💡 Tuşlar Stream Deck’teki gibi canlı: yayındaki sahne yanar, sessiz durumunu gösterir, yayın tuşu canlıdayken yanar."
+    ]
+  },
+  "0.83.0": {
+    "titulo": "🎬 OBS penceresi yeniden düzenlendi + 📊 OBS sağlığı ve ⌨️ kısayollar (tam kapsama)",
+    "itens": [
+      "🗂 Panelin 🎬 penceresi yeniden düzenlendi: ana eylemler (yayın, kayıt, duraklat, sanal kamera, replay, ekran görüntüsü) HEP üstte elinizin altında; kalanlar sayaçlı 8 katlanabilir bölüme dönüştü — Sahneler, Stüdyo, Ses, Kaynaklar, Medya, Filtreler, Kısayollar ve Profiller. Her bölüm açık/kapalı bıraktığınızı hatırlar (tarayıcı başına).",
+      "📊 YENİ: panelde OBS sağlık şeridi — fps, CPU, bellek, disk alanı, kayıp kareler (çizim + çıkış + ağ, göründüklerinde kırmızı) ve yayın/kayıt ne kadardır sürüyor. OBS’nin alt bilgisi, artık ağdaki her cihazda.",
+      "⌨️ YENİ: OBS Kısayolları bölümü — OBS’de kısayolu olan HER ŞEY (eklentiler dahil) panelden tetiklenir. Kapsamayı kapatan joker. (Varsayılan kapalı; Uzaktan OBS Studio sayfasındaki «Kontrolde görünenler»den açın.)",
+      "✅ Kapsama denetimi: şifreli bağlantı (kripto meydan okuma gerçekten doğrulanır — yanlış şifre reddedilir), yayın, duraklat ve bölümlü kayıt, sanal kamera, replay, sahneler/önizleme, stüdyo modu, geçişler (sahne başına dahil), kaynaklar, mikser, medya, filtreler, koleksiyonlar, profiller, ekran görüntüsü — ve şimdi sağlık ile kısayollar. Hepsi uçtan uca doğrulandı."
+    ]
+  },
+  "0.82.0": {
+    "titulo": "⚙️ 🎬 Uzaktan OBS Studio ve 🎵 Parça Masası için özel sayfalar",
+    "itens": [
+      "📄 Uzaktan OBS Studio ve Parça Masası, ayarlarda ÖZEL sayfalar kazandı — 🎨 Temalar’dan hemen sonra: birinde OBS bağlantısı ve tam kontrol; diğerinde parça klavyesi, ızgara, düğme yazı tipi ve Stream Deck içe aktarıcı. Kontrolleri aramak için Labs’i kaydırmak yok artık.",
+      "🧪 Labs sekmesi anahtar olmaya devam ediyor: 🎬 veya 🎵 anahtarını açın, ilgili sayfa menüde ANINDA belirir; kapatın, kaybolur (sayfada olan Labs’e geri götürülür). Labs kartında yalnızca özetiyle birlikte aç/kapat kaldı.",
+      "🔗 İçeride her şey aynı: hiçbir ayarın adı değişmedi, hiçbir şey kaybolmadı — yalnızca ekrandaki adresi değişti."
+    ]
+  },
+  "0.81.0": {
+    "titulo": "🎬 Tüm overlay’lerde standart giriş ve çıkış",
+    "itens": [
+      "✨ Tüm overlay’ler artık ekrana AYNI efektle girip çıkıyor: saatin her zaman kullandığı yumuşak solma (fade). Öne çıkan kart (yukarı kayardı) ve duyurular (aşağı inerdi) yeni standarda geçti — mevcut kurulumlar da birlikte geçer; yalnızca editörde yapılan kişisel seçimler olduğu gibi kalır.",
+      "🔍 Büyütülmüş avatar (ve ek kopyaları) ile 📎 abone medyası gerçek bir ÇIKIŞ kazandı: eskiden aniden kayboluyorlardı, şimdi girişle aynı solmayla çıkıyorlar. Medyada ses anında durur — yalnızca görüntü yavaşça kaybolur.",
+      "🎛️ Hiçbir şey kilitlenmedi: overlay editöründe her öğenin animasyonunu her zamanki gibi seçebilirsiniz (kaydırma, pop, yakınlaştırma…). Değişen, artık her yerde aynı olan fabrika standardı."
+    ]
+  },
+  "0.80.1": {
+    "titulo": "🪟 Ayrılmış pencereler: sınırsız boyutlandırma + hepsinde 🗕 küçült",
+    "itens": [
+      "↘ Köşedeki ok yeniden gerçekten söz sahibi: ayrılmış pencere her yöne SINIRSIZ boyutlanır — çubuğa takılı kartın tavanları (genişlik ve yüksekliği kilitleyen) artık serbest pencereler için geçerli değil.",
+      "🗕 Ayrılmış her pencereye küçültme düğmesi geldi: üst çubukta bir çipe dönüşür (mini ekran çiplerinin yanında) ve çip pencereyi aynı yerde, aynı boyutta yeniden açar. Çip sekmenin F5’ine dayanır; çubuktaki düğmeyle açmak da çipi toplar. Bundan böyle her pencerenin standardı bu: 🗕 🗖 ↩ ✖."
+    ]
+  },
+  "0.80.0": {
+    "titulo": "🕐⏱️⏳ Bağımsız saat, kronometre ve zamanlayıcı + Belirlenen saatte çıkan Duyurular",
+    "itens": [
+      "🕐 Üç araç BAĞIMSIZ oldu: sekme değiştirmek artık hiçbir şeyi durdurmuyor — siz başka sekmedeyken kronometre ve zamanlayıcı saymaya devam ediyor ve her birinin kendi «ekranda göster»i var. Saat, kronometre VE zamanlayıcı aynı anda, aynı widget içinde üst üste izleyici ekranında olabilir. Sekmeler kimin çalıştığını (●) ve kimin ekranda olduğunu (👁) gösterir.",
+      "⏳ Zamanlayıcıya GÜN ve SAAT geldi: gün, saat, dakika ve saniye için yazılabilir kutular (bildiğiniz +/- ile), 100 güne kadar geri sayım ve «2d 3:00:00» gösterimi.",
+      "📢 Duyurulara tam GG/AA/YYYY SS:DD:SN biçimiyle «⏰ Kendiliğinden kaybol» geldi: yalnızca istediğinizi doldurun (hepsi 00 varsayılandır ve bir şey yapmaz), saat sayılarla eşleşince — ya da ⏳ satırında zamanlayıcıda o kadar süre kalınca — mesaj çıkar. Bir kez tetiklendi mi sayılar 00’a döner.",
+      "✨ Son düzlükte Duyuru, zamanlayıcıdaki gibi yanıp söner — artık saatin işaretlenen tarihi/saati yaklaşırken de."
+    ]
+  },
+  "0.79.0": {
+    "titulo": "🪟 Her araç pencereye dönüşüyor + 🔍 avatar çoklu kopya (pencere planı tamamlandı)",
+    "itens": [
+      "🧲 Araç çubuğundaki TÜM kartlar (📱 QR, 🎁 çekiliş, 📊 beğenmetre, 👥 izleyici, 🏆 winstreak, 📢 duyurular, 📋 ortak pano, 🎵 parçalar, 🎬 OBS, 🕐 saat…) artık AYRILABİLİYOR: açık bir kartın üst şeridini sürükleyin, çubuktan kopup serbest bir pencereye dönüşür — çekilişi bir köşede açık tutarken panelin geri kalanıyla çalışın.",
+      "🗖 Ayrılan pencerede gerçek pencere düğmeleri var: 🗖 ekranı kapla/geri getir, ✖ kapat ve ↩ çubuğa geri takmak için — ve artık dışarı tıklayınca ya da başka bir kart açılınca KAPANMIYOR. Konum, ayrılma ve kaplanmış durum tarayıcı başına HATIRLANIYOR.",
+      "🔍✚ Büyütülmüş avatarın çoklu kopyası: avatar penceresinin ⚙ menüsüne «Aynı anda birden çok kopyaya izin ver» geldi (varsayılan kapalı, herkes için geçerli). Açıkken BAŞKA birini büyütmek değiştirmez: panelde bir küçük pencere ve izleyici ekranında bir avatar daha açılır; her birinin kendi boyutu ve kendi ✖ düğmesi vardır.",
+      "✅ Böylece pencere planının 3 aşaması tamamlandı: klasik düğmeli pencereler (v0.78), çoklu tarayıcı davranışı (v0.78) ve şimdi ayrılabilir araçlar + çoklu kopyalar."
+    ]
+  },
+  "0.78.0": {
+    "titulo": "🪟 Mini ekranlar gerçek pencerelere dönüştü (Windows tarzı)",
+    "itens": [
+      "🗖 Panel pencereleri (🔍 büyütülmüş avatar ve 🎁 çekiliş) artık üç klasik düğmeye sahip: 🗕 küçült, 🗖 ekranı kapla/geri getir ve ✖ kapat — ayrıca sürüklenmeye, köşeden boyutlanmaya devam ediyor ve konumu, boyutu, hatta kaplanmış durumu tarayıcı başına HATIRLIYOR. Bundan böyle her pencerenin standardı bu.",
+      "💻 Birden çok tarayıcı, sıfır rahatsızlık: biri bir pencere açtığında, DİĞER tarayıcılarda KÜÇÜLTÜLMÜŞ gelir (üst çubukta bir çip). Her pencerenin ⚙ menüsünde tarayıcı başına iki seçim: «açık olarak gelsin» (varsayılan kapalı) ve «diğer tarayıcılarla eşitle» (varsayılan açık — kapatırsanız pencere onlardan geleni yok sayar).",
+      "🔜 Aynı pencerenin ÇOKLU KOPYALARI seçeneği (panelde ve izleyici overlay’inde, varsayılan kapalı) bu planın sonraki aşaması; gelecekteki bir sürümde gelecek."
+    ]
+  },
+  "0.77.0": {
+    "titulo": "🔊 Overlay sesleri — giriş, çıkış, ekran süresi ve bitiş sesleri",
+    "itens": [
+      "🔊 Tüm overlay’ler (öne çıkan yorum, abone medyası, QR Kod, çekiliş, beğeni ölçer, izleyici, winstreak, duyurular ve saat/kronometre/zamanlayıcı) artık ses çalabilir: GİRİŞTE (belirdiklerinde), ÇIKIŞTA (kaybolduklarında), EKRAN SÜRESİ boyunca (görünürken) ve BİTİŞTE (zamanlayıcı sonu ve çekiliş açıklaması).",
+      "🎛️ Her sesin kendi ayarları var: 10 saniyeye dek öne alma/geciktirme (negatif dosyanın başını atlar; pozitif çalmadan önce bekler), overlay ekrandayken yineleme (varsayılan kapalı) ve çalma süresi (0 = sonuna dek). Dosya boyutu ve süre sınırı yok.",
+      "🖥️ Nerede çalacağı da ses ses sizin seçiminiz: overlay VE panel (varsayılan), yalnız overlay (yayın duyar) veya yalnız panel (yalnız siz duyarsınız). Hepsini yeni «🔊 Overlay sesleri» kartında ayarlayın (Ekran ve widget’lar sekmesi); varsayılan sesler gelecekteki bir sürümde gelecek."
+    ]
+  },
+  "0.76.0": {
+    "titulo": "🛡️ Güvenlik Modu — paneli yayında korkmadan gösterin",
+    "itens": [
+      "🛡️ 🖱️ Ekranı düzenle’nin yanında yeni düğme: Güvenlik Modu panelin tüm sütunlarındaki yorumları (metin, medya ve yazar fotoğrafları) BULANIKLAŞTIRIR — utandırıcı bir yorum ya da görüntünün aniden belirmesinden korkmadan paneli yayında gösterebilirsiniz.",
+      "💧 Bulanıklık varsayılan olarak GÜÇLÜ gelir; kaydırıcıyla istediğiniz noktaya kadar zayıflatın — hafif bir tülden tam sise kadar.",
+      "💻 Tarayıcı başına geçerli: her bilgisayar/sekme kendi ayarını seçer (orada hatırlanır). İzleyici hiçbir şey fark etmez — overlay, sabit sohbet ve aboneler ekranı normal kalır."
+    ]
+  },
+  "0.75.1": {
+    "titulo": "Program güncellenince açık ekranlar kendini yeniliyor",
+    "itens": [
+      "🔄 OBS tarayıcı kaynağı ve açık sekmeler (overlay, sabit sohbet, panel) artık programın güncellendiğini fark edip KENDİLİĞİNDEN yeniden yükleniyor — önceden yeni sunucuya bağlanıyor ama biri elle yenileyene dek eski kodu çalıştırmaya devam ediyorlardı.",
+      "🌀 Telegram’ın hareketli çıkartmasının overlay’de «📎 çıkartma» görünmesinin sebebi tam olarak buydu: OBS ekranı hâlâ hareketli çıkartmalardan önceki sürümü çalıştırıyordu. Güncelleyin (BU sefer OBS kaynağında son bir elle yenileme gerekebilir) — bundan sonrası otomatik."
+    ]
+  },
+  "0.75.0": {
+    "titulo": "Fotoğraf, ses, video ve dosyayla yanıtlayın — aboneler gibi",
+    "itens": [
+      "📎 «Yanıtla» kutusuna Ekle düğmesi geldi: aboneye yanıt artık fotoğraf, ses, video veya dosya taşıyabilir (en çok 5 ek, her biri 20 MB) — Telegram’da ve WhatsApp’ta (iki mod: geçit ve yerel kitaplık).",
+      "💬 Yalnız metin, yalnız ekler veya ikisi birden: metin önce gider (özgün mesajı alıntılayarak, her zamanki imzanızla), ekler arkadan gelir — fotoğraf fotoğraf olarak, ses ses olarak, gerisi belge olarak.",
+      "🛡️ Hepsi her zamanki güvenli yoldan: dosya yola çıkmadan önce programın yerel klasöründen geçer, ağın kısıtlı modu yine yanıtlayamaz ve Telegram’ın geri çevirdiği (çok büyük) fotoğraf kendini belge olarak yeniden gönderir."
+    ]
+  },
+  "0.74.0": {
+    "titulo": "Telegram’ın hareketli çıkartmaları gerçekten hareket ediyor",
+    "itens": [
+      "🌀 Telegram’ın HAREKETLİ çıkartmaları (kendi .tgs biçimi) artık panelde VE izleyici ekranında gerçekten, döngüde oynuyor — önceden yalnızca donmuş bir küçük resim geliyordu. Video ve sabit çıkartmalar her zamanki gibi.",
+      "📦 Animasyon oynatıcısı (açık kaynak lottie-web) programa GÖMÜLÜ geliyor — yayın sırasında internetten hiçbir şey alınmaz ve animasyon çıkartma başına yalnızca bir kez okunur.",
+      "💬 Peki WhatsApp? Oradaki hareketli çıkartmalar animasyonlu webp’dir ve program bunları görüntü olarak zaten doğal biçimde oynatır — hareket ederek gelir, hareket etmeye devam eder."
+    ]
+  },
+  "0.73.2": {
+    "titulo": "Şablon ve parça modlarında ses oynatıcısı karta yapışıyor",
+    "itens": [
+      "🧲 Öne çıkan, görsel, şablon veya ayrık parçalar modunu kullandığında (kart parçalara ayrıldığı ve oynatıcı içine giremediği için), ses hapı artık karta YAPIŞIYOR: hemen altına — kart ekranın dibindeyse hemen üstüne — her zaman ortalanmış ve genişliği karta uydurulmuş şekilde.",
+      "🏃 Karta her an eşlik eder: giriş animasyonu sırasında, editörde konum değiştiğinde ve ekran yeniden boyutlandığında — ortalıkta kaybolmuş oynatıcı yok artık."
+    ]
+  },
+  "0.73.1": {
+    "titulo": "Ses oynatıcısı artık overlay’de yorumun İÇİNDE yaşıyor",
+    "itens": [
+      "🎧 Standart öne çıkan kartta ses artık ekranın ortasında yüzen bir hap değil: şık oynatıcı (▶/⏸, dalga, süre) yorum kartının İÇİNE, adın ve metnin hemen yanına giriyor — WhatsApp tarzında eksiksiz balon.",
+      "🧩 Şablonlarda ve ayrık parçalar modunda yüzen oynatıcı sürüyor — orada kart parçalara ayrılır ve özel katman doğru yerdir. Kontrol her zamanki gibi tamamen panelde (oynat/duraklat, konum, ses)."
+    ]
+  },
+  "0.73.0": {
+    "titulo": "WhatsApp tarzında şık ses oynatıcısı",
+    "itens": [
+      "🎧 Gelen sesler (sesli mesajlar ve dosyalar) gerçek bir oynatıcıya kavuştu: yuvarlak ▶/⏸ düğmesi, sesin DALGA FORMU, süre (mm:ss) ve dosya boyutu — tarayıcının gri varsayılan oynatıcısına elveda.",
+      "🌊 Dalga formu sesin gerçeğidir (sesten çizilir, dosya başına bir kez) — kişinin nerede daha yüksek konuştuğu GÖRÜLÜR. Dalganın herhangi bir noktasına tıklayın, doğrudan oraya atlayın.",
+      "📺 İzleyici ekranında da ses güzel görünür: aynı dalga görseli, panelin uzaktan oynatıcısını ayna gibi yansıtır — sunucu yönetirken izleyici dalganın boyandığını ve sürenin ilerlediğini görür.",
+      "☝️ Panelde bir seferde tek ses: bir önizlemeyi oynatmak öncekini kendiliğinden duraklatır."
+    ]
+  },
+  "0.72.0": {
+    "titulo": "Telegram ve WhatsApp mesajlarında profil fotoğrafı",
+    "itens": [
+      "🖼️ Telegram ve WhatsApp mesajları artık kişinin PROFİL FOTOĞRAFIYLA geliyor — panelde, sabit sohbette ve izleyici ekranında, diğer ağlarda olduğu gibi. WhatsApp’ın iki modu için de geçerli (geçit ve yerel kitaplık).",
+      "⚡ Fotoğraf kişi başına bir kez alınır ve programın yerel klasöründe saklanır — yayına yük bindirmeden ve her mesajda yeniden aramadan. İlk mesajdan bir an sonra gelirse, ekrandaki mesajlar fotoğrafı geriye dönük kazanır.",
+      "🔒 Gizliliğe saygı: Telegram/WhatsApp ayarlarında fotoğrafını gizleyen, her zamanki renkli baş harflerle görünmeye devam eder — hatasız ve ısrarcı yeniden denemeler olmadan."
+    ]
+  },
+  "0.71.0": {
+    "titulo": "Uzaktan oynatıcı: ekrandaki medya ancak sunucu play’e basınca çalar",
+    "itens": [
+      "⏯️ İzleyici ekranına konan video ve sesler artık kendi kendine BAŞLAMIYOR: medya duraklatılmış görünür ve sunucunun play’e basmasını bekler — konuşmanın ortasına dalan ses derdi bitti.",
+      "🎛️ Panelden, «Şu an yayında» çubuğundan oynatıcının tam kontrolü: oynat/duraklat (▶️/⏸), başa dön (⏮), süre gösteren (mm:ss) konum sürgüsü ve ses düzeyi kontrolü — hepsi izleyici ekranını gerçek zamanlı yönetir.",
+      "🔚 Medya sona ulaştığında oynatıcı kendiliğinden duraklar ve düğme ▶️’ye döner — yeniden play’e basmak sıfırdan başlatır.",
+      "🔊 Seçilen ses düzeyi bir medyadan diğerine geçerli kalır; yorumu yayından almak oynatıcıyı sıfırlar (konum ve durum) — sıradaki için hazır.",
+      "🔧 Kaputun altında: sunucu artık medyayı aralık desteğiyle (HTTP Range) sunuyor — video/sesin istediğiniz noktasına atlayabilmenizi sağlayan bu; panelin önizleme oynatıcılarında da geçerli."
+    ]
+  },
+  "0.70.1": {
+    "titulo": "Telegram ve WhatsApp bağlayıcılarında token’lar gerçekten hatırlanıyor",
+    "itens": [
+      "🔑 Bir kez girilen token artık HEP GEÇERLİ: alan boşken yeniden bağlanmak kayıtlı token’ı kullanır — her yayında veya yeniden başlatmada yeniden yazmak yok. Yeni token mı yazdınız? Eskisini anında değiştirir.",
+      "💬 Kartlardaki token alanı kayıtlı bir token olduğunda haber verir: «🔑 token kayıtlı — aynısını kullanmak için boş bırakın (değiştirmek için yazın)».",
+      "🔒 Üstüne güvenlik takviyesi: token artık asla tarayıcılara gitmiyor — paneli ağdan açan yalnızca var olduğu bilgisini alır; token’ın kendisi yalnızca yayıncının bilgisayarındaki data/ klasöründe durur."
+    ]
+  },
+  "0.70.0": {
+    "titulo": "Abone medyası tamamlandı: halk ekranında ölçek ve tam ekranla",
+    "itens": [
+      "📺 Ekrana gönderilen medya artık öne çıkarmanın her modunda (klasik kart, kalıplar ve parçalar) HALKA GÖRÜNÜYOR: overlay’in kendi katmanında yaşar — görüntü ve video ortalanır, ses zarif bir 🎙️ rozetiyle çalar.",
+      "🎚️ Yorum yayındayken panel «🖼️ Ekrandaki boyut» kaydırıcısını (yüksekliğin %20–%100’ü) ve «⛶ Tam ekran»ı kazanır — medya kararmış arka planla halk ekranının tamamını kaplar; ayar anında geçerli olur, video yeniden başlamaz.",
+      "📐 Panelde medya DİNAMİK boyut kazandı: sütun genişliğini takip eder ve karttan bir daha taşmaz (tüm sütunlar açıkken bile). Fotoğraflar artık tek tıkla büyür (büyüteç) — Esc veya tık kapatır.",
+      "🩹 Telegram eksik olanı teslim ediyor: çıkartmalar (statik, video ve animasyonlular küçük resimle) ve 📍 konum/yerler — ad, adres ve koordinatlar kartta metne dönüşür. WhatsApp da öyle (iki modda da konum).",
+      "🧰 Ayarlar onarımları: «🛡️ Zaman aşımı ve yasak» kartı ile 🎙️ transkripsiyon kartı TÜM sekmelere sızıyordu — artık yalnızca 🔌 Bağlantılar’da; kaybolan «🔄 Bağlantıları yeniden başlat» kartı da yerine döndü."
+    ]
+  },
+  "0.69.0": {
+    "titulo": "Aboneliksiz WhatsApp: yerel kütüphane modu geldi (kartta QR)",
+    "itens": [
+      "🖥️ Söz verilen ikinci yol burada: 🔌 Bağlantılar’daki WhatsApp kartına mod seçici geldi — 🌐 Whapi geçidi (ücretli) veya 🖥️ YEREL KÜTÜPHANE (ücretsiz), açık Baileys kütüphanesi bilgisayarınızda %100 çalışır; geçitsiz ve aboneliksiz.",
+      "⬇️ Hiçbir şey gömülü gelmez: kütüphane istek üzerine (tek tıkla, npm ile) data/ klasörüne indirilir — eşleştirme karttaki QR ile: yayın numarasının WhatsApp’ıyla tarayın (Bağlı cihazlar), bitti. Oturum kaydedilir ve yeniden başlatmalarda kalır; 🗑️ düğmesi numara değiştirmek için oturumu siler.",
+      "💬 Her şey geçit modundaki gibi çalışır: kendi sütunu, özel sohbetler her zaman girer, grup filtresi, önizlemeli ve transkripsiyonlu medya, imzalı yanıt, ⏳ yerel filtreyle zaman aşımı ve 🚫 yasak — burada WhatsApp’ın yerel kişi engellemesini kullanır.",
+      "⚠️ UYARI aynı: Whapi ile aynı resmî olmayan protokol, aynı gerçek yasaklanma riski — her zaman yayına özel İKİNCİL numara. Değişen tek şey köprüyü kimin kurduğu (ve fiyat: sıfır).",
+      "🔁 Seçilen mod hatırlanır: yeniden bağlanma ve bağlantıları yeniden başlatma kendiliğinden doğru moda döner."
+    ]
+  },
+  "0.68.0": {
+    "titulo": "WhatsApp geldi: yayın numarasından doğrudan, panelde kendi sütunu",
+    "itens": [
+      "💬 Yeni Labs: WhatsApp, OBS Social’a tam bir ağ olarak katılıyor — panelde kendi sütunu, birleşik sütunda varlık, filtreler, arama, çekiliş ve dahası. İnsanlar yayın numarasıyla DOĞRUDAN (ve/veya seçtiğiniz bir grupta) konuşur.",
+      "📎 Metin, fotoğraf, ses, video, çıkartma ve belge kartta önizlemeyle gelir (Labs’ı açıksa yerel transkripsiyonla birlikte); medya karantinada kalır ve yalnızca siz gönderince ekrana çıkar (sağ tık → 📺). Telefona benzeyen adlar ekranda her zamanki gibi maskelenir.",
+      "💬 İmzalı yanıt Telegram’daki gibi çalışır — üstelik yanıt, kişinin orijinal mesajını ALINTILAR. ⏳ zaman aşımı OBS Social’ın kendi filtresiyle geçerli (WhatsApp’ta yerel ceza yok); 🚫 yasak kişinin numarasını geçitte de engeller.",
+      "🔌 Bağlantı, Whapi.Cloud geçidini (ücretli) periyodik sorgulama ile kullanır — webhook yok, genel adres yok, her şey bilgisayarınızda. ⚠️ ÖNEMLİ UYARI: Whapi, Meta’nın resmî ürünü DEĞİLDİR ve numaranın yasaklanması gerçek bir risktir — yayına özel İKİNCİL bir numara kullanın, asla kişisel numaranızı değil. Labs kartı açmadan önce her şeyi açıklar.",
+      "🧩 Bilgisayarınızda %100 çalışan açık kütüphane seçeneği (geçitsiz ve aboneliksiz — aynı risk) bir sonraki sürümde geliyor."
+    ]
+  },
+  "0.67.0": {
+    "titulo": "Yerel transkripsiyon: abonelerin sesleri bilgisayarınızda metne dönüşür",
+    "itens": [
+      "🎙️ Yeni Labs: abonelerin gönderdiği her ses ve video (bugün Telegram, yakında WhatsApp) panel kartında oynatıcının altında bir metin taslağı kazanır — play’e basmadan bile okursunuz.",
+      "🔒 Her şey whisper.cpp (Whisper’ın açık motoru) ile SİZİN MAKİNENİZDE çalışır: buluta hiçbir şey gitmez, hiçbir ses bilgisayarınızdan çıkmaz.",
+      "⬇️ Hiçbir şey gömülü gelmez: motor (Windows x64), ffmpeg dönüştürücü ve 5 model (75 MB’lık Tiny’den en isabetli Large v3 Turbo’ya) 🔌 Bağlantılar’dan istek üzerine indirilir — ilerleme çubuğu, iptal ve silme ile. Windows dışında program kurulu whisper-cli ve ffmpeg’i kendisi bulur.",
+      "🧠 Modeli ve dili seçersiniz (veya otomatik algılamaya bırakırsınız), gelişmiş alanda kendi whisper-cli’ınızı gösterebilirsiniz. Kuyruk, yayını yormamak için dosyaları tek tek işler.",
+      "⚠️ Bir şey mi ters gitti? Taslak nedenini açıkça söyler (model indirilmedi, ffmpeg gerekli…), bir tıkla yeniden dener. Biten taslaklar program yeniden başlasa da kalır.",
+      "🛡️ Model indirme/silme ve motor komutunu değiştirme yalnızca OBS Social’ın çalıştığı bilgisayarda yapılabilir — ağdan kimse dokunamaz."
+    ]
+  },
+  "0.66.0": {
+    "titulo": "Çekilişte Telegram ve WhatsApp: katılıp katılmayacaklarına ve kaç edeceklerine siz karar verirsiniz",
+    "itens": [
+      "🎁 Çekiliş penceresine mesajlaşma ağları için yeni bir blok geldi: 📨 Telegram ve 💬 WhatsApp’ın her birinin kendi aç/kapa seçicisi var — ve KAPALI başlarlar: varsayılan olarak oradan konuşanlar yarışmaz.",
+      "🎟️ Bu ağlarda abone/üye seviyeleri olmadığından her kişinin kaç bilet edeceğine (1–100) siz karar verirsiniz, YouTube’un adlandırılmış seviyeleri gibi. Açık çekilişte (ek bilet yok) herkes 1 eder.",
+      "🚫 Yayının ortasında seçiciyi kapattınız mı? Listede olanlar anında 0 bilet olur: toplama girmez ve asla çekilmez — katılımcıları sıfırlamaya gerek yok.",
+      "🔢 Panelin bilet sayacı artık çekilişin herhangi bir kuralı değiştiği anda güncelleniyor (ek biletler, seçiciler, ağırlıklar).",
+      "🧑‍💻 Her satır yalnızca o ağın Labs’ı açıkken görünür — WhatsApp bloğu konektörü gelene kadar bekliyor."
+    ]
+  },
+  "0.65.1": {
+    "titulo": "Grup gerektirmeyen Telegram: botla doğrudan konuşun",
+    "itens": [
+      "💬 Grup artık İSTEĞE BAĞLI: insanlar bota DOĞRUDAN mesaj atabilir (özel sohbet) ve her şey panele aynı şekilde düşer — metin, fotoğraf, ses, video, önizleme, imzalı yanıt. Grup ayarlı olsa bile özel sohbetler gelmeye devam eder (ikisi birlikte kullanılabilir).",
+      "🛡️ Özel sohbette Telegram’ın yerel cezası yok — gerek de yok: ⏳ zaman aşımı ve 🚫 yasak, OBS Social’ın kendi filtresiyle geçerli; başarısız deneme de hata bildirimi de yok. Grupta yerel ceza eskisi gibi çalışır (yönetici bot).",
+      "📖 Bağlantılar ve Labs metinleri doğrudan modu netleştirecek şekilde güncellendi."
+    ]
+  },
+  "0.65.0": {
+    "titulo": "Telegram geldi: yayın grubu panel sütunu oluyor",
+    "itens": [
+      "📨 🧪 Labs’te YENİ (deneysel): RESMÎ Bot API ile Telegram — ücretsiz, risksiz ve genel adres gerektirmez. @BotFather’da bir bot oluşturun, yayın grubuna ekleyin, token’ı 🔌 Bağlantılar’a yapıştırın, bitti: abonelerin gönderdiği her şey panelin kendi sütununa (ve birleşik sütuna) düşer.",
+      "📎 Fotoğraf, ses, video ve belge panelde ÖNİZLEME ile gelir (gömülü oynatıcı): karar vermeden önce dinler/izlersiniz. Ekranda medya yalnızca SİZ gönderince (sağ tık → 📺) görünür — görsel karta girer, ses/video hemen çalar. Her şey yerel karantinada kalır (data/, 500 MB tavan).",
+      "⏳🚫 Sütundan sağ tıkla doğrudan zaman aşımı (30 sn, 5 dk, 1 sa, 1 gün) ve yasak: OBS Social içinde HER ZAMAN geçerlidir (kişinin mesajları panele bile girmez) ve bot yöneticiyse grubun kendisinde de uygulanır. Listeler Bağlantılar → 🛡️’de: 4 katlanır blok, sayfada 10 kişi ve ✔ Serbest bırak.",
+      "💬 Panelden ayrılmadan aboneye yanıt: «Yanıttaki adınız» sabit (yalnız siz silince gider), metin ve satır sonları SINIRSIZ (uzun mesajlar kendiliğinden bölünür), Enter satır atlar ve yalnız Ctrl+Enter (veya düğme) gönderir — yanıt grupta doğru mesaja reply olarak düşer.",
+      "👤 Panelde ve ekranda öncelik geçerli: ad > @kullanıcıadı; telefona benzeyen adlar v0.64’teki gibi ekranda zorunlu olarak maskeli kalır."
+    ]
+  },
+  "0.64.0": {
+    "titulo": "Ekrana gönderme artık yalnız sağ tıkla — telefon numarası asla yayına çıkmaz",
+    "itens": [
+      "🖱️ ALIŞKANLIK DEĞİŞİKLİĞİ: bir yoruma tek tıklama artık onu ekrana GÖNDERMEZ — panelin tüm sütunlarında gönderme artık her zaman sağ tık → «📺 Ekrana gönder». Yayın ortasında yanlışlıkla tıklamaya karşı koruma; WhatsApp ve Telegram’ın (hassas içerik riskinin daha yüksek olduğu) gelişine hazırlık.",
+      "☎️ Telefon numarası asla yayında görünmez: uzaktan bile telefon numarasına benzeyen her yazar overlay’de, sabit sohbette, çekiliş podyumunda ve büyütülmüş avatarda zorunlu olarak maskelenir — «📱 Misafir A7X» gibi bir takma ada dönüşür (aynı kişi için hep aynı, hiçbir rakam göstermeden). Panelde sunucu gerçek numarayı görmeye devam eder.",
+      "📖 SSS ve panel mesajları yeni gönderme biçimine göre güncellendi."
+    ]
+  },
+  "0.63.0": {
+    "titulo": "Doğrudan bankadan Pix, Labs’e geldi",
+    "itens": [
+      "💠 🧪 Labs’te YENİ (deneysel): doğrudan bankadan Pix — program KENDİ bankanızın Pix API’sini (Merkez Bankası standardı) sorgular ve gelen her Pix, kişinin banka uygulamasında yazdığı mesajla birlikte panelin 💝 Destekler sekmesinde bir destek olur; tutar ekranda Super Chat olarak görünür. Aracı yok, platform ücreti yok.",
+      "🏦 Banco Inter (işletme hesabı — MEI olur) ve Sicoob (işletme ve bireysel) için hazır profiller, ayrıca standarda uyan her banka için özel mod: bankanın geliştirici portalındaki kimlik bilgilerini ve sertifikayı yapıştırın, bitti.",
+      "🔐 Kimlik bilgileri yalnızca bilgisayarınızda kalır (data/ klasörü) ve asla ekranlara gitmez; ilk sorgu yalnızca zaten var olan Pix’leri tanır — panelde yalnızca sonra gelenler görünür. Canlı durum (🟢/🟡/🔴) ve bankasız denemek için 🧪 örnek Pix düğmesi.",
+      "💝 Destekler sekmesi artık bağışlar VEYA Pix açıkken görünür — her Pix desteği, genel URL bağışlarıyla karışmasın diye «Pix R$ …» rozetiyle gelir."
+    ]
+  },
+  "0.62.1": {
+    "titulo": "Avatar harfi çemberin merkezine geri döndü",
+    "itens": [
+      "🧑 Parçalı overlay’de fotoğrafsız avatarın harfi (resmi olmayanın «G»si) çemberin köşesine yapışmış, çarpık duruyordu: daha özgül bir stil kuralı ortalamayı kapatıyordu. Harf yeniden tam merkezde — parçalı overlay’de de standart kartta da."
+    ]
+  },
+  "0.62.0": {
+    "titulo": "Overlay editörü yatay ve dikey ekranlarla bütünleşti",
+    "itens": [
+      "📱 Artık her overlay şablonunun dikey ekranda KENDİ konumu var: bir şablon düzenlenirken editörün 📱 Dikey sekmesi konumu şablonun kendisine kaydeder — yatay konum el değmeden kalır ve her şablon her ekranda farklı bir köşede durabilir.",
+      "🧲 Dikey konumu tanımlanmamış şablon kendini yerleştirir: genişlikte ortalanır, alta yaslanır ve 9:16 ekranın her zaman tamamen içinde kalır — dikey yayından taşan overlay yok.",
+      "💰 Parçalı overlay’de Super Chat tutarı artık tek satır ve karta sığana kadar küçülüyor: mesajın üstüne iki satıra kırılan dönüştürülmüş etiket («$5.00 ≈ R$ 27,00») ortadan kalktı.",
+      "📏 Sekme (🖥️↔📱) veya şablon değiştirmek gerçek kart ölçümünü sıfırlar: değişimin hemen ardından yapılan sürükleme artık önceki ekranın sayılarıyla telafi edilmez."
+    ]
+  },
+  "0.61.0": {
+    "titulo": "Her overlay kendi ağıyla — YouTube, Twitch, Kick, Bilibili veya paylaşımlı",
+    "itens": [
+      "📺 Artık her overlay şablonunun görsel editörde bir ağ seçicisi var: ▶️ Yalnız YouTube, 💜 Yalnız Twitch, 🟢 Yalnız Kick, 💙 Yalnız Bilibili veya 🌐 Paylaşımlı (hepsinde geçerli) — bir ağın overlay’i başka bir ağın yorumlarıyla asla karışmasın diye.",
+      "🎭 Otomatik mod seçime saygı duyar: bir ağa işaretlenmiş şablon yalnızca o ağın yorumlarına giydirilir; diğerleri uyan bir sonraki şablona geçer ya da standart kartta kalır.",
+      "🏷️ Şablon listesi her şablonun ağ emojisini gösterir (🎭 Şablonum 💜) — bir bakışta kime ait olduğunu anlarsınız."
+    ]
+  },
+  "0.60.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.52.0": {
+    "titulo": "Izgara Stream Deck’teki gibi bütün görünüyor — ve pencerecikler gerçek pencere oluyor",
+    "itens": [
+      "🔲 IZGARA TAM DOĞUYOR: Masanın ızgarası önceden tanımlı olduğundan (4, 6, 8, 12 veya 15), tüm alanlar baştan görünür — ve her boş alanda, düğmeyi tam orada oluşturan bir ➕ vardır (ayarlarda; panelde boş alanlar Elgato programındaki gibi sessiz durur).",
+      "📁 KLASÖRÜN IZGARASI EDİTÖRDE YAŞIYOR: eski \"Klasörü aç (N tuş)\" yerine editör, klasörün/çoklu eylem düğmesinin içindeki ızgarayı gösterir — çocuklar gerçek tuşlar olarak (tıklamak her birinin editörünü açar) ve boşlar, tuşu içeride oluşturan ➕ ile.",
+      "🪟 PENCERECİKLER ARTIK HİÇBİR ŞEYİ KİLİTLEMİYOR: çekiliş podyumu ve büyütülmüş avatar yüzen pencereler oldu — onlar açıkken panel %100 kullanılabilir kalır ve yalnızca düğmelerine aktif tıklamayla giderler.",
+      "🗕 KIRMIZI ✖ KÜÇÜLTME OLDU: yaptığı işe daha uygun (yalnızca SİZİN ekranınızdan kaldırıyordu). Küçültülen pencerecik, üst çubukta 💬 test düğmesinin yanında bir çip olur — yavaşça yeşil (görev hâlâ etkin) veya kırmızı (görev bitti) yanıp söner. Çipe tıklamak yeniden açar; bitmiş bir çekilişin podyumunu bile yeniden görebilirsiniz.",
+      "🖱️ PENCERECİK TAŞINIR VE ESner: üstünden tutup ekranın istediğiniz köşesine sürükleyin; ↘ köşesi kartlardaki gibi yeniden boyutlandırır. Ve araç kartları (🎁 kartı tarayıcının kenarından taşıyordu) artık açılırken pencereyi ölçer: asla taşmaz, içeride kayar ve ↘ tutamacını da kazanır.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +11 cümle).",
+      "🎵 Parça masasının sesleri artık kendi görselleriniz arasında \"Görsel\" olarak görünmüyor — artık kendi yüklenen ses listeleri var ve görsel seçiciler yalnızca görsel ve video sunuyor.",
+      "🎯 Dinamik boyutlu overlay’ler (öne çıkan, duyuru, podyum…) artık 🖱️ Ekranı düzenle’de seçtiğiniz noktada hep ORTALANIR — dev bir mesaj ekranda gezinmeden yanlara doğru büyür, her ölçekte."
+    ]
+  },
+  "0.51.0": {
+    "titulo": "Masaya iki klasör tipi geldi — ve tuşlar sürüklerken sayfalar arasında uçuyor",
+    "itens": [
+      "🎛️ KLASÖR \"ÇOKLU EYLEM DÜĞMESİ\" OLDU: yeni ad her zaman yaptığını söylüyor — tıklama içindeki her şeyi sırayla çalar (⏱ beklemelerle) ve basılı tutmak açar. Görünümü artık 🎛️, kimse karıştırmasın diye.",
+      "📁 BASİT KLASÖR, YENİLİK: YALNIZCA başka tuşları saklayan yeni bir tuş tipi — tıklama hemen açar (basılı tutmadan) ve hiçbir şey kendiliğinden çalmaz. Ses tetikleme korkusu olmadan düzenlemek için mükemmel. Editörde eski \"Bir klasör\" seçeneği \"Tuş tipi\" seçicisine dönüştü: 🎵 ses, 🎛️ çoklu eylem veya 📁 basit klasör — ve iki klasör tipi arasında geçiş, içindeki tuşları yerinde bırakır.",
+      "↔️ SÜRÜKLEMEK GÜÇLENDİ: bir tuşu sayfa topunun (1 2 3) veya ◀ ▶ üzerine bırakın, sayfa değiştirir; bir klasörün üzerine bırakın, içine girer; ⬅ üzerine bırakın, klasörden çıkar. Ayarlarda ve panelin ✏️ sıralamasında geçerli.",
+      "🔊 YETİŞKİN SES DÜZEYİ: parça editörünün kaydırıcısı komşularıyla hizalandı, kaydırırken sayıyı canlı gösteriyor (Ses: %42) ve 0-100 arası tam sesi YAZMAK için bir kutu kazandı.",
+      "📝 SATIR SONLU AD: düğme adı artık Enter kabul ediyor (tuşta en fazla 3 satır) ve 50 karaktere kadar — \"BGM Jazz ↵ Soğuk gece\" sonunda güzelce sığıyor.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +14 cümle ve 2 kalıp)."
+    ]
+  },
+  "0.50.0": {
+    "titulo": "Çekiliş kazananlardan yanıt istiyor — ve her köşe daha güzel oluyor",
+    "itens": [
+      "🎁 ÇEKİLİŞTE TWITCH FOUNDER’I: Twitch founder rozetini taşıyan artık kendi ek biletlerini kazanıyor (panelin 🎁 kısmında yeni alan) — önceden herkes gibi 1 bilet değerindeydi.",
+      "🤖 BOTLAR KENDİLİĞİNDEN DIŞARIDA: BOT rozetini taşıyan (Nightbot, StreamElements...) çekilişin katılımcı listesine bile girmiyor — artık robotun çekilmemesini ummaya gerek yok.",
+      "💬 KAZANANLARIN 1. YANITI: her kazananın çekilişten sonraki ilk yorumu podyumun yanında bir balonda görünüyor — SİZİN panelinizde ve (isterseniz) izleyici ekranında. Her biri 🎁 içinden açılıp kapanır.",
+      "⏱ İKİ MODLU YANIT SÜRESİ: her sıradakinin sohbette görünmesi için ayarlanabilir bir zamanlayıcı (5sn–10dk) — son 10 saniye kırmızı yanıp söner, saatin Zamanlayıcısı gibi. 🥇 Tek ödül: 1. yanıt vermezse \"⌛ Zamanında yanıt vermedi\" ile soluklaşır ve şans 2.ye, sonra 3.ye İNER; sırası geldiğinde yanıt veren zamanlayıcıyı tamamen DURDURUR. 🏆 Herkes ödüllü: her sıradaki kendi sırasını alır, art arda. Kimse yanıt vermedi mi? Çekiliş yeniden koşmaya hazırdır.",
+      "🎲 Çekiliş zarı artık ekranda 3 saniye dönüyor (2,2sn idi) — hâlâ ayarlanabilir.",
+      "🔒 TEMA VE DİL KİŞİSELLEŞİYOR: her tarayıcı/makine kendi 🎨 temasını (açık, koyu, retro...) ve kendi 🌐 dilini seçer, başkalarınınkini değiştirmeden — makineler arasında eşitlenmeyen TEK şeyler bunlardır. Geri kalan her şey her yerde aynı kalır.",
+      "↕️ YORUMLAR ARASINDA NEFES: panel ayarlarında, sütunlardaki yorumları birbirinden ayırmak için yeni seçenek — 0’dan (bitişik, eskisi gibi) 30 px’e; varsayılan artık 1 px.",
+      "🎗️ İKİ YANDA ŞERİT: yorumun hangi platformdan geldiğini söyleyen renkli şeritçik sağ kenarda da görünebilir — boşluk seçeneğinin yanında yeni seçenek.",
+      "🕐 ÖNE ÇIKAN YORUM SAATİ GÖSTERİYOR: artık tam olarak yazıldığı saati gösteriyor — izleyici ekranındaki kartta ve panel çubuğunda.",
+      "📊 LIKOMETRE YÜZDEYİ GÖSTERİYOR: sayıların yanında, şu an izleyenlerin yüzde kaçının like bıraktığını da söylüyor.",
+      "🔔 30 SINIRI DUYURULUYOR: QR kodların ve winstreaklerin ➕ düğmeleri artık sayıyor (\"1/30\") ve 30 tavanına gelince açıklamayla kapanıyor — önceden tıklamak hiçbir şey yapmıyordu.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +41 cümle ve 8 kalıp — hâlâ yalnızca Portekizce konuşan eski panel köşeleri dahil)."
+    ]
+  },
+  "0.49.1": {
+    "titulo": "Stream Deck içe aktarıcısı gerçek yedeği açmayı öğreniyor",
+    "itens": [
+      "🪆 GERÇEK YEDEK ARTIK AÇILIYOR: Elgato programının dışa aktardığı .streamDeckProfilesBackup dosyası içinde BAŞKA zipler olan bir zip (her profil bir .streamDeckProfile, o da başka bir zip) — içe aktarıcı yalnızca ilk katmana bakıyor, \"hiçbir şey\" bulamayıp vazgeçiyordu. Artık matruşkaları açıyor: her profil, ses düğmeleri içinde olacak şekilde kendi 📁 klasörü oluyor (kök manifest adıyla), iç sayfalardakiler bile.",
+      "🚚 64 MB SINIRI YOK: ekran artık yedeği doğrudan HTTP ile gönderiyor (base64 şişmesi yok) ve sunucu dosyayı belleğe yüklemeden DOĞRUDAN DİSKTEN okuyor — 5 GB’a kadar yedekler sığıyor (4 GB üstü dosyaların zip64 biçimi anlaşılıyor). İçindeki dev resim ve seslere dokunulmuyor bile: yalnızca manifestler okunuyor. İçe aktarma yalnızca yayıncının bilgisayarının işlemi olmaya devam ediyor.",
+      "📄 TEK BİR PROFİL DE: doğrudan bir .streamDeckProfile (veya .sdProfile) seçmek çalışır — profil adında tek bir klasör olur, arada genel bir \"Stream Deck\" klasörü olmadan.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +5 cümle)."
+    ]
+  },
+  "0.49.0": {
+    "titulo": "Masa sırayla çalan 📁 klasörler kazanıyor — ve Grup alanı emekli oluyor",
+    "itens": [
+      "📁 TUŞ KLASÖR OLUYOR: Masa editöründe \"📁 Bir klasör\" işaretleyin, tuş içinde başka tuşlar saklamaya başlar (her parçanın \"Klasörün içinde\" alanı nerede yaşadığını söyler). Klasör kaç tuşu olduğunu gösterir ve görünüm klavyeninkini izler — kare, emoji veya resimli.",
+      "▶️ TIKLAMA HEPSİNİ SIRAYLA ÇALAR: klasöre tıklamak içindeki tuşları sırayla, DOĞRUDAN SUNUCUDA ateşler — paneli kapatsanız bile sıra devam eder ve ⏹ (veya klasöre bir tıklama daha) anında keser. Her tuşun ⏱ BEKLEMESİ var: sonrakinden önce ne kadar bekleneceğini YAZDIĞINIZ bir kutu — 0sn’den 24sa’ye, saniye (\"12\", \"2.5\") veya saat gibi (\"1:30\", \"2:00:00\").",
+      "✊ BASILI TUTMAK KLASÖRÜ AÇAR: klasör tuşunu basılı tutun (süre sizin: 0–5sn, Masa ayarlarında) ve içindekileri göstererek açılır, geri dönmek için ⬅ ile — panelde ve ayarlarda. 0sn ile dokununca açılır.",
+      "🎛️ İÇE AKTARICI GERÇEK KLASÖRLER OLUŞTURUR: her Stream Deck profili artık düğmeleri içinde bir 📁 klasör olur — ve yeniden içe aktarmak zaten var olan klasörü yeniden kullanır, ikizler olmadan.",
+      "🪦 ELVEDA, GRUP: (klavye yenilemesinden beri hiçbir şey yapmayan) \"Grup\" alanı editörden kaldırıldı — klasörler gerçek yedek. Bir klasörü kaldırmak (onayla) tuşlarını Masaya serbest bırakır.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +14 cümle ve 6 kalıp)."
+    ]
+  },
+  "0.48.0": {
+    "titulo": "OBS sahneleri 🎵 Masaya giriyor ve OBS’ye giden yol adım adım oluyor",
+    "itens": [
+      "🎬 MASADA SAHNELER (deneysel, fabrikadan kapalı): Labs’taki 🎵 Parça Masası kartındaki yeni bir seçici, her OBS sahnesini panel Masasının sonunda bir tuşa dönüştürüyor — yayındaki sahne 🔴 ile işaretleniyor, tıklama sahneyi değiştiriyor (stüdyo modunda önizlemeyi 👁 seçiyor) ve tuşlar OBS sahneleriyle birlikte görünüp kayboluyor. Canlı bir ayna: editöre ve sıralamaya girmiyorlar ve kısıtlı modun 🎬 iznine uyuyorlar.",
+      "🧭 OBS’Yİ BAĞLAMAK ARTIK AÇIK: Labs’taki 🎬 OBS Studio kartı artık numaralı adım adım anlatımı taşıyor (OBS 28+ → Araçlar → WebSocket Sunucu Ayarları → Etkinleştir → Bağlantı Bilgilerini Göster → buraya yapıştır ve 💾). Masa, sahneler açıkken OBS henüz bağlanmadıysa karta işaret ederek uyarıyor — ve ❓ SSS tam yolu tekrarlıyor.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +20 cümle)."
+    ]
+  },
+  "0.47.1": {
+    "titulo": "Siyah pencere dilinizi konuşuyor ve yolu gösteriyor",
+    "itens": [
+      "🌐 SİYAH PENCERE DİLİNİZİ KONUŞUYOR: OBS Social açılırken görünen mesajlar (ve yeni sürüm bildirimi) artık ayarlarda seçilen dilde çıkıyor — otomatikte ise bilgisayarın kendi dilinde. Başlangıçta zorunlu Portekizce dönemi bitti.",
+      "🧭 PANELE GİDEN YOL: açılış mesajı artık adresleri tarayıcıda açmanızı açıkça söylüyor (Chrome, Edge, Firefox...) — ve paneli aynı WiFi’deki telefondan veya başka bir bilgisayardan açabilmeniz için SİZİN ağınızın adresini (192.168...) de gösteriyor.",
+      "🔤 AKSANLAR VE ALFABELER: Windows başlatıcısı pencerenin UTF-8 modunu açıyor (chcp 65001); aksanlar, Rusça, Japonca, Korece ve Çince düzgün görünüyor — antivirüsü rahatsız edecek hiçbir hile olmadan.",
+      "📋 PANO SIRAYI KAPATIYOR: panel araçlarının varsayılan sırasında 📋 artık her zaman son düğme — yeni bir düğme (Labs’tan veya yeni bir özellikten, 🎵 ve 🎬 gibi) ondan ÖNCE giriyor. Ve 🧲 Paneli düzenle bölümünde istediğiniz yere sürüklenebilmeye devam ediyor.",
+      "🎨 TARAYICI GÖRÜNÜMÜNE SON: panelin 🔎 Arama alanı, dosya gönderme düğmeleri (medya, parçalar, yedekler) ve yerel ayrıntılar (seçici listeleri, sayı okları) artık programın temasını giyiyor. Ve 🎨 Temanızın arka planı açıksa, onlar da açığa uyuyor."
+    ]
+  },
+  "0.47.0": {
+    "titulo": "🎵 Parça masası gerçek bir Stream Deck oluyor",
+    "itens": [
+      "🎛️ KARE DÜĞME KLAVYESİ: masa artık Stream Deck’inki gibi bir tuş ızgarası — ayarlarda VE panelde, tıpatıp aynı görünümle. Izgarayı seçin (sayfa başına 4, 6, 8, 12 veya 15 düğme); taşanlar başka bir sayfa olur, 1 2 3 noktaları ve ◀ ▶ ile gezilir.",
+      "🪗 AKORDEON DÜZENLEYİCİ: bir tuşa tıklamak ONUN düzenleme panelini aşağıda açar (Elgato’nun programındaki gibi) — başka birine tıklamak öncekini kapatıp yenisini açar. Üst üste dev kartlar yok artık.",
+      "🖼️ TUŞ SİZİN: her düğme, emoji VEYA kendi arka plan görselinizle mükemmel bir kare; metin istediğiniz yerde (altta, ortada, üstte veya metinsiz) ve kendi kenar rengiyle. TÜM düğmelerin metin yazı tipi tek yerden ayarlanır: boyut, kalın ve renk (Stream Deck’in Global Font Settings’i gibi).",
+      "↔️ SÜRÜKLEMEK SIRALAR — İKİ YERDE DE: ayarlarda bir tuşu diğerinin üstüne sürükleyin, yer değişsin; panelde gizli ✏️ sıralama modunu açar. Sıra tektir: bir tarafta değişti mi diğerinde de geçerli.",
+      "🎚️ STREAM DECK’İN 4 MODU: her parça nasıl çalacağını seçer — Çal/Durdur (aynı anda bir), Üstüne bindir (BGM’in üstünde efektler, onu düşürmeden!), Yeniden başlat (üstünde, sıfırdan) ve 🔁 Tekrarla/Durdur. Fade de yön kazandı: girişte, çıkışta, ikisi veya hiç — Stream Deck içe aktarıcı bunların hepsini düğmelerinizden zaten eşliyor.",
+      "🗑️ DOĞRU KALDIRMA: kaldırma artık parça boşken bile anında çalışıyor (satır eskiden ekranda takılırdı) ve içeriği olan parça çıkmadan önce onay istiyor.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +38 cümle ve 13 desen)."
+    ]
+  },
+  "0.46.1": {
+    "titulo": "Şifre alanları artık temayı giyiyor",
+    "itens": [
+      "🎨 GÖRSEL DÜZELTME: şifre alanları (Labs’teki OBS şifresi, 🔒 Güvenlik’teki ağ şifreleri ve gizli URL’ler) tarayıcının ham yüzüyle görünüyordu — beyaz arka plan, hizasız. Artık hepsi diğer alanlar gibi koyu temayı giyiyor; 💾 kaydet, parça yükleme ve klasör arama satırları ortalandı."
+    ]
+  },
+  "0.46.0": {
+    "titulo": "OBS paneli dinliyor ve 🎵 Parça masası Stream Deck’i emekli ediyor — hepsi 🧪 Labs’te",
+    "itens": [
+      "🎬 PANELDEN OBS (Labs, fabrikadan kapalı): panelin 🎬 aracı OBS sahnelerini gösterir (stüdyo modunda tıklama önizlemeyi seçer, düğme yayına gönderir), Ekranı Değiştir, ses kaynaklarının susturulması ve yayın/kayıt (hep onaylı). OBS 28+ ile gelen uzaktan kumandayı kullanır (Araçlar → WebSocket Sunucu Ayarları) — konuşma %100 bilgisayarınızın içinde, şifre yalnızca data/ klasöründe, asla ekranlarda değil.",
+      "🎵 PARÇA MASASI (Labs, fabrikadan kapalı): müzik ve efektler panelde düğme olur — aynı ağdaki telefonda da. Aynı anda bir parça, fade ile geçiş, döngüde BGM (🔁), parça başına ses ve fade, ⏹ hepsini durdur, klasör gibi gruplar — ve her parça nerede çalacağını seçer: yayında (OBS’teki overlay üzerinden), sadece panelde veya ikisinde. MP3, WAV, OGG, FLAC, M4A ve fazlasını kabul eder.",
+      "🎛️ STREAM DECK İÇE AKTARICI: Elgato programının profil yedeğini gösterin, \"Ses Çal\" düğmeleri hazır parçalara dönüşsün — her birinin adı, grubu, sesi, döngüsü ve fade’i. Sesler yedekte gelmez; klasörlerini gösterirsiniz, OBS Social kendisi bulur ve kopyalar (alt klasörlerde bile).",
+      "🔒 GÜVENLİK DAHİL: OBS’i ağdan yönetmek kısıtlı modda yeni bir seçici (kilitli doğar); OBS yapılandırması, içe aktarma ve klasör araması yalnızca yerel bilgisayar işlemleridir; parçalar yalnızca programın kendi klasörlerindeki dosyaları çalar.",
+      "❓ SSS iki yeniliği de aldı; yedekleme/temizlik parçaları ve OBS bağlantısını zaten tanıyor (Araçlar ve Bağlantılar öğeleri).",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +90 cümle ve 10 desen)."
+    ]
+  },
+  "0.44.0": {
+    "titulo": "Her şeyde 8 tutamaç, 📺 Sabit sohbet Düzenle'ye giriyor ve canlı sayı rozeti 🔢",
+    "itens": [
+      "✋ HER ŞEYDE 8 TUTAMAÇ: normal moddaki tüm overlay'ler ve 🧩 modundaki tüm parçalar artık 8 boyutlandırma tutamacına sahip (4 köşe + 4 kenar). Soldan veya üstten çekmek karşı tarafı yerinde tutar — overlay konumundan kaçmaz. Parçalarda yalnızca çekecek bir şeyi olan tutamaçlar görünür (yalnız-genişlik parçası yükseklik tutamacı göstermez).",
+      "📺 SABİT SOHBET EKRANI DÜZENLE'YE GİRDİ: sabit canlı sohbet artık haritanın bir öğesi — istediğiniz yere sürükleyin (yalnız sol/sağ değil) ve 8 tutamaçla esnetin. OBS'te kendi URL'si olduğundan gerçek önizleme onu çizmez — ama konum ve boyut yayında gerçekten geçerlidir. Çubuktaki ↺ sohbeti her zamanki yanına döndürür.",
+      "📏 SOHBET YÜKSEKLİĞİ: Sabit canlı sohbet kartı Yükseklik seçicisini kazandı (0 = tüm ekran, her zamanki gibi) — zaten var olan Genişliğin yanında. Diğer overlay'ler kontrol edildi: öne çıkanın genişliği ve yüksekliği var, widget'ların boyutu var (🧩 modunda parça başına genişlik/yükseklik).",
+      "🔢 CANLI SAYI ROZETİ: herhangi bir tutamacı çekerken farenin yanındaki rozet, boyutu gerçek zamanlı ve o öğenin elle seçicisiyle AYNI BİRİMDE gösterir — öne çıkan/sohbet genişliği için px, kart yüksekliği için \"× harf\", widget ve parça ölçeği için %, döndürmede °.",
+      "🪞 EV KURALI, ARTIK KAYITLI: haritada fareyle yapılan her boyut ayarı anında elle seçicilere yansır — her zaman. Boyut kaydırıcıları fareyi yuvarlamadan izlemek için inceldi (adım 1).",
+      "🌐 Her şey 10 dile çevrildi (+12 cümle ve sözlük başına 2 kalıp)."
+    ]
+  },
+  "0.43.0": {
+    "titulo": "Tema overlay'leri giydiriyor, çekiliş panelde görünüyor, ♿ Erişilebilirlik ve genel denetim",
+    "itens": [
+      "🎨 TEMA ARTIK OVERLAY'LERİ GİYDİRİYOR: bir tema yüklendiğinde (galeriden veya dosyadan) öne çıkan kartı, sabit sohbet ve widget'lar onun renklerini, köşelerini ve yazı tipini alır — galerinin üstündeki 🖥️ anahtarıyla kontrol edilir (fabrikadan açık; yalnız paneli değiştirmesi için kapatın). QR taranabilir kalmak için beyaz arka planını korur, Varsayılan tema overlay'leri fabrikaya döndürür.",
+      "🎁 ÇEKİLİŞ PANELDE GÖRÜNÜYOR: sonuç çıkar çıkmaz podyum panelde açılır (🔍 avatar tarzında), her kazananın madalyası, fotoğrafı ve ağıyla — OBS ekranına bağımlı olmadan. ✖ yalnız orada kapatır; yayın widget'ı kendi ekran süresini izler.",
+      "♿ YENİ ERİŞİLEBİLİRLİK SAYFASI: güçlendirilmiş kontrast, animasyonları azaltma, klavye için güçlendirilmiş görünür odak ve durumda renge ek şekiller (nokta ✓/!/✕ kazanır — renk körlüğü için). Her özellik kendi anahtarıyla, tüm cihazlarda anında geçerli. Üstüne: buton ipuçları artık ekran okuyucular için metne dönüşüyor (ipucu title'ı çalıyordu) ve bağlantı noktaları sesle kendini tanıtıyor.",
+      "🔍 GENEL DENETİM: ölü kod avı (hiçbir şey kalmadı), yedeklemenin güvenlik incelemesi — kötü niyetli bir öğe adı ('__proto__') JavaScript'in bir aralığından geçiyordu ve engellendi, güvenlik takımına yeni klasör işgali ve kötü niyetli sıklık testleri eklendi (54 kilit) — ve yeni alanlarda güvenlik açığı taraması.",
+      "🌐 ÇEVİRİLER GÜNCEL: sözlük başına +67 cümle ve 2 kalıp (9 dilde 1111 özdeş anahtar) — hiç çevrilmemiş eski borçlar dahil: Duyurular kartı (yazı tipi, hizalama, kalın...), Saat, tekil butonlar (Bağlantıyı kes, kopyala...) ve ekran çözünürlükleri.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.42.0": {
+    "titulo": "Sanat 🧪 Labs'te, 💾 her şeyin yedeği, Kurucu/BOT rozetleri, nokta 🟡🟢🔴 ve ❓ SSS sayfası",
+    "itens": [
+      "🧪 ÖZEL SANAT TAŞINDI: tüm özel sanat sistemi (Overlay'leriniz, öne çıkan kart arka planı, tam ekran çerçeve, widget arka planları, sığdırma ve \"Sanat kartın TA KENDİSİ\") artık Labs sekmesinde, 🖼️ Overlay'lerde özel sanat anahtarının arkasında yaşıyor — bundan böyle Labs'teki HER ŞEY gibi fabrikadan KAPALI gelir. Kapalıyken hiçbir sanat ekrana girmez (seçimleriniz saklı kalır); varsayılan overlay ve diğer kişiselleştirmeler her zamanki gibi sürer.",
+      "💾 YEDEKLEME VE GERİ YÜKLEME: 🗄️ Günlükler ve veriler sekmesinde her öğe (⚙️ Ayarlar, 📜 günlükler, 🖼️ medya, ✓ işaretler ve kuyruk, 🎁 katılımcılar, 🔌 kanallar, 🧰 QR/winstreak'ler) SİZİN SEÇTİĞİNİZ bir klasöre kendi yedeğini kazandı, istenen sıklık merdiveniyle: elle, gerçek zamanlı (bir şey değişir değişmez yazar), 1sn–60sn, 1dk–60dk, 6s, 12s ve 24s. Zamanlanmış yedek yalnız gerçekten bir şey değiştiğinde yazar, en yeni 30 saklanır, ↩️ Geri yükle seçtiğiniz yedeği geri getirir — anında, yeniden başlatmadan (yalnız günlükler ister). Güvenlik için yedekleme ve geri yükleme yalnız programın bilgisayarında çalışır.",
+      "🚦 3 RENKTE BAĞLANTILAR: nokta artık yayın YOKKEN bağlıysa 🟡 sarı, yalnız yayın sürerken 🟢 yeşil ve bağlantı başarısız olduğunda 🔴 kırmızı — panelde ve ayarlarda, hikâyeyi anlatan metinle.",
+      "🏷️ ROZETLER: Kurucu Twitch VE Kick için geçerli (Twitch'te de var — zaten okunuyordu, şimdi net ve doğru etiketli) ve 🤖 BOT geldi: Kick yerli rozetini yollar, ünlü robotlar (Nightbot, StreamElements, Streamlabs, Botrix...) tüm ağlarda adlarından tanınır. Rozet alanında kendi anahtarı, diğerleri gibi.",
+      "📄 CANLI SOHBET VARSAYILANLARI: iki sohbette de (panel ve sabit sohbet) yorum metni artık fabrikadan adın ALTINDA gelir, varsayılan okuma yönü EN YENİLER ÜSTTE.",
+      "❓ SSS: ayarlarda OBS Social'ın her şeyi hakkında 20 soru-cevaplı yeni sayfa — bağlantılar, OBS'teki overlay, nokta renkleri, ekranı düzenleme, parçalar, sanat, yedek, güvenlik, ağ, güncelleme...",
+      "🧹 Üstüne: veri temizleme kartı (hiç çevrilmemişti) artık bu sürümün tüm yenilikleriyle birlikte 10 dili konuşuyor.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +126 cümle ve 5 kalıp)."
+    ]
+  },
+  "0.41.0": {
+    "titulo": "Sanatınız haritanın 🖼️ parçası oluyor — Düzenle ◀▶ geri al/yinele ve ↺ hepsi varsayılana kazanıyor",
+    "itens": [
+      "🖼️ SANAT ARTIK AYARLANIYOR: \"Öne çıkan yorum arka planı\"nda bir sanatı etkinleştirir etkinleştirmez, 🖱️ Ekranı düzenle'de Öne Çıkan'ın içinde 🖼️ Sanatınız parçası olarak VE 🪟 Katmanlar'da alt katman olarak görünür — sürükleyin, tutamaçlarla esnetin, döndürün, opaklığı değiştirin ve Sığdırmayı (kapla/esnet/sığdır) doğrudan parça çubuğundan seçin. 🧩 AÇIK YA DA KAPALI çalışır.",
+      "📸 VARSAYILAN DOKUNULMAMIŞ, KANITLI: her şey varsayılandayken öne çıkan kartı büyük yenilemeden öncekiyle piksel piksel AYNI kaldı (görüntüleri v0.33.1 ile bayt bayt karşılaştırdık, sanatla ve sanatsız). Görünümü değiştiren, açık olan \"sığdır\"/\"Sanat kartın TA KENDİSİ\" anahtarlarıydı — artık hepsi haritada görülür, ayarlanır ve geri alınır.",
+      "◀▶ HER ŞEYDE GERİ AL VE YİNELE: Düzenle çubuğu, editörün dokunduğu HER ŞEYİ kapsayan geri/ileri butonlarını (ve Ctrl+Z / Ctrl+Y) kazandı — her öğenin konumu ve boyutu, katman sırası, her parça, sanat, parça modu. Nereden gelirse gelsin her ayar kendiliğinden geçmişe girer.",
+      "↺ HEPSİ VARSAYILANA: tek buton tüm Düzenle'yi fabrika ayarına döndürür — konumlar, boyutlar, katmanlar, parçalar ve sanat. Ve bu sıfırlama bile ◀ ile geri alınabilir.",
+      "👁 🖼️ Sanatınız alt katmanının gözü sanatı yayında gizler/gösterir; 🧩 modunda sanat, katman istifine herhangi bir parça gibi girer (örneğin metnin üstüne konabilir).",
+      "🌐 DÜZELTME: yan menü öğeleri (🔌 Bağlantılar, 🎨 Temalar, ℹ️ Hakkında...) menü yalnız-simge modunu kazandığından beri diğer dillere çevrilmiyordu — yeniden çevriliyorlar.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.40.0": {
+    "titulo": "Parçalar 🪟 Katmanlar'da alt katman oluyor — ve önizleme bir daha asla kaymıyor",
+    "itens": [
+      "🥞 EKSİK KAVRAM: 🪟 Katmanlar panelinde her sökülmüş öğe artık PARÇALARINI alt katman olarak açar — metin, ad, avatar, saatin zamanı... Bir alt katmanı sürükleyerek kartın/widget'ın İÇİNDE kimin üstte olacağını seçin (yayında geçerli), 👁 parçayı yayında gerçekten gizler, 🔒 parçayı editörde kilitler, alt katmana tıklamak haritada parçayı seçer.",
+      "📐 DÜZELTME: tam ekranda parça çubuğu açıldığında gerçek önizleme haritadan kayıyordu — dikdörtgenler bir yerde, gerçek overlay başka yerde kalıyor, isabetli ayarı engelliyordu. Artık önizleme haritanın HER boyut değişiminde kendini yeniden ölçekler.",
+      "📏 Parça çubuğu tek satır oldu (yer yetmezse kaydırmalı) — açıp kapamak artık haritayı bloklar hâlinde itmiyor.",
+      "✅ Dosya yüklendi mesajı artık olmayan bir \"Kullan\" butonuna tıklamayı söylüyordu — şimdi medyanın nereye gireceğinin seçildiği hemen alttaki seçicilere işaret ediyor.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.39.0": {
+    "titulo": "🎨 Temalar sekmesi her şeyi topluyor, sayfa tüm ekranı kullanıyor ve tek 🧩 overlay'i parçalıyor",
+    "itens": [
+      "🎨 YENİDEN DÜZENLEME: görsel olan her şey artık tek sekmede — 🎨 TEMALAR: 🖱️ Ekranı düzenle (üstte), widget'lar, öne çıkan yorum, sabit canlı sohbet, overlay'leriniz ve temalar. İlişkililer, o yüzden birlikteler. Eski adresler çalışmayı sürdürüyor.",
+      "📏 Ayarlar sayfası pencerenin TÜM GENİŞLİĞİNİ kullanmaya başladı — Ekranı düzenle haritası tam ekrana gerek kalmadan 2-3 kat büyüdü (⛶ içinde hâlâ var).",
+      "🧩 TEK anahtar: editör çubuğundaki \"Parçalı overlay\", TÜM overlay'i bir kerede parçalar (öne çıkan + tüm widget'lar). Tutamaçlarla boyutlandırma hiçbir buton istemez — hep etkindir. Tekil anahtarlar, yalnız bir parçayı sökmek isteyenler için her birinin kartında durur.",
+      "🍔 Daraltılmış yan menü gerçekten temizlendi: yalnız simgeler, ortalanmış, ad ipucunda.",
+      "🔧 GENEL HATA DENETİMİ: (1) iptal edilen bir dokunuş (dokunmatik ekranda yaygın) editörün herhangi bir sürüklemesini asılı bırakıp haritayı yenilemeye kadar donduruyordu — tüm sürüklemelerde düzeltildi; (2) her ayar tüm ayar dosyasını anında diske yazıyordu — bir sürükleme saniyede ~8 yazma üretip programı sohbetin ortasında boğuyordu; artık yazma hareketin bitmesini bekler (yayın anında tepki vermeyi sürdürür, programı kapatmak bekleyeni kaydeder); (3) Duyurular widget'ı ayarlarda \"parça\" çöpü kabul etmiyor; (4) renkler yalnız gerçek renklerse (#hex) overlay stil sayfasına girer; (5) bir parçadaki sayısal olmayan değer editörde \"NaN%\" olabiliyordu.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.38.0": {
+    "titulo": "Her şey elde: fareyle esnet ve döndür, tam ekran editör ve katlanır menüler",
+    "itens": [
+      "✋ ANA YENİLİK: 🖱️ Ekranı düzenle doğrudan işleme editörü oldu. Seçilen öğe kenarlarında TUTAMAÇLAR kazanır — esnetmek için çekin: öne çıkan kartı genişliğini ve yüksekliğini GERÇEKTEN değiştirir, sökülmüş her widget'ın kutusu da öyle, sıradan öğeler boyut değiştirir. Kaydırıcılar piksel piksel ince ayar için kalır; fare ana yoldur.",
+      "🔄 Seçilen her parça DÖNDÜRME tutamacını da (üstünde ⟳) ve genişlik/yükseklik/boyut tutamaçlarını kazanır — overlay'in herhangi bir parçasını doğrudan ekranda döndürüp esnetin, sonucu gerçek önizlemede anında görün.",
+      "⛶ TAM EKRAN: yeni bir buton editöre tarayıcının tüm penceresini verir (Esc çıkar), harita ekran yüksekliğine oturur. Sayfayı kendi sekmesinde açın, editör kendine ait bir ekran olur — boşa alan bitti.",
+      "📐 Öne çıkanın ve sökülmüş widget'ların dikdörtgeni artık haritada GERÇEK BOYUTTA (önceden sabit bir tahmindi) — konumlandırdığınız, yayında görünenin ta kendisi. Haritada parçalar yalnız emojiyi gösterir (tam ad seçilende ve ipucunda) ki kartı örtmesinler.",
+      "🍔 Ayarların yan menüsü artık yalnız simgelere daralır (üstündeki ⏴ butonu), katmanlar paneli katlanır (▾) — haritaya daha çok yer.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.37.0": {
+    "titulo": "Aşama 3 ve 4: widget'lar parçalara söküldü + tam ince ayar ve yüksek çözünürlük avatar",
+    "itens": [
+      "🧩 ANA YENİLİK: artık WIDGET'LAR da sökülüyor. QR Kod (kod ve başlık), Beğeni-metre (sayılar, çubuk ve etiket), Winstreak (simge, etiket ve sayılar), İzleyiciler (toplam ve ağ başına), Saat (zaman ve açıklama) ve Çekiliş (başlık ve podyum) — her widget'ın \"🧩 Serbest parçalar\" anahtarı var (Widget'ları kişiselleştir kartında ve widget seçildiğinde doğrudan 🖱️ çubuğunda). Açıkken widget boyutu ayarlanır bir kutu olur ve her parçası kendi başına sürüklenir, yayın gerçek zamanlı izler.",
+      "🎛️ HER parça (öne çıkanın ve widget'ların) editör çubuğunda tam İNCE AYARI kazandı: 🔄 döndür (-180°...180°), 🌫️ opaklık, 🎨 kendi rengi (her zamanki renge dönüşle), ✨ gölge, 🪞 aynala ve boyut — aç/kapat ve bireysel ↺ ile birlikte.",
+      "🧑 Öne çıkanın avatarı artık her ağın verdiği EN YÜKSEK çözünürlükte gelir (YouTube 512px, Twitch 300px, Kick tam boyut) — avatar büyütülünce bulanık fotoğraf bitti. Ve ayarlanır kenarlık kazandı (kalınlık ve renk). Panel listeleri her zamanki hafif fotoğraflarla kalır.",
+      "🖱️ Editörde bir parçayı kavramak artık widget'ını da seçer — öğe çubuğu ve parça çubuğu birlikte görünür.",
+      "⚙️ Her şey sunucuda sağlıklı sınırlarla (uydurma değer girmez) ve bir parçaya dokunmak diğerlerini asla silmez.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.36.0": {
+    "titulo": "Sanatınız artık öne çıkan kartın TA KENDİSİ — ve 🧩 editörün gözünün önünde",
+    "itens": [
+      "🖼️ GERİ BİLDİRİM DÜZELTMESİ: \"Öne çıkan yorum arka planı\" olarak sanat yüklemek hiçbir şey yapmıyor gibiydi — yalnız bir yorum yayındayken, kırpılmış ve varsayılan görünümün altında beliriyordu (arka plan, çubuk ve gölge kalıyordu). Artık \"Sanat kartın TA KENDİSİ\" anahtarı var: açın, varsayılan görünüm tümüyle kaybolur — yalnız sanatınız kalır, içerik üstünde.",
+      "📐 Yeni bir seçici sanatın karta nasıl gireceğine karar verir: KAPLA (fazlalığı kırpar, eskisi gibi), ESNET (kartın tam boyutu) veya SIĞDIR (bütün, kırpmadan ve bozmadan).",
+      "🧩 Serbest parçalar anahtarı artık 🖱️ Ekranı düzenle çubuğunda da — orada açın, parçalar öne çıkan kartın içinde belirir, ayarları avlamaya gerek kalmaz. Kendi overlay'inizin tam tarifi: 🧩 Serbest parçalar + Esnet + Sanat kartın TA KENDİSİ.",
+      "💡 🖼️ Overlay'leriniz kartı artık öne çıkan arka planının ne zaman göründüğünü açıklıyor (anında görmek için 🧪 Örnek'i kullanın) ve yeni anahtarları işaret ediyor.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.35.0": {
+    "titulo": "Editör yenilemesinin 2. aşaması: 🧩 öne çıkan serbest parçalara söküldü",
+    "itens": [
+      "🧩 ANA YENİLİK: 💬 Öne çıkan yorum SERBEST PARÇALAR modunu kazandı. Ayarlarda açınca avatar, ağ simgesi, ad, rozetler, Super Chat tutarı ve metin 6 bağımsız parça olur — her biri kendi konumu, boyutu ve aç/kapatıyla, 🖱️ Ekranı düzenle'de gerçek önizlemenin üstünde sürüklenir. Yorumu SİZİN sanatınıza, ona zarar vermeden oturtmak için yapıldı.",
+      "📏 Ad ve metnin kendi kutusu var (ayarlanır genişlik ve yükseklik) ve yorum sığmadığında ne olacağına karar veren DİNAMİK SIĞDIRMA: harfi sığana dek küçült (varsayılan), kenarda kes, ya da taşır — ve her durumda kart dışarı çıkmaya çalışanı kırpar, yani sanatınızın üstüne HİÇBİR ŞEY taşmaz, ne uzun ad ne metin yığını.",
+      "🖱️ Editörde öne çıkan karta tıklayınca parçalar içinde görünür; bir parçayı kavramak ince ayar çubuğunu açar (boyut, kutu genişliği/yüksekliği, sığdırma ve parçanın ↺'su). Sürüklemek YAYINDA gerçek zamanlı yansır.",
+      "📐 Serbest modda kart yüksekliği ayarlanır (yazı tipini izlemek için harf boyutunun katlarında).",
+      "🧰 Kapalıyken kart her zamanki gibi kendini kurar — modu kullanmayan için hiçbir şey değişmez.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.34.0": {
+    "titulo": "Editör yenilemesinin 1. aşaması: 🪟 katmanlar ve 📺 Ekranı düzenle'de gerçek önizleme",
+    "itens": [
+      "🪟 ANA YENİLİK: 🖱️ Ekranı düzenle, Photoshop'taki gibi bir KATMANLAR paneli kazandı. Ekranın her parçası (çerçeveniz/overlay'iniz, öne çıkan yorum ve her widget) bir katman — listede sürükleyerek kimin üstte olacağını seçin, sıra YAYINDA gerçekten geçerli. Artık çerçevenizi öne çıkanın ÜSTÜNE, saati altına vb. koyabilirsiniz. ↺ her zamanki sırayı döndürür.",
+      "👁 Her katmanın YALNIZ editörde gizleyen bir gözü var (sanatınızın üstünde sakin çalışmak için — yayında hiçbir şey kapanmaz) ve yerleşmiş bir parçaya çarpmamak için kilitleyen bir 🔒. Göz ve kilit seçimleri tarayıcınızda kalır.",
+      "📺 Editör artık GERÇEK ÖNİZLEME gösteriyor: gerçek /overlay, seçilen ekranın gerçek boyutunda, tuvale sığacak şekilde küçültülmüş — gördüğünüz, OBS'in yakaladığının ta kendisi, çerçeveniz, widget'lar ve gerçek yazı tipleriyle. Renkli dikdörtgenler önizlemenin üstünde kontur oldu (ve eski modu yeğleyen önizlemeyi kapatabilir).",
+      "🧪 Yeni bir buton ayarlarken editörde öne çıkanı görmeniz için yayına örnek bir yorum koyar — OBS'te de görünür, aynı buton kaldırır.",
+      "🧰 Bu, editörün büyük yenilemesinin ilk adımı (overlay parçaları bağımsız ayarlanabilir). Sonraki aşamalar ayrı sürümlerle gelecek.",
+      "🌐 Her şey 10 dile çevrildi."
+    ]
+  },
+  "0.33.1": {
+    "titulo": "Rozet anahtarları sabit sohbette artık anında geçerli",
+    "itens": [
+      "🏷️ DÜZELTME: 💬 Sabit canlı sohbette bir rozeti açıp kapamak yalnız SONRA gelen yorumlara işliyordu — ekrandakiler dışarı kayana dek eski hâlde kalıyordu. Artık sabit sohbet rozetleri anında yeniden çizer, panel ve öne çıkan yorum gibi.",
+      "✔️ 🏷️ Sohbet rozetleri sayfasının tüm anahtarları için geçerli: her rol, platformun özgün sanatı, \"diğer rozetler\" ve genel anahtar."
+    ]
+  },
+  "0.33.0": {
+    "titulo": "3 platformun gerçek rozetleri — ve moderasyonun sildiği ekrandan kayboluyor",
+    "itens": [
+      "🏷️ ANA YENİLİK: OBS Social artık YouTube, Twitch ve Kick'in ÖZGÜN rozetlerini getirip her birinin sanatını renkli etiketin yanında gösteriyor. Üye seviyeleri için kanalın çizimi, Twitch'in kendi rozetleri (Prime, Turbo, bit'ler, hediyeler, etkinlikler, kanala özel sanatlar) ve Kick'inkiler ekranda sitedeki gibi görünüyor — hepsi girişsiz ve API anahtarsız.",
+      "🎖️ Üç API'nin yolladığı tüm roller girdi: sahip, moderatör, VIP, abone (kademesiyle), üye, kurucu, OG ve doğrulanmış hesap. Sabit rolü olmayanlar da (her kanalın kendininki var) platform sanatıyla, sanat yoksa ağ renginde konturla görünüyor.",
+      "🎚️ Ayarlarda yeni bir sayfa — 🏷️ Sohbet rozetleri — HER BİRİNİ AYRI AYRI KAPATMAYA izin veriyor, ekranda nasıl durduğunun önizlemesiyle. Yalnız görselleri bırakıp programın renkli etiketleriyle kalmak ya da hepsini bir kerede kapatmak da mümkün. Aynı anda yayın (overlay'ler) ve panel için geçerli.",
+      "🗑️ Bir moderatör yorum sildiğinde, birini yasakladığında veya susturduğunda ya da sohbeti temizlediğinde, yorum artık panelden, sabit sohbetten ve yayındaki öne çıkandan ANINDA KAYBOLUR — platformun sitesinde kaybolduğu gibi. Eskiden sohbetten silindikten sonra yayın ekranında kalıyordu. YouTube, Twitch ve Kick'te çalışır, ayarlardan kapatılabilir.",
+      "✔️ Ham adla gelen Kick rozetleri artık düzgün görünüyor, kanalın abone çizimi (1 ay, 3 ay, 6 ay...) Kick yolladığında kullanılıyor.",
+      "🌐 Hepsi 10 dile çevrildi, rozet önizlemeleri dahil."
+    ]
+  },
+  "0.32.0": {
+    "titulo": "Kick sütunu (ve her sakin ağınki) bir daha boş kalmıyor",
+    "itens": [
+      "📋 ANA DÜZELTME: program tüm ağlar için birlikte TEK 300'lük yorum listesi tutuyordu. YouTube coşmuş bir yayında Kick'in yorumları listeden itiliyor ve sütunu neredeyse boş görünüyordu — sayaç doğru toplamı gösterse bile. Artık her ağın kendi 300'lük alanı var; sakin bir ağın sütunu diğerlerinin hacmiyle bir daha boğulmaz.",
+      "🕘 Kick artık ÇOK daha fazla geçmiş getiriyor. Sitesi her seferinde 25 yorum ve geriye devam işareti veriyor — program yalnız ilk partiyi okuyordu. Artık işareti izleyip bir kerede 200'e kadar kurtarıyor.",
+      "💬 Kick sohbet yanıtları (biri başkasına yanıt verdiğinde) geçmişten atılıyordu. Geri döndüler.",
+      "🔄 Her sütunun 🔄 butonu artık sunucunun sakladığını da panele geri veriyor — eskiden panel eski yorumları kaybettiyse buton bile geri getirmiyordu.",
+      "✔️ Kick'in doğrulanmış kanal rozeti ham \"verified\" sözcüğü olarak görünüyordu; artık panelin güzel rozeti oluyor.",
+      "⚡ Daha hafif Kick yeniden bağlanması: tam tarama yalnız ilk kez olur (veya 🔄'ya bastığınızda); otomatik yeniden bağlanmalar yalnız yakın geçmişi arar, asla iki arama aynı anda olmaz."
+    ]
+  },
+  "0.31.0": {
+    "titulo": "Tüm sekmelerde doğru sayaçlar ve her sütunda 👤 farklı kişiler",
+    "itens": [
+      "🔢 DÜZELTME: \"Canlı\" sekmesinin sayısı gerçek toplamın çok altındaydı — yalnız panel ekranından geçeni sayıyordu, tüm yayını değil. Yayının ortasında paneli açar veya yenilerseniz sayım neredeyse sıfırdan başlıyordu. Artık tüm sekmeler sunucunun saydığı günün gerçek sayısını gösteriyor.",
+      "💰 Aynısı Super Chat'ler, Üyeler ve Bağışlar için de geçerliydi: üçü de artık tüm yayını sayıyor. Ve bir bağış artık iki kez sayılmıyor (bağış ve super chat olarak).",
+      "♾️ Hiçbir sayacın tavanı yok. Çekiliş rozeti de \"99+\"da durmayı bıraktı, gerçek sayıyı gösteriyor.",
+      "📜 Program yeniden başlarken sayaçlar artık günün tüm dosyasını okuyor. Eskiden yalnız son 5 MB hesaba giriyordu ve büyük yayında toplam olduğundan küçük dönüyordu.",
+      "👤 Her sütun üçüncü bir sayaç kazandı: içinde kaç FARKLI kişinin konuştuğu. Birleşikte tüm ağların toplamı.",
+      "🎁 Çekiliş butonunda katılımcılara ek olarak oyundaki toplam bilet de görünüyor — seviyelerin (abone, üye, founder, Tier 2, Tier 3...) sayılıp sayılmadığı bir bakışta anlaşılıyor."
+    ]
+  },
+  "0.30.0": {
+    "titulo": "Artık takılmayan kaydırma, sohbet geçmişi geri döndü ve her sütunda 🔄",
+    "itens": [
+      "🖱️ DÜZELTME: çok kişi konuşurken sohbet kaydırması takılıyordu — fare tekerleği tutmuyor, kenar çubuğu elden kaçıyordu. Panel her mesajda tüm listeyi, saniyede onlarca kez, yeniden kuruyor ve tarayıcı sürüklemenizi yarıda iptal ediyordu. Artık mesajlar gruplanıyor ve siz kaydırırken hiçbir şey yeniden kurulmuyor: panel bırakmanızı bekliyor.",
+      "🕘 DÜZELTME: bir sohbetin bağlantısı düşüp geri geldiğinde (yayında kendiliğinden olur), program kayıp yorumları istiyordu — ama yanlışlıkla HEPSİNİ atıyordu. Kick, Twitch ve Bilibili'de bu sorun vardı. Artık boşluk gerçekten kapanıyor.",
+      "🔄 Her sütun yalnız kendini yenileyen bir buton kazandı: o ağı yeniden başlatır ve platformun hâlâ sakladığı yorumları geri getirir. Birleşikte buton hepsini bir kerede yeniler.",
+      "⏱️ Ve otomatik olabilir: ⚙️ Ayarlar → Paneli kişiselleştir'de sohbetlerin ne sıklıkta kendiliğinden yenileneceğini seçin — \"asla\"dan (yalnız buton) 60 dakikaya.",
+      "👀 Bağlı bir ağın sütunu artık ilk mesajdan önce bile görünüyor — eskiden sessiz ağın sütunu yoktu ve yenileyemiyordunuz.",
+      "🔌 Ayrıca düzeltildi: sonradan düşen eski bir bağlantı aynı ağla paralel ikinci bağlantı açabiliyordu."
+    ]
+  },
+  "0.29.1": {
+    "titulo": "Güvenlik denetimi: üç program çökmesi ve bir açık düzeltildi",
+    "itens": [
+      "🛡️ Program üç durumda kendiliğinden kapanıyordu — tarayıcıda yanlış yazılmış adres (\"localhost:3000/%\" gibi), ağdaki başka makineden garip bir komut ve bir sekmenin bağlantısındaki herhangi bir tıkanma. Artık bunların hiçbiri yayını düşürmüyor: hata o sekmede veya o istekte kalıyor.",
+      "🔐 Kötü niyetli sitelere karşı kilidin deliği vardı: kendi adını ağınızın IP'sine yönlendiren bir dış site yerel gibi görünüp paneli açabiliyordu. Düzeltildi — artık adres gerçekten makinenize veya ağınıza ait olmalı.",
+      "🎵 Ses ve görseller yalnız OBS Social'ın kendi klasörlerinden gelebilir. Eskiden ağda ayar izni olan biri paneli ve yayını herhangi bir siteden dosya yüklettirebiliyordu.",
+      "📎 Dosya yükleme artık yalnız görsel, video ve ses kabul ediyor.",
+      "🧱 Ek QR kodlar ve winstreak'ler için 30 tavanı ve panel mesajlarına boyut sınırı — eskiden \"daha ekle\"yi yineleyerek bellek ve disk doldurulabiliyordu.",
+      "🔎 Ayrıca sertleştirildi: eski oturumlar temizleniyor, güncelleme https'ten çıkmayı reddediyor ve kanal adları Twitch sohbetine temizlenmiş gidiyor."
+    ]
+  },
+  "0.29.0": {
+    "titulo": "İstediğiniz gibi yanıp sönme ve sesli çekiliş zarı",
+    "itens": [
+      "⏳ Zamanlayıcının son düzlüğü artık sizin: açıp kapatın, sona istediğiniz kadar saniye kala başlasın (1–60) ve seçtiğiniz renkte.",
+      "🔴 00:00 yanıp sönmesi de: açıp kapatın, renk sizin ve birkaç saniye sonra kendiliğinden durabilir (ya da eskisi gibi durmadan yanıp sönebilir).",
+      "📢 Duyuru aynı üç kontrolü kazandı, kendi zamanıyla — isterseniz sayıdan çok önce yanıp sönmeye başlayabilir — ve yanıp sönerken yalnız kendine ait bir renk (ya da hiç, metnin normal rengi kalır).",
+      "🎲 Çekilişte zarın podyumdan önce ekranda ne kadar döneceği seçilebilir (0–15 saniye; 0 doğrudan kazananlara gider). Varsayılan 2,2 saniye kalır.",
+      "🔊 Zar, zamanlayıcı gibi ses kazandı: seçtiğiniz dosya, 0–100 ses ve nerede çalacağı (panel, yayın veya ikisi). Hazır bir zar sesiyle gelir.",
+      "🌐 Üstüne, 🕐 Saat ve 🎁 Çekiliş kartlarının tamamı saat dilimi listesi dahil 10 dile çevrildi — eskiden yalnız Portekizce görünüyorlardı."
+    ]
+  },
+  "0.28.0": {
+    "titulo": "Winstreak yerine döndü, standartlaşan animasyonlar ve metin biçimi",
+    "itens": [
+      "🏆 DÜZELTME: v0.26.0'da winstreak kartı tüm ekran genişliğine yayılmış, kıvılcımları her yana saçılmış bir şerit olmuştu. Kartı köşesinden çıkaran fazladan bir CSS satırıydı. Doğru boyuta, seçilen köşeye döndü ve kıvılcımlar artık kartın içinde yükseliyor.",
+      "🎬 Tüm seçicilerde tüm animasyonlar: giriş ve çıkış artık öne çıkan yorumda, widget'larda ve sabit canlı sohbette tam olarak aynı 11 efekti sunuyor (belirme, 4 yandan kayma, zıplama, yakınlaşma, sekme, 3B dönüş, fırıl fırıl ve bulanıklaşma).",
+      "🔁 Döngü animasyonları da üç yerde tam ve eşit oldu, 4 yenisiyle: sekme, durmadan fırıldanma, bulanıp geri gelme ve sallanma.",
+      "📄 Sabit canlı sohbet, metni adın altında gösterme seçeneğini kazandı, canlı panelin tarzında.",
+      "📄 Ve canlı panel tersini kazandı: metni adın yanında gösterme, sabit canlı sohbetin tarzında, saat sağda.",
+      "🌐 Sabit canlı sohbette yorumcuların metni artık dil çevirmeninden korunuyor — kısa bir cümle istemeden çevrilebiliyordu."
+    ]
+  },
+  "0.27.0": {
+    "titulo": "Gerçekten çalan zamanlayıcı sesi, son sayım ve \"güvenli değil\" açıklaması",
+    "itens": [
+      "🔊 Zamanlayıcı bitiş sesi birçok tarayıcıda çalmıyordu (Edge, telefon ve tabletinkiler): sayfaya dokunulmadan sesi bırakmıyorlar. Artık OBS Social sesi kendisi hazırlıyor ve tarayıcı yine tutarsa tek tıkla çözen \"sesi açmak için buraya tıklayın\" daveti gösteriyor. OBS içinde değişen yok — orada ses zaten çalıyordu.",
+      "⏳ Son düzlük: kalan 10 saniyede zamanlayıcının rakamları sararıp atıyor — panelde ve yayın ekranında.",
+      "📢 Duyuru o son 10 saniyede yeniden yumuşakça yanıp sönüyor. Animasyon, çerçevenin kendi giriş animasyonuyla kavga ettiği için sönmüyordu; artık yanıp sönme metinde ve ikisi geçiniyor.",
+      "🔴 00:00'ın kırmızı yanıp sönmesi çok daha sakinleşti (0,7sn'den 1,8sn'ye), ürkütmeden, ve renk asla tümden kaybolmuyor.",
+      "⏱️ Kronometre saniyenin ondalıklarını (00:05.4) yayın ekranında da gösteriyor, 🧩 Widget'ları kişiselleştir'de kapatma seçeneğiyle.",
+      "🔐 🔗 OBS için URL'lerde \"bu siteye bağlantınız güvenli değil\" uyarısına yeni açıklama: neden görünür, neden bilgisayarınızın veya ağınızın sorunu değildir ve ev yapımı bir sertifika neden daha kötü olurdu (ve antivirüsü öttürürdü)."
+    ]
+  },
+  "0.26.0": {
+    "titulo": "Üç seviyeli winstreak kilometre taşları ve şeritteki saat",
+    "itens": [
+      "🕐 Saat, araç şeridinin ortasına, boş alana taşındı — tam ortaya, istendiği gibi",
+      "✨ Winstreak kilometre taşları artık yayın ekranında DA görünüyor (eskiden yalnız panel) ve sayı taşın üstündeyken efekt KALIYOR, geçince kendiliğinden gidiyor",
+      "🥇 Üç kutlama seviyesi: onlar (10, 20, 30...) altın parıltıyla; büyük taşlar (50, 100, 200, 300...) güçlü parıltı ve yükselen kıvılcımlarla; ve katlamalar (10, 20, 40, 80, 160, 320...) renkli kıvılcımlar, tüm kartta hale ve atışla — hepsinin en özeli",
+      "🎯 Bir sayı birden çok seviyeye uyduğunda (20 ve 80 gibi) hep en özeli kazanır"
+    ]
+  },
+  "0.25.3": {
+    "titulo": "Zamanlayıcı seçenekleri panelde ve sonda yanıp sönen Duyuru",
+    "itens": [
+      "⌛ Zamanlayıcı bitişi seçenekleri artık saatin kendi panelinde (Zamanlayıcı modunda): Duyuruyu ekrandan alma, sıfırda sayıyı yanıp söndürme, sonda Duyuruyu yanıp söndürme ve sesin nerede çalacağı — ayarları açmadan",
+      "📢 Zamanlayıcının son 10 saniyesinde ekrandaki Duyuru, izleyicinin sürenin bittiğini görmesi için yumuşakça yanıp söner (kapatılabilir)",
+      "🔁 Aynı seçenekler ayarlarda da durur ve iki ekran hep eşzamanlı kalır"
+    ]
+  },
+  "0.25.2": {
+    "titulo": "Saat başlıkta ve düzenleyici düzeltildi",
+    "itens": [
+      "🐞 Düzeltildi: panel düzenleyicisi Panoyu, Duyuruları ve Saati taşıyamıyordu — sırada yeni öğeler varsa program kaydederken sırayı atıyordu. Artık hepsi özgürce sürüklenir",
+      "🕐 Saat buton sırasından çıkıp başlığın ortasında, program adının yanındaki boş alanda bir gösterge oldu — tıklayınca aynı saat, kronometre ve zamanlayıcı menüsü açılır",
+      "📅 Yeni seçenek: panel göstergesinde yalnız saati veya saat + tarihi göster",
+      "⏱️ Kronometre veya zamanlayıcı çalışırken gösterge süreyi gösterir (altında etiketiyle) ve bitince saate döner"
+    ]
+  },
+  "0.25.1": {
+    "titulo": "Yayında zamanlayıcı sesi ve dahili hazır uyarı",
+    "itens": [
+      "📺 Zamanlayıcı sesi artık yayında da çalabilir: \"panelde ve yayında\", \"yalnız yayında\" (izleyici duyar) veya \"yalnız bilgisayarımda\" seçenekli yeni seçici",
+      "⏰ OBS Social zamanlayıcı için hazır bir uyarı sesiyle gelir — başlamak için hiçbir şey yüklemeye gerek yok (istediğinizde kendinizinkiyle değiştirebilirsiniz)",
+      "🎧 Yüklenen ses dosyaları artık doğru türle sunuluyor (MP3, WAV, OGG, M4A, AAC, FLAC, Opus) — bazılarının çalması için eksik olan buydu"
+    ]
+  },
+  "0.25.0": {
+    "titulo": "📢 Duyurular, 🕐 Saat ve güçlendirilmiş Winstreak",
+    "itens": [
+      "🏆 Winstreak: artık REKOR için de + ve − var (yanlışlıkla eklediğinizde düzeltebilirsiniz) — ve rekor asla mevcut zaferlerin altına düşmez",
+      "⏩ Herhangi bir + veya − butonunu basılı tutun, gitgide hızlanıp büyük adımlarla toplar (×5, ×10 yanında görünür)",
+      "⌨️ 0/0'ın sayıları alan oldu: tıklayıp zaferleri ve rekoru doğrudan yazın",
+      "✨ Rekor yuvarlak bir sayıya vurunca (5, 10, 25, 50, 100...) sayı kutlamak için altın parlar",
+      "📢 Yeni Duyurular overlay'i: 1000 karaktere kadar bir not yazıp ekrana koyun — yazı tipi, boyut, renkler, hizalama, kalın/italik/altı çizili, büyük harf, gölge ve tüm animasyonlarla, diğer overlay'ler gibi",
+      "🕐 Yeni Saat overlay'i: panel butonu güncel saati gösterir, tıklayınca 🕐 Saat (tarihli), ⏱️ Kronometre ve ⏳ Zamanlayıcı arasından seçtirir — her biri yayın ekranına gidebilir",
+      "🌍 Ayarlarda saat dilimi: \"bilgisayarınki\" veya dünyanın herhangi bir dilimi (GMT/UTC, Brasília, Lizbon, Tokyo...) — ekran saati seçileni kullanır",
+      "🤝 Zamanlayıcı + Duyurular birlikte: süre bitince duyuru kendiliğinden ekrandan çıkar (bu ortaklık kapatılabilir)",
+      "🔊 İlk kez OBS Social ses çalıyor: zamanlayıcı sıfırlandığında haber vermek için bir ses seçin (her biçim, 20 saniyeye kadar), 0–100 sesle"
+    ]
+  },
+  "0.24.0": {
+    "titulo": "Panel sayfası 🎨 Temalar oldu",
+    "itens": [
+      "🎨 Yeni Temalar sayfası (eski \"Panel\"): OBS Social'ı baştan aşağı kişiselleştirin — her şeyin renkleri (vurgu, arka plan, kartlar, iç kutular, metin, yumuşak metin ve kenarlıklar), programın arka plan görseli, yazı tipi, metin ve simge boyutları, yuvarlak köşeler ve boşluk",
+      "✨ Tek seferde yüklenecek 10 hazır tema: Varsayılan, Derin mor, Okyanus, Orman, Kor, Neon pembe, Yumuşak açık, Kâğıt, Yüksek kontrast ve Retro — sonra üstünde istediğinizi ayarlayın",
+      "💾 Temanızı dosyaya kaydedip başka bilgisayarda yükleyin (veya başka yayıncılarla paylaşın)",
+      "⚡ Her şey anında değişir, panelde ve ayarlarda aynı anda, hiçbir şey yeniden yüklenmeden",
+      "🔍 \"Arayüz boyutu\" olduğu yerde ve çalışır durumda — her şeyi bir kerede büyütür ve temadan bağımsızdır"
+    ]
+  },
+  "0.23.0": {
+    "titulo": "Temizlik merkezi ve OBS Social yüzlü iletişim kutuları",
+    "itens": [
+      "💬 Tarayıcı popup'larına veda: tüm uyarılar ve onaylar artık OBS Social'ın kendi pencereleri — renklerinizle, simgelerle, klavyeyle (Enter onaylar, Esc iptal eder) ve 10 dile çevrilmiş",
+      "🧹 Ayarlar → 🗄️ Günlükler ve veriler'de yeni temizlik merkezi: her veri türüne bir buton (günlükler, yüklenen medya, okuma işaretleri ve kuyruk, çekiliş katılımcıları, kayıtlı kanallar, QR kodlar ve winstreak'ler), her biri ne kadar yer kapladığını gösterir ve tam olarak neyi sildiğini söyler",
+      "💣 \"Her şeyi silip fabrikaya dön\"ün kendi kırmızı, daha ciddi uyarısı var: silinecekleri madde madde sayar ve butonu ancak SİL yazınca açar. Ağ erişim şifreniz korunur, dışarıda kalmayasınız diye",
+      "📺 Bilibili kalıntısı düzeltildi: ayar sayfaları arasında gezerken kartı Labs'te kapalıyken bile Bağlantılar'da yeniden beliriyordu — artık gerçekten kayboluyor",
+      "🔢 Temizlik sayıları sekme açılınca kendiliğinden yenileniyor (eskiden sayfanın açıldığı andakinde donuyordu)"
+    ]
+  },
+  "0.22.2": {
+    "titulo": "Avatarlar geri döndü ve sürüm karışıklığının sonu",
+    "itens": [
+      "📸 v0.22.1 hasarı onarıldı: kaybolan YouTube avatarları, yanıp sönen panel ve boş büyütme — büyük fotoğraf denemesinin artık garantili dönüşü var: görsel sunucusu büyük boyutu reddederse avatar anında özgün adrese döner (ve ancak en son çare renkli baş harfe dönüşür); büyütme bir daha asla boş kalmaz",
+      "🧊 Eski bir sorun bulunup düzeltildi: program tarayıcıya önbellek talimatı yollamıyordu — güncellemeden sonra tarayıcı ve OBS yeni dosyaları eskilerle karıştırabiliyordu (tam da bu tuhaflıkları doğuran). Artık her dosya her açılışta sunucuyla doğrulanıyor, hız kaybı olmadan",
+      "⏱️ Yayın süresi saati cerrahi oldu: her saniye başka hiçbir şeyi çizmeden yalnız ⏱ metnini günceller"
+    ]
+  },
+  "0.22.1": {
+    "titulo": "Yayın düzeltmeleri: Twitch, Kick ve net avatarlar",
+    "itens": [
+      "🟣 Twitch'in ⏱'si görünmüyordu: Twitch genel sorgu kodunu (Client-ID) değiştirdi ve sorgu 400 hatası dönüyordu — artık OBS Social güncel kodu Twitch'in kendi sayfasından okuyor ve yine değişirse kendiliğinden yeniden keşfediyor",
+      "🟢 Cloudflare'ın engellediği Kick (403 hatası): program artık büyüyen beklemeyle kendi kendine ısrar ediyor (30sn, 60sn... 5dk'ya kadar) — yayının ortasında yeniden bağlan'a tıklamak gerekmiyor; Kick izleyici sorguları da engeli tetiklememek için seyreltildi (30sn)",
+      "⏱️ Yayın süresi artık saniyeleri gösterip saniye saniye ilerliyor (2h13m05s), veriler her 10sn'de doğrulanıyor",
+      "📸 Yüksek çözünürlükte YouTube avatarları: sohbet minicik fotoğraflar (32px) yollar — artık akış için 256px istiyoruz ve büyütülmüş avatarda (sağ tık) fotoğraf YouTube'da 512px, Twitch'te 600px geliyor",
+      "🛟 Geçici bir sorgu hatası artık çipin bilinen son durumunu silmiyor (boşuna yanıp sönen 💤 yok)"
+    ]
+  },
+  "0.22.0": {
+    "titulo": "Saatler kesin düzende, Kick kurtarıyor ve yayın süresi",
+    "itens": [
+      "🕐 Saat hatasının kalanı bulunup düzeltildi: yeniden başlatınca bellek günlüğe VARIŞ sırasıyla geliyordu (geç kurtarılan geçmiş yerinden oluyordu) — artık hep gerçek saate göre sıralı döner",
+      "🔢 Aynı saniyenin mesajları kararlı bir eşitlik bozucu kazandı (varış numarası): sıra artık iki yenileme arasında asla değişmiyor; panelde, sütunlarda ve sabit sohbette",
+      "🟢 Kick mesaj kurtarması düzeltildi: geçmiş uç noktası kanalın sayısal ID'sini istiyor (adla sessizce 404 dönüyordu); YouTube, Twitch ve Bilibili kontrol edildi, kurtarmayı sürdürüyorlar",
+      "⏱️ Panel çiplerinde yayın süresi: bağlı her ağ, yayının ne süredir havada olduğunu gösteriyor (⏱ 2h13), doğrudan platformun kendisinden",
+      "💤 Gerçek zamanlı çevrimiçi izleyici: platform yayının kapandığını söylerse çip 💤 ile soluklaşır (sohbet bağlı kalır) — YouTube, Twitch, Kick ve Bilibili, izleyicilerle birlikte her 10 saniyede güncellenir"
+    ]
+  },
+  "0.21.0": {
+    "titulo": "10 dil + Geri bildirimde konular",
+    "itens": [
+      "🌍 Yayın platformlarında en çok kullanılanlardan seçilen sekiz yeni dil: İspanyolca, Fransızca, Almanca, Rusça, Türkçe, Japonca, Korece ve Çince (basitleştirilmiş) — hepsi tam, her yayın topluluğunun gerçekten kullandığı terimlerle",
+      "⚡ Her sayfa yalnız kullanılan dilin sözlüğünü indirir (OBS'e fazladan yük yok); 🌐 Dil sekmesinin seçicisi geçerli dilde kendini alfabetik sıralar",
+      "📣 Konu seçicili Geri bildirim: Genel geri bildirim, Sorun veya hata, Fikir veya öneri, Bağlantılarda yardım, OBS ve overlay'lerde yardım, Güncelleme ve kurulum, Diller ve çeviriler, Övgü veya teşekkür — ve istediğiniz konuyu yazacağınız kutu açan ✉️ Diğer",
+      "📬 Seçilen konu e-postanın konu alanına doğrudan gider; kategoriler e-postada hep Portekizce kalır (arayüz başka dilde olsa da), geliştirici her şeyi tek yerde toplasın diye"
+    ]
+  },
+  "0.20.0": {
+    "titulo": "🌐 OBS Social İngilizce konuşuyor",
+    "itens": [
+      "🌐 Ayarlarda yeni Dil sekmesi: \"Sistem dili\" (her sayfayı açanın tarayıcısını/bilgisayarını izler) veya herkes için sabit bir dil",
+      "🇺🇸 Eksiksiz İngilizce: panel, ayarlar, overlay'ler, sabit sohbet, duyurular, bağlantı durumu ve onay kutuları — doğru yayıncılık terimleriyle çevrildi (Queue, Featured, Giveaway, Winstreak...)",
+      "⚡ Değişiklik anında, tüm açık sayfalarda geçerli — yeniden başlatmadan ve yenilemeden, yayının ortasında bile",
+      "🔒 Sizin veya izleyicilerin yazdığı (mesajlar, adlar, widget başlıkları) asla çevrilmez; henüz çevirisi olmayan Portekizce görünür",
+      "🧱 Yeni diller için temel hazır: gelecekteki her dil yalnızca bir sözlük dosyası"
+    ]
+  },
+  "0.19.0": {
+    "titulo": "Bilibili bir Labs seçeneği oluyor",
+    "itens": [
+      "📺 Bilibili deneysel olduğundan (girişsiz; adları kısaltabilir veya bağlantıyı reddedebilir) artık 🧪 Labs'te etkinleştirme anahtarı var — varsayılan kapalı",
+      "🔌 Anahtar kapalıyken kartı Bağlantılar'dan kaybolur, test mesajları örneğini atlar ve bağlantı denemeleri uyarıyla reddedilir",
+      "♻️ Bilibili'yi zaten kullanan bir şey kaybetmez: güncellemede kayıtlı kanalı olanlar için anahtar kendiliğinden açılır",
+      "🧹 Anahtarı kapatmak bağlantıyı düşürür ve kayıtlı kanalı unutur"
+    ]
+  },
+  "0.18.3": {
+    "titulo": "Kesik metinsiz seçiciler",
+    "itens": [
+      "✂️ Panelin ⏱️ ve 🌊 seçicilerinin metni kesiliyordu (\"Gerçek zaman (ağların en az...\") — etiketler kısa ve temiz oldu; tam açıklama fare üstüne gelince ipucunda durur"
+    ]
+  },
+  "0.18.2": {
+    "titulo": "Saatler hep sırada",
+    "itens": [
+      "🕐 Düzeltildi: saatler sütunlarda, birleşikte ve sabit sohbette sıradan çıkabiliyordu — kurtarılan geçmiş canlı mesajlardan SONRA geldiğinde (örn. yeniden bağlanmada) listenin sonuna düşüyordu",
+      "📅 Artık her mesaj gerçek saatinin konumuna girer: zaman çizgisi panelde, sabit sohbette ve sunucu belleğinde hep doğru"
+    ]
+  },
+  "0.18.1": {
+    "titulo": "Overlay'lerinizde temizlik",
+    "itens": [
+      "🧹 \"Ekranı düzenle'yi aç\" butonu Overlay'lerinizden çıktı — gerek kalmadı: harita hemen üstte, aynı sayfada"
+    ]
+  },
+  "0.18.0": {
+    "titulo": "Ekran ve widget'lar: her şey tek yerde",
+    "itens": [
+      "🖥️ Ayarlarda yeni Ekran ve widget'lar sayfası: 🖱️ Ekranı düzenle panelden çıkıp artık orada, tam sayfa yaşıyor — Widget'ları kişiselleştir ve Overlay'lerinizle birlikte, hepsi tek yerde, bozulmadan",
+      "🖱️ Panel butonu aynı yerde ama kısayol oldu: tıklayınca doğrudan Ekran ve widget'lar sayfası açılır",
+      "🔗 Eski kısayollar ve bağlantılar (Overlay'leriniz) otomatik olarak yeni sayfaya götürür"
+    ]
+  },
+  "0.17.1": {
+    "titulo": "Eksik avatarlar artık görünüyor",
+    "itens": [
+      "🖼️ Düzeltildi: Twitch'te her kişinin İLK mesajı sonsuza dek fotoğrafsız kalıyordu (avatar araması mesajdan sonra bitiyor ve doldurmaya dönmüyordu) — artık fotoğraf gelince o kişinin tüm eski mesajları anında avatar kazanıyor, panelde ve sabit sohbette, yanıp sönmeden",
+      "🟢 Kick: avatarlar artık sitenin genel API'sinden aranıyor (eskiden Kick'te kimsenin fotoğrafı yoktu)",
+      "📺 Bilibili: aynı şekilde, genel profil API'siyle (izin verdiğinde)",
+      "♻️ Düzeltme öne çıkan yorum, çekiliş ve paneli sonra açanlar için de geçerli"
+    ]
+  },
+  "0.17.0": {
+    "titulo": "Yatay ve dikey overlay",
+    "itens": [
+      "📺 OBS için URL'lerde yeni seçici: normal, yatay, dikey (9:16, telefon yayınları için) veya ikisi birden",
+      "🔗 İkisi birlikteyken her şey otomatik bağlanır: bir widget, winstreak veya renk ayarladınız, iki overlay'de de görünür — yeniden uğraşmadan",
+      "📱 Yalnız KONUMLAR bağımsız: 🖱️ Ekranı düzenle 🖥️ Yatay ve 📱 Dikey sekmelerini kazanır (harita dikeyde ayağa kalkar), her ekran kendi düzenini saklar — ek QR'lar ve winstreak'ler dahil",
+      "🌐 Dikey yayın kendi URL'sini kullanır (overlay?tela=vertical); mod dikey içerdiğinde URL sayfasında görünür"
+    ]
+  },
+  "0.16.0": {
+    "titulo": "Sağ tıkla büyütülen avatar",
+    "itens": [
+      "🔍 Paneldeki herhangi bir avatara sağ tık: fotoğraf anında büyür, panelde VE OBS ekranında — yorum yapanı öne çıkarmak için birebir",
+      "🎚️ Görseli büyütüp küçültmek için kaydırıcı (boyut iki yerde geçerli ve akılda kalır)",
+      "🎨 Fotoğrafı olmayan, aynı şekilde büyütülen renkli baş harf dairesiyle görünür",
+      "✖ Panel butonuyla, dışarı tıklayarak veya Ekranı temizle ile birlikte kapanır"
+    ]
+  },
+  "0.15.1": {
+    "titulo": "Okumanıza saygılı kaydırma",
+    "itens": [
+      "📌 Eski yorumları görmeye mi kaydırdınız? Yeni mesajlar gelince liste artık geri ZIPLAMIYOR — okuduğunuz mesaj tam olduğu yerde kalır (sütunlar ve birleşik mod için geçerli)",
+      "▶️ Yeni mesajların kıyısındaki akışı her zamanki gibi izlemeyi sürdürür",
+      "🖱️ Bir sütunun başlığına tıklayıp doğrudan yeni mesajlara dönün — sona, ya da yönünüz tersse başa — ve 1. sayfaya"
+    ]
+  },
+  "0.15.0": {
+    "titulo": "Vurgulu ve renkli rol rozetleri",
+    "itens": [
+      "🏷️ Rozetler her rolün klasik renkleriyle vurgu kazandı: 👑 SAHİP (kırmızı), 🛡️ MOD (yeşil), 💎 VIP (pembe), ⭐ ABONE (Twitch moru — veya Kick yeşili), 🎖️ ÜYE (YouTube yeşili), 🏆 KURUCU ve 🏅 OG (Kick)",
+      "🖱️ Etiket kirletmesin diye kısa; tam ad fare üstüne gelince görünür — abonelik kademesi (T2, T3, Prime) ve YouTube üye seviyesi dahil",
+      "🖥️ Panelde, sabit sohbette ve öne çıkan yorumda geçerli; Super Chat'ler ve bağışlar kendi mesajının rengiyle kalır",
+      "💬 Test mesajları artık rozetleri görmeniz için MOD, ABONE T3 ve VIP örnekleri içeriyor"
+    ]
+  },
+  "0.14.2": {
+    "titulo": "⏭️ butonunda kuyruk sayacı",
+    "itens": [
+      "🔢 Kuyruğun küçük sayısı 🔃'den ⏭️ Doğrudan git'e taşındı — daha anlamlı olduğu yere: boşalttığı tam olarak o",
+      "➕ Ve sayı artık her şeyi topluyor: birleşiğin yumuşak akış kuyruğu + her sütunun kuyrukları"
+    ]
+  },
+  "0.14.1": {
+    "titulo": "Sütunlarda bireysel yumuşak akış ve düzeltilen 🔃 balonu",
+    "itens": [
+      "🕊️ Her ağın sütunları bekletmeli ⏳ yumuşak akışa geri kavuştu — ama artık her birinin KENDİ kuyruğu var, kendi temposunda damlayan (varsayılan otomatik): bir YouTube patlaması Twitch'i asla geciktirmez",
+      "🌊 Sütun başına modu, her birinin tam ritmini seçmek isteyenler için duruyor (0,5sn–5sn)",
+      "🔧 🔃 butonunun küçük sayısı yanlış yerde ve yalnız fareyle beliriyordu — artık butonun köşesine hep çapalı, kuyruk olduğu sürece görünür"
+    ]
+  },
+  "0.14.0": {
+    "titulo": "Sütun başına ritim ve hızlı boşaltma",
+    "itens": [
+      "🧱 🌊 seçicisinde yeni \"Sütun başına\" modu: her sütun altbilgide kendi ritim seçicisini kazanır (anında, veya mesajlar arası 0,5sn–5sn) — bir sütun diğerini asla beklemez",
+      "💬 Sütun başına modda Birleşik sütununun seçicisi yumuşak akışın kendisinin ritmini yönetir",
+      "⏳ Kendi ritmiyle her sütun sırasını bekleyen mesaj sayısını yeniden gösterir",
+      "⏭️ 🔃'nin yanında yeni buton: ritmi beklemeden TÜM kuyruğu bir kerede boşaltır — doğrudan güncel mesajlara atlamak isteyenler için (birleşik, sabit sohbet ve her sütunun kuyrukları için geçerli)"
+    ]
+  },
+  "0.13.1": {
+    "titulo": "Gerçek zamanlı bireysel sütunlar",
+    "itens": [
+      "⚡ Her ağın sütunları mesajları artık GELDİĞİ ANDA gösteriyor — yumuşak akış kuyruğunu beklemeden (küçük ağı büyük ağın boşalmasına bekleten oydu)",
+      "🕊️ Yumuşak akış (⏱️/🌊/🔃) artık yalnız birleşik akış için geçerli: birleşik mod, 💬 Birleşik sütunu ve ekranın sabit sohbeti",
+      "⏳ Bekletilen sayacı yalnız birleşik sütunda kalır — ağ sütunlarının bekleyecek bir şeyi kalmadı",
+      "ℹ️ 🔃 butonundaki küçük sayı (sağ üst köşe) tam olarak bu: birleşik akışın yumuşak akışını bekleyen mesaj sayısı"
+    ]
+  },
+  "0.13.0": {
+    "titulo": "Sınırsız sütunlar, sayfalama ve mesaj kurtarmayla",
+    "itens": [
+      "🔢 Her sütunun sayacı artık o ağın yayındaki GERÇEK mesaj toplamını gösteriyor (sunucuda sayılan), yalnız ekrana sığanı değil — ve Canlı'nın belleği tüm yayını tutuyor",
+      "📄 Her sütunda sayfalama: sonsuz kaydırma yok — varsayılan sayfa başına 20 mesaj, filtrelerin yanındaki 📄 seçicisinde 5–100 arası ayarlanır",
+      "⏳ Her sütun, yumuşak akış kuyruğunda girmeyi bekleyen mesaj sayısını gösterir",
+      "🕘 Kayıp mesaj kurtarma: yayın düştüyse veya program kapalıysa, yeniden bağlanınca OBS Social her servisin son sohbetten sunduğunu çeker — YouTube (son onlarcası), Twitch (topluluk servisi recent-messages ile), Kick (site API'sinin sonuncuları) ve Bilibili (son ~10) — hiçbir şeyi çiftlemeden; 🧪 Labs'ten kapatılabilir"
+    ]
+  },
+  "0.12.0": {
+    "titulo": "Canlı sütunları artık sürüklenebilir",
+    "itens": [
+      "⠿ Her sütunu başlığından sürükleyip panelde özgürce taşıyın — 💬 Birleşik sütunu dahil",
+      "💾 Seçilen sıra kaydedilir ve programı kapatıp açmaya dayanır",
+      "🖐️ Sürükleme sırasında panel sohbet güncellemelerini tutar, sütun elinizden kaçmasın diye — bırakır bırakmaz hepsini salar"
+    ]
+  },
+  "0.11.0": {
+    "titulo": "Canlı sekmesinde sütunlu sohbetler",
+    "itens": [
+      "🧱 Canlı sekmesinde yeni Sütunlar modu: her ağ (YouTube, Twitch, Kick, Bilibili ve Bağışlar) yan yana kendi sütununu kazanır, her biri mesaj sayaçlı",
+      "💬 Ek seçenek + Birleşik: ayrı sütunların yanında ortak sohbet sütununu da (tüm ağlar birlikte) gösterir",
+      "🎛️ Ağ filtreleri sütun kontrolü olur: bir ağı kapatın, sütunu kaybolur",
+      "🔎 Arama çalışmayı sürdürür: ararken panel birleşik moda döner, temizleyince sütunlar geri gelir",
+      "🕊️ Yumuşak akış ve mesaj giriş efekti sütunların içinde aynı çalışır"
+    ]
+  },
+  "0.10.1": {
+    "titulo": "Mesajlar arası boşluk ve giriş efekti",
+    "itens": [
+      "🌊 Yeni panel seçicisi: her mesajın belirirken arasındaki boşluk (0,5–5 saniye veya otomatik) — dev yayınlarda bile kayan yazı gibi çok sakin bir akış için",
+      "✨ Her yeni mesaj bu akış türüne özel dikilmiş yumuşak kayma-ve-odaklanma efektiyle girer",
+      "🔢 🔃 butonunun sayacı artık kuyruktan tek tek çıkan mesajları da izler"
+    ]
+  },
+  "0.10.0": {
+    "titulo": "Yumuşak mesaj akışı (elveda çığ)",
+    "itens": [
+      "🕊️ Mesajlar artık panele ve sabit sohbete sabit, huzurlu bir tempoda girer — dev yayınlarda bile bir anda boşalan patlamalar yok",
+      "⏱️ Panelin kendisinde ritim seçici: gerçek zaman (varsayılan), her 2–60 saniyede veya 🖐️ elle — elde hiçbir şey kendiliğinden girmez",
+      "🔃 Elle yenileme butonu (her modda) bekleyen mesaj sayacıyla — ve bırakınca onlar da yumuşakça girer",
+      "🔎 Arama ve günlükler seçilen ritimden bağımsız her şeyi anında almayı sürdürür"
+    ]
+  },
+  "0.9.4": {
+    "titulo": "İzleyiciler doğru yerde ve hizasızlık avı",
+    "itens": [
+      "👥 İzleyicilerin toplam modunda sayıların yanı artık gerçekten LOGOLARA göre (sağ, sol, üst ve alt) — sayı hep üstte kalıyordu",
+      "🙅 İzleyici widget'ından kişi simgesini 👥 kaldıran yeni seçici (panel popover'ında ve widget editöründe)",
+      "🎚️ Filtre seçicileri artık ağ metnini ezmiyor, ekran boyutu Izgaradan ayrı kendi etiketini (Ekran) kazandı ve iki sütunlu alanlar farklı uzunluklarla bile hizalı kalıyor"
+    ]
+  },
+  "0.9.3": {
+    "titulo": "Sıkı güvenlik denetimi",
+    "itens": [
+      "🛡️ Tam kod denetimi: erişim kapıları, güncelleyici, ekranlar ve geçmiş — sömürülebilir hiçbir açık bulunmadı",
+      "🔧 Üç önleyici zırh: ters bölülü güncelleme paketleri Windows'ta artık denetimleri atlatamıyor, panel düzenleme alanları sunucuda temizleniyor ve kaba kuvvet kilidi eski IP'lerin belleğini temizliyor"
+    ]
+  },
+  "0.9.2": {
+    "titulo": "Antivirüsle barış",
+    "itens": [
+      "🛡️ Yeniden başlatma artık eski pencereyi zorla kapatmıyor — antivirüsler (Kaspersky gibi) bunu zararlı davranışı sayıp programı engelliyordu. Eski pencere \"bir tuşa basın\" derse son bir kez kapatın: yeni başlatma betiğiyle yeniden başlatmalar aynı pencereyi kullanır",
+      "🔄 Güncelleyici artık deponun güncel adına (OBSSocial) doğrudan işaret ediyor"
+    ]
+  },
+  "0.9.1": {
+    "titulo": "Doğru tasarımda kaydırıcılar ve asla kaybolmayan komutlar",
+    "itens": [
+      "🎚️ Yeniden çizilen kaydırıcılar: büyük toplu ince çizgi, overlay kontrolleriyle aynı ve metinlerle düzgün hizalı",
+      "📨 Yeniden bağlanma sırasında tıklanan komutlar (örn. güncellemenin hemen ardından) artık kaybolmuyor — kuyrukta bekleyip program yanıt verir vermez gönderiliyor (bazen şifreyi ve seçicileri göstermeyen Ağı kısıtla'yı düzeltir)",
+      "⚡ Ağı kısıtla artık sunucuyu beklemeden ekranda anında yanıt veriyor"
+    ]
+  },
+  "0.9.0": {
+    "titulo": "Panel sizin tarzınızda, birikmeyen pencere ve ekran boyutu önizlemesi",
+    "itens": [
+      "🧲 Tamamen kişiselleştirilebilir panel: araç simgelerini ve sekmeleri istediğiniz sıraya sürükleyin (Ayarlar → Panel, gerçek zamanlı önizlemeyle) ve çubuğun sekmelerin üstünde mi altında mı olacağını seçin",
+      "🪟 Yeniden başlatma ve güncelleme artık aynı siyah pencereyi YENİDEN KULLANIYOR — pencere birikmesi yok (eski pencere de artık \"bir tuşa basın\" demiyor)",
+      "🖥️ Ekranı düzenle'de istediğiniz ekran boyutunu seçin (Full HD, 2K, 4K, ultra geniş, dikey veya özel) overlay'lerin nasıl duracağını görmek için — konumlar % cinsinden ve kendiliğinden uyarlanır",
+      "📱 Panel ve ayarlar küçük ekranlara uyum sağlar (çubuklar taşmak yerine satır atlar)"
+    ]
+  },
+  "0.8.0": {
+    "titulo": "Anahtar anahtar ağ izinleri, Bağlantılar'da yeniden başlatma ve dahası",
+    "itens": [
+      "🔒 Yenilenen kısıtlı mod: artık ağın TAM OLARAK neyi kullanabileceğini, her şey için bir kaydırıcıyla seçiyorsunuz — pano, arama, ekrandaki yorumlar, bağlantılar, araçlar, ayarlar, medya ve günlükler",
+      "🎚️ Programın tüm aç/kapatları güzel kaydırıcılar oldu (Labs, çekiliş, filtreler, güncelleme...)",
+      "♻️ Bağlantılar'da OBS Social'ı anında yeniden başlatan yeni buton (kendi kapanır ve açılır)",
+      "🔍 Güncelleme araması artık programın açılışında da çalışır (ve günde 1 kez sürer; hâlâ isteğe bağlıdır ve asla kendiliğinden kurmaz)",
+      "📜 Changelog sayfalar kazandı: her seferde 5 sürüm, gezinme oklarıyla",
+      "🧹 Artık anlamı kalmayan seçenekler Hakkında sayfasından kaldırıldı"
+    ]
+  },
+  "0.7.1": {
+    "titulo": "Görünüm: gerçek göz, dolu kutular ve ortalanmış QR'lar",
+    "itens": [
+      "👁 Maymuncuk 🙈 göster/gizle'de açılıp kapanan çizilmiş bir göz oldu — URL'lerde ve panelin göster/kaldır butonlarında",
+      "📏 URL kutuları gizliyken bile büyük boyutlarını korur",
+      "💖 Destek QR kodları artık ortalanmış ve hizalı"
+    ]
+  },
+  "0.7.0": {
+    "titulo": "Otomatik güncelleme araması ve kendi kendine yeniden başlatma",
+    "itens": [
+      "🔁 Program artık günde 1 kez kendisi güncelleme arıyor ve yeni sürüm varsa panelde bildiriyor — kapatma seçicisiyle (ve onayınız olmadan ASLA bir şey kurmuyor)",
+      "♻️ Güncelle'ye tıklayınca OBS Social kurar, kapanır ve kendi açılır — panel yenilenir, OBS'teki overlay siz hiçbir şey yapmadan yeniden bağlanır",
+      "🛟 Başlatma betikleri artık program açıkken değiştirilmiyor (Windows'ta ek koruma) ve port yeniden doğuşta sabırla açılıyor"
+    ]
+  },
+  "0.6.1": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.6.0": {
+    "titulo": "Güncelleyicide iç iyileştirmeler",
+    "itens": [
+      "🔧 Güncelleyici ek indirme yolları ve daha açık hata mesajları kazandı"
+    ]
+  },
+  "0.5.6": {
+    "titulo": "Güncellemede daha açık hata mesajları",
+    "itens": [
+      "🩺 Güncelleme paketi erişilemez olduğunda mesaj ne olduğunu daha iyi açıklıyor"
+    ]
+  },
+  "0.5.5": {
+    "titulo": "İnterneti kesen antivirüsle bile çalışan güncelleme",
+    "itens": [
+      "🛡️ Güncelleme indiricisi artık Windows sertifikalarına da güveniyor — \"HTTPS denetimli\" antivirüs/güvenlik duvarlarının yol açtığı SELF_SIGNED_CERT_IN_CHAIN hatasını çözer (bağlantı güvenliği hep açık kalır)",
+      "🩺 Node.js bunun için fazla eskiyse hata mesajı çözümü açıklar (Node'u güncelle veya antivirüsün HTTPS denetimini kapat)"
+    ]
+  },
+  "0.5.4": {
+    "titulo": "Daha dayanıklı güncelleme denetimi",
+    "itens": [
+      "🔄 Güncelleme butonu artık başarana dek birçok yol dener: sorunlu ağlara daha hoşgörülü yeni indirici, B planı olarak zorunlu IPv4 ve C planı olarak GitHub'ın alternatif adresi",
+      "🩺 Yine de başarısız olursa hata mesajı desteği kolaylaştırmak için tam teknik nedeni gösterir"
+    ]
+  },
+  "0.5.3": {
+    "titulo": "Destek: yeni bağlantılı NuBank ve kaldırılan PicPay",
+    "itens": [
+      "🟣 NuBank'ın QR'ı ve bağlantısı yeni ödeme bağlantısıyla değiştirildi",
+      "🟢 PicPay kartı kaldırıldı — NuBank (her bankadan Pix), LivePix ve PixGG kalıyor"
+    ]
+  },
+  "0.5.2": {
+    "titulo": "Fikir sahibinin tam adıyla emeği geçenler",
+    "itens": [
+      "ℹ️ Hakkında sayfası artık Wanderson de Souza Ferreira'yı (Ward'z de Souza) tam adıyla anıyor"
+    ]
+  },
+  "0.5.1": {
+    "titulo": "Destek QR kodları hazır",
+    "itens": [
+      "💖 Geliştiriciyi Destekle sayfası artık NuBank, PicPay (Pix kopyala-yapıştır), LivePix ve PixGG'nin resmî QR kodlarıyla geliyor",
+      "🔗 Her kart doğrudan bağlantıyı açma ve kopyalama butonları kazandı (Pix kopyala-yapıştır kodu her bankanın uygulamasında çalışır)"
+    ]
+  },
+  "0.5.0": {
+    "titulo": "Geri bildirim, Geliştiriciyi Destekle, Hakkında ve 1 tıkla güncelleme",
+    "itens": [
+      "📣 Yeni Geri bildirim sayfası: öneri veya sorununuzu yazıp doğrudan ayarlardan e-postayla gönderin",
+      "💖 Yeni Geliştiriciyi Destekle sayfası: projeyi desteklemek için NuBank, PicPay, LivePix ve PixGG QR kodları",
+      "ℹ️ Yeni Hakkında sayfası: uygulama bilgileri, yaratıcıların emeği ve okuduğunuz bu changelog",
+      "🔄 1 tıkla güncelleme (OTA): GitHub'a gitmeden yeni sürümü denetleyip kurun — güncelleyip güncellememeye siz karar verirsiniz; ayarlarınız, şifreniz, günlükleriniz ve medyanız el değmeden kalır"
+    ]
+  },
+  "0.4.0": {
+    "titulo": "Daha basit yerel ağ ve bağlı makineler monitörü",
+    "itens": [
+      "🌐 Uzaktan erişim tamamen kaldırıldı: yalnız sizin ağınız/Wi-Fi'niz girer — dışarıdan bağlantılar her zaman reddedilir",
+      "🔗 Erişim seçenekleri OBS için URL'ler sayfasına taşındı: başkaları için panel adresi, isteğe bağlı şifre ve kısıtlı mod (varsayılan) veya tam özgürlük",
+      "🖥️ Şimdi bağlı makineler: panele kimin eriştiğini canlı izleyin — makine adı (ağ bildirirse), cihaz/tarayıcı, IP ve açık sekmeler (yalnız sizin bilgisayarınız görür)"
+    ]
+  },
+  "0.3.0": {
+    "titulo": "Erişim şifresi ve saklı URL'ler",
+    "itens": [
+      "🔑 Ağdan erişenler için isteğe bağlı şifre (yalnız karışık kod olarak saklanır, asla düz metin)",
+      "🙈 Ayarların tüm URL'leri göz 🙈/👁'e tıklayana dek saklı kalır",
+      "🛡️ Şifresiz ağ için varsayılan kısıtlı mod ve yinelenen şifre denemelerine karşı kilit"
+    ]
+  },
+  "0.2.0": {
+    "titulo": "Seviyeli çekiliş, bağımsız ekstralar ve çok daha fazlası",
+    "itens": [
+      "🎟️ Seviyeye göre çekiliş biletleri: Twitch Prime/Tier 1-3, Kick abonesi ve founder'ı ve YouTube üye seviyeleri (adlandırılmışlar dahil) — hepsi girişsiz, sohbetin genel rozetleriyle; açık çekiliş seçicisiyle",
+      "📱🏆 %100 bağımsız ek QR kodlar ve winstreak'ler: ekranda birlikte yaşarlar, her biri kendi renkleri, boyutu, konumu ve animasyonlarıyla",
+      "🔎 Genel yorum araması: yüzlerce sayfada bile her mesajı bulur, diskteki günlükleri de tarar",
+      "🎬 Çıkış animasyonları ve 🔁 döngüler (yanıp sönme, parlama, nefes alma, süzülme, sallanma...), hepsi ayarlanır hızla, ve tüm overlay'ler için ekran süresi",
+      "👥 Dinamik sıralı canlı izleyiciler, istediğiniz yanda sayılar ve izleyiciye widget",
+      "🔄 Bağlantıları yeniden başlatma butonları, otomatik yeniden bağlanan bağlantı belleği ve saatli ✓ okundu işareti",
+      "🖱️ Izgaralı Ekranı düzenle (sabit veya serbest), öğe başına boyut ve sürüklenir tam ekran medya"
+    ]
+  },
+  "0.1.0": {
+    "titulo": "İlk sürüm",
+    "itens": [
+      "💬 YouTube, Twitch, Kick ve Bilibili sohbetleri tek panelde, girişsiz ve API anahtarsız",
+      "🖱️ Yoruma tıklayın, yayın ekranında belirsin (OBS Browser Source), yazanın ağının rengiyle",
+      "💰 Gerçek renkli Super Chat'ler ve real'e döviz çevirisi, 👑 Üyeler sekmesi ve 💝 Bağışlar",
+      "🎨 Kişiselleştirilebilir overlay'ler: konum, renkler, yazı tipleri, kendi arka plan medyanız ve kendi CSS'iniz",
+      "📱 QR Kod, 🎁 Çekiliş, 📊 Beğeni-metre, 🏆 Winstreak ve 📋 paylaşılan Pano"
+    ]
+  },
+  "0.45.0": {
+    "titulo": "Panelde heyecanlı çekiliş, yeniden yanıp sönmeyen yorumlar, 10 dilde changelog ve dikey panel",
+    "itens": [
+      "🎁 PANELİN ÇEKİLİŞİ EKRANDAKİYLE AYNI: panelde açılan podyum artık seyircininkiyle AYNI zarı 🎲 atıyor; aynı süre (çekilişin seçicisi), aynı açıklanma sırası ve aynı widget düzeniyle — yayıncı heyecanı birlikte yaşıyor. Ve ✖ Podyumu ekrandan kaldır butonu (🎁 aracındakinin aynısı) modalın içinde.",
+      "🫧 YORUMLAR ARTIK YENİDEN YANIP SÖNMÜYOR: bir sütun güncellenince her yorum ekrandaki YERİNİ koruyor — yalnız gelen doğuyor (geliş animasyonuyla), yalnız giden ölüyor, avatarlar yeniden yüklenmeyi bırakıyor. Herkes için daha az rahatsız edici, özellikle harekete duyarlı kişiler için.",
+      "🫧 GELİŞ SİZİN: 🎨 Temalar'da, Panel kısmında, yorumların geliş animasyonunu (kayma, belirme, pop, zoom, sekme veya hiçbiri) ve süreyi (0,1sn–2sn) seçin. Canlı sekmesi ve sütunlar için geçerli.",
+      "📱↕ DİKEY MONİTÖR: panel artık her boy dikey ekrana uyum sağlıyor — sütun modunda sütunlar ezilmek ya da yana kaymak yerine katlara bölünüyor (aşağı kaydırmalı).",
+      "💣 HER ŞEYİ SİL DOĞRU YENİDEN DOĞUYOR: Her şeyi sil artık programı güncellemeyle ve ♻️ butonuyla AYNI yoldan kendiliğinden YENİDEN BAŞLATIYOR (antivirüsü kızdıran numaralar yok) — ekranlar haber veriyor ve o dönünce yenileniyor.",
+      "🌐 CHANGELOG 10 DİL KONUŞUYOR: bu koca sürüm geçmişi (72 sürüm!) artık arayüz dilinde görünüyor — her dilin tam bir aynası var, eksik kalan Portekizce görünüyor.",
+      "🧭 REFERANSLAR GÜNCEL: Zamanlayıcı ve başka köşeler artık 🎨 Temalar sekmesi olan \"🖥️ Ekran ve widget'lar\" sayfasını anıyordu — tüm metinler doğru yeri gösteriyor. Saatteki uzun tarih de artık arayüz dilini izliyor.",
+      "🌐 Her şey 10 dile çevrildi (sözlük başına +42 cümle ve 1 kalıp), saat popover'ının eski borçları dahil (Zamanlayıcı, sesler, winstreak)."
+    ]
+  },
+  "0.52.1": {
+    "titulo": "Masada serbest yerleşim, katlanabilir listeler ve sizin gibi bir panel",
+    "itens": [
+      "🎛️ Masa düğmeleri İSTEDİĞİNİZ YERDE durur: boş yerleri bilerek bırakabilir, bir tuşu herhangi bir boşluğa sürükleyebilir, başka bir tuşun üstüne bıraktığınızda ikisi yer değiştirir. ➕ düğmeyi tam o gözde oluşturur.",
+      "📦 Yüklenen medyalar katlanabilir listelere dönüştü (changelog gibi), başlıkta sayısıyla — artık ekranın yarısını kaplamıyorlar. Açık/kapalı durumu tarayıcınızda saklanır.",
+      "↩️ Düğme adı istediğiniz kadar satır sonu kabul eder (tek sınır yine 50 harf) ve alan siz yazdıkça kendiliğinden büyür.",
+      "📐 Paneldeki her pencereciği ve kartı bıraktığınız yer SİZİNDİR: konum ve boyut yenilemeden, yeniden başlatmadan ya da programı kapatmadan sonra aynı döner — tema ve dil gibi. Monitör mü değiştirdiniz? Hiçbir şey ekran dışında kaybolmaz.",
+      "📊 Beğeni ölçerin yüzdesi ORTAYA taşındı ve izleyici ekranında öne çıktı; panelde de iki sayının arasında, ortada duruyor.",
+      "💜 💖 Geliştiriciyi Destekle sayfası artık tek seferlik bağışı yeni aylık destek \"OBS Social Dostları\"ndan açıkça ayırıyor — ayraç, her blokta etiket ve hiçbir özelliğin buna bağlı olmadığı notuyla: her şey ücretsiz kalıyor."
+    ]
+  },
+  "0.52.2": {
+    "titulo": "Serbest yerleşim tüm düğme ızgaralarına ulaştı",
+    "itens": [
+      "🎛️ Serbest yerleşim artık TÜM düğme ızgaralarında geçerli: klasör düzenleyicisinin içindekini de sürükleyebilirsiniz — boş göz, başka bir tuşla yer değiştirme ve ⬅ üzerine bırakınca tuş klasörden çıkar."
+    ]
+  },
+  "0.52.3": {
+    "titulo": "OBS ağdaki herhangi bir bilgisayarda olabilir",
+    "itens": [
+      "🎬 DÜZELTME: OBS bağlantısı bu bilgisayara sabitlenmişti (127.0.0.1) — yalnızca port ve parola vardı. Artık Adres alanı var: aynı makinedeki OBS için 127.0.0.1 bırakın, ağdaki başka bir bilgisayardaki OBS için onun IP’sini yazın.",
+      "🧹 Adres, düşünmeden yapıştırdığınızı kabul eder: ws://192.168.0.10:4455, 192.168.0.10:4455 ya da boşluklu — hepsi aynı IP olur. Makine adları ve IPv6 da geçerli.",
+      "💬 Bağlanmadığında mesaj artık NEYİ denediğini ve nereye bakılacağını söylüyor: adresi ve portu anıyor, ağ durumunda o makinenin güvenlik duvarını ve oradaki OBS’te açık olması gereken WebSocket sunucusunu hatırlatıyor."
+    ]
+  },
+  "0.53.0": {
+    "titulo": "OBS’in tamamı düğmeye dönüşüyor",
+    "itens": [
+      "🎬 Panelin 🎬 aracı TAM bir OBS kontrolü oldu: yayın, kayıt (duraklatma ve bölüm işaretiyle), sanal kamera, tekrar arabelleği ve tekrarı kaydetme, sahne listesi, stüdyo modu ve geçişler, yayındaki sahnenin kaynaklarını gösterme/gizleme, sessiz ve seviyeli ses mikseri, medya kontrolü (▶ ⏸ ⏹ ⏭ ⏮), filtreleri açma/kapatma, sahne koleksiyonları, profiller ve ekran görüntüsü.",
+      "🎛️ Bunların hepsi Ses Masası’nda da TUŞ oluyor: bir tuş oluşturun, 🎬 OBS eylemi türünü ve ardından eylemi seçin. Sahne, kaynak ve filtre listeleri bağlı OBS’ten gelir; ▶ Şimdi dene, kontrol edebilmeniz için anında tetikler.",
+      "💡 🎬 tuşları, kontrol ettikleri şey açıkken kendiliğinden YANAR: kayıt, yayın, kaynak görünür, filtre açık, sahne yayında. Düğme sadece tetiklemez, durumu da gösterir.",
+      "🔀 🎬 tuşu 🎛️ Çoklu eylem düğmesinin içine girer: sıra sesi ve komutu karıştırır. Sahneyi değiştir, 2 saniye bekle ve jeneriği çal — artık tek bir düğme.",
+      "📸 Sahne ekran görüntüsü OBS’in diskine gitmez: bağlantı üzerinden gelir ve doğrudan programın medyasına düşer, overlay olmaya hazır. OBS ağdaki başka bir bilgisayarda olsa da aynı şekilde çalışır.",
+      "🎚️ Kontrolün her bloğunun 🧪 Labs → 🎬 OBS Studio içinde kendi açma/kapaması var: sadece sahne değiştiren birinin ekranında mikser, filtreler ve profiller yer kaplamasın. Koleksiyonlar ve profiller kapalı gelir, çünkü değişimleri tüm OBS’i yeniden yükler.",
+      "🛡️ Program OBS’e kendi neler yapabildiğini sorar: sürümünüzde olmayan bir özellik (bölüm işareti OBS 30.2 ister) denenmez bile — hata yerine açıklayan bir mesaj alırsınız.",
+      "🔒 OBS’i yönetmek kısıtlı modda hâlâ 🎬 seçicisine bağlı, Masa’nın içinden de: ağdan bu seçici olmadan giren, çoklu eylem düğmesinin içinde bile 🎬 tuşlarını tetikleyemez.",
+      "🌍 Hepsi 10 dile çevrildi; SSS ve Labs kartı güncellendi.",
+      "🖼️ DÜZELTME: avatarlar çok daha az kayboluyor. Önceden birinin fotoğrafını ararken yaşanan tek bir ağ tökezlemesi, O kişinin fotoğrafını yayının sonuna kadar siliyordu — hata sonsuza dek saklanıyordu. Artık hata yalnızca birkaç dakika geçerli, bir sonraki mesaj yeniden deniyor, Twitch ikinci bir yedek kaynak kazandı ve ekranda yüklenmeyen görsel, renkli baş harfe dönüşmeden önce bir şans daha alıyor.",
+      "🔍 Bir avatarı BÜYÜTÜRKEN (panelde ve izleyici ekranında), program servisin sahip olduğu en iyi kaliteyi ister — YouTube orijinali, Twitch 600×600, Kick \"fullsize\", Bilibili kırpmasız — ve en büyüğü yoksa kendiliğinden bir basamak iner. Fotoğraf asla boş kalmaz.",
+      "🕒 DÜZELTME: farklı servislerin yorumları artık birleşik akışta ve genel sütunda birbirinin önüne geçmiyor. YouTube yorumları tek tek vermez: TOPLU verir ve her biri birkaç saniye öncesinin saatini taşır; bu da topluluğun Twitch ve Kick sırasını kesmesine yol açıyordu. Zaman çizelgesi artık GELİŞ SIRASINI izliyor — panelde, izleyicinin canlı sohbetinde ve sunucunun belleğinde. Kurtarılan geçmiş (dakikalar öncesi) yine geçmişteki doğru yerine dönüyor.",
+      "📸 Ekran görüntüsünün net kuralları var, çünkü o EKRANINIZIN FOTOĞRAFI: iki görüntü arasında en az 3 saniye, program son 60 tanesini saklar (en eskisi kendiliğinden düşer) ve kısıtlı modda ağdan girenler için yalnızca 🖼️ medya seçicisi açıkken çalışır — o zaman bile sadece yayındaki sahneden, asla yayın dışındaki bir pencerenizden değil."
+    ]
+  },
+  "0.54.0": {
+    "titulo": "Öne çıkanın gardırobu",
+    "itens": [
+      "🎭 Overlay profilleri: öne çıkan yorumun görünümü artık adlı ve eksiksiz bir KALIP olarak kaydedilebiliyor — renkler, yazı, görsel, konum ve parçalar, hepsi birlikte. Görünümü kurun, ➕ tıklayın, bitti: ✨ Bunu kullan ile tüm overlay’i tek tıkla değiştirin (◀ ile geri alınır), 💾 ile üzerine yazın ve 🗑️ ile silin. Yeni kart, Görünüm sekmesinde 🎨 kartının hemen altında.",
+      "🎭 OTOMATİK geçiş: açın, öne çıkarılan her yorum doğru kalıbı kendiliğinden giysin — sıradan yorumlar için bir profil ve Super Chat’lerle 💝 bağışlar için her DEĞER BASAMAĞINA bir tane (ulaşılan en yüksek basamak kazanır). Değer, günün kuruyla real’e çevrilir, hangi para biriminde olursa olsun — hesabı bilgisayarınızdaki program yapar, panel değer uyduramaz.",
+      "🧪 Her basamağın bir deneme düğmesi var: o değerde yalancıktan bir Super Chat’i yayına koyar; kalıbı yayından önce GERÇEKTEN giyilmiş görürsünüz. 🪜 ise Super Chat’in 6 klasik basamağını (R$ 1, 5, 10, 20, 50 ve 100) tek seferde doldurur.",
+      "✍️ Editörün örnek yorumu bir harf sayacı kazandı: boyutu seçin (5–500) ve uzun bir yorumun görselinize sığıp sığmadığını deneyin — metin yayında anında değişir.",
+      "👥 William Marchiori, katkıcı olarak OBS Social’ın künyesine giriyor (ℹ️ Hakkında ve README’de)."
+    ]
+  },
+  "0.55.0": {
+    "titulo": "Editör kalıbı giyiyor",
+    "itens": [
+      "🎭+🖼️ Overlay profilleri ve kendi görselleriniz artık TEK ŞEY: görsel 🧪 Labs’tan çıktı (artık deneysel değil, anahtar yok) ve 🖼️ Görselleriniz bölümü Görünüm sekmesindeki 🎭 kartının içinde. Yükleyin, nereye gireceğini seçin, bitti — görsel HER ZAMAN görünür.",
+      "🖱️ Ekranı düzenle, kalıpla düzenleme mekaniğini eksiksiz kazandı: 🎭 Düzenlenen seçicisi bir kalıp seçer ve öne çıkanda değiştirdiğiniz HER ŞEY — konumlar, parçalar, renkler, yazı, görsel — kendiliğinden o kalıba kaydedilir; önizleme kalıbı anında giyer. Siz düzenlerken canlı görünüm değişmez; normale dönmek için «— Canlı görünüm —» seçin.",
+      "🔗 Her kalıp kendi URL’sini kazandı: /overlay?perfil=AD o kalıbı HER ZAMAN giyer — URL ile seçilmiş sabit görünümlü bir OBS sahnesi olabilir.",
+      "🖥️ Editörün tam ekran önizlemesi kendini düzeltmeyi öğrendi: yeniden çizim haritanın boyutuna yolda dokununca yanlış ölçekte takılıp kayıyordu — şimdi bir sonraki karede yeniden ölçüyor ve haritayla hep örtüşüyor."
+    ]
+  },
+  "0.55.1": {
+    "titulo": "Görsel gerçekten yönetiyor",
+    "itens": [
+      "🖼️ \"Görsel kartın TA KENDİSİ\" artık sözünü TAMAMEN tutuyor: açıkken OBS Social’in standart overlay’i KAPANIR — koyu arka plan, gölge ya da her zamanki dizilim (fotoğraf, ad ve rozetler yan yana) görselinizin üstüne binmez. Sadece görsel kalır; parçalar (fotoğraf, ad, metin, değer...) tam olarak 🖱️ Ekranı düzenle’de koyduğunuz yerde — genel 🧩 kapalıyken bile. Seçeneği kapatınca her zamanki kart olduğu gibi geri gelir.",
+      "🖱️ Düzenleyicinin haritası da eşlik eder: \"Görsel kartın TA KENDİSİ\" açıkken öne çıkanın parçaları 🧩 olmadan da sürüklenmek üzere görünür — haritada gördüğünüz, yayının gösterdiğidir."
+    ]
+  },
+  "0.56.0": {
+    "titulo": "Sizin usulünüzle eşleşen basamaklar",
+    "itens": [
+      "🎯 🎭 otomatiğin her basamağı artık NASIL eşleşeceğini kendi seçicisinde seçiyor: 💰 real cinsinden bir tutardan itibaren (eskisi gibi); 🎨 YouTube’un Super Chat’e boyadığı RENGE göre (7 resmi ton — mavi, camgöbeği, yeşil, sarı, turuncu, macenta ve kırmızı — YouTube’dan gelen gerçek renkle, gövde ya da başlık, eşleşir); veya 🔤 ad alanında görünen bir KELİMEYE göre (ad, «Üye», kanal seviyesi — program ada ve yanındaki rozetlere bakar).",
+      "🥇 Birden fazla basamak uyduğunda karar sırası: renk → tutar → kelime → sıradan yorum. Kelime basamağı, kendi basamağı olmayan bir Super Chat için yedek olarak da çalışır — ve üyelerin sıradan yorumlarını giydirir.",
+      "🧪 Her basamağın deneme düğmesi türüne uyar: renginki seçilen tonla boyanmış bir Super Chat’i yayına koyar; kelimeninki, kelimesi ad rozetinde olan bir yorumu; tutarınki, o tutarlı Super Chat’i — hep kalıbı yayından önce GERÇEKTEN giyilmiş görmek için.",
+      "↔️ Eski basamaklar hiç dokunmadan geçerli: türü olmayan basamak, her zamanki gibi tutara göredir."
+    ]
+  },
+  "0.56.1": {
+    "titulo": "Görseliniz sahneyi kendiliğinden alır",
+    "itens": [
+      "🖼️ Öne çıkan yorumun arka planı için bir görsel mi seçtiniz? Tamam: OBS Social’ın standart overlay’i sahneden KENDİLİĞİNDEN çekilir — görselinizin üzerinde standart arka plan, gölge ya da bildik montaj yok. Yalnız görsel kalır; parçalar (fotoğraf, ad, metin, tutar...) 🖱️ Ekranı düzenle’de nereye koyarsanız orada. Açmayı hatırlamanız gereken bir düğme yok.",
+      "📐 «Görsel karta nasıl girer» seçicisi (kapla/esnet/sığdır) emekli oldu — tam değiştirmeyle artık anlamı kalmamıştı. Görsel şimdi haritada çizdiğiniz 🖼️ Görseliniz kutusunu tam olarak doldurur: kutu, görselin ta kendisidir.",
+      "🧹 «Görsel kartın ta kendisi» düğmesi de gitti: normal davranış hâline geldi. Zaten görsel kullananların hiçbir şeye dokunması gerekmez — her şey yerinde, sadece fazladan adımlar yok."
+    ]
+  },
+  "0.57.0": {
+    "titulo": "Görsel overlay düzenleyicisi, bütünüyle, OBS Social’ın içinde",
+    "itens": [
+      "🎨 Yeni sayfa: görsel overlay düzenleyicisi — düzenleyicinin tamamı, programın içinde. Çalışma tezgâhı olarak 1920×1080 ekranın tamamı; her öğe (görsel, avatar, ad, metin ve tutar) kendi başına bir figür: sürükleyin, mavi tutamaçtan esnetin ya da yan panellerde konumu PİKSEL olarak yazın. 🎭 Overlay profilleri kartındaki 🎨 düğmesinden (ya da doğrudan /editor) açılır.",
+      "🗂️ «Öğe seç» çubuğu: her öğe, katmanı (1–4) ve yığında inip çıkmak için ▲▼ oklarıyla bir fiş olur — tıkladınız, seçildi; listelerde aramak yok.",
+      "🎭 Her şey bildiğiniz overlay profillerine kaydedilir: düzenleyicide kaydetmek profili anında günceller, 🎭 otomatik eskisi gibi giydirir ve /overlay?perfil=AD tam olarak düzenleyicinin çizdiğini gösterir. Canlı önizleme açıkken her dokunuş kendiliğinden kaydedilir ve yayına bir örnek yorum çıkar."
+    ]
+  },
+  "0.58.0": {
+    "titulo": "Görünüm sayfası yeniden doğdu: Düzenle, editörün TA KENDİSİ",
+    "itens": [
+      "🎨 Tam reform: 🖱️ Ekranı düzenle, görsel overlay düzenleyicisi OLDU — yerinde, Görünüm sayfasının içinde, ayrı sayfa yok. Üstte profil çubuğu (seç, 💾 kaydet, ✨ giydir, 🗑️, ➕ yeni) ve overlay türü (Sıradan yorum/Super Chat) ile MİNYATÜRLÜ görsel satırı; haritanın altında 🗂️ Öğe seç çubuğu; yanda, seçilenin PİKSEL sayıları.",
+      "🗂️ Katmanlar paneli «Öğe seç» çubuğuna dönüştü, TÜM öğelerle: öne çıkan, sabit sohbet, çerçeve, her widget — ve sökülmüş olanların parçaları. Her fiş katmanını gösterir ve yığında inip çıkmak için ▲▼ okları taşır; tıkladınız, haritada seçildi (👁 ve 🔒 duruyor).",
+      "🧹 🎭 Overlay profilleri kartı gitti: profiller editörün çubuğu oldu; 🎭 otomatik ve 🖼️ Görselleriniz editörün içinde, katlanabilir bloklarda yaşıyor — çift kart karmaşası bitti.",
+      "🩹 Ve özel overlay’in «standardı değiştirmemesinin» sebebi: eski kurulumlarda 🎭 otomatik BOŞ geliyordu (sıradan profil yok, basamak yok) — anahtarı açmak hiçbir şey yapmıyordu. Artık güncelleme, hiç dokunmayanlarda fabrika eşlemesini kendiliğinden doldurur (sıradan + 6 Super Chat seviyesi); açtınız, giyildi."
+    ]
+  },
+  "0.59.0": {
+    "titulo": "Hata korkusu yok: kurtarma düğmeleri ve doğruyu söyleyen kutular",
+    "itens": [
+      "📏 Öne çıkan kutusu artık önizlemedeki GERÇEK kartı ölçüyor — senkron dışı tahmin bitti: seçim, ekranda görünenin aynısına sarılır; standart kartta da özel görsellerde de (ve her yeni öne çıkanda kendini yeniden ölçer).",
+      "📐 Her overlay yan panelde piksel cinsinden Genişlik ve Yükseklik seçicileri kazandı: widget’lar, saat, çerçeve (oransal, ölçeği sürer), sabit sohbet (gerçek), standart kart (gerçek Genişlik = azami genişlik) ve görselli kart (gerçek Genişlik × Yükseklik). Ve alanlar artık öğeleri GERÇEK ZAMANDA, her tuşta oynatıyor.",
+      "🟣 Standart kartta haritanın yan tutamaçları gerçek GENİŞLİĞİ (px) esnetir; «Boyut %» cetveli görsel/parça modundaki kart için kaybolur (orada Genişlik × Yükseklik hükmeder — cetvel her şeyi kaydıran sinsi bir zoom yaratıyordu).",
+      "🧹 Temiz metinler: başka bir programla karşılaştırmalar arayüzden çıktı (bizimkini anlamak için başka bir programı bilmek gerekmiyor) ve Hakkında bölümü William Marchiori’yi OBS Social için birçok öğenin katkıcısı olarak tanıtıyor."
+    ]
+  },
+  "0.59.1": {
+    "titulo": "İsabetli el ve her parçada Genişlik×Yükseklik",
+    "itens": [
+      "🧲 El yine isabetli: öne çıkanı taşımak KARTI kutuyu bıraktığınız yere tam olarak koyar — standart kartta da parça overlay’inde de (program, her şeyi kaydıran iç çapayı kendiliğinden telafi eder).",
+      "👁️ Bir gözcü her saniye önizlemedeki gerçek kartı yeniden ölçer: 🧩 açıldı, animasyon bitti, sürükleme bırakıldı — kutu karta kendiliğinden yeniden sarılır; bir daha asla hayalete sarılmaz.",
+      "📐 Öne çıkanın HER parçası panelde Genişlik ve Yükseklik kazandı: görsel ve metin gerçek kutuyla, ad gerçek genişlikle, kare avatar (Boyutu sürerler) ve tutar/simge/rozetler önizlemede ölçülür — yazdınız, boyutlandı.",
+      "💰 Ve Super Chat, parça overlay’inde tutarı İKİ kez göstermeyi bıraktı: rozetlerdeki «superchat $5.00» etiketi sahneden çekilir — yalnız bizim tutar parçamız kalır, reale çevrimiyle."
+    ]
+  },
+  "0.92.0": {
+    "titulo": "🖼️ Her profilin görseli tam orada, adın yanında gönderiliyor",
+    "itens": [
+      "🎭 Profil (öne çıkanın kalıbı) çubuğunda artık 🖼️ Bu profilin görseli düğmesi var: yeni profilin adını yaz, görseli ya da videoyu gönder — profil doğrudan o ada bağlı görselle doğsun. Görsel, sen ➕ Yeni profil düğmesine basana kadar yanında bir küçük resimde bekler (✖ ise ondan vazgeçer).",
+      "Profili görselle birlikte mi oluşturdun? Kendiliğinden düzenleyicide açılır; konumu, boyutu ve parçaları ayarlamaya hazırdır.",
+      "Ad yazılmamışsa, bu düğmeyle gönderilen görsel açık olan kalıbı hemen giydirir — hiçbirini düzenlemiyorsan canlı görünümü.",
+      "🖼️ Overlay görseli satırının altında her profili ve çizili görselini gösteren bir şerit belirdi: bir tıklama o kalıbı ayarlamak için açar, ilk kart canlı görünümdür ve açık kalıp işaretli durur. Şerit, gönderdiğin ya da değiştirdiğin her görseli anında izler."
+    ]
+  },
+  "0.93.0": {
+    "titulo": "🖼️ Özel görsel varsayılan karttan kurtuldu",
+    "itens": [
+      "Öne çıkanın görseli artık varsayılan overlay’in boyutuna hapis değil: haritadaki tutamaçlarla ya da Genişlik ve Yükseklik seçicileriyle onu ÇOK daha ötesine esnetebilirsin (kartın %400’üne kadar). İkisi artık birbirinden bağımsız boyutlanıyor.",
+      "Düzeltildi: görseli kartın dışına taşımak ya da esnetmek onu YOK EDİYORDU — kart, kenarını aşan her şeyi kırpıyordu. Artık görsel kartı aştığında kart kırpmayı bırakıyor ve görsel ekranda eksiksiz kalıyor.",
+      "Görsel kartın epey dışına da sürüklenebiliyor (-%200 ile %300 arası), işin tam istediğin gibi otursun diye.",
+      "🖼️ «Overlay (senin medyan)» katmanı artık 🖼️ «Tam ekran çerçevesi» — eski ad, 🖼️ Senin görselin yanında tekrar gibi duruyordu; oysa farklı şeyler: bu, tüm ekranı kaplayan çerçeve; öteki ise yorum kartının arka planı."
+    ]
+  },
+  "0.93.1": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.94.0": {
+    "titulo": "🧩 Overlay’in her ögesi serbest — ve kalıplar arasında yolculuk eden ayarlar",
+    "itens": [
+      "Görselin geçen sürümde kazandığı şey artık TÜM overlay’ler ve TÜM ögeleri için geçerli: öne çıkanın avatarı, adı, rozetleri, tutarı ve metni, ayrıca widget parçaları (QR, beğeni ölçer, winstreak, izleyici, saat, çekiliş). Her parçanın kutusu %400’e, boyutu %1000’e çıkıyor ve hepsi epey dışarı sürüklenebiliyor (-%200 ile %300 arası). En sıkı bağlı olan avatardı: %300’de duruyordu.",
+      "Ve kenarda artık hiçbir şey kaybolmuyor: bir parça taştığı anda kendi overlay’i kırpmayı bırakıyor — öne çıkan kartı VE her widget, tek tek. Her şeyi içinde olan bir overlay eskisi gibi kırpmaya devam ediyor; kurduğun hiçbir kalıbın görünümü değişmiyor.",
+      "📏 Her overlay’in BOYUTUNUN da tavanı düşüktü: %250 (tam ekran çerçevesinde %200). Artık hepsi %1000’e çıkıyor — çubuktaki seçiciyle, haritadaki tutamaçlarla ya da pikselleri yazarak.",
+      "🎯 Düzenleyici çubuğunda yeni «Yalnızca düzenlediğim» anahtarı: haritadaki her şeyi gizler ve yalnızca üzerinde çalıştığın overlay’i, parçalarıyla bırakır. Sadece düzenleyicide — yayında hepsi görünmeye devam eder — ve seçim bu tarayıcıda hatırlanır.",
+      "📋 🎭 çubuğunda yeni «Ayarları şuraya kopyala...» düğmesi: bir kalıpta oturtmayı tutturdun ve aynı kurgu diğerlerinde de olsun mu istiyorsun? Hedef kalıpları işaretle, ayarlar yolculuğa çıksın — konumlar, boyutlar, parçalar, renkler, hepsi. Her kalıbın görseli ve ağı yerinde kalır; zaten aynı tür overlay için farklı görsellere sahip olmanın durumu bu. Görsel de gitsin istersen bunun için bir kutucuk var."
+    ]
+  },
+  "0.95.0": {
+    "titulo": "🔒 Güvenlik güncellemesi",
+    "itens": [
+      "Güvenlik güncellemesi ve iç bakım."
+    ]
+  },
+  "0.96.0": {
+    "titulo": "🐛 «Overlay parçalı» artık yayını basmıyor — ve 🎯 önizlemede de geçerli",
+    "itens": [
+      "ÖNEMLİ DÜZELTME: 🧩 «Overlay parçalı» seçeneğini açmak, ayrı parçaları olan TÜM widget’ları yayına atıyordu — KAPALI olanları bile, hem de sekiz tanesini bir anda, yayının ortasında. Artık parça kutusu yalnızca gerçekten ekranda olan widget için geçerli; kapalı olanlar kapalı kalıyor.",
+      "Oradaki işe yarar şey kaybolmasın diye, ayrı parçaları olan widget hiç verisi olmasa bile düzenleyicinin ÖNİZLEMESİNDE görünmeye devam ediyor — parçalarını sürükleyecek bir yer veren şey bu. Yalnızca düzenleyicide: yayın bunların hiçbirini görmüyor.",
+      "🎯 «Yalnızca düzenlediğim» artık önizlemede de geçerli. Önce yalnızca haritadaki dikdörtgenleri gizliyordu, önizleme ise overlay’in tamamını göstermeye devam ediyordu — 🧩 açıldığında \"geri gelen\" şey buydu.",
+      "Ve bir parça taştığında kırpmayı bırakan widget (v0.94) artık widget sonradan ekrana geldiğinde de doğru davranıyor: önce hâlâ gizli olan widget sıfır ölçülüyor ve hesap yanlış çıkıyordu."
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+Pasta dos QR codes da página "💖 Apoie o Desenvolvedor".
+
+Os QR codes já vêm prontos (gerados a partir dos links oficiais de doação):
+
+  DOAÇÃO AVULSA (uma vez só)
+  nubank.svg      -> link de cobrança do NuBank (Pix de qualquer banco)
+  livepix.svg     -> livepix.gg/wardz
+  pixgg.svg       -> pixgg.com/wardz_de_souza
+
+  ASSINATURA (mensal, renova sozinha)
+  livepixsub.svg  -> livepix.gg/wardz/amigos-do-obs-social
+
+Para trocar algum, basta substituir o arquivo pelo novo QR com o MESMO nome
+(aceita .svg, .png ou .jpg — ex.: nubank.png). O cartão correspondente usa a
+imagem automaticamente.

@@ -1,0 +1,5 @@
+data/
+# 🔒 As artes de fábrica (v0.55–v0.94) são exclusivas do streamer e saíram do
+# programa na v0.95. Se alguma cópia voltar para cá durante um teste, ela NÃO
+# pode ser commitada de novo — este repositório é público.
+public/artes/
