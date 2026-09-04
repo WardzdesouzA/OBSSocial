@@ -1942,7 +1942,7 @@ const hub = connectHub((event) => {
       updateMidiaDireta(event.midiaDireta || null);
       updateRelogio(event.relogio);
       updateParticipants(event.participantCount || 0, event.fichasTotais || 0);
-      updateClipboard(event.clipboard);
+      updateClipboard(event.clipboard, event.clipboardFechado === true);
       prepararSomDoTimer();
       // 🎵🎬 Labs: mesa de trilhas e OBS (ficam escondidos com o Labs desligado)
       trilhasLista = Array.isArray(event.trilhas) ? event.trilhas : [];
@@ -2218,7 +2218,7 @@ const hub = connectHub((event) => {
       updateRelogio(event.relogio, event.fim);
       break;
     case 'clipboard':
-      updateClipboard(event.itens);
+      updateClipboard(event.itens, event.fechado === true);
       break;
     case 'feedPending':
       updateFeedPending(event.count || 0);
@@ -6630,6 +6630,7 @@ const clipTextEl = document.getElementById('clipText');
 const clipCountEl = document.getElementById('clipCount');
 const CLIP_POR_PAGINA = 5;
 let clipItens = [];
+let clipFechado = false; // 📋 v0.155.1: esta tela está proibida de ver/mandar (rede, modo restrito)
 let clipPagina = 0;
 // v0.90.1: o texto enviado fica guardado até a entrada voltar do servidor
 let clipEsperandoEco = null;
@@ -6735,13 +6736,22 @@ function renderClipboard() {
     linha.appendChild(apaga);
     lista.appendChild(linha);
   }
-  // v0.90.1: histórico vazio agora DIZ que está vazio, em vez de um branco
-  if (!clipItens.length) {
+  // v0.90.1: histórico vazio agora DIZ que está vazio, em vez de um branco.
+  // 📋 v0.155.1: e a tela proibida (rede, modo restrito com o 📋 desligado)
+  // diz que está proibida — antes via «Nenhuma entrada ainda» e parecia
+  // que o histórico não estava chegando nela
+  if (clipFechado || !clipItens.length) {
     const vazio = document.createElement('div');
     vazio.className = 'hint';
     vazio.style.cssText = 'margin:0;text-align:center;padding:6px 0';
-    vazio.textContent = OBS_I18N.t('Nenhuma entrada ainda.');
+    vazio.textContent = clipFechado
+      ? OBS_I18N.t('🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.')
+      : OBS_I18N.t('Nenhuma entrada ainda.');
     lista.appendChild(vazio);
+  }
+  for (const id of ['clipText', 'clipEnviarBtn', 'clipArquivoBtn', 'clipClearBtn']) {
+    const el = document.getElementById(id);
+    if (el) el.disabled = clipFechado;
   }
   const pager = document.getElementById('clipPagerRow');
   pager.style.display = paginas > 1 ? '' : 'none';
@@ -6750,8 +6760,9 @@ function renderClipboard() {
   document.getElementById('clipPagProx').disabled = clipPagina >= paginas - 1;
 }
 
-function updateClipboard(itens) {
+function updateClipboard(itens, fechado) {
   clipItens = Array.isArray(itens) ? itens : [];
+  clipFechado = fechado === true;
   // v0.90.1: chegou o eco do que eu mandei? Aí sim a caixa esvazia
   if (clipEsperandoEco !== null && clipItens.some((i) => i.tipo === 'texto' && i.previa === String(clipEsperandoEco).slice(0, 1500))) {
     if (clipTextEl.value === clipEsperandoEco) clipTextEl.value = '';

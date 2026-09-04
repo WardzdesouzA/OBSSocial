@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Le presse-papiers est fermé au réseau. Le streamer l’ouvre dans Réglages → Sécurité → ce que le réseau peut utiliser.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Il vit dans 🔊 Sons des overlays, sous 🕐 Horloge → 🏁 Fin — avec les sons de tous les autres overlays : fichier, volume, où il joue et le bouton d’écoute.",
     "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Il vit dans 🔊 Sons des overlays, sous 🎁 Tirage → 🏁 Fin — avec les sons de tous les autres overlays : fichier, volume, où il joue et le bouton d’écoute.",

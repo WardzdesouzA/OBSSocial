@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 클립보드가 네트워크에 닫혀 있습니다. 스트리머가 설정 → 보안 → 네트워크가 쓸 수 있는 것 에서 열 수 있습니다.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 오버레이 소리의 🕐 시계 → 🏁 종료에 있습니다 — 다른 모든 오버레이 소리와 함께: 파일, 볼륨, 어디서 나는지, 듣기 버튼.",
     "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 오버레이 소리의 🎁 추첨 → 🏁 종료에 있습니다 — 다른 모든 오버레이 소리와 함께: 파일, 볼륨, 어디서 나는지, 듣기 버튼.",

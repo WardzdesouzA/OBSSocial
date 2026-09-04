@@ -1,4 +1,11 @@
 {
+  "0.155.1": {
+    "titulo": "📋 Portapapeles: nada se pierde al cerrar, y la pantalla bloqueada dice por qué",
+    "itens": [
+      "📋 Lo que se mandaba al portapapeles justo antes de cerrar o actualizar el programa desaparecía al reiniciar (la grabación quedaba pospuesta y el programa cerraba antes). Ahora se guarda al salir.",
+      "🔒 El panel abierto por la red con el portapapeles apagado en Seguridad mostraba «Ninguna entrada todavía» — parecía que el historial no llegaba. Ahora dice que está cerrado para la red (y dónde lo libera el streamer), con la caja y los botones bloqueados."
+    ]
+  },
   "0.155.0": {
     "titulo": "🔊 Todos los sonidos de los overlays en un solo lugar",
     "itens": [

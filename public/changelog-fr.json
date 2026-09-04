@@ -1,4 +1,11 @@
 {
+  "0.155.1": {
+    "titulo": "📋 Presse-papiers : rien ne se perd à la fermeture, et l’écran bloqué dit pourquoi",
+    "itens": [
+      "📋 Ce qui était envoyé au presse-papiers juste avant de fermer ou de mettre à jour le programme disparaissait au redémarrage (l’enregistrement était différé et le programme fermait avant). Il est maintenant écrit à la sortie.",
+      "🔒 Le panneau ouvert par le réseau avec le presse-papiers désactivé dans Sécurité affichait « Aucune entrée pour l’instant » — on aurait dit que l’historique n’arrivait pas. Il dit maintenant que le presse-papiers est fermé au réseau (et où le streamer l’ouvre), avec la zone et les boutons désactivés."
+    ]
+  },
   "0.155.0": {
     "titulo": "🔊 Tous les sons des overlays au même endroit",
     "itens": [

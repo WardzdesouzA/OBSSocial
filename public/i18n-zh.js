@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 剪贴板对网络关闭。主播可在 设置 → 安全 → 网络可以使用的内容 中开放。",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "它住在 🔊 叠加层声音 的 🕐 时钟 → 🏁 结束 里 —— 和其他所有叠加层的声音放在一起：文件、音量、在哪播放和试听按钮。",
     "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "它住在 🔊 叠加层声音 的 🎁 抽奖 → 🏁 结束 里 —— 和其他所有叠加层的声音放在一起：文件、音量、在哪播放和试听按钮。",

@@ -1,4 +1,11 @@
 {
+  "0.155.1": {
+    "titulo": "📋 Zwischenablage: nichts geht beim Schließen verloren, und ein gesperrter Bildschirm sagt warum",
+    "itens": [
+      "📋 Was kurz vor dem Schließen oder Aktualisieren des Programms an die Zwischenablage geschickt wurde, verschwand beim Neustart (das Speichern war aufgeschoben und das Programm schloss vorher). Jetzt wird es beim Beenden geschrieben.",
+      "🔒 Ein über das Netzwerk geöffnetes Panel mit in Sicherheit abgeschalteter Zwischenablage zeigte „Noch keine Einträge“ — es sah aus, als käme der Verlauf nicht an. Jetzt steht dort, dass die Zwischenablage für das Netzwerk geschlossen ist (und wo der Streamer sie freigibt), mit gesperrtem Feld und Tasten."
+    ]
+  },
   "0.155.0": {
     "titulo": "🔊 Alle Overlay-Sounds an einem Ort",
     "itens": [

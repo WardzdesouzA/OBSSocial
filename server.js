@@ -1114,7 +1114,10 @@ function podeVerClipboard(ws) {
 
 function clipboardAvisar() {
   const comItens = JSON.stringify({ type: 'clipboard', itens: clipboardPublico() });
-  const vazio = JSON.stringify({ type: 'clipboard', itens: [] });
+  // 📋 v0.155.1: quem está proibido fica sabendo que está (fechado: true) —
+  // antes recebia uma lista vazia e via «Nenhuma entrada ainda», como se o
+  // histórico não estivesse chegando
+  const vazio = JSON.stringify({ type: 'clipboard', itens: [], fechado: true });
   for (const client of wss.clients) {
     if (client.readyState === 1) client.send(podeVerClipboard(client) ? comItens : vazio);
   }
@@ -1845,6 +1848,10 @@ function saveSettingsAgora() {
 for (const sinal of ['SIGINT', 'SIGTERM']) {
   process.on(sinal, () => {
     if (saveSettingsTimer) saveSettingsAgora();
+    // 📋 v0.155.1: a gravação adiada (250 ms) do histórico da área de
+    // transferência também vai já — o que foi mandado logo antes de fechar
+    // ou atualizar o programa sumia no reinício
+    persistClipboardAgora();
     process.exit(0);
   });
 }
@@ -9465,6 +9472,7 @@ wss.on('connection', (ws, req) => {
     logs: logsInfo(),
     dados: resumoDados(),
     clipboard: podeVerClipboard(ws) ? clipboardPublico() : [],
+    clipboardFechado: !podeVerClipboard(ws), // 📋 v0.155.1: a tela diz o porquê do vazio
     connections: conexoesPublicas(),
     trilhas: state.trilhas,
     perfisOverlay: state.perfisOverlay,
