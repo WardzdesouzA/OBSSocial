@@ -1,4 +1,11 @@
 {
+  "0.154.0": {
+    "titulo": "🧲 Chaque bouton et chaque onglet du panneau peuvent être réorganisés",
+    "itens": [
+      "🐛 Le 🎞️ Média direct n’obéissait pas à 🧲 Organiser le panneau : vous le glissiez, il revenait à côté du 📋 Presse-papiers. La raison était interne — la liste de ce qui peut être réordonné vivait à trois endroits du programme, et le serveur avait gardé une vieille version sans le Média direct ; à l’enregistrement, il jetait la clé et le bouton retombait toujours en fin de file. Maintenant il va là où vous le lâchez, comme les autres.",
+      "🧲 Pour que cela n’arrive plus à aucun bouton, la liste est devenue UNE seule, partagée par le serveur, le panneau et l’aperçu des réglages. Une nouvelle fonction y entre une fois et vaut pour les trois — et un test vérifie que chaque bouton d’outil et chaque onglet qui existent dans le panneau y figurent."
+    ]
+  },
   "0.153.0": {
     "titulo": "🔒 Mise à jour de sécurité",
     "itens": [

@@ -1,4 +1,11 @@
 {
+  "0.154.0": {
+    "titulo": "🧲 Every dashboard button and tab can be rearranged",
+    "itens": [
+      "🐛 🎞️ Direct media ignored 🧲 Arrange the dashboard: you dragged it, it went back next to the 📋 Clipboard. The reason was internal — the list of what can be reordered lived in three places in the program, and the server had kept an old copy without Direct media; on save it dropped the key and the button always fell to the end. Now it goes where you drop it, like the others.",
+      "🧲 So this never happens to any button again, the list became ONE, shared by the server, the dashboard and the settings preview. A new feature enters it once and applies to all three — and a test checks that every tool button and every tab that exist in the dashboard are in it."
+    ]
+  },
   "0.153.0": {
     "titulo": "🔒 Security update",
     "itens": [

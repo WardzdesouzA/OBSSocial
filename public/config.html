@@ -3068,6 +3068,7 @@
 </div>
 <style id="panel-css"></style>
 
+<script src="/painel-ordem.js"></script>
 <script src="/i18n.js"></script>
 <script src="/render.js"></script>
 <script>
@@ -12597,23 +12598,18 @@ showCfgPage(location.hash.replace('#sec-', ''));
 const TOOL_META = { qr: '📱 QR Code', raffle: '🎁 Sorteio', likemeter: '📊 Likômetro', aud: '👥 Audiência', ws: '🏆 Winstreak', aviso: '📢 Avisos', midiaDireta: '🎞️ Mídia direta', trilhas: '🎵 Mesa de trilhas', obs: '🎬 OBS Studio', vmix: '🎛️ vMix', clip: '📋 Área de transf.' };
 const TAB_META = { live: '🔴 Ao vivo', saved: '📥 Fila', superchat: '💰 Super Chats', member: '👑 Membros', whatsapp: '💬 WhatsApp', telegram: '📨 Telegram', apoio: '💝 Apoios' };
 
+// 🧲 v0.154: a ordem vem de /painel-ordem.js — a MESMA lista e a MESMA regra
+// («o 📋 fecha a fila») do servidor e do painel. TOOL_META/TAB_META são só os
+// rótulos da prévia; a lista do que existe não mora mais aqui.
 function panelOrderOf(kind) {
   const panel = (settings && settings.panel) || {};
-  const salvo = kind === 'tool' ? panel.toolOrder : panel.tabOrder;
-  const salvoArr = Array.isArray(salvo) ? salvo : [];
-  const padrao = Object.keys(kind === 'tool' ? TOOL_META : TAB_META);
-  const ordem = [...new Set([...salvoArr, ...padrao])].filter((k) => padrao.includes(k));
-  // 📋 A Área de transferência fecha a fila por padrão: um botão novo (Labs ou
-  // recurso novo) entra ANTES dela. Só fica depois se o usuário a moveu.
-  if (kind === 'tool') {
-    const moveuClip = salvoArr.includes('clip') && salvoArr[salvoArr.length - 1] !== 'clip';
-    if (!moveuClip && ordem.includes('clip')) {
-      ordem.splice(ordem.indexOf('clip'), 1);
-      ordem.push('clip');
-    }
-  }
-  return ordem;
+  return kind === 'tool'
+    ? OBS_PAINEL_ORDEM.ordenarFerramentas(panel.toolOrder)
+    : OBS_PAINEL_ORDEM.ordenarAbas(panel.tabOrder);
 }
+// Recurso novo sem rótulo aqui aparece pela chave — nunca some da prévia
+for (const k of OBS_PAINEL_ORDEM.FERRAMENTAS) if (!TOOL_META[k]) console.warn('🧲 ferramenta sem rótulo na prévia:', k);
+for (const k of OBS_PAINEL_ORDEM.ABAS) if (!TAB_META[k]) console.warn('🧲 aba sem rótulo na prévia:', k);
 
 function renderPanelOrder() {
   for (const [rowId, kind, meta] of [['mpTools', 'tool', TOOL_META], ['mpTabs', 'tab', TAB_META]]) {
@@ -12624,7 +12620,7 @@ function renderPanelOrder() {
       chip.className = 'mp-chip';
       chip.draggable = true;
       chip.dataset.key = key;
-      chip.textContent = meta[key];
+      chip.textContent = meta[key] || key;
       row.appendChild(chip);
     }
   }

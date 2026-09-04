@@ -1,4 +1,11 @@
 {
+  "0.154.0": {
+    "titulo": "🧲 Jede Schaltfläche und jeder Reiter des Panels lassen sich neu anordnen",
+    "itens": [
+      "🐛 Das 🎞️ Direktmedium gehorchte 🧲 Panel anordnen nicht: man zog es, und es sprang zurück neben die 📋 Zwischenablage. Der Grund war intern — die Liste dessen, was sich umsortieren lässt, lebte an drei Stellen im Programm, und der Server hatte eine alte Fassung ohne das Direktmedium behalten; beim Speichern verwarf er den Schlüssel, und die Schaltfläche fiel immer ans Ende. Jetzt landet sie dort, wo Sie sie loslassen, wie die anderen.",
+      "🧲 Damit das keiner Schaltfläche mehr passiert, wurde die Liste EINE einzige, geteilt von Server, Panel und der Vorschau in den Einstellungen. Eine neue Funktion kommt einmal hinein und gilt für alle drei — und ein Test prüft, dass jede Werkzeug-Schaltfläche und jeder Reiter, die es im Panel gibt, darin stehen."
+    ]
+  },
   "0.153.0": {
     "titulo": "🔒 Sicherheitsupdate",
     "itens": [

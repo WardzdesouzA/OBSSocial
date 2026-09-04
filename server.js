@@ -159,6 +159,10 @@ function tcons(texto, ...args) {
 
 const qrcodeFactory = require('qrcode-generator');
 const currency = require('./currency');
+// 🧲 v0.154: a lista de ferramentas/abas/colunas do painel é a MESMA que as
+// páginas usam — o sanitizador só aceita o que existe, e o que existe mora
+// num lugar só (nunca mais um botão novo sumindo da ordem salva)
+const PAINEL_ORDEM = require('./public/painel-ordem');
 
 const { TwitchConnector } = require('./connectors/twitch');
 const { KickConnector } = require('./connectors/kick');
@@ -10115,12 +10119,11 @@ function tratarMensagem(ws, raw) {
       // todo mundo — inclusive por seletores CSS montados com essas chaves)
       {
         const p = state.settings.panel;
-        // Toda ferramenta nova precisa entrar aqui, senão ela some da ordem
-        // salva (o filtro descarta o que não conhece)
-        const TOOL_KEYS = ['qr', 'raffle', 'likemeter', 'aud', 'ws', 'aviso', 'trilhas', 'obs', 'vmix', 'clip'];
-        const TAB_KEYS = ['live', 'saved', 'superchat', 'member', 'whatsapp', 'telegram', 'apoio']; // 💬📨 v0.124
-        p.toolOrder = Array.isArray(p.toolOrder) ? p.toolOrder.filter((k) => TOOL_KEYS.includes(k)) : [];
-        p.tabOrder = Array.isArray(p.tabOrder) ? p.tabOrder.filter((k) => TAB_KEYS.includes(k)) : [];
+        // 🧲 v0.154: as chaves aceitas vêm de /public/painel-ordem.js, a mesma
+        // lista que o painel e as configurações usam. Ferramenta nova entra
+        // LÁ, uma vez só — aqui nada precisa mudar.
+        p.toolOrder = PAINEL_ORDEM.soConhecidas(p.toolOrder, PAINEL_ORDEM.FERRAMENTAS);
+        p.tabOrder = PAINEL_ORDEM.soConhecidas(p.tabOrder, PAINEL_ORDEM.ABAS);
         p.toolbarPos = p.toolbarPos === 'bottom' ? 'bottom' : 'top';
         p.comentGap = Math.max(0, Math.min(30, Math.round(numeroEntre(p.comentGap, 0, 30, 1))));
         p.faixaDupla = p.faixaDupla === true;
@@ -10146,10 +10149,9 @@ function tratarMensagem(ws, raw) {
         p.liveView = p.liveView === 'colunas' ? 'colunas' : 'unificado';
         p.columnsShowAll = p.columnsShowAll === true;
         p.columnsShowEmpty = p.columnsShowEmpty === true;
-        const COL_KEYS = ['__all', 'youtube', 'twitch', 'kick', 'bilibili', 'doacao', 'telegram', 'whatsapp'];
-        p.columnsOrder = Array.isArray(p.columnsOrder)
-          ? [...new Set(p.columnsOrder.filter((k) => COL_KEYS.includes(k)))]
-          : [];
+        // «__all» é a coluna «Todas», do painel — não é uma rede, por isso
+        // entra aqui e não na lista compartilhada
+        p.columnsOrder = PAINEL_ORDEM.soConhecidas(p.columnsOrder, ['__all', ...PAINEL_ORDEM.COLUNAS]);
         {
           // 🫧 Animação de chegada: só estilos conhecidos, duração 0.1–2s
           const ANIM_ESTILOS = ['deslizar', 'surgir', 'pop', 'zoom', 'quicar', 'nenhuma'];
