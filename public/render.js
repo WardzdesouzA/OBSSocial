@@ -615,6 +615,10 @@ function criarMotorAudioOv(confDe) {
     parar(id);
     const el = new Audio(conf.url);
     el.preload = 'auto';
+    // 🔉 v0.155: volume por som (0 a 100). Som sem volume gravado toca cheio,
+    // como sempre tocou; os que vieram do timer/dado antigos trazem o deles.
+    const vol = Number(conf.volume);
+    el.volume = (Number.isFinite(vol) ? Math.max(0, Math.min(100, vol)) : 100) / 100;
     el.style.display = 'none';
     el.dataset.audioOv = id;
     document.body.appendChild(el);
@@ -650,6 +654,18 @@ function criarMotorAudioOv(confDe) {
     }
   }
   return { tocar, parar, presenca };
+}
+
+// 🔊 v0.155: o primeiro som dos overlays que toque DESTE lado (o filtro diz
+// qual lado) serve de chave para destravar o áudio do navegador — depois de
+// um, o navegador confia na página e toca todos os outros
+function obsPrimeiroSomOv(audios, filtro) {
+  for (const conf of Object.values(audios || {})) {
+    for (const s of Object.values(conf || {})) {
+      if (s && s.url && filtro(s)) return s.url;
+    }
+  }
+  return '';
 }
 
 function connectHub(onEvent) {

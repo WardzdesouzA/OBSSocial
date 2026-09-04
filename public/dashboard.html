@@ -1588,7 +1588,7 @@
             <span>🔊</span>
             <select id="pRlSomOnde" style="flex:1">
               <option value="ambos">Som no painel e na live</option>
-              <option value="live">Som só na live</option>
+              <option value="overlay">Som só na live</option>
               <option value="painel">Som só no meu computador</option>
             </select>
           </div>
@@ -2059,6 +2059,10 @@ const hub = connectHub((event) => {
     // 🔊 v0.77: momento de áudio vindo do overlay — o painel toca a parte
     // dele (a saída também CALA os loops de entrada/tempo daquele widget)
     case 'audioOverlayToca':
+      // 🏁 v0.155: a finalização o painel toca sozinho, do próprio evento
+      // (timer zerando, sorteio novo) — um overlay antigo ainda repassando
+      // não pode fazê-la tocar em dobro
+      if (event.momento === 'fim') break;
       if (event.momento === 'saida') {
         motorAudioOvPainel.parar(event.chave + ':entrada');
         motorAudioOvPainel.parar(event.chave + ':tempo');
@@ -4597,11 +4601,10 @@ function updateRaffleTool(raffle) {
   }
 }
 
-// 🔊 Som do dado no painel (mesma regra do alerta do timer)
+// 🔊 Som do dado no painel — v0.155: só pelo card «🔊 Áudios dos overlays»
+// (🎁 Sorteio → 🏁 Finalização); o caminho antigo (raffle.somUrl) saiu
 function tocarSomDoDado() {
-  const conf = settings?.raffle || {};
-  if (!conf.somUrl || conf.somOnde === 'live') return;
-  OBS_SOM.tocar(conf.somUrl, conf.somVolume, 20000);
+  motorAudioOvPainel.tocar('raffle', 'fim');
 }
 
 // ---------- Ferramentas: Likometro ----------
@@ -6512,27 +6515,21 @@ function updateRelogio(relogio, fim) {
   if (fim) tocarSomDoTimer();
 }
 
-// 🔊 Som do fim do timer (escolhido nas configurações; só toca no painel)
+// 🔊 Som do fim do timer no painel — v0.155: só pelo card «🔊 Áudios dos
+// overlays» (🕐 Relógio → 🏁 Finalização); o caminho antigo (relogio.somUrl)
+// saiu, e o motor já respeita o «onde toca» (só toca aqui se não for «só
+// no overlay»)
 function tocarSomDoTimer() {
-  const conf = settings?.relogio || {};
-  if (!conf.somUrl) return;
-  // Onde o alerta toca: no painel, na live (overlay) ou nos dois
-  if (conf.somOnde === 'live') return;
-  // Trava de segurança: o aviso sonoro nunca passa de 20 segundos
-  OBS_SOM.tocar(conf.somUrl, conf.somVolume, 20000);
+  motorAudioOvPainel.tocar('relogio', 'fim');
 }
 
 // O navegador só libera áudio depois de um toque na página. Deixamos o som
 // pronto assim que as configurações chegam e mostramos um convite discreto
 // se, mesmo assim, ele continuar bloqueado.
 function prepararSomDoTimer() {
-  // Vale para os dois sons do painel: o alerta do timer e o dado do sorteio.
-  // Destravar um já destrava o outro.
-  const rel = settings?.relogio || {};
-  const sor = settings?.raffle || {};
-  const chave = (rel.somOnde !== 'live' && rel.somUrl)
-    || (sor.somOnde !== 'live' && sor.somUrl)
-    || '';
+  // Qualquer som dos overlays que toque no painel serve de chave: destravar
+  // um já destrava todos os outros (v0.155)
+  const chave = obsPrimeiroSomOv(settings?.audiosOverlay, (s) => s.onde !== 'overlay');
   if (!chave) return;
   OBS_SOM.preparar(chave, (estado) => {
     const aviso = document.getElementById('somBloqueado');
@@ -6582,7 +6579,14 @@ function mandarConfRelogio(mudancas) {
 document.getElementById('pRlTirarAviso').addEventListener('input', (e) => mandarConfRelogio({ tirarAvisoNoFim: e.target.checked }));
 document.getElementById('pRlPiscar').addEventListener('input', (e) => mandarConfRelogio({ piscarNoFim: e.target.checked }));
 document.getElementById('pRlPiscarAviso').addEventListener('input', (e) => mandarConfRelogio({ piscarAvisoNoFinal: e.target.checked }));
-document.getElementById('pRlSomOnde').addEventListener('input', (e) => mandarConfRelogio({ somOnde: e.target.value }));
+// 🔊 v0.155: o «onde toca» do fim do timer é o da 🏁 Finalização do relógio
+// em «🔊 Áudios dos overlays» — o mesmo campo, visto daqui. O servidor troca
+// o widget inteiro, então mandamos o relógio completo com só o onde mudado.
+document.getElementById('pRlSomOnde').addEventListener('input', (e) => {
+  const rel = settings?.audiosOverlay?.relogio || {};
+  if (!rel.fim || !rel.fim.url) return;
+  hub.send({ type: 'settings', settings: { audiosOverlay: { relogio: { ...rel, fim: { ...rel.fim, onde: e.target.value } } } } });
+});
 
 // Mantém os controles do painel com o que está valendo
 function sincronizarOpcoesTimer() {
@@ -6598,8 +6602,13 @@ function sincronizarOpcoesTimer() {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el) el.checked = valor;
   }
+  // 🔊 v0.155: a linha do «onde toca» espelha a 🏁 Finalização do relógio no
+  // card «🔊 Áudios dos overlays» — e só aparece quando há um som lá
   const onde = document.getElementById('pRlSomOnde');
-  if (onde && document.activeElement !== onde) onde.value = r.somOnde || 'ambos';
+  const fim = settings?.audiosOverlay?.relogio?.fim;
+  const linhaSom = onde && onde.closest('.pop-row');
+  if (linhaSom) linhaSom.style.display = fim && fim.url ? '' : 'none';
+  if (onde && document.activeElement !== onde) onde.value = (fim && fim.onde) || 'ambos';
 }
 
 for (const btn of document.querySelectorAll('[data-atalho]')) {

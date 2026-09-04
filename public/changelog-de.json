@@ -1,4 +1,12 @@
 {
+  "0.155.0": {
+    "titulo": "🔊 Alle Overlay-Sounds an einem Ort",
+    "itens": [
+      "🔊 Der Sound am Ende des ⏱ Timers und der des 🎲 Würfels der Verlosung sind umgezogen: sie wohnen jetzt in „🔊 Overlay-Sounds“, unter dem 🏁 Abschluss der 🕐 Uhr und der 🎁 Verlosung — zusammen mit den Sounds aller anderen Overlays. Die Karten von Timer und Verlosung haben eine Abkürzung bekommen, die die Karte gleich an der richtigen Stelle öffnet. Was Sie eingestellt hatten (Datei, Lautstärke und wo er spielt), wurde von selbst mitgenommen; wer nie etwas geändert hat, behält die Standard-Sounds des Programms, und wer stummgeschaltet hatte, bleibt stumm.",
+      "🔉 Die Karte hat bekommen, was nur der alte Weg hatte: Lautstärke pro Sound (0 bis 100) und eine ▶️ Anhören-Taste bei jedem Moment. Und eine Doppelung ist weg: wer den Sound an beiden Stellen eingestellt hatte, hörte Timer-Ende und Würfel DOPPELT, im Panel und im Stream — jetzt spielt es einmal, über die Karte.",
+      "🛠️ Wichtige Korrektur: seit v0.77 reichte EIN in „🔊 Overlay-Sounds“ eingestellter Sound, damit das Programm beim nächsten Start die Einstellungsdatei nicht lesen konnte und ALLE Einstellungen auf Werkszustand zurücksetzte — der Fehler wurde stillschweigend verschluckt. Die Datei wird jetzt immer gelesen, und der Test, der den Fall nachstellt, gehört zur Testreihe."
+    ]
+  },
   "0.154.0": {
     "titulo": "🧲 Jede Schaltfläche und jeder Reiter des Panels lassen sich neu anordnen",
     "itens": [

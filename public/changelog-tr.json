@@ -1,4 +1,12 @@
 {
+  "0.155.0": {
+    "titulo": "🔊 Overlay’lerin tüm sesleri tek yerde",
+    "itens": [
+      "🔊 ⏱ zamanlayıcı bitiş sesi ile 🎲 çekiliş zarının sesi taşındı: artık «🔊 Overlay sesleri» içinde, 🕐 Saat ve 🎁 Çekiliş’in 🏁 Bitiş’inde yaşıyorlar — diğer tüm overlay sesleriyle birlikte. Zamanlayıcı ve çekiliş kartlarına, kartı doğrudan doğru yerde açan bir kısayol geldi. Ayarladıklarınız (dosya, ses düzeyi ve nerede çalacağı) kendiliğinden taşındı; hiç dokunmayan programın varsayılan sesleriyle kalır, sessize almış olan sessiz kalır.",
+      "🔉 Kart, yalnızca eski yolun sahip olduğu şeyi kazandı: ses başına ses düzeyi (0–100) ve her anda bir ▶️ Dinle düğmesi. Ve bir fazlalık gitti: sesi iki yerde de ayarlamış olanlar zamanlayıcı bitişini ve zarı panelde ve yayında İKİ KEZ duyuyordu — artık kart üzerinden bir kez çalıyor.",
+      "🛠️ Önemli düzeltme: v0.77’den beri «🔊 Overlay sesleri»nde ayarlanmış TEK bir ses, program yeniden açıldığında ayar dosyasını okuyamamasına ve TÜM ayarların fabrika değerlerine dönmesine yetiyordu — hata sessizce yutuluyordu. Artık dosya her zaman okunuyor ve bu durumu yeniden üreten test, test setine eklendi."
+    ]
+  },
   "0.154.0": {
     "titulo": "🧲 Panelin her düğmesi ve her sekmesi yeniden düzenlenebilir",
     "itens": [

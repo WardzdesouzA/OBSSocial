@@ -3191,25 +3191,20 @@ TRILHA_PLAYER.quandoBloquear((preso) => {
 
 // 🔊 Alerta do fim do timer NA LIVE: o overlay é uma fonte do OBS, então
 // o som entra no áudio da transmissão (quem assiste também ouve).
+// v0.155: o som mora só em «🔊 Áudios dos overlays» (🕐 Relógio → 🏁
+// Finalização). O caminho antigo (relogio.somUrl) saiu — e com ele o toque
+// em dobro de quem tinha os dois configurados.
 function tocarSomNaLive() {
-  const conf = settings?.relogio || {};
-  dispararFimOv('relogio'); // 🔊 v0.77: som de finalização do widget
-  if (!conf.somUrl) return;
-  if (conf.somOnde === 'painel') return; // o streamer escolheu só o painel
-  OBS_SOM.tocar(conf.somUrl, conf.somVolume, 20000);
+  dispararFimOv('relogio');
 }
 
 // Dentro do OBS o som toca sozinho. Num navegador comum (celular, tablet,
 // outro PC), é preciso um toque na tela antes — então deixamos tudo pronto
 // e, se ainda assim estiver bloqueado, convidamos a pessoa a tocar uma vez.
 function prepararSomNaLive() {
-  // Vale para os dois sons que podem tocar na live: o alerta do timer e o
-  // dado do sorteio. Destravar um já destrava o outro.
-  const rel = settings?.relogio || {};
-  const sor = settings?.raffle || {};
-  const chave = (rel.somOnde !== 'painel' && rel.somUrl)
-    || (sor.somOnde !== 'painel' && sor.somUrl)
-    || '';
+  // Qualquer som dos overlays que toque na live serve de chave: destravar
+  // um já destrava todos os outros (v0.155)
+  const chave = obsPrimeiroSomOv(settings?.audiosOverlay, (s) => s.onde !== 'painel');
   if (!chave) return;
   OBS_SOM.preparar(chave, (estado) => {
     const convite = document.getElementById('somBloqueadoOv');
@@ -3464,12 +3459,10 @@ function tempoDoDado() {
   return Math.max(0, Math.min(15, n)) * 1000;
 }
 
-// 🔊 Som do dado NA LIVE (mesma regra do alerta do timer)
+// 🔊 Som do dado NA LIVE (mesma regra do alerta do timer): v0.155, só pelo
+// card «🔊 Áudios dos overlays» (🎁 Sorteio → 🏁 Finalização)
 function tocarSomDoDado() {
-  const conf = settings?.raffle || {};
-  dispararFimOv('raffle'); // 🔊 v0.77: som de finalização do sorteio
-  if (!conf.somUrl || conf.somOnde === 'painel') return;
-  OBS_SOM.tocar(conf.somUrl, conf.somVolume, 20000);
+  dispararFimOv('raffle');
 }
 
 // 🎲 O suspense do dado sobrevive a updates: um broadcast no meio do giro
@@ -3553,10 +3546,13 @@ const audioOvNoPainel = (chave, momento) => {
   const c = settings?.audiosOverlay?.[chave]?.[momento];
   return !!(c && c.url && c.onde !== 'overlay');
 };
+// 🏁 A finalização (o timer zerando, o sorteio revelando) toca AQUI a parte
+// da live. A parte do painel NÃO é repassada: o painel enxerga o mesmo
+// evento e toca a dele sozinho — assim ela toca uma vez só, com ou sem
+// overlay aberto, e sem depender de qual tela viu primeiro (v0.155)
 function dispararFimOv(chave) {
   if (AUDIO_OV_EM_PREVIA) return;
   motorAudioOv.tocar(chave, 'fim');
-  if (audioOvNoPainel(chave, 'fim')) hubOv.send({ type: 'audioOverlayMomento', chave, momento: 'fim' });
 }
 const elOvVisivel = (id) => {
   const el = document.getElementById(id);

@@ -1960,18 +1960,8 @@
       </div>
       <div class="field">
         <label>🔊 Som quando o timer acabar</label>
-        <select id="rl-som"><option value="">Nenhum (silencioso)</option></select>
-        <div class="hint" style="margin:6px 0">Envie o áudio em <b>🎨 Temas → 🖼️ Suas artes</b> (aba Aparência) — qualquer formato, até <b>20 segundos</b>. O som toca no computador do streamer, não na live.</div>
-        <label>Volume: <b id="rl-volume-val">70</b>%</label>
-        <input type="range" id="rl-volume" min="0" max="100" step="5">
-        <label style="margin-top:10px">Onde o som toca</label>
-        <select id="rl-somOnde">
-          <option value="ambos">🔊 No painel e na live (todo mundo ouve)</option>
-          <option value="live">📺 Só na live (o público ouve)</option>
-          <option value="painel">🖥️ Só no meu computador (só eu ouço)</option>
-        </select>
-        <div class="hint" style="margin:6px 0 0">Na live, o som sai pela fonte do overlay no OBS — confira se ela está com o áudio ativado (no OBS: <b>Controlar áudio via OBS</b> na fonte Navegador).</div>
-        <button id="rl-testarSom" class="btn-link" style="margin-top:8px">▶️ Ouvir o som</button>
+        <div class="hint" style="margin:0 0 6px">Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.</div>
+        <button type="button" class="btn-link" data-aov-ir="relogio">🔊 Abrir em Áudios dos overlays</button>
       </div>
       <div class="field">
         <label>⏳ Reta final do timer (antes de zerar)</label>
@@ -2038,23 +2028,14 @@
       </div>
       <div class="field" style="margin-bottom:0">
         <label>🔊 Som do dado</label>
-        <select id="sr-som"><option value="">Nenhum (silencioso)</option></select>
-        <div class="hint" style="margin:6px 0">Envie o áudio em <b>🎨 Temas → 🖼️ Suas artes</b> (aba Aparência) — qualquer formato, até <b>20 segundos</b>.</div>
-        <label>Volume: <b id="sr-volume-val">70</b>%</label>
-        <input type="range" id="sr-volume" min="0" max="100" step="5">
-        <label style="margin-top:10px">Onde o som toca</label>
-        <select id="sr-somOnde">
-          <option value="ambos">🔊 No painel e na live (todo mundo ouve)</option>
-          <option value="live">📺 Só na live (o público ouve)</option>
-          <option value="painel">🖥️ Só no meu computador (só eu ouço)</option>
-        </select>
-        <button id="sr-testarSom" class="btn-link" style="margin-top:8px">▶️ Ouvir o som</button>
+        <div class="hint" style="margin:0 0 6px">Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.</div>
+        <button type="button" class="btn-link" data-aov-ir="raffle">🔊 Abrir em Áudios dos overlays</button>
       </div>
     </div>
 
     <div class="card" id="cardAudiosOv">
       <h3>🔊 Áudios dos overlays</h3>
-      <div class="hint">Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (vale para o ⏱ timer/cronômetro e o 🎁 sorteio). Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início.</div>
+      <div class="hint">Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).</div>
       <div class="field">
         <label>Overlay</label>
         <select id="aov-widget">
@@ -3878,7 +3859,7 @@ mediaFile.onchange = async () => {
     // Áudio não é arte: ele nunca aparece nos seletores de fundo — o lugar
     // dele é a 🎵 Mesa de trilhas e os sons do sorteio/timer
     uploadStatus.textContent = /\.(mp3|wav|oga|weba|m4a|aac|flac|opus)$/i.test(file.name)
-      ? `✅ "${file.name}" enviado! Ele é um ÁUDIO da biblioteca dos overlays: use no som do 🎁 sorteio, do ⏱ timer ou nos 🔊 áudios dos overlays. (Sons da 🎵 Mesa de Trilhas são enviados na página da própria Mesa.)`
+      ? `✅ "${file.name}" enviado! Ele é um ÁUDIO da biblioteca dos overlays: use em 🔊 Áudios dos overlays (o som do timer, do dado e de todos os outros overlays). (Sons da 🎵 Mesa de Trilhas são enviados na página da própria Mesa.)`
       : `✅ "${file.name}" enviado! Escolha ONDE ele entra nos seletores logo abaixo (fundo do destaque, moldura, widgets...).`;
     const aviso = await avisoDeFormato(data.url, file.name);
     if (aviso) uploadStatus.textContent = aviso;
@@ -3920,8 +3901,6 @@ ligarMidiasLembradas();
 
 function renderMediaList() {
   if (typeof fillTemaFundos === 'function') setTimeout(fillTemaFundos, 0);
-  if (typeof fillRelogioSons === 'function') setTimeout(fillRelogioSons, 0);
-  if (typeof fillSorteioSons === 'function') setTimeout(fillSorteioSons, 0);
   mediaListEl.innerHTML = '';
   // Os áudios (Mesa de trilhas e sons de widgets) moram numa lista separada:
   // eles não são artes e não podem aparecer como "Imagem" no meio delas
@@ -4031,8 +4010,13 @@ function audioUsage(url) {
   const alvo = norm(url);
   const usos = [];
   if ((cfgTrilhas || []).some((t) => norm(t.url) === alvo)) usos.push('🎵 Mesa de trilhas');
-  if (norm((settings?.raffle || {}).somUrl) === alvo) usos.push('🎁 sorteio');
-  if (norm((settings?.relogio || {}).somUrl) === alvo) usos.push('⏱ timer');
+  // 🔊 v0.155: os sons dos overlays (todos os momentos) moram em audiosOverlay
+  const nomes = { featured: '💬 destaque', midia: '📎 mídia do inscrito', qr: '📱 QR Code', raffle: '🎁 sorteio', likemeter: '📊 likômetro', audience: '👥 audiência', winstreak: '🏆 winstreak', aviso: '📢 avisos', relogio: '🕐 relógio/timer' };
+  for (const [chave, conf] of Object.entries(settings?.audiosOverlay || {})) {
+    for (const [momento, s] of Object.entries(conf || {})) {
+      if (s && norm(s.url) === alvo) usos.push(`🔊 ${nomes[chave] || chave} (${momento})`);
+    }
+  }
   return usos;
 }
 
@@ -4500,17 +4484,6 @@ const FUSOS = [
     sel.appendChild(op);
   }
 }
-// Duração real de qualquer formato, lida pelo próprio navegador
-function duracaoDoAudio(url) {
-  return new Promise((resolve) => {
-    const audio = new Audio();
-    audio.addEventListener('loadedmetadata', () => resolve(Number(audio.duration) || 0), { once: true });
-    audio.addEventListener('error', () => resolve(-1), { once: true });
-    audio.preload = 'metadata';
-    audio.src = url;
-    setTimeout(() => resolve(0), 6000); // sem metadados: deixa passar
-  });
-}
 
 function mandarRelogioConf(mudancas) {
   applyingSettings = true;
@@ -4518,28 +4491,6 @@ function mandarRelogioConf(mudancas) {
   setTimeout(() => { applyingSettings = false; }, 300);
 }
 document.getElementById('rl-fuso').addEventListener('input', (e) => mandarRelogioConf({ fuso: e.target.value }));
-document.getElementById('rl-som').addEventListener('input', async (e) => {
-  const url = e.target.value;
-  if (!url) { mandarRelogioConf({ somUrl: '' }); return; }
-  // Limite de 20 segundos: o navegador sabe a duração real de qualquer formato
-  const duracao = await duracaoDoAudio(url);
-  if (duracao < 0) {
-    await obsAviso('Não consegui ler esse arquivo de áudio. Tente outro formato (MP3, WAV, OGG...).', 'Timer', '🔊');
-    e.target.value = settings?.relogio?.somUrl || '';
-    return;
-  }
-  if (duracao > 20.5) {
-    await obsAviso('Esse áudio tem ' + Math.round(duracao) + ' segundos. O aviso do timer aceita no máximo 20 segundos — escolha um mais curto.', 'Timer', '🔊');
-    e.target.value = settings?.relogio?.somUrl || '';
-    return;
-  }
-  mandarRelogioConf({ somUrl: url });
-});
-document.getElementById('rl-volume').addEventListener('input', (e) => {
-  document.getElementById('rl-volume-val').textContent = e.target.value;
-  mandarRelogioConf({ somVolume: Number(e.target.value) });
-});
-document.getElementById('rl-somOnde').addEventListener('input', (e) => mandarRelogioConf({ somOnde: e.target.value }));
 document.getElementById('rl-tirarAviso').addEventListener('input', (e) => mandarRelogioConf({ tirarAvisoNoFim: e.target.checked }));
 document.getElementById('rl-piscar').addEventListener('input', (e) => {
   mandarRelogioConf({ piscarNoFim: e.target.checked });
@@ -4577,18 +4528,6 @@ function sincronizarPiscadas() {
   document.getElementById('rl-fimOpts').classList.toggle('off', r.piscarNoFim === false);
   document.getElementById('rl-avisoOpts').classList.toggle('off', r.piscarAvisoNoFinal === false);
 }
-document.getElementById('rl-testarSom').onclick = () => {
-  const url = document.getElementById('rl-som').value;
-  if (!url) { obsAviso('Escolha um som primeiro (envie o arquivo em 🎨 Temas → 🖼️ Suas artes).', 'Timer', '🔊'); return; }
-  try {
-    const audio = new Audio(url);
-    audio.volume = Math.max(0, Math.min(100, Number(document.getElementById('rl-volume').value) || 70)) / 100;
-    audio.play().catch(() => obsAviso('O navegador não deixou tocar agora. Clique em qualquer lugar da página e tente de novo.', 'Timer', '🔊'));
-    setTimeout(() => audio.pause(), 20000); // nunca passa de 20s
-  } catch {
-    obsAviso('Não consegui tocar esse arquivo de áudio.', 'Timer', '🔊');
-  }
-};
 
 
 // ---------- 🎁 Sorteio: tempo do dado e som ----------
@@ -4648,64 +4587,6 @@ document.getElementById('sr-dadoSegundos').addEventListener('input', (e) => {
   const n = Number(e.target.value);
   mandarSorteioConf({ dadoSegundos: Number.isFinite(n) ? Math.max(0, Math.min(15, n)) : 3 });
 });
-document.getElementById('sr-som').addEventListener('input', async (e) => {
-  const url = e.target.value;
-  if (!url) { mandarSorteioConf({ somUrl: '' }); return; }
-  const duracao = await duracaoDoAudio(url);
-  if (duracao < 0) {
-    await obsAviso('Não consegui ler esse arquivo de áudio. Tente outro formato (MP3, WAV, OGG...).', 'Sorteio', '🔊');
-    e.target.value = settings?.raffle?.somUrl || '';
-    return;
-  }
-  if (duracao > 20.5) {
-    await obsAviso('Esse áudio tem ' + Math.round(duracao) + ' segundos. O som do dado aceita no máximo 20 segundos — escolha um mais curto.', 'Sorteio', '🔊');
-    e.target.value = settings?.raffle?.somUrl || '';
-    return;
-  }
-  mandarSorteioConf({ somUrl: url });
-});
-document.getElementById('sr-volume').addEventListener('input', (e) => {
-  document.getElementById('sr-volume-val').textContent = e.target.value;
-  mandarSorteioConf({ somVolume: Number(e.target.value) });
-});
-document.getElementById('sr-somOnde').addEventListener('input', (e) => mandarSorteioConf({ somOnde: e.target.value }));
-document.getElementById('sr-testarSom').onclick = () => {
-  const url = document.getElementById('sr-som').value;
-  if (!url) { obsAviso('Escolha um som primeiro (envie o arquivo em 🎨 Temas → 🖼️ Suas artes).', 'Sorteio', '🔊'); return; }
-  try {
-    const audio = new Audio(url);
-    audio.volume = Math.max(0, Math.min(100, Number(document.getElementById('sr-volume').value) || 70)) / 100;
-    audio.play().catch(() => obsAviso('O navegador não deixou tocar agora. Clique em qualquer lugar da página e tente de novo.', 'Sorteio', '🔊'));
-    setTimeout(() => audio.pause(), 20000); // nunca passa de 20s
-  } catch {
-    obsAviso('Não consegui tocar esse arquivo de áudio.', 'Sorteio', '🔊');
-  }
-};
-
-// Só áudios entram na lista do som do dado
-function fillSorteioSons() {
-  const sel = document.getElementById('sr-som');
-  if (!sel) return;
-  const atual = (settings?.raffle?.somUrl) || sel.value;
-  sel.innerHTML = '';
-  const nenhum = document.createElement('option');
-  nenhum.value = '';
-  nenhum.textContent = OBS_I18N.t('Nenhum (silencioso)');
-  sel.appendChild(nenhum);
-  const padrao = document.createElement('option');
-  padrao.value = '/sons/dado-padrao.wav';
-  padrao.textContent = OBS_I18N.t('🎲 Dado padrão do OBS Social');
-  sel.appendChild(padrao);
-  for (const midia of midiasDosOverlays()) {
-    if (!/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|webm|weba)$/i.test(midia.name || '')) continue;
-    const op = document.createElement('option');
-    op.value = midia.url;
-    op.textContent = midia.name;
-    sel.appendChild(op);
-  }
-  sel.value = atual || '';
-}
-
 function fillSorteioConf() {
   const r = settings?.raffle || {};
   const campo = (id, valor) => {
@@ -4714,46 +4595,12 @@ function fillSorteioConf() {
   };
   campo('sr-dadoSegundos', r.dadoSegundos ?? 3);
   try { palavrasSorteioCfg.pintar(); } catch {}
-  campo('sr-volume', r.somVolume ?? 70);
-  document.getElementById('sr-volume-val').textContent = String(r.somVolume ?? 70);
-  campo('sr-somOnde', r.somOnde || 'ambos');
-  fillSorteioSons();
-}
-
-// Só áudios entram na lista do som do timer
-function fillRelogioSons() {
-  const sel = document.getElementById('rl-som');
-  if (!sel) return;
-  const atual = (settings?.relogio?.somUrl) || sel.value;
-  sel.innerHTML = '';
-  const nenhum = document.createElement('option');
-  nenhum.value = '';
-  nenhum.textContent = OBS_I18N.t('Nenhum (silencioso)');
-  sel.appendChild(nenhum);
-  // Som que vem junto com o programa (a pessoa pode trocar pelo dela)
-  const padrao = document.createElement('option');
-  padrao.value = '/sons/timer-padrao.wav';
-  padrao.textContent = OBS_I18N.t('⏰ Alerta padrão do OBS Social');
-  sel.appendChild(padrao);
-  for (const midia of midiasDosOverlays()) {
-    if (!/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|webm|weba)$/i.test(midia.name || '')) continue;
-    const op = document.createElement('option');
-    op.value = midia.url;
-    op.textContent = midia.name;
-    sel.appendChild(op);
-  }
-  sel.value = atual || '';
 }
 
 function fillRelogioConf() {
   const r = settings?.relogio || {};
   const sel = document.getElementById('rl-fuso');
   if (sel && document.activeElement !== sel) sel.value = r.fuso || 'auto';
-  const vol = document.getElementById('rl-volume');
-  if (vol && document.activeElement !== vol) vol.value = r.somVolume ?? 70;
-  document.getElementById('rl-volume-val').textContent = String(r.somVolume ?? 70);
-  const onde = document.getElementById('rl-somOnde');
-  if (onde && document.activeElement !== onde) onde.value = r.somOnde || 'ambos';
   document.getElementById('rl-tirarAviso').checked = r.tirarAvisoNoFim !== false;
   document.getElementById('rl-piscar').checked = r.piscarNoFim !== false;
   document.getElementById('rl-piscarAviso').checked = r.piscarAvisoNoFinal !== false;
@@ -4770,7 +4617,6 @@ function fillRelogioConf() {
   campo('rl-piscarAvisoSegundos', r.piscarAvisoSegundos ?? 10);
   campo('rl-piscarAvisoCor', r.piscarAvisoCor || '#ffd23f');
   sincronizarPiscadas();
-  fillRelogioSons();
   fillSorteioConf();
   fillAudiosOv();
 }
@@ -4795,6 +4641,7 @@ function aovMontarLinhas() {
       <label>${rotulo}</label>
       <select id="aov-${momento}-som"><option value="">— sem som —</option></select>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:12px">
+        <label style="display:flex;align-items:center;gap:6px;margin:0" title="Volume deste som (0 a 100)">🔉 <input type="number" id="aov-${momento}-volume" min="0" max="100" step="5" value="100" style="width:64px"> %</label>
         <label style="display:flex;align-items:center;gap:6px;margin:0" title="Adiantar (negativo: pula o começo do áudio) ou atrasar (positivo: espera antes de tocar), em segundos">⏩ <input type="number" id="aov-${momento}-desloc" min="-10" max="10" step="0.5" value="0" style="width:64px"> s</label>
         <label style="display:flex;align-items:center;gap:6px;margin:0" title="Repetir enquanto o overlay estiver na tela"><input type="checkbox" id="aov-${momento}-repetir"> 🔁 Repetir na tela</label>
         <label style="display:flex;align-items:center;gap:6px;margin:0" title="Quanto tempo o áudio toca (0 = até o fim do arquivo)">⏱ <input type="number" id="aov-${momento}-duracao" min="0" max="3600" step="1" value="0" style="width:70px"> s</label>
@@ -4803,11 +4650,13 @@ function aovMontarLinhas() {
           <option value="overlay">📺 Só no overlay (a live ouve)</option>
           <option value="painel">🖥️ Só no painel (só eu ouço)</option>
         </select>
+        <button type="button" class="btn-link" id="aov-${momento}-ouvir" style="margin:0" title="Ouvir este som agora, no volume escolhido">▶️ Ouvir</button>
       </div>`;
     caixa.appendChild(linha);
-    for (const sufixo of ['som', 'desloc', 'repetir', 'duracao', 'onde']) {
+    for (const sufixo of ['som', 'volume', 'desloc', 'repetir', 'duracao', 'onde']) {
       document.getElementById(`aov-${momento}-${sufixo}`).addEventListener('change', aovEnviar);
     }
+    document.getElementById(`aov-${momento}-ouvir`).addEventListener('click', () => aovOuvir(momento));
   }
   const selW = document.getElementById('aov-widget');
   if (selW && !selW.dataset.ligado) { selW.dataset.ligado = '1'; selW.addEventListener('change', fillAudiosOv); }
@@ -4847,6 +4696,7 @@ function fillAudiosOv() {
   for (const [momento] of AOV_MOMENTOS) {
     const s = conf[momento] || {};
     aovPreencherSons(document.getElementById(`aov-${momento}-som`), s.url || '');
+    campo(`aov-${momento}-volume`, s.volume ?? 100);
     campo(`aov-${momento}-desloc`, s.desloc ?? 0);
     campo(`aov-${momento}-duracao`, s.duracao ?? 0);
     const rep = document.getElementById(`aov-${momento}-repetir`);
@@ -4861,8 +4711,10 @@ function aovEnviar() {
   for (const [momento] of AOV_MOMENTOS) {
     const url = document.getElementById(`aov-${momento}-som`)?.value || '';
     if (!url) continue;
+    const vol = Number(document.getElementById(`aov-${momento}-volume`).value);
     widget[momento] = {
       url,
+      volume: Number.isFinite(vol) ? Math.max(0, Math.min(100, Math.round(vol))) : 100,
       desloc: Number(document.getElementById(`aov-${momento}-desloc`).value) || 0,
       repetir: document.getElementById(`aov-${momento}-repetir`).checked,
       duracao: Number(document.getElementById(`aov-${momento}-duracao`).value) || 0,
@@ -4873,6 +4725,33 @@ function aovEnviar() {
   hub.send({ type: 'settings', settings: { audiosOverlay: { [chave]: widget } } });
   setTimeout(() => { applyingSettings = false; }, 300);
 }
+// ▶️ Ouvir este som agora, no volume escolhido (só aqui, na página)
+function aovOuvir(momento) {
+  const url = document.getElementById(`aov-${momento}-som`)?.value || '';
+  if (!url) { obsAviso('Escolha um som primeiro (envie o arquivo em 🎨 Temas → 🖼️ Suas artes).', 'Áudios dos overlays', '🔊'); return; }
+  try {
+    const audio = new Audio(url);
+    const vol = Number(document.getElementById(`aov-${momento}-volume`)?.value);
+    audio.volume = (Number.isFinite(vol) ? Math.max(0, Math.min(100, vol)) : 100) / 100;
+    audio.play().catch(() => obsAviso('O navegador não deixou tocar agora. Clique em qualquer lugar da página e tente de novo.', 'Áudios dos overlays', '🔊'));
+    setTimeout(() => audio.pause(), 30000); // a prévia não passa de 30 s
+  } catch {
+    obsAviso('Não consegui tocar esse arquivo de áudio.', 'Áudios dos overlays', '🔊');
+  }
+}
+// 🔊 v0.155: os cards do ⏱ timer e do 🎁 sorteio apontam para cá — abre a
+// página do card, expande-o se estiver recolhido, escolhe o overlay e rola
+function aovIrPara(chave) {
+  const card = document.getElementById('cardAudiosOv');
+  if (!card) return;
+  const pagina = Object.entries(cfgPages).find(([, cards]) => Array.from(cards).includes(card));
+  if (pagina) { location.hash = '#sec-' + pagina[0]; showCfgPage(pagina[0]); }
+  if (card.classList.contains('recolhido')) card.querySelector(':scope > h3')?.click();
+  const sel = document.getElementById('aov-widget');
+  if (sel) { sel.value = chave; fillAudiosOv(); }
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+for (const b of document.querySelectorAll('[data-aov-ir]')) b.addEventListener('click', () => aovIrPara(b.dataset.aovIr));
 
 // ---------- 🎨 Temas ----------
 // Temas prontos: cada um personaliza o programa inteiro de uma vez.

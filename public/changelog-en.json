@@ -1,4 +1,12 @@
 {
+  "0.155.0": {
+    "titulo": "🔊 Every overlay sound in one place",
+    "itens": [
+      "🔊 The ⏱ timer-end sound and the 🎲 raffle die sound moved house: they now live in “🔊 Overlay sounds”, under the 🏁 Finish of the 🕐 Clock and of the 🎁 Raffle — together with the sounds of every other overlay. The timer and raffle cards got a shortcut that opens the card already in the right place. Whatever you had set (file, volume and where it plays) was carried over by itself; anyone who never touched it keeps the program’s default sounds, and anyone who had silenced it stays silent.",
+      "🔉 The card gained what only the old way had: volume per sound (0 to 100) and a ▶️ Play button on every moment. And a redundancy is gone: anyone with the sound set in both places heard the timer end and the die play TWICE, on the panel and on the live — now it plays once, through the card.",
+      "🛠️ Important fix: since v0.77, a single sound set in “🔊 Overlay sounds” was enough for the program, when reopened, to fail to read the settings file and put EVERY setting back to factory defaults — the error was swallowed silently. The file is now always read, and the test that reproduces the case is part of the battery."
+    ]
+  },
   "0.154.0": {
     "titulo": "🧲 Every dashboard button and tab can be rearranged",
     "itens": [
