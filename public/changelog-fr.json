@@ -1,4 +1,12 @@
 {
+  "0.155.2": {
+    "titulo": "🔊 Sons des overlays : trois restes du balayage",
+    "itens": [
+      "🎁 Avec le temps du dé à 0 (podium direct), la 🏁 Fin du tirage ne jouait que sur le panneau — le direct restait muet même avec « où : les deux ». Elle joue maintenant des deux côtés à chaque nouveau tirage, avec ou sans dé.",
+      "🔇 L’invitation « touchez ici pour activer le son » pouvait rester allumée pour toujours si le premier son de la carte pointait vers un fichier disparu du disque. Désormais seul un vrai blocage du navigateur l’allume ; un fichier mort retombe sur un son livré avec le programme. Et l’aperçu de l’éditeur ne touche plus à l’audio.",
+      "🧹 L’ancien lecteur du minuteur et du dé a quitté le code pour de bon — tout son d’overlay passe par le même moteur."
+    ]
+  },
   "0.155.1": {
     "titulo": "📋 Presse-papiers : rien ne se perd à la fermeture, et l’écran bloqué dit pourquoi",
     "itens": [

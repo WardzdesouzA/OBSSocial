@@ -3202,6 +3202,8 @@ function tocarSomNaLive() {
 // outro PC), é preciso um toque na tela antes — então deixamos tudo pronto
 // e, se ainda assim estiver bloqueado, convidamos a pessoa a tocar uma vez.
 function prepararSomNaLive() {
+  // A prévia do editor (iframe) é muda: nem destrava, nem acende convite (v0.155.2)
+  if (AUDIO_OV_EM_PREVIA) return;
   // Qualquer som dos overlays que toque na live serve de chave: destravar
   // um já destrava todos os outros (v0.155)
   const chave = obsPrimeiroSomOv(settings?.audiosOverlay, (s) => s.onde !== 'painel');
@@ -3518,7 +3520,10 @@ function showRaffle(raffle, animateNew) {
     raffleShownAt = raffle.drawnAt || 0;
     const dadoMs = tempoDoDado();
     raffleRevealAte = animateNew && dadoMs > 0 ? Date.now() + dadoMs : 0;
-    if (raffleRevealAte) tocarSomDoDado();
+    // 🏁 v0.155.2: a finalização do sorteio toca em TODO sorteio novo — com
+    // dado (na hora em que ele começa a girar) ou sem (pódio direto), como o
+    // painel já fazia. Antes, com «0» no tempo do dado, só o painel ouvia.
+    if (animateNew && raffleShownAt) tocarSomDoDado();
   }
   const resta = raffleRevealAte - Date.now();
   if (!jaRevelado && resta > 60) {

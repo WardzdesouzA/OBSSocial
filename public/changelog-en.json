@@ -1,4 +1,12 @@
 {
+  "0.155.2": {
+    "titulo": "🔊 Overlay sounds: three leftovers from the sweep",
+    "itens": [
+      "🎁 With the die time at 0 (straight to the podium), the raffle 🏁 Finish only played on the panel — the live stayed silent even with “where: both”. Now it plays on both for every new draw, with or without the die.",
+      "🔇 The “tap here to enable sound” invite could stay lit forever if the card’s first sound pointed to a file that vanished from disk. Now only a real browser block lights it; a dead file falls back to a sound shipped with the program. And the editor preview no longer touches audio.",
+      "🧹 The old timer/die player is gone from the code for good — every overlay sound goes through the same engine."
+    ]
+  },
   "0.155.1": {
     "titulo": "📋 Clipboard: nothing lost on close, and a blocked screen says why",
     "itens": [
