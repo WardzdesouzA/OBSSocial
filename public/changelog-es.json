@@ -1,4 +1,12 @@
 {
+  "0.155.0": {
+    "titulo": "🔊 Todos los sonidos de los overlays en un solo lugar",
+    "itens": [
+      "🔊 El sonido del fin del ⏱ timer y el del 🎲 dado del sorteo se mudaron: ahora viven en «🔊 Sonidos de los overlays», en la 🏁 Finalización del 🕐 Reloj y del 🎁 Sorteo — junto con los sonidos de todos los demás overlays. Las tarjetas del timer y del sorteo ganaron un atajo que abre la tarjeta ya en el lugar correcto. Lo que tenías configurado (archivo, volumen y dónde suena) se llevó solo; quien nunca lo tocó sigue con los sonidos por defecto del programa, y quien lo había silenciado sigue en silencio.",
+      "🔉 La tarjeta ganó lo que solo tenía la forma antigua: volumen por sonido (0 a 100) y el botón ▶️ Escuchar en cada momento. Y se fue una redundancia: quien tenía el sonido configurado en los dos lugares oía el fin del timer y el dado sonar EL DOBLE, en el panel y en el directo — ahora suena una sola vez, por la tarjeta.",
+      "🛠️ Arreglo importante: desde la v0.77, bastaba UN sonido configurado en «🔊 Sonidos de los overlays» para que el programa, al reabrirse, no lograra leer el archivo de configuración y devolviera TODAS las configuraciones a los valores de fábrica — el error se tragaba en silencio. Ahora el archivo se lee siempre, y la prueba que reproduce el caso pasó a formar parte de la batería."
+    ]
+  },
   "0.154.0": {
     "titulo": "🧲 Todos los botones y pestañas del panel pueden reorganizarse",
     "itens": [

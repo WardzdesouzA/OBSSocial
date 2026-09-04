@@ -318,9 +318,9 @@ const DEFAULT_SETTINGS = {
     whatsappFichas: 1, // fichas de quem participa pelo WhatsApp (1 a 100)
     // 🎲 O dado rodando antes de mostrar o podio
     dadoSegundos: 3,     // 0 = vai direto para o podio; ate 15
-    somUrl: '/sons/dado-padrao.wav', // vem junto com o programa; trocavel por um seu
-    somVolume: 70,       // 0 a 100
-    somOnde: 'ambos',    // 'painel' | 'live' | 'ambos' — onde o som do dado toca
+    // 🔊 v0.155: o som do dado mora em audiosOverlay.raffle.fim (o card
+    // «Áudios dos overlays»). Os antigos somUrl/somVolume/somOnde daqui
+    // migram para lá na carga e não existem mais.
     // 💬 A primeira resposta de cada ganhador depois do sorteio
     respostaPainel: true,  // mostra a resposta no modal do painel
     respostaTela: true,    // mostra a resposta no podio da tela (publico)
@@ -383,9 +383,14 @@ const DEFAULT_SETTINGS = {
     tipo: 'suave',  // suave (a do avatar) | contorno | nenhuma
     opacidade: 55,  // 0 a 100 (55 = o rgba(0,0,0,0.55) do avatar)
   },
-  // 🔊 v0.77: áudios dos overlays — por widget, sons de entrada, saída,
-  // tempo de tela e finalização (vazio = nenhum som configurado)
-  audiosOverlay: {},
+  // 🔊 v0.77: sons de cada overlay por momento (entrada, saída, tempo de
+  // tela, finalização). v0.155: os sons do fim do timer e do dado moram AQUI
+  // — antes viviam em relogio/raffle, e o programa tocava os dois caminhos.
+  // Estes dois já vêm com o programa; instalação antiga traz os seus.
+  audiosOverlay: {
+    relogio: { fim: { url: '/sons/timer-padrao.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' } },
+    raffle: { fim: { url: '/sons/dado-padrao.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' } },
+  },
   // 🪟 v0.79: opções das janelas (compartilhadas entre os navegadores)
   janelas: {
     avatarMulti: false, // várias instâncias do 🔍 avatar ao mesmo tempo
@@ -543,10 +548,8 @@ const DEFAULT_SETTINGS = {
   // 🕐 Relógio: fuso horário e opções do timer
   relogio: {
     fuso: 'auto',            // 'auto' (do computador) ou um fuso IANA (America/Sao_Paulo...)
-    // Timer: quando o tempo acaba
-    somUrl: '/sons/timer-padrao.wav', // vem junto com o programa; trocável por um seu
-    somVolume: 70,           // 0 a 100
-    somOnde: 'ambos',        // 'painel' | 'live' | 'ambos' — onde o alerta toca
+    // Timer: quando o tempo acaba — o SOM mora em audiosOverlay.relogio.fim
+    // (o card «Áudios dos overlays»; v0.155 migrou somUrl/somVolume/somOnde)
     mostrarDataNoPainel: true, // mostrador do cabeçalho: só a hora ou hora + data
     tirarAvisoNoFim: true,   // timer + Avisos trabalhando juntos
     // ⏳ Reta final: o numero pisca ANTES de zerar
@@ -718,6 +721,14 @@ for (const grupo of [DEFAULT_SETTINGS.pecas,
 const ANIM_CHAT_ANTIGA = { slide: 'slide-up', 'slide-side': 'slide-left' };
 
 let migrarArteDosPerfis = false; // 🖼️ v0.102: os moldes passam pela mesma migração da arte
+// 🔊 v0.77: os overlays que têm som e os quatro momentos. Ficam AQUI, antes
+// de `state` nascer, porque sanitizeAudiosOverlay roda já na carga do
+// settings.json (mergeSettings) — declarados mais abaixo, davam ReferenceError
+// (zona morta do const) em qualquer instalação com um som configurado, e
+// loadSettings engolia o erro e voltava TUDO ao padrão de fábrica (v0.155).
+const AUDIO_OV_CHAVES = new Set(['featured', 'midia', 'qr', 'raffle', 'likemeter', 'audience', 'winstreak', 'aviso', 'relogio']);
+const AUDIO_OV_MOMENTOS = ['entrada', 'saida', 'tempo', 'fim'];
+
 function mergeSettings(base) {
   const src = base || {};
   const widgets = {};
@@ -756,7 +767,7 @@ function mergeSettings(base) {
     },
     panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}) },
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
-    relogio: { ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) },
+    relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
     selos: { ...DEFAULT_SETTINGS.selos, ...(src.selos || {}) },
     layers: { ...DEFAULT_SETTINGS.layers, ...(src.layers || {}) },
     pecas: Object.fromEntries(Object.keys(DEFAULT_SETTINGS.pecas).map((k) => (
@@ -770,18 +781,18 @@ function mergeSettings(base) {
     chats: { ...DEFAULT_SETTINGS.chats, ...(src.chats || {}) }, // 👥 v0.141
     midiaTela: { ...DEFAULT_SETTINGS.midiaTela, ...(src.midiaTela || {}) },
     sombra: { ...DEFAULT_SETTINGS.sombra, ...(src.sombra || {}) }, // ✨ v0.86
-    audiosOverlay: sanitizeAudiosOverlay(src.audiosOverlay || {}), // 🔊 v0.77
+    audiosOverlay: audiosOverlayNaCarga(src), // 🔊 v0.77 · v0.155 (migra o som do timer/dado)
     janelas: { avatarMulti: (src.janelas || {}).avatarMulti === true }, // 🪟 v0.79
     backup: {
       ...DEFAULT_SETTINGS.backup,
       ...(src.backup || {}),
       itens: { ...DEFAULT_SETTINGS.backup.itens, ...((src.backup || {}).itens || {}) },
     },
-    raffle: ajustarSorteio({
+    raffle: semSonsLegados(ajustarSorteio({ // 🔊 v0.155: o som do dado migrou
       ...DEFAULT_SETTINGS.raffle,
       ...(src.raffle || {}),
       weights: { ...DEFAULT_SETTINGS.raffle.weights, ...((src.raffle || {}).weights || {}) },
-    }),
+    })),
     widgets,
   };
 }
@@ -1224,8 +1235,8 @@ function limparPeca(bruta, padrao, limites = LIMITES_PECA) {
 // saída, tempo de tela e finalização. Sem teto de tamanho ou de duração de
 // arquivo (pedido do streamer): saneamos só a URL (uploads/sons), o
 // deslocamento (±10s), o repetir, a duração de reprodução e onde toca.
-const AUDIO_OV_CHAVES = new Set(['featured', 'midia', 'qr', 'raffle', 'likemeter', 'audience', 'winstreak', 'aviso', 'relogio']);
-const AUDIO_OV_MOMENTOS = ['entrada', 'saida', 'tempo', 'fim'];
+// (AUDIO_OV_CHAVES e AUDIO_OV_MOMENTOS moram antes de mergeSettings: esta
+// função roda na carga do settings.json, antes desta parte do arquivo.)
 function sanitizeAudiosOverlay(bruto) {
   const limpo = {};
   if (!bruto || typeof bruto !== 'object') return limpo;
@@ -1238,8 +1249,10 @@ function sanitizeAudiosOverlay(bruto) {
       const url = (typeof s.url === 'string'
         && (/^\/uploads\/[^/\\]+$/.test(s.url) || /^\/sons\/[a-z0-9-]+\.[a-z0-9]{2,5}$/i.test(s.url))) ? s.url : '';
       if (!url) continue;
+      const vol = Number(s.volume);
       widget[momento] = {
         url,
+        volume: Number.isFinite(vol) ? Math.round(Math.max(0, Math.min(100, vol))) : 100, // 🔉 v0.155
         desloc: Math.max(-10, Math.min(10, Number(s.desloc) || 0)),
         repetir: s.repetir === true,
         duracao: Math.max(0, Math.min(3600, Math.round(Number(s.duracao) || 0))),
@@ -1249,6 +1262,56 @@ function sanitizeAudiosOverlay(bruto) {
     if (Object.keys(widget).length) limpo[chave] = widget;
   }
   return limpo;
+}
+
+// 🔊 v0.155: os campos antigos de som do timer (relogio.somUrl/somVolume/
+// somOnde) e do dado (raffle.*) saem de cena. Quem os tinha gravados leva o
+// som, o volume e o «onde» para a 🏁 Finalização do relógio e do sorteio em
+// audiosOverlay — só se o lugar novo ainda estiver vazio (o card, quando já
+// foi configurado, é a escolha mais recente e vence). Depois disso os campos
+// antigos são apagados e não voltam: saíram dos padrões e do sanitizador.
+//
+// Roda na carga, ANTES de PASTAS_SOM (e de qualquer const daqui) existir:
+// o state nasce na linha ~867 e estas funções só valem porque são içadas.
+// Por isso valida a URL pelo próprio sanitizeAudiosOverlay (função içada,
+// regex inline) e guarda as tabelas DENTRO das funções, nunca em const solto.
+function sonsLegados() { return [['relogio', 'relogio'], ['raffle', 'raffle']]; }
+function migrarSonsLegados(audios, src) {
+  const ONDE_LEGADO = { painel: 'painel', live: 'overlay', ambos: 'ambos' };
+  for (const [secao, chave] of sonsLegados()) {
+    const legado = (src && src[secao]) || {};
+    if (typeof legado.somUrl !== 'string' || !legado.somUrl) continue;
+    if (audios[chave] && audios[chave].fim) continue;
+    const vol = Number(legado.somVolume);
+    const migrado = sanitizeAudiosOverlay({ [chave]: { fim: {
+      url: legado.somUrl,
+      volume: Number.isFinite(vol) ? vol : 70,
+      desloc: 0, repetir: false, duracao: 0,
+      onde: ONDE_LEGADO[legado.somOnde] || 'ambos',
+    } } });
+    if (migrado[chave]) audios[chave] = { ...(audios[chave] || {}), ...migrado[chave] };
+  }
+  return audios;
+}
+// O que vale na carga: o que estava gravado + o legado migrado + os padrões
+// só numa instalação NOVA (nunca gravou audiosOverlay nem o campo antigo).
+// Quem já gravou o card alguma vez — mesmo vazio — ou silenciou o timer/dado
+// de propósito fica como está; e como mergeSettings roda de novo a cada
+// ajuste pela rede e na restauração, os padrões não voltam nessas passagens
+// (o state sempre carrega audiosOverlay).
+function audiosOverlayNaCarga(src) {
+  const base = migrarSonsLegados(sanitizeAudiosOverlay((src && src.audiosOverlay) || {}), src);
+  const nova = !(src && typeof src === 'object' && 'audiosOverlay' in src);
+  for (const [secao, chave] of sonsLegados()) {
+    const nuncaTeve = nova && !('somUrl' in ((src && src[secao]) || {}));
+    const padrao = DEFAULT_SETTINGS.audiosOverlay[chave];
+    if (nuncaTeve && padrao && !(base[chave] && base[chave].fim)) base[chave] = { ...(base[chave] || {}), ...padrao };
+  }
+  return base;
+}
+function semSonsLegados(secao) {
+  if (secao && typeof secao === 'object') { delete secao.somUrl; delete secao.somVolume; delete secao.somOnde; }
+  return secao;
 }
 
 function sanitizeStyle(raw) {
@@ -9830,7 +9893,9 @@ function tratarMensagem(ws, raw) {
           )),
         },
         tema: { ...state.settings.tema, ...(incoming.tema || {}) },
-        relogio: { ...state.settings.relogio, ...(incoming.relogio || {}) },
+        // 🔊 v0.155: os campos antigos de som saem ANTES da fusão — a migração
+        // para o card só vale na carga do disco, nunca por uma tela antiga
+        relogio: semSonsLegados({ ...state.settings.relogio, ...(incoming.relogio || {}) }),
         layoutV: {
           ...state.settings.layoutV,
           ...(incoming.layoutV || {}),
@@ -9845,11 +9910,11 @@ function tratarMensagem(ws, raw) {
             )),
           },
         },
-        raffle: {
+        raffle: semSonsLegados({ // 🔊 v0.155: idem para o som do dado
           ...state.settings.raffle,
           ...(incoming.raffle || {}),
           weights: { ...state.settings.raffle.weights, ...((incoming.raffle || {}).weights || {}) },
-        },
+        }),
         widgets,
       });
       // 🏷️ Selos: tudo aqui é liga/desliga
@@ -10038,14 +10103,12 @@ function tratarMensagem(ws, raw) {
         const IDIOMAS = ['auto', 'pt', 'en', 'es', 'fr', 'de', 'ru', 'tr', 'ja', 'ko', 'zh'];
         if (!IDIOMAS.includes(state.settings.idioma)) state.settings.idioma = 'auto';
       }
-      // 🕐 Relógio e 🎁 Sorteio: números dentro do limite, cores de verdade e
-      // som só das pastas do programa (o painel já limita, mas o servidor é
-      // quem manda — ele guarda e reenvia para todas as telas).
+      // 🕐 Relógio e 🎁 Sorteio: números dentro do limite e cores de verdade
+      // (o painel já limita, mas o servidor é quem manda — ele guarda e
+      // reenvia para todas as telas). O som dos dois mora em audiosOverlay
+      // (🔊 v0.155) e já foi saneado lá em cima.
       {
         const r = state.settings.relogio;
-        r.somUrl = urlLocalDeArquivo(r.somUrl, PASTAS_SOM);
-        r.somVolume = Math.round(numeroEntre(r.somVolume, 0, 100, 70));
-        r.somOnde = ['painel', 'live', 'ambos'].includes(r.somOnde) ? r.somOnde : 'ambos';
         r.piscarFinal = r.piscarFinal !== false;
         r.piscarFinalSegundos = Math.round(numeroEntre(r.piscarFinalSegundos, 1, 60, 10));
         r.piscarFinalCor = corHex(r.piscarFinalCor, '#ffd23f');
@@ -10061,9 +10124,6 @@ function tratarMensagem(ws, raw) {
 
         const sorteio = ajustarSorteio(state.settings.raffle); // 🔑 palavras + 👑 fundador (v0.116)
         sorteio.dadoSegundos = numeroEntre(sorteio.dadoSegundos, 0, 15, 3);
-        sorteio.somUrl = urlLocalDeArquivo(sorteio.somUrl, PASTAS_SOM);
-        sorteio.somVolume = Math.round(numeroEntre(sorteio.somVolume, 0, 100, 70));
-        sorteio.somOnde = ['painel', 'live', 'ambos'].includes(sorteio.somOnde) ? sorteio.somOnde : 'ambos';
         // 📨/💬 Telegram/WhatsApp no sorteio: liga/desliga + fichas 1..100
         sorteio.telegramSorteio = sorteio.telegramSorteio === true;
         sorteio.whatsappSorteio = sorteio.whatsappSorteio === true;
@@ -10168,7 +10228,8 @@ function tratarMensagem(ws, raw) {
         const s2 = state.settings;
         s2.screenMode = ['normal', 'horizontal', 'vertical', 'ambos'].includes(s2.screenMode) ? s2.screenMode : 'normal';
         s2.idioma = ['auto', 'pt', 'en', 'es', 'fr', 'de', 'ru', 'tr', 'ja', 'ko', 'zh'].includes(s2.idioma) ? s2.idioma : 'auto';
-        // 🕐 Relógio: fuso conhecido, som só das mídias enviadas, volume 0-100
+        // 🕐 Relógio: fuso conhecido e liga/desliga de verdade (o som mora em
+        // audiosOverlay.relogio.fim desde a v0.155)
         {
           const r = s2.relogio || (s2.relogio = {});
           r.fuso = (typeof r.fuso === 'string' && /^[A-Za-z_+\-/0-9]{3,40}$/.test(r.fuso)) ? r.fuso : 'auto';
@@ -10176,11 +10237,6 @@ function tratarMensagem(ws, raw) {
             // fuso inválido derruba para automático (nunca quebra a tela)
             try { new Intl.DateTimeFormat('pt-BR', { timeZone: r.fuso }); } catch { r.fuso = 'auto'; }
           }
-          r.somUrl = (typeof r.somUrl === 'string'
-            && (/^\/uploads\/[^/\\]+$/.test(r.somUrl) || /^\/sons\/[a-z0-9-]+\.[a-z0-9]{2,5}$/i.test(r.somUrl))) ? r.somUrl : '';
-          const n = Number(r.somVolume);
-          r.somVolume = Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 70;
-          r.somOnde = ['painel', 'live', 'ambos'].includes(r.somOnde) ? r.somOnde : 'ambos';
           r.mostrarDataNoPainel = r.mostrarDataNoPainel !== false;
           r.piscarAvisoNoFinal = r.piscarAvisoNoFinal !== false;
           r.tirarAvisoNoFim = r.tirarAvisoNoFim !== false;
@@ -10819,8 +10875,12 @@ function tratarMensagem(ws, raw) {
         // Sons tambem: sorteio/timer voltam ao silencio e a trilha fica
         // pendente (como as importadas sem arquivo), em vez de apontar
         // para um endereco morto
-        if (state.settings.raffle && eraEle(state.settings.raffle.somUrl)) { state.settings.raffle.somUrl = ''; changed = true; }
-        if (state.settings.relogio && eraEle(state.settings.relogio.somUrl)) { state.settings.relogio.somUrl = ''; changed = true; }
+        // 🔊 v0.155: os sons dos overlays (qualquer momento) voltam ao silêncio
+        for (const conf of Object.values(state.settings.audiosOverlay || {})) {
+          for (const momento of Object.keys(conf || {})) {
+            if (conf[momento] && eraEle(conf[momento].url)) { delete conf[momento]; changed = true; }
+          }
+        }
         let trilhasMudou = false;
         for (const t of state.trilhas || []) {
           if (eraEle(t.url)) { t.url = ''; trilhasMudou = true; }

@@ -1,4 +1,12 @@
 {
+  "0.155.0": {
+    "titulo": "🔊 Tous les sons des overlays au même endroit",
+    "itens": [
+      "🔊 Le son de fin du ⏱ minuteur et celui du 🎲 dé du tirage ont déménagé : ils vivent désormais dans « 🔊 Sons des overlays », sous la 🏁 Fin de l’🕐 Horloge et du 🎁 Tirage — avec les sons de tous les autres overlays. Les cartes du minuteur et du tirage ont reçu un raccourci qui ouvre la carte déjà au bon endroit. Ce que vous aviez réglé (fichier, volume et où ça joue) a été emporté tout seul ; qui n’y a jamais touché garde les sons par défaut du programme, et qui l’avait coupé reste en silence.",
+      "🔉 La carte a gagné ce que seule l’ancienne façon avait : le volume par son (0 à 100) et un bouton ▶️ Écouter à chaque moment. Et une redondance a disparu : qui avait le son réglé aux deux endroits entendait la fin du minuteur et le dé jouer EN DOUBLE, sur le panneau et en direct — maintenant ça joue une seule fois, par la carte.",
+      "🛠️ Correctif important : depuis la v0.77, UN seul son réglé dans « 🔊 Sons des overlays » suffisait pour que le programme, à sa réouverture, n’arrive pas à lire le fichier de réglages et remette TOUS les réglages aux valeurs d’usine — l’erreur était avalée en silence. Le fichier est désormais toujours lu, et le test qui reproduit le cas fait partie de la batterie."
+    ]
+  },
   "0.154.0": {
     "titulo": "🧲 Chaque bouton et chaque onglet du panneau peuvent être réorganisés",
     "itens": [

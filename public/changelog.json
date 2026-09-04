@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.155.0",
+    "titulo": "🔊 Todos os sons dos overlays num lugar só",
+    "itens": [
+      "🔊 O som do fim do ⏱ timer e o som do 🎲 dado do sorteio mudaram de casa: agora moram em «🔊 Áudios dos overlays», na 🏁 Finalização do 🕐 Relógio e do 🎁 Sorteio — junto com os sons de todos os outros overlays. Os cards do timer e do sorteio ganharam um atalho que abre o card já no lugar certo. O que você tinha configurado (arquivo, volume e onde toca) foi levado para lá sozinho; quem nunca mexeu continua com os sons padrão do programa, e quem tinha silenciado continua em silêncio.",
+      "🔉 O card ganhou o que só o jeito antigo tinha: volume por som (0 a 100) e o botão ▶️ Ouvir em cada momento. E uma redundância foi embora: quem tinha o som configurado nos dois lugares ouvia o fim do timer e o dado tocarem EM DOBRO, no painel e na live — agora toca uma vez só, pelo card.",
+      "🛠️ Conserto importante: desde a v0.77, bastava UM som configurado em «🔊 Áudios dos overlays» para o programa, ao ser reaberto, não conseguir ler o arquivo de configurações e voltar TODAS as configurações ao padrão de fábrica — o erro era engolido em silêncio. Agora o arquivo é lido sempre, e o teste que reproduz o caso passou a fazer parte da bateria."
+    ]
+  },
+  {
     "version": "0.154.0",
     "titulo": "🧲 Todo botão e toda aba do painel podem ser reorganizados",
     "itens": [
