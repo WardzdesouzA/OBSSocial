@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.155.2",
+    "titulo": "🔊 Sons dos overlays: três sobras da varredura",
+    "itens": [
+      "🎁 Com o tempo do dado em 0 (pódio direto), a 🏁 Finalização do sorteio tocava só no painel — a live ficava muda mesmo com «onde: ambos». Agora toca nos dois em todo sorteio novo, com ou sem dado.",
+      "🔇 O convite «toque aqui para liberar o som» podia ficar aceso para sempre se o primeiro som do card apontasse para um arquivo que sumiu do disco. Agora só o bloqueio de verdade do navegador acende o convite; arquivo morto cai num som que vem com o programa. E a prévia do editor não mexe mais no áudio.",
+      "🧹 O tocador antigo do timer e do dado saiu do código de vez — todo som de overlay passa pelo mesmo motor."
+    ]
+  },
+  {
     "version": "0.155.1",
     "titulo": "📋 Área de transferência: nada se perde ao fechar, e a tela proibida diz o porquê",
     "itens": [

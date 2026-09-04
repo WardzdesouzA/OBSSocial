@@ -1246,27 +1246,32 @@ function nivelDoMarco(n) {
 }
 
 // ---------------------------------------------------------------------------
-// 🔊 Som dos alertas (fim do timer)
+// 🔊 Destravador do áudio da página
 //
 // Navegadores modernos (Chrome, Edge, Safari, e os do tablet/celular) só
 // deixam uma página tocar áudio depois que a pessoa encostou nela pelo menos
 // uma vez. Sem isso o som simplesmente não sai — sem erro, sem aviso.
 //
 // Para resolver, guardamos UM único elemento de áudio e o "liberamos" no
-// primeiro clique/toque/tecla que acontecer na página: tocamos o arquivo com
+// primeiro clique/toque/tecla que acontecer na página: tocamos um arquivo com
 // volume zero e paramos na hora. Depois disso o navegador confia na página e
-// o alerta do timer toca sozinho na hora certa.
+// os sons dos overlays (motor v0.77) tocam sozinhos na hora certa.
 //
-// Quando mesmo assim o navegador bloquear, avisamos a página (aoBloquear)
-// para ela mostrar um convite discreto de "toque para ativar o som".
+// Quando mesmo assim o navegador bloquear, avisamos a página (aoMudar) para
+// ela mostrar um convite discreto de "toque para ativar o som".
+//
+// v0.155.2: quem tocava o alerta antigo do timer/dado por aqui (tocar/parar)
+// saiu — todo som de overlay passa pelo motor. Ficou só o destravador.
 const OBS_SOM = (() => {
   let elemento = null;
   let liberado = false;
   let bloqueado = false;
   let urlPreferida = '';
   let aoMudar = null;
-  let pararEm = null;
   let urlNoElemento = '';
+  // Chave de reserva: vem com o programa. Se o arquivo escolhido pela pessoa
+  // sumiu do disco (apagado à mão), o destravamento não pode ficar preso nele
+  const SOM_RESERVA = '/sons/timer-padrao.wav';
 
   function audio() {
     if (!elemento) {
@@ -1301,8 +1306,15 @@ const OBS_SOM = (() => {
         el.volume = volumeAntes;
         liberado = true; bloqueado = false; avisar();
         return true;
-      }).catch(() => {
+      }).catch((err) => {
         el.volume = volumeAntes;
+        // v0.155.2: só o bloqueio de autoplay (NotAllowedError) é bloqueio.
+        // Arquivo morto ou formato que o navegador não abre não acende o
+        // convite: troca a chave pela de reserva e tenta de novo
+        if (!(err && err.name === 'NotAllowedError') && urlPreferida !== SOM_RESERVA) {
+          urlPreferida = SOM_RESERVA;
+          return liberar();
+        }
         bloqueado = true; avisar();
         return false;
       });
@@ -1330,35 +1342,8 @@ const OBS_SOM = (() => {
     }
   }
 
-  // Toca o alerta agora. maxMs é a trava de segurança de duração.
-  function tocar(url, volume, maxMs) {
-    if (!url) return Promise.resolve(false);
-    const el = audio();
-    if (pararEm) { clearTimeout(pararEm); pararEm = null; }
-    try {
-      if (urlNoElemento !== url) { el.src = url; urlNoElemento = url; }
-      try { el.currentTime = 0; } catch { /* ainda carregando, tudo bem */ }
-      el.volume = Math.max(0, Math.min(100, Number(volume ?? 70))) / 100;
-      const p = el.play();
-      const fim = () => {
-        pararEm = setTimeout(() => { try { el.pause(); } catch { /* já parou */ } }, Math.max(1000, Number(maxMs) || 20000));
-      };
-      if (!p || typeof p.then !== 'function') { liberado = true; bloqueado = false; fim(); avisar(); return Promise.resolve(true); }
-      return p.then(() => { liberado = true; bloqueado = false; fim(); avisar(); return true; })
-        .catch(() => { bloqueado = true; avisar(); return false; });
-    } catch {
-      bloqueado = true; avisar();
-      return Promise.resolve(false);
-    }
-  }
-
-  function parar() {
-    if (pararEm) { clearTimeout(pararEm); pararEm = null; }
-    if (elemento) { try { elemento.pause(); } catch { /* já parou */ } }
-  }
-
   return {
-    preparar, tocar, parar, liberar,
+    preparar, liberar,
     estaLiberado: () => liberado,
     estaBloqueado: () => bloqueado && !liberado,
   };

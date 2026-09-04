@@ -1,4 +1,12 @@
 {
+  "0.155.2": {
+    "titulo": "🔊 Overlay-Sounds: drei Reste aus der Durchsicht",
+    "itens": [
+      "🎁 Mit Würfelzeit 0 (direkt zum Podium) spielte der 🏁 Abschluss der Verlosung nur im Panel — der Stream blieb stumm, selbst mit „wo: beide“. Jetzt spielt er bei jeder neuen Ziehung auf beiden Seiten, mit oder ohne Würfel.",
+      "🔇 Die Einladung „hier tippen, um den Ton freizugeben“ konnte für immer leuchten, wenn der erste Sound der Karte auf eine von der Platte verschwundene Datei zeigte. Jetzt zündet sie nur eine echte Browser-Sperre; eine tote Datei fällt auf einen mitgelieferten Sound zurück. Und die Editor-Vorschau rührt den Ton nicht mehr an.",
+      "🧹 Der alte Timer-/Würfel-Player ist endgültig aus dem Code — jeder Overlay-Sound läuft über dieselbe Engine."
+    ]
+  },
   "0.155.1": {
     "titulo": "📋 Zwischenablage: nichts geht beim Schließen verloren, und ein gesperrter Bildschirm sagt warum",
     "itens": [

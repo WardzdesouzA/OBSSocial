@@ -1,4 +1,12 @@
 {
+  "0.155.2": {
+    "titulo": "🔊 Overlay sesleri: taramadan kalan üç şey",
+    "itens": [
+      "🎁 Zar süresi 0 iken (doğrudan podyum) çekilişin 🏁 Bitiş sesi yalnızca panelde çalıyordu — «nerede: ikisi» olsa bile yayın sessiz kalıyordu. Artık her yeni çekilişte, zar olsun olmasın, ikisinde de çalıyor.",
+      "🔇 Kartın ilk sesi diskten silinmiş bir dosyayı gösteriyorsa «sesi açmak için buraya dokun» daveti sonsuza dek yanık kalabiliyordu. Artık yalnızca tarayıcının gerçek engeli daveti yakıyor; ölü dosya programla gelen bir sese düşüyor. Editör önizlemesi de artık sese dokunmuyor.",
+      "🧹 Zamanlayıcı ve zarın eski çaları koddan tamamen çıktı — her overlay sesi aynı motordan geçiyor."
+    ]
+  },
   "0.155.1": {
     "titulo": "📋 Pano: kapatırken hiçbir şey kaybolmaz ve engellenen ekran nedenini söyler",
     "itens": [

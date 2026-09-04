@@ -1,4 +1,12 @@
 {
+  "0.155.2": {
+    "titulo": "🔊 Sonidos de los overlays: tres restos de la revisión",
+    "itens": [
+      "🎁 Con el tiempo del dado en 0 (podio directo), la 🏁 Finalización del sorteo sonaba solo en el panel — el directo quedaba mudo incluso con «dónde: ambos». Ahora suena en los dos en cada sorteo nuevo, con o sin dado.",
+      "🔇 La invitación «toca aquí para liberar el sonido» podía quedar encendida para siempre si el primer sonido de la tarjeta apuntaba a un archivo que desapareció del disco. Ahora solo el bloqueo real del navegador la enciende; un archivo muerto cae en un sonido que viene con el programa. Y la vista previa del editor ya no toca el audio.",
+      "🧹 El reproductor antiguo del timer y del dado salió del código definitivamente — todo sonido de overlay pasa por el mismo motor."
+    ]
+  },
   "0.155.1": {
     "titulo": "📋 Portapapeles: nada se pierde al cerrar, y la pantalla bloqueada dice por qué",
     "itens": [
