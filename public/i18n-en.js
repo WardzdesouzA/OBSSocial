@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 The clipboard is closed to the network. The streamer opens it in Settings → Security → what the network can use.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "It lives in 🔊 Overlay sounds, under 🕐 Clock → 🏁 Finish — together with the sounds of every other overlay: file, volume, where it plays and the play button.",
     "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "It lives in 🔊 Overlay sounds, under 🎁 Raffle → 🏁 Finish — together with the sounds of every other overlay: file, volume, where it plays and the play button.",

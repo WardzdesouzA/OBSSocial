@@ -1,4 +1,11 @@
 {
+  "0.155.1": {
+    "titulo": "📋 Clipboard: nothing lost on close, and a blocked screen says why",
+    "itens": [
+      "📋 Whatever was sent to the clipboard right before closing or updating the program vanished on restart (the save was deferred and the program closed before it). Now it is written on the way out.",
+      "🔒 A panel opened over the network with the clipboard turned off in Security showed “No entries yet” — it looked like the history was not arriving. Now it says the clipboard is closed to the network (and where the streamer opens it), with the box and buttons disabled."
+    ]
+  },
   "0.155.0": {
     "titulo": "🔊 Every overlay sound in one place",
     "itens": [

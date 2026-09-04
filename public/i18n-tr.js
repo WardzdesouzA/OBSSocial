@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Pano ağa kapalı. Yayıncı bunu Ayarlar → Güvenlik → ağın kullanabilecekleri bölümünden açar.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 Overlay sesleri içinde, 🕐 Saat → 🏁 Bitiş altında yaşar — diğer tüm overlay sesleriyle birlikte: dosya, ses düzeyi, nerede çalacağı ve dinleme düğmesi.",
     "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 Overlay sesleri içinde, 🎁 Çekiliş → 🏁 Bitiş altında yaşar — diğer tüm overlay sesleriyle birlikte: dosya, ses düzeyi, nerede çalacağı ve dinleme düğmesi.",

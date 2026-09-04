@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Die Zwischenablage ist für das Netzwerk geschlossen. Der Streamer gibt sie frei unter Einstellungen → Sicherheit → was das Netzwerk nutzen darf.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Er wohnt in 🔊 Overlay-Sounds, unter 🕐 Uhr → 🏁 Abschluss — zusammen mit den Sounds aller anderen Overlays: Datei, Lautstärke, wo er spielt und die Anhören-Taste.",
     "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Er wohnt in 🔊 Overlay-Sounds, unter 🎁 Verlosung → 🏁 Abschluss — zusammen mit den Sounds aller anderen Overlays: Datei, Lautstärke, wo er spielt und die Anhören-Taste.",

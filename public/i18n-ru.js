@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Буфер обмена закрыт для сети. Стример открывает его в Настройки → Безопасность → что доступно сети.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Он живёт в 🔊 Звуки оверлеев, в 🕐 Часы → 🏁 Завершение — вместе со звуками всех остальных оверлеев: файл, громкость, где играет и кнопка прослушивания.",
     "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Он живёт в 🔊 Звуки оверлеев, в 🎁 Розыгрыш → 🏁 Завершение — вместе со звуками всех остальных оверлеев: файл, громкость, где играет и кнопка прослушивания.",

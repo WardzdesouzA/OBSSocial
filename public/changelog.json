@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.155.1",
+    "titulo": "📋 Área de transferência: nada se perde ao fechar, e a tela proibida diz o porquê",
+    "itens": [
+      "📋 O que era mandado para a área de transferência logo antes de fechar ou atualizar o programa sumia no reinício (a gravação ficava adiada e o programa fechava antes dela). Agora ela vai junto na saída.",
+      "🔒 O painel aberto pela rede com a área de transferência desligada em Segurança mostrava «Nenhuma entrada ainda» — parecia que o histórico não estava chegando. Agora diz que ela está fechada para a rede (e onde o streamer libera), com a caixa e os botões travados."
+    ]
+  },
+  {
     "version": "0.155.0",
     "titulo": "🔊 Todos os sons dos overlays num lugar só",
     "itens": [

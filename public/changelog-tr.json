@@ -1,4 +1,11 @@
 {
+  "0.155.1": {
+    "titulo": "📋 Pano: kapatırken hiçbir şey kaybolmaz ve engellenen ekran nedenini söyler",
+    "itens": [
+      "📋 Programı kapatmadan veya güncellemeden hemen önce panoya gönderilenler yeniden başlatınca kayboluyordu (kayıt erteleniyor, program ondan önce kapanıyordu). Artık çıkışta yazılıyor.",
+      "🔒 Güvenlik’te pano kapalıyken ağdan açılan panel «Henüz kayıt yok» gösteriyordu — geçmiş gelmiyormuş gibi görünüyordu. Artık panonun ağa kapalı olduğunu (ve yayıncının nereden açtığını) söylüyor; kutu ve düğmeler kilitli."
+    ]
+  },
   "0.155.0": {
     "titulo": "🔊 Overlay’lerin tüm sesleri tek yerde",
     "itens": [
