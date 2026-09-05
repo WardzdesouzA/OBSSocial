@@ -1,4 +1,14 @@
 {
+  "0.156.0": {
+    "titulo": "🎭 Sound deck: the key changes color and face with the state",
+    "itens": [
+      "🟢🔴 On 🎬 OBS action and 🎛️ vMix action keys the outline now has two colors: GREEN when what the key controls is on (scene live, recording, source visible, sound active) and RED, same style, when the scene is in studio-mode preview or the audio is muted. Before, the preview scene and a muted mic lit up green — easy to mistake for “live”.",
+      "🎭 New “Emoji by state” option on those keys: the emoji tells the story too — 🎙️ talking / 🔇 muted, ⏺ recording / ⏹ stopped, 🔴 live / 👁 in preview… In “Automatic” the program picks the trio; in “I pick” you set the emoji for each color (🟢 on, 🔴 preview/muted, ⚪ off). The change comes with a little bounce, a key with an image gets the emoji as a corner badge, and without the program connected the usual emoji stays.",
+      "🎙️ The action “🔇 Audio mute” became “🎙️ Mute/unmute audio” (and “Mute” / “Unmute” in what it does) — the 🔇 looked like the state, not the action, and “audio mute” was confusing. Same for the vMix input and master.",
+      "👻 The mirrored OBS scenes — keys that appeared by themselves at the end of the panel’s deck without anyone creating them (the experimental Labs switch) — are gone for good. Only what you create lives on the deck: a scene key comes from the 🎬 creator or the editor, like any other.",
+      "🧹 In the key editor, ▶ Test now spilled over “What it does” (it was a square button holding a long label). Now it is a real text button and everything sits in its place."
+    ]
+  },
   "0.155.2": {
     "titulo": "🔊 Overlay sounds: three leftovers from the sweep",
     "itens": [

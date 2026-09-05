@@ -1,4 +1,14 @@
 {
+  "0.156.0": {
+    "titulo": "🎭 Table de pistes : la touche change de couleur et de visage avec l’état",
+    "itens": [
+      "🟢🔴 Sur les touches 🎬 Action OBS et 🎛️ Action vMix, le contour a maintenant deux couleurs : VERT quand ce que la touche contrôle est actif (scène à l’antenne, enregistrement, source visible, son actif) et ROUGE, du même style, quand la scène est dans le preview du mode studio ou que l’audio est coupé. Avant, la scène du preview et le micro coupé s’allumaient en vert — facile à confondre avec « à l’antenne ».",
+      "🎭 Nouvelle option « Emoji selon l’état » sur ces touches : l’emoji raconte aussi l’histoire — 🎙️ qui parle / 🔇 coupé, ⏺ en enregistrement / ⏹ arrêté, 🔴 à l’antenne / 👁 en preview… En « Automatique » le programme choisit le trio ; en « Je choisis » vous définissez l’emoji de chaque couleur (🟢 actif, 🔴 preview/coupé, ⚪ éteint). Le changement arrive avec un petit rebond, la touche avec image reçoit l’emoji en badge dans le coin et, sans le programme connecté, l’emoji habituel reste.",
+      "🎙️ L’action « 🔇 Muet de l’audio » est devenue « 🎙️ Couper/rétablir le son » (et « Couper le son » / « Rétablir le son » dans ce qu’elle fait) — le 🔇 ressemblait à l’état, pas à l’action, et « muet de l’audio » prêtait à confusion. Pour l’entrée et le master du vMix, idem.",
+      "👻 Les scènes-miroir d’OBS — des touches qui apparaissaient toutes seules à la fin de la Table du panneau sans que personne ne les crée (le sélecteur expérimental du Labs) — ont disparu pour de bon. Sur la Table ne vit que ce que vous créez : une touche de scène vient du 🎬 créateur ou de l’éditeur, comme n’importe quelle autre.",
+      "🧹 Dans l’éditeur de touche, le ▶ Tester maintenant débordait sur « Ce qu’elle fait » (c’était un bouton carré avec un long libellé). C’est maintenant un vrai bouton texte et chaque chose reste à sa place."
+    ]
+  },
   "0.155.2": {
     "titulo": "🔊 Sons des overlays : trois restes du balayage",
     "itens": [

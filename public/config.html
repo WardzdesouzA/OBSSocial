@@ -2706,16 +2706,14 @@
         <div class="hint">⚙️ Ligada, a configuração completa mora na página «🎵 Mesa de Trilhas» do menu à esquerda (logo depois de 🎨 Temas).</div>
         <div class="lab-body">
           <div class="hint">Cada trilha é um botão na ferramenta 🎵 do painel (e do celular na mesma rede). <b>Uma por vez</b>: apertar outra troca com fade; BGM pode repetir (🔁); o ⏹ para tudo. Para o som entrar NA LIVE, a fonte do overlay no OBS precisa estar com o áudio ativo (é o normal de uma fonte de navegador).</div>
-          <label class="check" style="margin:4px 0 8px" title="Precisa da conexão 🎬 OBS Studio (o card aqui em cima) ligada e conectada">
-            <input type="checkbox" id="trilhasCenasChk">
-            <span>🎬 <b>Cenas do OBS viram teclas na Mesa (experimental)</b> — cada cena do OBS aparece como um botão no fim da Mesa do painel: a cena no ar fica marcada 🔴 e o clique troca a cena (no modo estúdio, escolhe o preview 👁). Precisa da conexão <b>🎬 OBS Studio</b> ligada e conectada — o card aqui em cima tem o passo a passo.</span>
-          </label>
           <!-- 🎬 v0.84: o criador — cada recurso do OBS vira uma tecla DE
-               VERDADE na Mesa, que a pessoa move/renomeia/apaga à vontade
-               (diferente das cenas-espelho acima, grudadas no fim) -->
+               VERDADE na Mesa, que a pessoa move/renomeia/apaga à vontade.
+               (v0.156: o seletor experimental de cenas-espelho, que punha as
+               cenas sozinhas no fim da Mesa do painel, saiu — só entra na
+               Mesa o que a pessoa cria.) -->
           <details id="obsTeclasGerador" style="margin:4px 0 10px">
             <summary style="cursor:pointer;font-weight:700">🎬 Criar teclas do OBS na Mesa (escolha o que quiser)</summary>
-            <div class="hint" style="margin:6px 0">Marque os recursos do seu OBS e aperte ➕: cada um vira uma tecla DE VERDADE na Mesa — dá para mover, renomear, colorir e apagar como qualquer outra. As cenas-espelho do seletor acima ficam grudadas no fim; estas não. Depois de criar, é só arrastar cada tecla para a célula que quiser.</div>
+            <div class="hint" style="margin:6px 0">Marque os recursos do seu OBS e aperte ➕: cada um vira uma tecla DE VERDADE na Mesa — dá para mover, renomear, colorir e apagar como qualquer outra. Depois de criar, é só arrastar cada tecla para a célula que quiser.</div>
             <div id="obsTeclasLista" style="max-height:280px;overflow-y:auto"></div>
             <div class="row" style="align-items:center;margin-top:6px">
               <button id="obsTeclasCriarBtn" class="icon-btn" style="width:auto;padding:0 10px">➕ Criar as teclas marcadas</button>
@@ -2936,7 +2934,7 @@
       <details class="faq-item"><summary>Como atualizo o OBS Social?</summary><div class="faq-resposta">Em ℹ️ Sobre: o programa avisa quando existe versão nova e se atualiza sozinho quando você confirmar. Seus dados e configurações são mantidos.</div></details>
       <details class="faq-item"><summary>O programa ficou fechado e perdi comentários. Dá para recuperar?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🕘 Recuperar mensagens perdidas: ao conectar, o OBS Social busca o que cada serviço ainda guarda do chat recente — sem duplicar nada.</div></details>
       <details class="faq-item"><summary>Como controlo o OBS pelo painel?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🎬 OBS Studio pelo painel (experimental). Para linkar: no OBS (28+), abra Ferramentas → Configurações do Servidor WebSocket, marque Ativar servidor WebSocket, clique em Mostrar senha das conexões e copie a porta (4455) e a senha para o card do Labs — o passo a passo numerado está lá. Se o OBS estiver em OUTRO computador da rede, ponha o IP dele no campo Endereço (e libere a porta 4455 no firewall daquela máquina). A ferramenta 🎬 do painel comanda tudo: transmitir, gravar (com pausa e marcador de capítulo), câmera virtual, replay buffer, cenas, modo estúdio, transições, mostrar/esconder fontes, mixer de áudio, controle de mídia, filtros, coleções, perfis e print da tela — e cada bloco tem um liga/desliga no card do Labs, para a ferramenta ficar do tamanho que você usa. Tudo dentro do seu computador, sem internet.</div></details>
-      <details class="faq-item"><summary>Dá para transformar as coisas do OBS em botões?</summary><div class="faq-resposta">Dá — é a tecla <b>🎬 Ação do OBS</b> na 🎵 Mesa de trilhas. Crie uma tecla, escolha o tipo 🎬 e depois a ação (trocar de cena, gravar, mudo do microfone, mostrar uma fonte, ligar um filtro, tocar uma mídia...). As listas de cenas, fontes e filtros vêm do OBS conectado; o ▶ Testar agora dispara na hora para você conferir. A tecla <b>acende sozinha</b> quando o que ela controla está ligado (gravando, no ar, fonte visível). Essas teclas também entram dentro de um 🎛️ Botão de multi ação: a fila mistura som e comando — trocar de cena, esperar 2s e tocar a vinheta, por exemplo. E as cenas do OBS ainda podem virar teclas automáticas, pelo seletor experimental do card 🎵 do Labs.</div></details>
+      <details class="faq-item"><summary>Dá para transformar as coisas do OBS em botões?</summary><div class="faq-resposta">Dá — é a tecla <b>🎬 Ação do OBS</b> na 🎵 Mesa de trilhas. Crie uma tecla, escolha o tipo 🎬 e depois a ação (trocar de cena, gravar, mudo do microfone, mostrar uma fonte, ligar um filtro, tocar uma mídia...). As listas de cenas, fontes e filtros vêm do OBS conectado; o ▶ Testar agora dispara na hora para você conferir. A tecla <b>acende sozinha</b> quando o que ela controla está ligado (gravando, no ar, fonte visível). Essas teclas também entram dentro de um 🎛️ Botão de multi ação: a fila mistura som e comando — trocar de cena, esperar 2s e tocar a vinheta, por exemplo.</div></details>
       <details class="faq-item"><summary>Como controlo o vMix pelo painel?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🎛️ vMix pelo painel (experimental). O vMix já traz a API TCP ligada de fábrica, na porta 8099 e sem senha — não precisa instalar nada. Na página 🎛️ vMix Remoto, deixe 127.0.0.1 se o vMix roda na mesma máquina, ou ponha o IP do computador do vMix (e libere a porta 8099 no firewall dele) e aperte 💾. A ferramenta 🎛️ do painel comanda: transmitir, gravar, saída externa, MultiCorder, tela cheia, entradas (preview e ao vivo, com o tally), os 4 botões de transição, corte, fade, fade to black, overlays 1 a 4, mixer de áudio (master e por entrada), controle de mídia, textos dos títulos, e no bloco avançado replay, presets, scripts, tecla de atalho e qualquer função do vMix pelo nome. Cada bloco tem um liga/desliga no card do Labs. O snapshot 📸 é salvo pelo próprio vMix, na pasta dele.</div></details>
       <details class="faq-item"><summary>Dá para transformar as coisas do vMix em botões?</summary><div class="faq-resposta">Dá — é a tecla <b>🎛️ Ação do vMix</b> na 🎵 Mesa de trilhas, igualzinha à do OBS: crie uma tecla, escolha o tipo 🎛️ e depois a ação (mandar uma entrada ao vivo ou ao preview, transição, gravar, mudo de uma entrada, overlay, texto de um título, função livre...). As entradas vêm do vMix conectado; o ▶ Testar agora dispara na hora. A tecla <b>acende sozinha</b> quando o que ela controla está ligado (gravando, no ar, no preview, overlay no ar, entrada muda). Essas teclas entram na fila de um 🎛️ Botão de multi ação como as outras, e o criador do card 🎵 do Labs monta várias de uma vez.</div></details>
       <details class="faq-item"><summary>Dá para usar o Stream Deck (ou outro aparelho de botões) com o OBS Social?</summary><div class="faq-resposta">Dá — é o 🕹️ Controle externo, em 🧪 Labs (experimental). Cada ação do OBS Social ganha um endereço (URL) com um token; o aparelho abre o endereço e a ação acontece. Funciona com qualquer coisa que saiba abrir um endereço: Stream Deck (com um plugin de requisição HTTP da loja da Elgato, ou a ação «Site»), Bitfocus Companion (conexão Generic: HTTP), Touch Portal, Loupedeck, Razer Stream Controller, Macro Deck, Streamer.bot, o app Atalhos do iPhone, HTTP Shortcuts no Android, Node-RED... A página 🕹️ Controle Externo lista todos os endereços prontos para copiar, com um ▶ para testar cada um antes de gravar no aparelho.</div></details>
@@ -5810,8 +5808,8 @@ function enviarTrilhas() {
 
 // ---------- 🎬 v0.84: criador de teclas do OBS na Mesa ----------
 // Cada recurso do OBS conectado vira uma TECLA DE VERDADE (tipo 'obs'):
-// móvel, renomeável e apagável como qualquer outra — diferente das
-// cenas-espelho do seletor acima, que ficam grudadas no fim da Mesa.
+// móvel, renomeável e apagável como qualquer outra. (v0.156: é o ÚNICO
+// caminho — as teclas de cena que entravam sozinhas na Mesa saíram.)
 function obsTeclasCatalogo() {
   const o = cfgObs || {};
   if (!o.conectado) return [];
@@ -6694,6 +6692,64 @@ function renderTrilhaEditorCard() {
   const cor = document.createElement('input');
   cor.type = 'color'; cor.value = t.cor || '#3949ab'; cor.style.width = '46px';
   visu.appendChild(campo('Cor', cor));
+  // 🎭 v0.156: a cara da tecla 🎬/🎛️ muda com o estado do que ela controla
+  // (a tecla já acendia; agora o emoji também conta) — automático (o par do
+  // catálogo em render.js) ou os dois emojis escolhidos pela pessoa
+  const estadoLinha = linha();
+  const estadoModo = document.createElement('select');
+  estadoModo.id = 'trEstadoModo';
+  for (const [v, r] of [['fixo', 'Fixo — o emoji acima'], ['auto', 'Automático — o programa escolhe o par'], ['manual', 'Eu escolho os dois emojis']]) {
+    const op = document.createElement('option');
+    op.value = v; op.textContent = r;
+    if (((t.estadoEmoji || {}).modo || 'fixo') === v) op.selected = true;
+    estadoModo.appendChild(op);
+  }
+  estadoLinha.appendChild(campo('🎭 Emoji pelo estado', estadoModo));
+  // Três caras: 🟢 verde (ligado / no ar / som ativo), 🔴 vermelho (no
+  // preview / mudo — só nas ações que têm isso) e ⚪ apagado
+  const caixaEstado = (id, dica) => {
+    const el = document.createElement('input');
+    el.type = 'text'; el.id = id; el.maxLength = 8; el.style.width = '54px'; el.placeholder = dica;
+    return el;
+  };
+  const estadoVerde = caixaEstado('trEstadoVerde', '🎙️');
+  const estadoVermelho = caixaEstado('trEstadoVermelho', '🔇');
+  const estadoApagado = caixaEstado('trEstadoApagado', '⚪');
+  estadoVerde.value = (t.estadoEmoji || {}).verde || '';
+  estadoVermelho.value = (t.estadoEmoji || {}).vermelho || '';
+  estadoApagado.value = (t.estadoEmoji || {}).apagado || '';
+  const estadoVerdeW = campo('🟢 Ligado / no ar / som ativo', estadoVerde);
+  const estadoVermelhoW = campo('🔴 No preview / mudo', estadoVermelho);
+  const estadoApagadoW = campo('⚪ Desligado', estadoApagado);
+  estadoLinha.append(estadoVerdeW, estadoVermelhoW, estadoApagadoW);
+  const estadoDica = document.createElement('span');
+  estadoDica.className = 'hint'; estadoDica.id = 'trEstadoDica';
+  estadoDica.style.cssText = 'margin:0;flex:1 0 100%';
+  estadoLinha.appendChild(estadoDica);
+  // (obsAcaoSel/vmixAcaoSel nascem mais abaixo; isto só roda depois deles)
+  const atualizarEstadoDica = () => {
+    const tipo = tipoSel.value;
+    const acao = tipo === 'vmix' ? vmixAcaoSel.value : tipo === 'obs' ? obsAcaoSel.value : '';
+    const manual = estadoModo.value === 'manual';
+    const temVermelho = !!acao && acaoTemVermelho(tipo, acao);
+    estadoVerdeW.style.display = manual ? '' : 'none';
+    estadoVermelhoW.style.display = manual && temVermelho ? '' : 'none';
+    estadoApagadoW.style.display = manual ? '' : 'none';
+    const trio = acao ? (ESTADO_EMOJI_AUTO[tipo] || {})[acao] : null;
+    const T = (s) => OBS_I18N.t(s);
+    if (!acao && estadoModo.value !== 'fixo') {
+      estadoDica.textContent = T('Escolha primeiro a ação da tecla — o emoji pelo estado depende dela.');
+    } else if (estadoModo.value === 'auto') {
+      estadoDica.textContent = trio
+        ? `${T('Automático:')} 🟢 ${trio.verde}${trio.vermelho ? ' · 🔴 ' + trio.vermelho : ''}${trio.apagado ? ' · ⚪ ' + trio.apagado : ''}. ${T('O contorno continua mudando de cor; a cara muda junto. Sem o programa conectado, fica o emoji de sempre.')}`
+        : T('Esta ação não tem estado para mostrar (ela só dispara): o emoji fica fixo.');
+    } else if (manual) {
+      estadoDica.textContent = T('Um emoji para cada cor do contorno: 🟢 verde = ligado, no ar ou som ativo; 🔴 vermelho = no preview ou mudo; ⚪ apagado. Caixa vazia = fica o emoji de sempre.');
+    } else {
+      estadoDica.textContent = T('O contorno da tecla fica verde quando o que ela controla está ligado (no ar, gravando, som ativo) e vermelho no preview ou no mudo. Com «Automático» ou «Eu escolho», o emoji também muda com o estado (🎙️ ativo / 🔇 mudo).');
+    }
+  };
+  estadoModo.addEventListener('change', atualizarEstadoDica);
   // Som: arquivo, modo, fade, volume, destino
   const som = linha();
   const arq = document.createElement('select');
@@ -6853,7 +6909,9 @@ function renderTrilhaEditorCard() {
   const obsParams = linha();
   const obsDica = document.createElement('span');
   obsDica.className = 'hint';
-  obsDica.style.cssText = 'margin:0;flex:1 0 100%';
+  // v0.156: a dica é filha direta do card (flex em COLUNA) — «flex:1 0 100%»
+  // aqui virava 100% da ALTURA e empurrava a fila e os botões para fora da vista
+  obsDica.style.cssText = 'margin:0';
   card.appendChild(obsDica);
   // As listas vivas do OBS (vazias quando ele não está conectado)
   const obsListas = () => {
@@ -7012,8 +7070,10 @@ function renderTrilhaEditorCard() {
     }
     // Um teste de verdade: dispara a ação no OBS agora
     const testar = document.createElement('button');
+    // v0.156: era um .icon-btn (quadrado de 38px) com texto comprido — o
+    // rótulo vazava por cima do «O que faz» ao lado. Botão de texto de verdade.
     testar.className = 'icon-btn'; testar.textContent = '▶ Testar agora';
-    testar.style.alignSelf = 'flex-end';
+    testar.style.cssText = 'align-self:flex-end;width:auto;padding:0 12px;white-space:nowrap;flex:none';
     testar.onclick = () => hub.send({ type: 'obsAcao', acao: info.id, alvo: obsAlvoAtual });
     obsBotaoTestar = testar;
     obsParams.appendChild(testar);
@@ -7059,7 +7119,7 @@ function renderTrilhaEditorCard() {
   const vmixParams = linha();
   const vmixDica = document.createElement('span');
   vmixDica.className = 'hint';
-  vmixDica.style.cssText = 'margin:0;flex:1 0 100%';
+  vmixDica.style.cssText = 'margin:0'; // v0.156: idem — filha do card em coluna, sem base de altura
   card.appendChild(vmixLinha);
   card.appendChild(vmixParams);
   card.appendChild(vmixDica);
@@ -7191,7 +7251,7 @@ function renderTrilhaEditorCard() {
     }
     const testar = document.createElement('button');
     testar.className = 'icon-btn'; testar.textContent = '▶ Testar agora';
-    testar.style.alignSelf = 'flex-end';
+    testar.style.cssText = 'align-self:flex-end;width:auto;padding:0 12px;white-space:nowrap;flex:none'; // v0.156: botão de texto, não o quadrado
     testar.onclick = () => hub.send({ type: 'vmixAcao', acao: info.id, alvo: vmixAlvoAtual });
     vmixBotaoTestar = testar;
     vmixParams.appendChild(testar);
@@ -7209,6 +7269,10 @@ function renderTrilhaEditorCard() {
   });
   // 📁 A fila: em que pasta a tecla mora + a ⏱ espera antes da PRÓXIMA tecla
   const fila = linha();
+  // 🎭 v0.156: a linha do emoji pelo estado mora DEPOIS da ação do OBS/vMix
+  // (é dela que o estado vem) e antes da fila — foi criada lá em cima só
+  // porque os campos dela precisam existir antes do aplica()
+  card.insertBefore(estadoLinha, fila);
   const pastaSel = document.createElement('select');
   {
     const op0 = document.createElement('option');
@@ -7323,6 +7387,9 @@ function renderTrilhaEditorCard() {
     loteLinha.style.display = p ? '' : 'none'; // 🔊 volume em lote só nas pastas
     for (const l of [obsLinha, obsParams]) l.style.display = ehObs ? '' : 'none';
     obsDica.style.display = ehObs ? '' : 'none';
+    // 🎭 v0.156: o emoji pelo estado só faz sentido em quem TEM estado (🎬/🎛️)
+    estadoLinha.style.display = ehObs || ehVmix ? '' : 'none';
+    if (ehObs || ehVmix) atualizarEstadoDica();
     telaLinha.style.display = ehMidiaK ? '' : 'none';
     if (ehMidiaK) {
       encherArqMidia();
@@ -7377,7 +7444,10 @@ function renderTrilhaEditorCard() {
       // 🎛️ v0.122: idem para a ação do vMix
       vmixAcao: vmixAcaoSel.value,
       vmixAlvo: Object.assign({}, vmixAlvoAtual),
+      // 🎭 v0.156: a cara pelo estado (guardada mesmo quando a tecla muda de tipo)
+      estadoEmoji: { modo: estadoModo.value, verde: estadoVerde.value, vermelho: estadoVermelho.value, apagado: estadoApagado.value },
     });
+    if (tipoSel.value === 'obs' || tipoSel.value === 'vmix') atualizarEstadoDica();
     if (mudouDePai) {
       alvo.pos = celulaLivre(cfgTrilhas.filter((x) => x.id !== alvo.id), paiNovo, primeiraCelulaDaVisao(paiNovo));
     }
@@ -7406,7 +7476,8 @@ function renderTrilhaEditorCard() {
     aplica();
   });
   for (const el of [nome, emoji, imagem, pos, cor, arq, modo, fadeTipo, fade, vol, dest, pastaSel, espera,
-    arqMidia, telaModoSel, telaEscalaNum, telaVolNum, telaLoopChk]) { // 🖼️🎞️ v0.86
+    arqMidia, telaModoSel, telaEscalaNum, telaVolNum, telaLoopChk, // 🖼️🎞️ v0.86
+    estadoModo, estadoVerde, estadoVermelho, estadoApagado]) { // 🎭 v0.156
     el.addEventListener('change', aplica);
   }
 }
@@ -7462,8 +7533,6 @@ function fillTrilhasControles() {
   if (neg && document.activeElement !== neg) neg.checked = tx.negrito !== false;
   const cor = document.getElementById('trilhasTxtCor');
   if (cor && document.activeElement !== cor && /^#[0-9a-f]{6}$/i.test(tx.cor || '')) cor.value = tx.cor;
-  const cenas = document.getElementById('trilhasCenasChk');
-  if (cenas && document.activeElement !== cenas) cenas.checked = settings.trilhasCenas === true;
   const seg = document.getElementById('trilhasSegurarInp');
   if (seg && document.activeElement !== seg) seg.value = String(settings.trilhasSegurar ?? 0.6);
   fillObsPainel();
@@ -7472,10 +7541,6 @@ function fillTrilhasControles() {
 document.getElementById('trilhasSegurarInp').addEventListener('change', (e) => {
   recordChange('labs');
   hub.send({ type: 'settings', settings: { trilhasSegurar: Math.max(0, Math.min(5, Number(e.target.value) || 0)) } });
-});
-document.getElementById('trilhasCenasChk').addEventListener('change', (e) => {
-  recordChange('labs');
-  hub.send({ type: 'settings', settings: { trilhasCenas: e.target.checked === true } });
 });
 document.getElementById('trilhasPagAnt').onclick = () => { trilhaPagina = Math.max(0, trilhaPagina - 1); renderTrilhasDeck(); };
 document.getElementById('trilhasPagProx').onclick = () => { trilhaPagina += 1; renderTrilhasDeck(); };

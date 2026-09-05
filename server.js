@@ -411,7 +411,6 @@ const DEFAULT_SETTINGS = {
   },
   // 🎬 Experimental: cada cena do OBS vira uma tecla na Mesa do painel
   // (precisa da conexão 🎬 OBS Studio do Labs configurada e conectada)
-  trilhasCenas: false,
   // 🎬 v0.53: o que aparece no controle do OBS dentro do painel. Cada bloco
   // tem o seu liga/desliga — quem só troca de cena não precisa ver mixer,
   // filtros e perfis ocupando a tela.
@@ -6740,6 +6739,17 @@ function sanitizeTrilha(bruta) {
     // 🎛️ v0.122: idem para o vMix (só vale para tipo 'vmix')
     vmixAcao: acaoVmixConhecida(t.vmixAcao) ? String(t.vmixAcao) : '',
     vmixAlvo: sanitizeVmixAlvo(t.vmixAcao, t.vmixAlvo) || {},
+    // 🎭 v0.156: a cara da tecla 🎬/🎛️ muda com o estado do que ela controla
+    // — 'fixo' (o emoji de sempre), 'auto' (o trio do catálogo) ou 'manual'
+    // (os emojis escolhidos pela pessoa para verde/vermelho/apagado, até 8
+    // pontos de código cada)
+    estadoEmoji: (() => {
+      const e = t.estadoEmoji && typeof t.estadoEmoji === 'object' ? t.estadoEmoji : {};
+      const modo = ['fixo', 'auto', 'manual'].includes(e.modo) ? e.modo : 'fixo';
+      // só texto (objeto/número não viram «[object»), sem caracteres de controle
+      const em = (v) => (typeof v === 'string' ? [...v.replace(/[\u0000-\u001f\u007f]/g, '')].slice(0, 8).join('').trim() : '');
+      return modo === 'manual' ? { modo, verde: em(e.verde), vermelho: em(e.vermelho), apagado: em(e.apagado) } : { modo };
+    })(),
     pastaId: String(t.pastaId || '').slice(0, 40),
     // ⏱ Espera (segundos, 0 a 24h) DEPOIS desta tecla antes da próxima na fila
     espera: Math.round(numeroEntre(t.espera, 0, 86400, 0) * 10) / 10,
@@ -10003,7 +10013,7 @@ function tratarMensagem(ws, raw) {
         state.settings.trilhasGrade = [4, 6, 8, 12, 15].includes(Number(state.settings.trilhasGrade))
           ? Number(state.settings.trilhasGrade) : 15;
         // 🎬 Experimental: cenas do OBS como teclas na Mesa (só liga/desliga)
-        state.settings.trilhasCenas = state.settings.trilhasCenas === true;
+        delete state.settings.trilhasCenas; // v0.156: as cenas-espelho da Mesa saíram
         // 🎬 Os blocos do controle do OBS no painel: só liga/desliga conhecidos
         {
           const p = state.settings.obsPainel || {};
