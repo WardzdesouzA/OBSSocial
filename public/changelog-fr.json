@@ -1,4 +1,10 @@
 {
+  "0.158.0": {
+    "titulo": "🎚️ Table de pistes : appuyer sur une autre musique change tout de suite",
+    "itens": [
+      "🎚️ Sur les touches « Lire / Arrêter (une à la fois) » et « 🔁 Répéter / Arrêter (BGM) », appuyer sur une autre musique entre maintenant TOUT DE SUITE : la nouvelle démarre avec son propre fondu d’entrée pendant que l’ancienne sort à côté, dans un fondu court (celui de la piste, au maximum 1 s). Avant, la nouvelle ne démarrait qu’après le fondu complet de l’ancienne (jusqu’à 3 s) — et les deux fondus additionnés pouvaient faire 6 s, l’ancienne encore audible ; on avait l’impression qu’elle « continuait par-dessus ». ⏹ et le clic d’arrêt gardent le fondu complet de la piste, et les touches « Superposer » et « Recommencer » continuent de jouer par-dessus, comme toujours."
+    ]
+  },
   "0.157.1": {
     "titulo": "🎲 Sons des overlays : le son du tirage porte le nom de ce qu’il est",
     "itens": [

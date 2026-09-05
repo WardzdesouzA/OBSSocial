@@ -1366,9 +1366,25 @@ const TRILHA_PLAYER = (() => {
   let pendente = null;       // { trilha, desde } esperando o navegador liberar
   let aoBloquear = null;     // callback da página (mostra o convite 🔇)
 
-  function audio() {
-    if (!el) { el = new Audio(); el.preload = 'auto'; }
-    return el;
+  // 🎚️ v0.158: cada trilha de base toca no PRÓPRIO <audio> — assim a nova
+  // começa na hora e a antiga sai em fade ao lado dela (crossfade), em vez de
+  // a nova esperar o fade inteiro da antiga acabar
+  const saindo = new Set();  // elementos da base antiga ainda em fade de saída
+  function novoAudio() {
+    const a = new Audio();
+    a.preload = 'auto';
+    return a;
+  }
+  // Quanto tempo a antiga leva para sair quando OUTRA base entra: o fade da
+  // trilha, mas nunca mais que 1 s — quem aperta outra música quer ouvir a
+  // outra música (o ⏹ e o clique de parar continuam com o fade inteiro)
+  const FADE_TROCA_MAX = 1;
+  function despedir(velho, trilha, seg) {
+    if (!velho) return;
+    saindo.add(velho);
+    const fim = () => { try { velho.pause(); } catch {} saindo.delete(velho); };
+    if (fadeSaida(trilha) && !velho.paused) rampaEm(velho, 0, Math.min(Math.max(0, Number(seg) || 0), 3), fim);
+    else fim();
   }
   const fadeEntrada = (t) => t.fadeTipo === 'entrada' || t.fadeTipo === 'ambos' || t.fadeTipo === undefined;
   const fadeSaida = (t) => t.fadeTipo === 'saida' || t.fadeTipo === 'ambos' || t.fadeTipo === undefined;
@@ -1394,7 +1410,8 @@ const TRILHA_PLAYER = (() => {
   function pararRampa() { if (rampaTimer) { clearInterval(rampaTimer); rampaTimer = null; } }
   function rampa(alvo, seg, aoFim) {
     pararRampa();
-    rampaTimer = rampaEm(audio(), alvo, seg, aoFim);
+    if (!el) { if (aoFim) aoFim(); return; }
+    rampaTimer = rampaEm(el, alvo, seg, aoFim);
   }
 
   function bloqueou(trilha, desde) {
@@ -1404,7 +1421,8 @@ const TRILHA_PLAYER = (() => {
 
   // ---- canal de base (solo / loop) ----
   function comecarBase(trilha, desde) {
-    const a = audio();
+    const a = novoAudio();
+    el = a;
     atual = trilha;
     pendente = null;
     a.src = trilha.url;
@@ -1420,25 +1438,29 @@ const TRILHA_PLAYER = (() => {
       const p = a.play();
       const fadeIn = () => { if (fadeEntrada(trilha)) rampa(alvo, trilha.fade); else a.volume = alvo; };
       if (p && typeof p.then === 'function') {
-        p.then(fadeIn).catch(() => { atual = null; bloqueou(trilha, desde); });
+        // (só a base ATUAL pode virar pendente — se outra já entrou no
+        // lugar enquanto o play() decidia, este elemento é passado)
+        p.then(() => { if (el === a) fadeIn(); }).catch(() => { if (el === a) { atual = null; bloqueou(trilha, desde); } });
       } else {
         fadeIn();
       }
     };
     if (Number.isFinite(a.duration) && a.duration > 0) aoSaberDuracao();
-    else a.addEventListener('loadedmetadata', aoSaberDuracao, { once: true });
+    else a.addEventListener('loadedmetadata', () => { if (el === a) aoSaberDuracao(); }, { once: true });
   }
   function pararBaseJa() {
     pararRampa();
     if (el) { try { el.pause(); } catch { /* já parou */ } }
+    el = null;
     atual = null;
   }
   function pararBase() {
     if (!atual || !el || el.paused) { pararBaseJa(); return; }
-    const t = atual;
+    const t = atual, velho = el;
+    pararRampa();
     atual = null;
-    if (fadeSaida(t)) rampa(0, Math.min(Math.max(0, Number(t.fade) || 0), 3), () => { try { el.pause(); } catch {} });
-    else pararBaseJa();
+    el = null;
+    despedir(velho, t, t.fade); // ⏹/clique de parar: o fade inteiro da trilha
   }
 
   // ---- canal de sobreposição (sobrepor / recomeçar) ----
@@ -1486,26 +1508,29 @@ const TRILHA_PLAYER = (() => {
       tocarPorCima(trilha);
       return;
     }
-    // solo/loop: troca a base com o fade da própria trilha
+    // solo/loop: a base TROCA — a nova começa agora (com o fade de entrada
+    // dela) e a antiga sai ao lado, em fade curto (v0.158: antes a nova só
+    // entrava depois do fade inteiro da antiga, e parecia que a antiga
+    // "continuava tocando")
     if (atual && el && !el.paused) {
-      const velha = atual;
+      const velha = atual, velho = el;
+      pararRampa();
       atual = null;
-      if (fadeSaida(velha)) {
-        rampa(0, Math.min(Math.max(0, Number(velha.fade) || 0), 3), () => { try { el.pause(); } catch {} comecarBase(trilha, desde); });
-      } else {
-        try { el.pause(); } catch {}
-        comecarBase(trilha, desde);
-      }
-    } else {
-      comecarBase(trilha, desde);
+      el = null;
+      despedir(velho, velha, Math.min(Number(velha.fade) || 0, FADE_TROCA_MAX));
+    } else if (el) {
+      pararBaseJa(); // base parada/pendente: some sem cerimônia
     }
+    comecarBase(trilha, desde);
   }
 
-  // ⏹ Para TUDO: a base e o que estiver por cima
+  // ⏹ Para TUDO: a base, o que estiver por cima e quem ainda estava saindo
   function parar() {
     pendente = null;
     pararBase();
     pararPorCima();
+    for (const velho of saindo) { try { velho.pause(); } catch {} }
+    saindo.clear();
   }
 
   // No primeiro toque da pessoa, o que ficou preso toca

@@ -1,4 +1,10 @@
 {
+  "0.158.0": {
+    "titulo": "🎚️ Sound deck: pressing another song switches right away",
+    "itens": [
+      "🎚️ On “Play / Stop (one at a time)” and “🔁 Repeat / Stop (BGM)” keys, pressing another song now cuts in RIGHT AWAY: the new one starts with its own fade-in while the old one leaves beside it in a short fade (the track’s fade, capped at 1 s). Before, the new one only started after the old one’s full fade (up to 3 s) — and with both fades added up it could take 6 s, with the old one still audible; it felt like it “kept playing on top”. ⏹ and the stop click keep the track’s full fade, and “Overlap” and “Restart” keys keep playing on top, as always."
+    ]
+  },
   "0.157.1": {
     "titulo": "🎲 Overlay sounds: the raffle sound is named for what it is",
     "itens": [

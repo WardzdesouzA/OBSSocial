@@ -1,4 +1,10 @@
 {
+  "0.158.0": {
+    "titulo": "🎚️ Soundboard: eine andere Musik drücken wechselt sofort",
+    "itens": [
+      "🎚️ Bei den Tasten „Abspielen / Stopp (eine nach der anderen)“ und „🔁 Wiederholen / Stopp (BGM)“ setzt eine andere Musik jetzt SOFORT ein: die neue startet mit ihrem eigenen Einblenden, während die alte daneben in einem kurzen Ausblenden geht (das Fade der Spur, höchstens 1 s). Vorher begann die neue erst nach dem vollen Ausblenden der alten (bis 3 s) — zusammen mit beiden Fades konnten es 6 s werden, die alte noch hörbar; es wirkte, als „liefe sie oben drüber weiter“. ⏹ und der Stopp-Klick behalten das volle Fade der Spur, und die Tasten „Überlagern“ und „Neu starten“ spielen wie immer oben drüber."
+    ]
+  },
   "0.157.1": {
     "titulo": "🎲 Overlay-Sounds: der Sound der Verlosung heißt, was er ist",
     "itens": [
