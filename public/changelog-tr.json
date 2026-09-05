@@ -1,4 +1,13 @@
 {
+  "0.161.0": {
+    "titulo": "🔗 Mesa’nın büyüteci tuşları hiçbir şey kopyalamadan ses dosyalarınıza yönlendiriyor",
+    "itens": [
+      "🔎 “Stream Deck’ten içe aktar”daki büyüteç artık her tuşu yalnızca klasörde bulunan dosyaya YÖNLENDİRİYOR: ses bilgisayarınızda olduğu yerde kalır, OBS Social oradan çalar. Programın içine hiçbir şey kopyalanmaz — “📥 Dosyaları Mesa kitaplığına kopyala”yı işaretlerseniz eskisi gibi çalışır.",
+      "🏷️ Stream Deck’in kullandığı dosya adına YA DA tuş adına göre eşleştirir: “Alkış” adlı bir tuş Alkış.wav’ı (ya da .mp3, .ogg…) bulur; aksan, büyük/küçük harf ve noktalamaya bakmaz. Yalnızca içe aktarılanlar için değil, elle oluşturulan tuşlar için de işe yarar.",
+      "🔁 Yeniden arama çalışır: sesi olmayan tuşlar, kitaplıktaki kopyasını kaybedenler ve zaten bilgisayarı gösterenler aramaya girer (klasör yer mi değiştirdi? yenisini gösterip yeniden tıklayın). Kitaplıkta sağlam kopyası olan tuşa dokunulmaz.",
+      "🔒 Her dosyanın yolu yalnızca sunucuda yaşar: ekranlar hiçbir zaman yol göndermez, ses tuşun kimliğiyle sunulur. Mesa’nın tam yedeği yönlendirilmiş tuşu saklar ama dosyayı saklamaz (dosya sizin klasörünüzde yaşar)."
+    ]
+  },
   "0.160.0": {
     "titulo": "🎁 Fabrika sesleri: duyuru, beğeni ölçer, QR Kod ve öne çıkan kendi sesiyle geliyor",
     "itens": [

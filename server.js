@@ -3030,9 +3030,16 @@ const server = http.createServer((req, res) => {
   // caminhos — nada de ../ passeando pela pasta.
   // 🎞️ v0.129: o arquivo do computador escolhido na Mídia direta é servido de
   // onde está — só o arquivo registrado pelo id (nunca um caminho da URL)
-  if (urlPath.startsWith('/midia-direta/')) {
+  // 🔗 v0.161: a tecla da Mesa que APONTA para um som do computador — o
+  // arquivo é servido de onde está, pelo id da tecla (nunca por um caminho
+  // vindo da URL); o caminho mora no servidor (ver aplicarLocal)
+  if (urlPath.startsWith('/midia-direta/') || urlPath.startsWith('/trilha-local/')) {
     const partes = urlPath.split('/');
-    const arquivo = midiaDiretaArquivos.get(String(partes[2] || ''));
+    let arquivo;
+    if (urlPath.startsWith('/trilha-local/')) {
+      const t = state.trilhas.find((x) => x.id === String(partes[2] || '') && x.local);
+      arquivo = t ? t.local : null;
+    } else arquivo = midiaDiretaArquivos.get(String(partes[2] || ''));
     let tamanho = 0;
     try { tamanho = arquivo ? fs.statSync(arquivo).size : -1; } catch { tamanho = -1; }
     if (!arquivo || tamanho < 0) {
@@ -4550,7 +4557,7 @@ function limparDados(escopo) {
     persistAvisos();
     broadcast({ type: 'qr', qrs: state.qrs });
     broadcast({ type: 'winstreak', winstreaks: state.winstreaks });
-    broadcast({ type: 'trilhas', trilhas: state.trilhas });
+    broadcast({ type: 'trilhas', trilhas: trilhasParaTela() });
     broadcastAvisos();
     feito.push('ferramentas');
   }
@@ -4795,12 +4802,12 @@ function restaurarBackup(item, marcaBruta) {
     } else if (item === 'ferramentas') {
       state.qrs = loadQrs();
       state.winstreaks = loadWinstreaks();
-      state.trilhas = loadTrilhas();
+      state.trilhas = descartarLocaisSumidos(loadTrilhas()); // 🔗 v0.161
       state.avisos = loadAvisos(); // 📢 v0.128
       pararTrilha();
       broadcast({ type: 'qr', qrs: state.qrs });
       broadcast({ type: 'winstreak', winstreaks: state.winstreaks });
-      broadcast({ type: 'trilhas', trilhas: state.trilhas });
+      broadcast({ type: 'trilhas', trilhas: trilhasParaTela() });
       broadcastAvisos();
     } else if (item === 'participantes') {
       const bruto = JSON.parse(fs.readFileSync(path.join(origem, 'participantes.json'), 'utf8'));
@@ -6860,8 +6867,53 @@ function normalizarPosTrilhas(lista) {
 // A lista inteira: além da limpeza de cada tecla, amarra as pastas —
 // pastaId só vale se aponta para uma pasta que existe, e pasta não entra
 // dentro de pasta (um nível, como no Stream Deck).
-function sanitizeTrilhas(lista) {
-  const limpa = (Array.isArray(lista) ? lista : []).slice(0, TRILHAS_MAX).map(sanitizeTrilha);
+// 🔗 v0.161: a tecla pode APONTAR para um arquivo de som do computador em
+// vez de ter uma cópia na biblioteca — `local` guarda o caminho e a url
+// vira /trilha-local/<id> (servida daqui). O caminho é do SERVIDOR: só
+// entra vindo do disco (trilhas.json), do backup da Mesa ou do 🔎 casar por
+// pasta — nunca de uma tela (trilhasSet passa por reaplicarLocais).
+function caminhoLocalDeSom(valor) {
+  const v = String(valor || '').trim();
+  if (!v || v.length > 500 || /[\r\n\0]/.test(v) || !path.isAbsolute(v)) return '';
+  // caminho de REDE (\\servidor\… ou //servidor/…) não entra: o programa não
+  // vai bater em máquina nenhuma por causa de uma tecla
+  if (/^(\\\\|\/\/)/.test(v)) return '';
+  return AUDIO_EXTS.has(path.extname(v).toLowerCase()) ? v : '';
+}
+// (o caminho sobrevive à troca de tipo da tecla — ida e volta 🎵→🎬→🎵 não
+// perde o som, como já acontece com a cópia da biblioteca)
+function aplicarLocal(t, bruta, comLocal) {
+  const local = comLocal ? caminhoLocalDeSom(bruta && bruta.local) : '';
+  if (local && String((bruta && bruta.url) || '') === '/trilha-local/' + t.id) { t.local = local; t.url = '/trilha-local/' + t.id; }
+  else t.local = '';
+  return t;
+}
+// O que as TELAS recebem: a lista sem o caminho local (ele é do servidor;
+// a tela só conhece a url /trilha-local/<id>)
+function trilhasParaTela() {
+  // (só o NOME do arquivo vai junto, para o editor mostrar «🔗 Aplausos.wav» —
+  // e um aviso quando o arquivo não está mais lá)
+  return state.trilhas.map(({ local, ...t }) => {
+    if (!local) return t;
+    let sumiu = false;
+    try { sumiu = !fs.statSync(local).isFile(); } catch { sumiu = true; }
+    return { ...t, localNome: path.basename(local), ...(sumiu ? { localSumiu: true } : {}) };
+  });
+}
+// 🔗 Restauração de backup (arquivo escolhido pela pessoa): só fica o
+// apontamento cujo arquivo EXISTE aqui como arquivo comum — o resto vira
+// tecla pendente, que a lupa 🔎 religa pelo nome
+function descartarLocaisSumidos(lista) {
+  for (const t of lista) {
+    if (!t.local) continue;
+    let ok = false;
+    try { ok = fs.statSync(t.local).isFile(); } catch { ok = false; }
+    if (!ok) { t.local = ''; t.url = ''; }
+  }
+  return lista;
+}
+function sanitizeTrilhas(lista, comLocal) {
+  const limpa = (Array.isArray(lista) ? lista : []).slice(0, TRILHAS_MAX).map((b) => aplicarLocal(sanitizeTrilha(b), b, comLocal === true));
   const pastas = new Set(limpa.filter(ehPastaTrilha).map((t) => t.id));
   for (const t of limpa) {
     // Quem MUDA de visão aqui (filho de pasta apagada) perde a casa: ela
@@ -6890,7 +6942,7 @@ function sanitizeTrilhas(lista) {
 function loadTrilhas() {
   try {
     const raw = JSON.parse(fs.readFileSync(TRILHAS_FILE, 'utf8'));
-    return sanitizeTrilhas(raw);
+    return sanitizeTrilhas(raw, true); // do disco: os caminhos locais valem
   } catch { return []; }
 }
 // Agora sim: as regras de mídia já existem, a lista pode entrar no state
@@ -7882,9 +7934,9 @@ async function importarBackupArquivo(caminho) {
     state.trilhas.push(t);
     adicionadas++;
   }
-  state.trilhas = sanitizeTrilhas(state.trilhas);
+  state.trilhas = sanitizeTrilhas(state.trilhas, true);
   persistTrilhas();
-  broadcast({ type: 'trilhas', trilhas: state.trilhas });
+  broadcast({ type: 'trilhas', trilhas: trilhasParaTela() });
   // 🖼️ v0.90: as artes das teclas entraram na biblioteca da Mesa
   broadcast({ type: 'media', media: listMedia() });
   return { ok: true, adicionadas, pendentes: state.trilhas.filter((t) => !t.url && t.origem).length };
@@ -7907,7 +7959,7 @@ async function importarBackupBuffer(buf) {
 }
 
 
-function casarTrilhasComPasta(pastaBruta) {
+function casarTrilhasComPasta(pastaBruta, opcoes) {
   const pasta = String(pastaBruta || '').trim();
   let raiz;
   try { raiz = fs.realpathSync(pasta); } catch { return { ok: false, erro: 'essa pasta não existe' }; }
@@ -7930,30 +7982,78 @@ function casarTrilhasComPasta(pastaBruta) {
     }
   };
   anda(raiz, 0);
-  let casadas = 0;
-  const faltando = [];
-  fs.mkdirSync(TRILHAS_UP_DIR, { recursive: true });
-  for (const t of state.trilhas) {
-    if (t.url || !t.origem) continue;
-    const de = porNome.get(t.origem.toLowerCase());
-    if (!de) { faltando.push(t.origem); continue; }
-    const seguro = path.basename(t.origem).replace(/[^\w.\-()\[\] À-ÿ]+/g, '_').slice(-80) || 'trilha';
-    const nomeFinal = Date.now().toString(36) + '-' + seguro;
-    try {
-      // 📚 v0.88: som casado é da MESA — vai para a biblioteca dela
-      fs.copyFileSync(de, path.join(TRILHAS_UP_DIR, nomeFinal));
-      // codificado como nas outras mídias (espaços etc.): o "EM USO" da lista
-      // de áudios compara com a URL da mídia, que sai de encodeURIComponent
-      t.url = '/uploads/trilhas/' + encodeURIComponent(nomeFinal);
-      casadas++;
-    } catch { faltando.push(t.origem); }
+  // 🔗 v0.161: além do nome de arquivo do Stream Deck (origem), o NOME da
+  // tecla também casa — "Aplausos" acha Aplausos.wav, aplausos.MP3, "Aplausos
+  // (1).wav" não; sem acento/maiúscula/pontuação fazendo diferença
+  const chaveDeNome = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const porChave = new Map();
+  for (const [nome, cheio] of porNome) {
+    const k = chaveDeNome(nome.replace(/\.[^.]+$/, ''));
+    if (k && !porChave.has(k)) porChave.set(k, cheio);
   }
-  if (casadas) {
+  // (tecla que já apontava: o nome do arquivo antigo vale primeiro — assim a
+  // tecla renomeada continua achando o seu som quando a pasta muda de lugar)
+  const achar = (t) => (t.local && porNome.get(path.basename(t.local).toLowerCase()))
+    || (t.origem && porNome.get(t.origem.toLowerCase()))
+    || porChave.get(chaveDeNome(t.local ? path.basename(t.local).replace(/\.[^.]+$/, '') : ''))
+    || porChave.get(chaveDeNome(t.origem ? t.origem.replace(/\.[^.]+$/, '') : ''))
+    || porChave.get(chaveDeNome(String(t.nome || '').replace(/\n/g, ' ')))
+    || null;
+  // A tecla precisa de som quando: não tem url; a cópia na biblioteca sumiu;
+  // ou já aponta para o computador (aí re-aponta — a pasta pode ter mudado).
+  // Tecla com cópia SAUDÁVEL na biblioteca fica como está.
+  const precisa = (t) => {
+    if (t.tipo !== 'trilha') return false;
+    if (!t.url) return true;
+    // apontada e o arquivo continua lá? não se mexe (outra pasta com um
+    // arquivo de mesmo nome não rouba a tecla); sumiu? entra na busca
+    // (no modo 📥 copiar, a apontada vira cópia na biblioteca)
+    if (t.local) { if (copiar) return true; try { return !fs.statSync(t.local).isFile(); } catch { return true; } }
+    const m = /^\/uploads\/(trilhas\/)?([^/\\]+)$/.exec(t.url);
+    if (!m) return false;
+    try { return !fs.existsSync(path.join(m[1] ? TRILHAS_UP_DIR : UPLOADS_DIR, decodeURIComponent(m[2]))); } catch { return true; }
+  };
+  const copiar = opcoes && opcoes.copiar === true;
+  let casadas = 0, religadas = 0, jaTinham = 0;
+  const faltando = [];
+  if (copiar) fs.mkdirSync(TRILHAS_UP_DIR, { recursive: true });
+  for (const t of state.trilhas) {
+    if (t.tipo !== 'trilha') continue;
+    if (!precisa(t)) { if (t.url) jaTinham++; continue; }
+    const de = achar(t);
+    const rotulo = t.origem || String(t.nome || '').replace(/\n/g, ' ') || t.id;
+    if (!de) {
+      // já apontava e o arquivo continua lá? então não falta nada — fica
+      if (t.local && fs.existsSync(t.local)) { jaTinham++; continue; }
+      faltando.push(rotulo);
+      continue;
+    }
+    if (!copiar && t.local === de) { jaTinham++; continue; } // mesmo arquivo de antes
+    const tinha = !!t.url;
+    if (copiar) {
+      const seguro = path.basename(de).replace(/[^\w.\-()\[\] À-ÿ]+/g, '_').slice(-80) || 'trilha';
+      const nomeFinal = Date.now().toString(36) + '-' + seguro;
+      try {
+        // 📚 v0.88: som copiado é da MESA — vai para a biblioteca dela
+        fs.copyFileSync(de, path.join(TRILHAS_UP_DIR, nomeFinal));
+        // codificado como nas outras mídias (espaços etc.): o "EM USO" da lista
+        // de áudios compara com a URL da mídia, que sai de encodeURIComponent
+        t.url = '/uploads/trilhas/' + encodeURIComponent(nomeFinal);
+        t.local = '';
+      } catch { faltando.push(rotulo); continue; }
+    } else {
+      // 🔗 só aponta: o arquivo fica onde está e é servido de lá
+      t.local = de;
+      t.url = '/trilha-local/' + t.id;
+    }
+    if (tinha) religadas++; else casadas++;
+  }
+  if (casadas || religadas) {
     persistTrilhas();
-    broadcast({ type: 'trilhas', trilhas: state.trilhas });
+    broadcast({ type: 'trilhas', trilhas: trilhasParaTela() });
     broadcast({ type: 'media', media: listMedia() });
   }
-  return { ok: true, casadas, faltando: faltando.slice(0, 50) };
+  return { ok: true, casadas, religadas, jaTinham, copiar, faltando: faltando.slice(0, 50) };
 }
 
 // ===========================================================================
@@ -8168,10 +8268,13 @@ function mesaAplicarManifesto(bruto) {
   if (!bruto || bruto.formato !== 'obs-social-mesa' || !Array.isArray(bruto.trilhas)) {
     return { ok: false, erro: 'esse arquivo não é um backup da Mesa' };
   }
-  state.trilhas = sanitizeTrilhas(bruto.trilhas);
+  // (o backup é deste computador: os caminhos locais das teclas voltam junto —
+  // mas só os que existem AQUI como arquivo; um backup de outra máquina, ou
+  // mexido na mão, não faz o programa apontar para lugar nenhum)
+  state.trilhas = descartarLocaisSumidos(sanitizeTrilhas(bruto.trilhas, true));
   pararTrilha();
   persistTrilhas();
-  broadcast({ type: 'trilhas', trilhas: state.trilhas });
+  broadcast({ type: 'trilhas', trilhas: trilhasParaTela() });
   broadcast({ type: 'media', media: listMedia() });
   return { ok: true, origem: 'mesa', teclas: state.trilhas.length, pendentes: state.trilhas.filter((t) => !t.url && t.origem).length };
 }
@@ -9657,7 +9760,7 @@ wss.on('connection', (ws, req) => {
     clipboard: podeVerClipboard(ws) ? clipboardPublico() : [],
     clipboardFechado: !podeVerClipboard(ws), // 📋 v0.155.1: a tela diz o porquê do vazio
     connections: conexoesPublicas(),
-    trilhas: state.trilhas,
+    trilhas: trilhasParaTela(),
     perfisOverlay: state.perfisOverlay,
     // 🏭 v0.59: os moldes de fábrica originais viajam junto — é o botão de
     // resgate do editor ("De fábrica") para desfazer qualquer bagunça
@@ -10563,7 +10666,23 @@ function tratarMensagem(ws, raw) {
     // ---------- 🎵 Mesa de trilhas (Labs) ----------
     case 'trilhasSet': {
       // A lista inteira de uma vez (o card de edição manda tudo junto)
-      state.trilhas = sanitizeTrilhas(msg.trilhas);
+      // 🔗 v0.161: o caminho local de cada tecla é do servidor — a tela não
+      // manda caminho nenhum; a tecla que já apontava para o arquivo continua
+      // apontando (se a tela não trocou a url dela)
+      {
+        const antes = new Map(state.trilhas.map((t) => [t.id, t]));
+        const cruas = new Map((Array.isArray(msg.trilhas) ? msg.trilhas : []).filter((b) => b && typeof b === 'object').map((b) => [String(b.id || ''), b]));
+        state.trilhas = sanitizeTrilhas(msg.trilhas);
+        for (const t of state.trilhas) {
+          const crua = cruas.get(t.id);
+          const m = /^\/trilha-local\/([^/]+)$/.exec(String((crua && crua.url) || ''));
+          if (!m) continue;
+          // a tecla apontada continua apontando; a CÓPIA de uma tecla apontada
+          // (📋 copiar/colar: url da original com id novo) herda o mesmo arquivo
+          const dona = antes.get(m[1]);
+          if (dona && dona.local) { t.local = dona.local; t.url = '/trilha-local/' + t.id; }
+        }
+      }
       persistTrilhas();
       // 🖼️🎞️ a mídia na tela é de uma tecla que sumiu (ou virou outra
       // coisa)? Sai da tela junto
@@ -10572,7 +10691,7 @@ function tratarMensagem(ws, raw) {
       // 📁 a pasta que estava rodando em fila sumiu (ou virou outra coisa)?
       // A fila para — senão as teclas antigas seguiam disparando até o fim
       if (pastaFila && !state.trilhas.some((t) => t.id === pastaFila.id && t.tipo === 'pasta')) pararTrilha();
-      broadcast({ type: 'trilhas', trilhas: state.trilhas });
+      broadcast({ type: 'trilhas', trilhas: trilhasParaTela() });
       break;
     }
     case 'trilhaTocar': {
@@ -10790,7 +10909,9 @@ function tratarMensagem(ws, raw) {
       break;
     }
     case 'trilhasCasarPasta': {
-      const r = casarTrilhasComPasta(msg.pasta);
+      // 🔗 v0.161: por padrão só APONTA para os arquivos (ficam onde estão);
+      // copiar=true traz cópias para a biblioteca da Mesa, como antes
+      const r = casarTrilhasComPasta(msg.pasta, { copiar: msg.copiar === true });
       ws.send(JSON.stringify({ type: 'trilhasCasadas', ...r }));
       break;
     }
@@ -11093,7 +11214,7 @@ function tratarMensagem(ws, raw) {
         }
         if (trilhasMudou) {
           persistTrilhas();
-          broadcast({ type: 'trilhas', trilhas: state.trilhas });
+          broadcast({ type: 'trilhas', trilhas: trilhasParaTela() });
         }
         if (changed) {
           saveSettings();

@@ -1,4 +1,13 @@
 {
+  "0.161.0": {
+    "titulo": "🔗 La loupe de la Mesa fait pointer les touches vers vos fichiers son, sans rien copier",
+    "itens": [
+      "🔎 La loupe de « Importer du Stream Deck » ne fait plus que POINTER chaque touche vers le fichier trouvé dans le dossier : le son reste où il est sur votre ordinateur et OBS Social le joue de là. Rien n’est copié dans le programme — sauf si vous cochez « 📥 Copier les fichiers dans la bibliothèque de la Mesa », qui fait comme avant.",
+      "🏷️ Elle associe par le nom de fichier qu’utilisait le Stream Deck OU par le nom de la touche : une touche « Applaudissements » trouve Applaudissements.wav (ou .mp3, .ogg…), sans tenir compte des accents, majuscules ou ponctuation. Ça marche pour les touches créées à la main, pas seulement les importées.",
+      "🔁 Chercher à nouveau fonctionne : entrent dans la recherche les touches sans son, celles dont la copie en bibliothèque a disparu et celles qui pointent déjà vers l’ordinateur (le dossier a bougé ? indiquez le nouveau et cliquez encore). Une touche avec une bonne copie en bibliothèque n’est pas touchée.",
+      "🔒 Le chemin de chaque fichier ne vit que sur le serveur : les écrans n’envoient jamais de chemin, et le son est servi par l’id de la touche. La sauvegarde totale de la Mesa garde la touche pointée, mais pas le fichier (il vit dans votre dossier)."
+    ]
+  },
   "0.160.0": {
     "titulo": "🎁 Sons d’origine : alerte, likomètre, QR Code et mise en avant arrivent avec leur son",
     "itens": [

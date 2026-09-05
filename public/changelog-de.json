@@ -1,4 +1,13 @@
 {
+  "0.161.0": {
+    "titulo": "🔗 Die Lupe der Mesa lässt Tasten auf deine Klangdateien zeigen, ohne etwas zu kopieren",
+    "itens": [
+      "🔎 Die Lupe unter „Vom Stream Deck importieren“ lässt jede Taste jetzt nur noch auf die im Ordner gefundene Datei ZEIGEN: der Klang bleibt, wo er auf deinem Computer ist, und OBS Social spielt ihn von dort. Nichts wird ins Programm kopiert — außer du hakst „📥 Die Dateien in die Bibliothek der Mesa kopieren“ an, das arbeitet wie bisher.",
+      "🏷️ Sie ordnet nach dem Dateinamen zu, den das Stream Deck nutzte, ODER nach dem Tastennamen: eine Taste „Applaus“ findet Applaus.wav (oder .mp3, .ogg…), ohne auf Akzente, Groß-/Kleinschreibung oder Satzzeichen zu achten. Das gilt auch für von Hand angelegte Tasten, nicht nur importierte.",
+      "🔁 Erneut suchen funktioniert: in die Suche kommen Tasten ohne Klang, Tasten mit verlorener Bibliothekskopie und Tasten, die schon auf den Computer zeigen (Ordner umgezogen? den neuen angeben und erneut klicken). Tasten mit gesunder Kopie in der Bibliothek bleiben unberührt.",
+      "🔒 Der Pfad jeder Datei lebt nur auf dem Server: die Bildschirme schicken nie einen Pfad, und der Klang wird über die Tasten-ID ausgeliefert. Das vollständige Mesa-Backup behält die zeigende Taste, aber nicht die Datei (sie lebt in deinem Ordner)."
+    ]
+  },
   "0.160.0": {
     "titulo": "🎁 Werksklänge: Hinweis, Likemeter, QR-Code und Hervorhebung kommen mit eigenem Klang",
     "itens": [
