@@ -1,4 +1,10 @@
 {
+  "0.157.1": {
+    "titulo": "🎲 Overlay-Sounds: der Sound der Verlosung heißt, was er ist",
+    "itens": [
+      "🎲 In 🔊 Overlay-Sounds hatte der vierte Moment für alle denselben Namen — „🏁 Abschluss (Timer/Stoppuhr und Verlosung)“ — und bei der Verlosung führte das in die Irre: der Sound spielt, wenn der Würfel zu rollen BEGINNT, passend zum Drehen, nicht wenn das Podium erscheint. Jetzt folgt der Name dem gewählten Overlay: bei 🎁 Verlosung heißt er „🎲 Würfel rollt (während der Verlosung)“, bei 🕐 Uhr „🏁 Abschluss (Timer/Stoppuhr auf null)“, und bei den anderen Overlays erscheint die Zeile gar nicht, weil dort nichts diesen Moment auslöst. Der bereits gewählte Sound bleibt, wo er ist."
+    ]
+  },
   "0.157.0": {
     "titulo": "🪟 Soundboard: der Tasten-Editor hat die Fensterknöpfe bekommen und kann am Raster andocken",
     "itens": [

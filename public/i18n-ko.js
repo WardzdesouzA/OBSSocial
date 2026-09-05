@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 종료(타이머/스톱워치가 0이 될 때)",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 주사위 굴러감(추첨 중)",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 오버레이 소리의 🎁 추첨 → 🎲 주사위 굴러감 — 다른 모든 오버레이 소리와 함께: 파일, 볼륨, 어디서 나는지, 듣기 버튼.",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "오버레이의 모든 소리는 여기에 있습니다. 각 오버레이는 등장할 때, 사라질 때, 화면에 있는 동안(표시되는 동안), 고유한 순간이 있는 오버레이는 그 순간(🏁 타이머/스톱워치가 0이 될 때, 🎲 추첨 주사위가 굴러갈 때)에 소리를 낼 수 있고 — 소리마다 볼륨, 오프셋, 반복, 어디서 나는지를 정합니다. 오디오는 🎨 테마 → 🖼️ 내 아트에서 올리세요 — 크기와 길이 제한 없음. 오프셋이 음수면 앞당겨(파일 앞부분을 건너뜀), 양수면 늦게 시작합니다. 라이브에서는 소리가 OBS의 오버레이 소스로 나갑니다: 소스의 오디오가 켜져 있는지 확인하세요(브라우저 소스의 「OBS로 오디오 제어」).",
     "✏️ Editor da tecla — botões principais": "✏️ 키 편집기 — 메인 버튼",
     "✏️ Editor da tecla — botões de dentro": "✏️ 키 편집기 — 안쪽 버튼",
     "Restaurar o editor": "편집기 복원",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.ko = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 클립보드가 네트워크에 닫혀 있습니다. 스트리머가 설정 → 보안 → 네트워크가 쓸 수 있는 것 에서 열 수 있습니다.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 오버레이 소리의 🕐 시계 → 🏁 종료에 있습니다 — 다른 모든 오버레이 소리와 함께: 파일, 볼륨, 어디서 나는지, 듣기 버튼.",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 오버레이 소리의 🎁 추첨 → 🏁 종료에 있습니다 — 다른 모든 오버레이 소리와 함께: 파일, 볼륨, 어디서 나는지, 듣기 버튼.",
     "🔊 Abrir em Áudios dos overlays": "🔊 오버레이 소리에서 열기",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "오버레이의 모든 소리는 여기에 있습니다. 각 오버레이는 등장할 때, 사라질 때, 화면에 있는 동안(표시되는 동안), 종료 시(⏱ 타이머/스톱워치가 0이 될 때, 🎁 추첨 공개)에 소리를 낼 수 있고 — 소리마다 볼륨, 오프셋, 반복, 어디서 나는지를 정합니다. 오디오는 🎨 테마 → 🖼️ 내 아트에서 올리세요 — 크기와 길이 제한 없음. 오프셋이 음수면 앞당겨(파일 앞부분을 건너뜀), 양수면 늦게 시작합니다. 라이브에서는 소리가 OBS의 오버레이 소스로 나갑니다: 소스의 오디오가 켜져 있는지 확인하세요(브라우저 소스의 「OBS로 오디오 제어」).",
     "Volume deste som (0 a 100)": "이 소리의 볼륨(0~100)",
     "▶️ Ouvir": "▶️ 듣기",
     "Ouvir este som agora, no volume escolhido": "이 소리를 지금 선택한 볼륨으로 듣기",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.ko = {
     "🎬 Entrada (quando aparece)": "🎬 등장(나타날 때)",
     "🚪 Saída (quando some)": "🚪 퇴장(사라질 때)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ 화면 시간(표시되는 동안)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 마무리(타이머/스톱워치와 추첨)",
     "— sem som —": "— 사운드 없음 —",
     "🔁 Repetir na tela": "🔁 화면에 있는 동안 반복",
     "🔊 No overlay e no painel": "🔊 오버레이와 패널 모두",

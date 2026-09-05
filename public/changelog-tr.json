@@ -1,4 +1,10 @@
 {
+  "0.157.1": {
+    "titulo": "🎲 Overlay sesleri: çekiliş sesi olduğu şeyin adını aldı",
+    "itens": [
+      "🎲 🔊 Overlay sesleri içinde dördüncü anın herkes için tek adı vardı — «🏁 Bitiş (zamanlayıcı/kronometre ve çekiliş)» — ve çekilişte bu yanıltıyordu: ses, podyum belirdiğinde değil, zar yuvarlanmaya BAŞLADIĞINDA, dönüşe eşlik etmek için çalar. Artık ad seçilen overlay’i izliyor: 🎁 Çekiliş’te «🎲 Zar yuvarlanıyor (çekiliş sırasında)», 🕐 Saat’te «🏁 Bitiş (zamanlayıcı/kronometre sıfırlanırken)», diğer overlay’lerde ise satır hiç görünmüyor, çünkü orada bu anı tetikleyen bir şey yok. Zaten seçtiğiniz ses yerinde kalıyor."
+    ]
+  },
   "0.157.0": {
     "titulo": "🪟 Ses masası: tuş düzenleyici pencere düğmelerini aldı ve ızgaraya yapışabiliyor",
     "itens": [

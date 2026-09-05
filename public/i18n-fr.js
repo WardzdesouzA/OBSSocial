@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 Fin (minuteur/chronomètre arrivant à zéro)",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 Dé qui roule (pendant le tirage)",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Il vit dans 🔊 Sons des overlays, sous 🎁 Tirage → 🎲 Dé qui roule — avec les sons de tous les autres overlays : fichier, volume, où il joue et le bouton d’écoute.",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Tous les sons des overlays vivent ici. Chaque overlay peut jouer un son à l’entrée, à la sortie, pendant le temps d’écran (tant qu’il est visible) et, pour ceux qui ont un moment à eux, à ce moment-là aussi (le 🏁 minuteur/chronomètre arrivant à zéro ou le 🎲 dé du tirage qui roule) — chaque son avec volume, décalage, répétition et lieu de lecture. Envoyez les audios dans 🎨 Thèmes → 🖼️ Vos visuels — sans limite de taille ni de durée. Un décalage négatif avance l’audio (saute le début du fichier) ; positif retarde le départ. En direct, le son sort par la source de l’overlay dans OBS : vérifiez que son audio est activé (Contrôler l’audio via OBS, sur la source Navigateur).",
     "✏️ Editor da tecla — botões principais": "✏️ Éditeur de touche — boutons principaux",
     "✏️ Editor da tecla — botões de dentro": "✏️ Éditeur de touche — boutons intérieurs",
     "Restaurar o editor": "Restaurer l’éditeur",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.fr = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Le presse-papiers est fermé au réseau. Le streamer l’ouvre dans Réglages → Sécurité → ce que le réseau peut utiliser.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Il vit dans 🔊 Sons des overlays, sous 🕐 Horloge → 🏁 Fin — avec les sons de tous les autres overlays : fichier, volume, où il joue et le bouton d’écoute.",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Il vit dans 🔊 Sons des overlays, sous 🎁 Tirage → 🏁 Fin — avec les sons de tous les autres overlays : fichier, volume, où il joue et le bouton d’écoute.",
     "🔊 Abrir em Áudios dos overlays": "🔊 Ouvrir dans Sons des overlays",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Tous les sons des overlays vivent ici. Chaque overlay peut jouer un son à l’entrée, à la sortie, pendant le temps d’écran (tant qu’il est visible) et à la fin (le ⏱ minuteur/chronomètre arrivant à zéro et le 🎁 tirage révélant) — chaque son avec volume, décalage, répétition et lieu de lecture. Envoyez les audios dans 🎨 Thèmes → 🖼️ Vos visuels — sans limite de taille ni de durée. Un décalage négatif avance l’audio (saute le début du fichier) ; positif retarde le départ. En direct, le son sort par la source de l’overlay dans OBS : vérifiez que son audio est activé (Contrôler l’audio via OBS, sur la source Navigateur).",
     "Volume deste som (0 a 100)": "Volume de ce son (0 à 100)",
     "▶️ Ouvir": "▶️ Écouter",
     "Ouvir este som agora, no volume escolhido": "Écouter ce son maintenant, au volume choisi",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.fr = {
     "🎬 Entrada (quando aparece)": "🎬 Entrée (quand il apparaît)",
     "🚪 Saída (quando some)": "🚪 Sortie (quand il disparaît)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ Temps d’écran (tant qu’il est visible)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 Finalisation (minuteur/chronomètre et tirage)",
     "— sem som —": "— sans son —",
     "🔁 Repetir na tela": "🔁 Répéter à l’écran",
     "🔊 No overlay e no painel": "🔊 Sur l’overlay et le panneau",

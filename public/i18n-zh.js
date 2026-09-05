@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 结束（计时器/秒表归零）",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 骰子滚动（抽奖中）",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "它住在 🔊 叠加层声音 的 🎁 抽奖 → 🎲 骰子滚动 —— 和其他所有叠加层的声音放在一起：文件、音量、在哪播放和试听按钮。",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "叠加层的全部声音都住在这里。每个叠加层都可以在出现时、消失时、显示期间（可见时）以及在有专属时刻的叠加层里的那个时刻（🏁 计时器/秒表归零、🎲 抽奖骰子滚动）播放声音 —— 每个声音都有自己的音量、偏移、重复和播放位置。请在 🎨 主题 → 🖼️ 你的素材 里上传音频 —— 不限大小和时长。偏移为负会提前开始（跳过文件开头）；为正则延迟开始。直播中，声音从 OBS 的叠加层来源输出：请确认该来源已启用音频（浏览器来源的「通过 OBS 控制音频」）。",
     "✏️ Editor da tecla — botões principais": "✏️ 按键编辑器 — 主按钮",
     "✏️ Editor da tecla — botões de dentro": "✏️ 按键编辑器 — 内部按钮",
     "Restaurar o editor": "还原编辑器",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.zh = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 剪贴板对网络关闭。主播可在 设置 → 安全 → 网络可以使用的内容 中开放。",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "它住在 🔊 叠加层声音 的 🕐 时钟 → 🏁 结束 里 —— 和其他所有叠加层的声音放在一起：文件、音量、在哪播放和试听按钮。",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "它住在 🔊 叠加层声音 的 🎁 抽奖 → 🏁 结束 里 —— 和其他所有叠加层的声音放在一起：文件、音量、在哪播放和试听按钮。",
     "🔊 Abrir em Áudios dos overlays": "🔊 在叠加层声音中打开",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "叠加层的全部声音都住在这里。每个叠加层都可以在出现时、消失时、显示期间（可见时）和结束时（⏱ 计时器/秒表归零、🎁 抽奖揭晓）播放声音 —— 每个声音都有自己的音量、偏移、重复和播放位置。请在 🎨 主题 → 🖼️ 你的素材 里上传音频 —— 不限大小和时长。偏移为负会提前开始（跳过文件开头）；为正则延迟开始。直播中，声音从 OBS 的叠加层来源输出：请确认该来源已启用音频（浏览器来源的「通过 OBS 控制音频」）。",
     "Volume deste som (0 a 100)": "这个声音的音量（0 到 100）",
     "▶️ Ouvir": "▶️ 试听",
     "Ouvir este som agora, no volume escolhido": "以所选音量立即试听这个声音",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.zh = {
     "🎬 Entrada (quando aparece)": "🎬 登场(出现时)",
     "🚪 Saída (quando some)": "🚪 退场(消失时)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ 屏幕时间(可见期间)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 完结(计时器/秒表和抽奖)",
     "— sem som —": "— 无声音 —",
     "🔁 Repetir na tela": "🔁 在屏时循环",
     "🔊 No overlay e no painel": "🔊 overlay 和面板都播",

@@ -1,4 +1,10 @@
 {
+  "0.157.1": {
+    "titulo": "🎲 Overlay sounds: the raffle sound is named for what it is",
+    "itens": [
+      "🎲 In 🔊 Overlay sounds, the fourth moment had a single name for everyone — “🏁 Finish (timer/stopwatch and raffle)” — and for the raffle that was misleading: the sound plays when the dice STARTS rolling, to go with the spin, not when the podium appears. Now the name follows the chosen overlay: on 🎁 Raffle it is “🎲 Dice rolling (while drawing)”, on 🕐 Clock it is “🏁 Finish (timer/stopwatch hitting zero)”, and on the other overlays the row does not even appear, since nothing fires that moment there. The sound you already picked stays in place."
+    ]
+  },
   "0.157.0": {
     "titulo": "🪟 Sound deck: the key editor got the window buttons and can dock to the grid",
     "itens": [

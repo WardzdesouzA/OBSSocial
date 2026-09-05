@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 Bitiş (zamanlayıcı/kronometre sıfırlanırken)",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 Zar yuvarlanıyor (çekiliş sırasında)",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 Overlay sesleri içinde, 🎁 Çekiliş → 🎲 Zar yuvarlanıyor — diğer tüm overlay sesleriyle birlikte: dosya, ses düzeyi, nerede çalacağı ve dinleme düğmesi.",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Overlay’lerin tüm sesleri burada yaşar. Her overlay girişte, çıkışta, ekranda kaldığı sürede (görünürken) ve kendine özgü bir anı olanlarda o anda da (🏁 zamanlayıcı/kronometre sıfırlanırken ya da 🎲 çekiliş zarı yuvarlanırken) ses çalabilir — her sesin kendi ses düzeyi, kaydırması, tekrarı ve çalacağı yer vardır. Sesleri 🎨 Temalar → 🖼️ Görselleriniz bölümünden yükleyin — boyut ve süre sınırı yok. Negatif kaydırma sesi öne alır (dosyanın başını atlar); pozitif kaydırma başlangıcı geciktirir. Yayında ses, OBS’deki overlay kaynağından çıkar: kaynağın sesinin açık olduğundan emin olun (Tarayıcı kaynağında «Sesi OBS ile denetle»).",
     "✏️ Editor da tecla — botões principais": "✏️ Tuş düzenleyici — ana düğmeler",
     "✏️ Editor da tecla — botões de dentro": "✏️ Tuş düzenleyici — içteki düğmeler",
     "Restaurar o editor": "Düzenleyiciyi geri getir",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.tr = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Pano ağa kapalı. Yayıncı bunu Ayarlar → Güvenlik → ağın kullanabilecekleri bölümünden açar.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 Overlay sesleri içinde, 🕐 Saat → 🏁 Bitiş altında yaşar — diğer tüm overlay sesleriyle birlikte: dosya, ses düzeyi, nerede çalacağı ve dinleme düğmesi.",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 Overlay sesleri içinde, 🎁 Çekiliş → 🏁 Bitiş altında yaşar — diğer tüm overlay sesleriyle birlikte: dosya, ses düzeyi, nerede çalacağı ve dinleme düğmesi.",
     "🔊 Abrir em Áudios dos overlays": "🔊 Overlay seslerinde aç",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Overlay’lerin tüm sesleri burada yaşar. Her overlay girişte, çıkışta, ekranda kaldığı sürede (görünürken) ve bitişte (⏱ zamanlayıcı/kronometre sıfırlanırken ve 🎁 çekiliş açıklanırken) ses çalabilir — her sesin kendi ses düzeyi, kaydırması, tekrarı ve çalacağı yer vardır. Sesleri 🎨 Temalar → 🖼️ Görselleriniz bölümünden yükleyin — boyut ve süre sınırı yok. Negatif kaydırma sesi öne alır (dosyanın başını atlar); pozitif kaydırma başlangıcı geciktirir. Yayında ses, OBS’deki overlay kaynağından çıkar: kaynağın sesinin açık olduğundan emin olun (Tarayıcı kaynağında «Sesi OBS ile denetle»).",
     "Volume deste som (0 a 100)": "Bu sesin düzeyi (0–100)",
     "▶️ Ouvir": "▶️ Dinle",
     "Ouvir este som agora, no volume escolhido": "Bu sesi seçilen düzeyde şimdi dinle",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.tr = {
     "🎬 Entrada (quando aparece)": "🎬 Giriş (belirdiğinde)",
     "🚪 Saída (quando some)": "🚪 Çıkış (kaybolduğunda)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ Ekran süresi (görünürken)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 Bitiş (zamanlayıcı/kronometre ve çekiliş)",
     "— sem som —": "— ses yok —",
     "🔁 Repetir na tela": "🔁 Ekranda yinele",
     "🔊 No overlay e no painel": "🔊 Overlay’de ve panelde",

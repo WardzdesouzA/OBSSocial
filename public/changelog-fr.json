@@ -1,4 +1,10 @@
 {
+  "0.157.1": {
+    "titulo": "🎲 Sons des overlays : le son du tirage porte le nom de ce qu’il est",
+    "itens": [
+      "🎲 Dans 🔊 Sons des overlays, le quatrième moment avait un seul nom pour tout le monde — « 🏁 Fin (minuteur/chronomètre et tirage) » — et pour le tirage c’était trompeur : le son joue quand le dé COMMENCE à rouler, pour accompagner le tour, pas quand le podium apparaît. Le nom suit maintenant l’overlay choisi : sur 🎁 Tirage c’est « 🎲 Dé qui roule (pendant le tirage) », sur 🕐 Horloge c’est « 🏁 Fin (minuteur/chronomètre arrivant à zéro) », et sur les autres overlays la ligne n’apparaît même pas, puisque rien n’y déclenche ce moment. Le son déjà choisi reste en place."
+    ]
+  },
   "0.157.0": {
     "titulo": "🪟 Table de pistes : l’éditeur de touche a reçu les boutons de fenêtre et peut s’ancrer à la grille",
     "itens": [

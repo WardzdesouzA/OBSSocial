@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 Завершение (таймер/секундомер на нуле)",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 Кубик катится (во время розыгрыша)",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Он живёт в 🔊 Звуки оверлеев, в 🎁 Розыгрыш → 🎲 Кубик катится — вместе со звуками всех остальных оверлеев: файл, громкость, где играет и кнопка прослушивания.",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Все звуки оверлеев живут здесь. Каждый оверлей может звучать при появлении, при исчезновении, во время показа (пока виден) и, где есть свой момент, в этот момент тоже (🏁 таймер/секундомер на нуле или 🎲 катится кубик розыгрыша) — у каждого звука своя громкость, сдвиг, повтор и место воспроизведения. Загрузите аудио в 🎨 Темы → 🖼️ Ваши арты — без ограничений по размеру и длительности. Отрицательный сдвиг ускоряет старт (пропускает начало файла), положительный — задерживает. В эфире звук выходит через источник оверлея в OBS: проверьте, что у него включён звук («Управлять звуком через OBS» у источника Браузер).",
     "✏️ Editor da tecla — botões principais": "✏️ Редактор клавиши — основные кнопки",
     "✏️ Editor da tecla — botões de dentro": "✏️ Редактор клавиши — кнопки внутри",
     "Restaurar o editor": "Развернуть редактор",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.ru = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Буфер обмена закрыт для сети. Стример открывает его в Настройки → Безопасность → что доступно сети.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Он живёт в 🔊 Звуки оверлеев, в 🕐 Часы → 🏁 Завершение — вместе со звуками всех остальных оверлеев: файл, громкость, где играет и кнопка прослушивания.",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Он живёт в 🔊 Звуки оверлеев, в 🎁 Розыгрыш → 🏁 Завершение — вместе со звуками всех остальных оверлеев: файл, громкость, где играет и кнопка прослушивания.",
     "🔊 Abrir em Áudios dos overlays": "🔊 Открыть в Звуках оверлеев",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Все звуки оверлеев живут здесь. Каждый оверлей может звучать при появлении, при исчезновении, во время показа (пока виден) и при завершении (⏱ таймер/секундомер на нуле, 🎁 розыгрыш раскрыт) — у каждого звука своя громкость, сдвиг, повтор и место воспроизведения. Загрузите аудио в 🎨 Темы → 🖼️ Ваши арты — без ограничений по размеру и длительности. Отрицательный сдвиг ускоряет старт (пропускает начало файла), положительный — задерживает. В эфире звук выходит через источник оверлея в OBS: проверьте, что у него включён звук («Управлять звуком через OBS» у источника Браузер).",
     "Volume deste som (0 a 100)": "Громкость этого звука (от 0 до 100)",
     "▶️ Ouvir": "▶️ Прослушать",
     "Ouvir este som agora, no volume escolhido": "Прослушать этот звук сейчас на выбранной громкости",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.ru = {
     "🎬 Entrada (quando aparece)": "🎬 Появление (когда возникает)",
     "🚪 Saída (quando some)": "🚪 Исчезновение (когда уходит)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ Экранное время (пока виден)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 Завершение (таймер/секундомер и розыгрыш)",
     "— sem som —": "— без звука —",
     "🔁 Repetir na tela": "🔁 Повторять на экране",
     "🔊 No overlay e no painel": "🔊 В оверлее и на панели",

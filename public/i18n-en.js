@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 Finish (timer/stopwatch hitting zero)",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 Dice rolling (while drawing)",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "It lives in 🔊 Overlay sounds, under 🎁 Raffle → 🎲 Dice rolling — together with the sounds of every other overlay: file, volume, where it plays and the play button.",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Every overlay sound lives here. Each overlay can play a sound on entry, on exit, during screen time (while visible) and, where there is a moment of its own, at that moment too (the 🏁 timer/stopwatch hitting zero or the 🎲 raffle dice rolling) — each sound with volume, offset, repeat and where it plays. Upload the audio files in 🎨 Themes → 🖼️ Your artwork — no size or length limit. A negative offset starts the audio early (skips the beginning of the file); a positive one delays the start. On the live, the sound comes out through the overlay source in OBS: make sure its audio is enabled (Control audio via OBS, on the Browser source).",
     "✏️ Editor da tecla — botões principais": "✏️ Key editor — main buttons",
     "✏️ Editor da tecla — botões de dentro": "✏️ Key editor — buttons inside",
     "Restaurar o editor": "Restore the editor",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.en = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 The clipboard is closed to the network. The streamer opens it in Settings → Security → what the network can use.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "It lives in 🔊 Overlay sounds, under 🕐 Clock → 🏁 Finish — together with the sounds of every other overlay: file, volume, where it plays and the play button.",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "It lives in 🔊 Overlay sounds, under 🎁 Raffle → 🏁 Finish — together with the sounds of every other overlay: file, volume, where it plays and the play button.",
     "🔊 Abrir em Áudios dos overlays": "🔊 Open in Overlay sounds",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Every overlay sound lives here. Each overlay can play a sound on entry, on exit, during screen time (while visible) and at the finish (the ⏱ timer/stopwatch hitting zero and the 🎁 raffle revealing) — each sound with volume, offset, repeat and where it plays. Upload the audio files in 🎨 Themes → 🖼️ Your artwork — no size or length limit. A negative offset starts the audio early (skips the beginning of the file); a positive one delays the start. On the live, the sound comes out through the overlay source in OBS: make sure its audio is enabled (Control audio via OBS, on the Browser source).",
     "Volume deste som (0 a 100)": "Volume of this sound (0 to 100)",
     "▶️ Ouvir": "▶️ Play",
     "Ouvir este som agora, no volume escolhido": "Play this sound now, at the chosen volume",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.en = {
     "🎬 Entrada (quando aparece)": "🎬 Entrance (when it appears)",
     "🚪 Saída (quando some)": "🚪 Exit (when it disappears)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ Screen time (while visible)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 Finish (timer/stopwatch and raffle)",
     "— sem som —": "— no sound —",
     "🔁 Repetir na tela": "🔁 Repeat on screen",
     "🔊 No overlay e no painel": "🔊 On the overlay and the panel",
