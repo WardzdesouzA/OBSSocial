@@ -1,4 +1,12 @@
 {
+  "0.160.0": {
+    "titulo": "🎁 Werksklänge: Hinweis, Likemeter, QR-Code und Hervorhebung kommen mit eigenem Klang",
+    "itens": [
+      "🔊 Sechs neue Klänge kommen mit dem Programm, einer für jeden Moment, der seinen eigenen hat: 📢 Hinweis erscheint, 📊 Likemeter erscheint und verschwindet, 📱 QR-Code erscheint und verschwindet und 💬 hervorgehobener Kommentar erscheint. Sie stehen in der Liste jedes Moments unter 🔊 Overlay-Klänge (mit „(OBS Social)“ im Namen), neben dem 🎲 Würfel und dem ⏰ Timer-Alarm — jeder passt überall.",
+      "🆕 Eine neue Installation beginnt mit jedem Klang an seinem Moment, bei 70 % Lautstärke, auf dem Overlay und im Panel.",
+      "🎁 Wer das Programm schon nutzt, bekommt keinen Klang ungefragt: der Knopf „🎁 Werksklänge in die leeren Momente“ oben in der Karte setzt jeden an seinen Platz — nur dort, wo noch kein Klang war. Was du gewählt hast, bleibt, und „— kein Klang —“ gilt danach weiterhin."
+    ]
+  },
   "0.159.0": {
     "titulo": "🖥️ Monitor: das Bild von OBS und vMix in den Steuerfenstern des Panels",
     "itens": [

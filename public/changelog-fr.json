@@ -1,4 +1,12 @@
 {
+  "0.160.0": {
+    "titulo": "🎁 Sons d’origine : alerte, likomètre, QR Code et mise en avant arrivent avec leur son",
+    "itens": [
+      "🔊 Six nouveaux sons sont livrés avec le programme, un pour chaque moment qui a le sien : 📢 alerte qui entre, 📊 likomètre qui entre et qui sort, 📱 QR Code qui entre et qui sort et 💬 commentaire mis en avant qui entre. Ils apparaissent dans la liste de tous les moments dans 🔊 Sons des overlays (avec « (OBS Social) » dans le nom), à côté du 🎲 dé et de l’⏰ alerte du minuteur — chacun sert n’importe où.",
+      "🆕 Une installation neuve naît avec chaque son à son moment, à 70 % de volume, sur l’overlay et sur le panneau.",
+      "🎁 Qui utilise déjà le programme ne reçoit aucun son sans le demander : le bouton « 🎁 Sons d’origine dans les moments vides », en haut de la carte, met chacun à sa place — seulement là où il n’y avait pas encore de son. Ce que vous avez choisi reste, et « — sans son — » vaut toujours ensuite."
+    ]
+  },
   "0.159.0": {
     "titulo": "🖥️ Moniteur : l’image d’OBS et de vMix dans les fenêtres de contrôle du panneau",
     "itens": [

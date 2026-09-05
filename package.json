@@ -1,6 +1,6 @@
 {
   "name": "obs-social",
-  "version": "0.159.0",
+  "version": "0.160.0",
   "description": "Painel de comentários de lives (YouTube, Twitch, Kick, Bilibili) com overlay para OBS",
   "main": "server.js",
   "scripts": {
