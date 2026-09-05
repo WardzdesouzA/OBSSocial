@@ -1,4 +1,10 @@
 {
+  "0.158.1": {
+    "titulo": "🎚️ Table de pistes : changer de musique respecte à nouveau le fondu choisi",
+    "itens": [
+      "🎚️ Le fondu enchaîné court de la 0.158.0 a été retiré. Appuyer sur une autre musique redevient comme avant : la piste qui sort fait le fondu de sortie complet que vous lui avez réglé, et seulement ensuite la nouvelle entre avec son fondu d’entrée. Pour un changement rapide, choisissez un fondu court sur la touche elle-même."
+    ]
+  },
   "0.158.0": {
     "titulo": "🎚️ Table de pistes : appuyer sur une autre musique change tout de suite",
     "itens": [

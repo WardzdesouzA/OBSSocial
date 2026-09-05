@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.158.1",
+    "titulo": "🎚️ Mesa de trilhas: a troca de música voltou a respeitar o fade escolhido",
+    "itens": [
+      "🎚️ O crossfade curto da 0.158.0 foi retirado. Apertar outra música volta a ser como sempre foi: a trilha que sai faz o fade de saída inteiro que você configurou nela, e só então a nova entra com o fade de entrada dela. Quem quer troca rápida escolhe um fade curto na própria tecla."
+    ]
+  },
+  {
     "version": "0.158.0",
     "titulo": "🎚️ Mesa de trilhas: apertar outra música troca na hora",
     "itens": [

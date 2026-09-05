@@ -1,4 +1,10 @@
 {
+  "0.158.1": {
+    "titulo": "🎚️ Sound deck: switching songs respects the chosen fade again",
+    "itens": [
+      "🎚️ The short crossfade from 0.158.0 was removed. Pressing another song is back to how it always was: the outgoing track does the full fade-out you set on it, and only then the new one comes in with its own fade-in. If you want a quick switch, pick a short fade on the key itself."
+    ]
+  },
   "0.158.0": {
     "titulo": "🎚️ Sound deck: pressing another song switches right away",
     "itens": [

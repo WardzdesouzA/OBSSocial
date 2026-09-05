@@ -1,4 +1,10 @@
 {
+  "0.158.1": {
+    "titulo": "🎚️ Soundboard: der Musikwechsel respektiert wieder das gewählte Fade",
+    "itens": [
+      "🎚️ Der kurze Crossfade aus 0.158.0 wurde entfernt. Eine andere Musik zu drücken ist wieder wie immer: die ausgehende Spur macht das volle Ausblenden, das Sie an ihr eingestellt haben, und erst dann kommt die neue mit ihrem Einblenden. Wer schnell wechseln will, wählt ein kurzes Fade an der Taste selbst."
+    ]
+  },
   "0.158.0": {
     "titulo": "🎚️ Soundboard: eine andere Musik drücken wechselt sofort",
     "itens": [
