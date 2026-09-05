@@ -1,4 +1,10 @@
 {
+  "0.158.1": {
+    "titulo": "🎚️ Ses masası: müzik geçişi yeniden seçilen fade’e uyuyor",
+    "itens": [
+      "🎚️ 0.158.0’daki kısa crossfade kaldırıldı. Başka bir müziğe basmak yine eskisi gibi: çıkan parça ona ayarladığınız çıkış fade’ini sonuna kadar yapar, ancak ondan sonra yeni parça kendi giriş fade’iyle girer. Hızlı geçiş isteyen, tuşun kendisinde kısa bir fade seçer."
+    ]
+  },
   "0.158.0": {
     "titulo": "🎚️ Ses masası: başka bir müziğe basınca hemen geçiyor",
     "itens": [

@@ -1,4 +1,10 @@
 {
+  "0.158.1": {
+    "titulo": "🎚️ Mesa de pistas: cambiar de música vuelve a respetar el fade elegido",
+    "itens": [
+      "🎚️ Se retiró el crossfade corto de la 0.158.0. Pulsar otra música vuelve a ser como siempre: la pista que sale hace el fade de salida completo que configuraste en ella, y solo entonces entra la nueva con su fade de entrada. Si quieres un cambio rápido, elige un fade corto en la propia tecla."
+    ]
+  },
   "0.158.0": {
     "titulo": "🎚️ Mesa de pistas: pulsar otra música cambia al instante",
     "itens": [
