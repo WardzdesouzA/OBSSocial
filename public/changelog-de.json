@@ -1,4 +1,14 @@
 {
+  "0.156.0": {
+    "titulo": "🎭 Soundboard: die Taste wechselt Farbe und Gesicht mit dem Zustand",
+    "itens": [
+      "🟢🔴 An den Tasten 🎬 OBS-Aktion und 🎛️ vMix-Aktion hat der Rand jetzt zwei Farben: GRÜN, wenn das, was die Taste steuert, an ist (Szene live, Aufnahme, Quelle sichtbar, Ton aktiv), und ROT im selben Stil, wenn die Szene im Preview des Studio-Modus ist oder das Audio stumm. Vorher leuchteten Preview-Szene und stummes Mikro grün — leicht mit „live“ zu verwechseln.",
+      "🎭 Neue Option „Emoji nach Zustand“ an diesen Tasten: auch das Emoji erzählt die Geschichte — 🎙️ spricht / 🔇 stumm, ⏺ nimmt auf / ⏹ gestoppt, 🔴 live / 👁 im Preview… Bei „Automatisch“ wählt das Programm das Trio; bei „Ich wähle“ legen Sie das Emoji jeder Farbe fest (🟢 an, 🔴 Preview/stumm, ⚪ aus). Der Wechsel kommt mit einem kleinen Hüpfer, eine Taste mit Bild bekommt das Emoji als Abzeichen in der Ecke, und ohne verbundenes Programm bleibt das gewohnte Emoji.",
+      "🎙️ Die Aktion „🔇 Audio stumm“ heißt jetzt „🎙️ Audio stumm/laut schalten“ (und „Stumm schalten“ / „Ton freigeben“ bei dem, was sie tut) — das 🔇 sah aus wie der Zustand, nicht wie die Aktion, und „Audio stumm“ war verwirrend. Beim vMix-Eingang und -Master ebenso.",
+      "👻 Die gespiegelten OBS-Szenen — Tasten, die von selbst am Ende des Panel-Soundboards auftauchten, ohne dass jemand sie angelegt hatte (der experimentelle Labs-Schalter) — sind endgültig weg. Auf dem Soundboard lebt nur, was Sie anlegen: eine Szenentaste kommt aus dem 🎬 Ersteller oder dem Editor, wie jede andere.",
+      "🧹 Im Tasten-Editor ragte ▶ Jetzt testen über „Was sie tut“ (es war eine quadratische Taste mit langem Text). Jetzt ist es eine echte Texttaste und alles sitzt an seinem Platz."
+    ]
+  },
   "0.155.2": {
     "titulo": "🔊 Overlay-Sounds: drei Reste aus der Durchsicht",
     "itens": [

@@ -1386,7 +1386,6 @@
         <div class="hint" id="trilhasOrdenandoHint" style="display:none">✏️ Modo ordenar: arraste um botão sobre outro para trocar de lugar; sobre uma 🎛️/📁 pasta para entrar nela (até pasta dentro de pasta); sobre o ⬅ da barra para subir um nível; sobre os ◀ ▶ para mudar de página. Clique no ✏️ de novo para voltar a tocar.</div>
         <div id="trilhasGrade" class="trilhas-teclado"></div>
         <div class="hint" id="trilhasVazioHint">A mesa está vazia. As trilhas se cadastram em <b>Configurações → 🧪 Labs → 🎵 Mesa de trilhas</b> — dá até para importar os botões do seu Stream Deck.</div>
-        <div class="hint" id="trilhasCenasHint" style="display:none">🎬 As teclas de cena aparecem quando o OBS estiver conectado — ligue e configure em <b>Configurações → 🧪 Labs → 🎬 OBS Studio</b> (lá tem o passo a passo).</div>
       </div>
     </div>
 
@@ -7001,29 +7000,13 @@ let pastaTocandoId = null;      // 📁 com a fila rodando no servidor
 let trilhaTelaPainel = null;    // { id, tipo, url, modo, escala, volume, loop } | null
 let pastaSegurarTimer = null;   // o "segure para abrir"
 
-// 🎬 Experimental (Labs): cada cena do OBS vira uma tecla no fim da Mesa.
-// São espelho vivo do OBS: não entram no editor nem na ordenação — some a
-// cena no OBS, some a tecla. Clique = trocar (no estúdio, escolhe o preview).
-function cenasNaMesa() {
-  const s = settings || {};
-  if (s.trilhasCenas !== true || !(s.labs && s.labs.obs === true)) return [];
-  const o = obsInfo || {};
-  if (!o.conectado || !Array.isArray(o.cenas)) return [];
-  return o.cenas.map((c) => ({
-    ehCena: true,
-    id: 'cena:' + c.nome,
-    nome: c.nome,
-    noAr: c.nome === o.cenaPrograma,
-    noPreview: !!o.estudio && c.nome === o.cenaPreview,
-  }));
-}
 // 📁 O que aparece na Mesa depende de onde você está: na raiz ficam as
-// teclas soltas + as pastas (+ as cenas 🎬); dentro de uma pasta, só o que
-// mora nela. Cada item carrega o índice REAL na lista (abs) para o ✏️ ordenar.
-// v0.52.1: a Mesa tem LUGAR LIVRE — cada tecla mora na célula t.pos e os
-// buracos ficam. As 🎬 cenas do OBS (que não são teclas salvas) entram nas
-// primeiras células livres DEPOIS da última tecla, sem invadir os buracos
-// que a pessoa deixou de propósito no meio.
+// teclas soltas + as pastas; dentro de uma pasta, só o que mora nela. Cada
+// item carrega o índice REAL na lista (abs) para o ✏️ ordenar.
+// v0.52.1: a Mesa tem LUGAR FIXO — cada tecla mora na célula t.pos e os
+// buracos ficam. (v0.156: as cenas-espelho do OBS, que entravam sozinhas no
+// fim da Mesa sem a pessoa ter criado nada, saíram — tecla de cena só a que
+// a pessoa cria no 🎬 criador ou no editor, como qualquer outra.)
 function celulasDaMesa() {
   if (pTrilhasPastaAberta && !trilhasLista.some((t) => trilhaEhPasta(t) && t.id === pTrilhasPastaAberta)) {
     pTrilhasPastaAberta = null; // a pasta aberta sumiu: volta para a raiz
@@ -7040,14 +7023,6 @@ function celulasDaMesa() {
       if (c > maior) maior = c;
     }
   });
-  if (!dentro) {
-    let c = maior + 1;
-    for (const cena of cenasNaMesa()) {
-      while (mapa.has(c)) c++;
-      mapa.set(c, { cena });
-      c++;
-    }
-  }
   return mapa;
 }
 // 🎬 v0.53: a tecla de OBS ACENDE quando o que ela controla está ligado —
@@ -7055,9 +7030,11 @@ function celulasDaMesa() {
 // Stream Deck faz: o botão mostra o estado, não só dispara.
 // 🎛️ v0.122: a tecla do vMix acende do mesmo jeito — no ar, no preview,
 // gravando, overlay ligado, entrada muda, mídia tocando
+// 🎭 v0.156: sem conexão a resposta é null (estado desconhecido): a tecla
+// não acende e mostra a cara de sempre, não a de «desligado»
 function vmixTeclaLigada(t) {
   const o = vmixInfo || {};
-  if (!o.conectado || !t.vmixAcao) return false;
+  if (!o.conectado || !t.vmixAcao) return null;
   const a = t.vmixAlvo || {};
   const ent = (ref) => (o.entradas || []).find((e) => String(e.numero) === String(ref) || e.chave === ref || e.titulo === ref) || null;
   switch (t.vmixAcao) {
@@ -7088,7 +7065,7 @@ function vmixTeclaLigada(t) {
 }
 function obsTeclaLigada(t) {
   const o = obsInfo || {};
-  if (!o.conectado || !t.obsAcao) return false;
+  if (!o.conectado || !t.obsAcao) return null; // 🎭 v0.156: desconhecido, não «desligado»
   const a = t.obsAlvo || {};
   switch (t.obsAcao) {
     case 'transmitir': return o.transmitindo === true;
@@ -7131,6 +7108,49 @@ function obsTeclaLigada(t) {
   }
 }
 
+// 🎭 v0.156: o estado em TRÊS cores (o contorno da tecla e a cara dela):
+//   'verde'    = ligado — no ar, gravando, fonte visível, som ATIVO
+//   'vermelho' = no PREVIEW (modo estúdio / preview do vMix) ou áudio MUDO
+//   false      = apagado · null = desconhecido (programa desconectado)
+// Quem não tem preview nem mudo continua ligado/desligado (verde/apagado).
+function obsTeclaEstado(t) {
+  const o = obsInfo || {};
+  if (!o.conectado || !t.obsAcao) return null;
+  const a = t.obsAlvo || {};
+  switch (t.obsAcao) {
+    // Cena: verde no ar, vermelha no preview (modo estúdio) — seja qual for o
+    // modo da tecla; antes a tecla «preview» acendia verde pela cena do preview
+    case 'cena': {
+      if (!a.nome) return false;
+      if (a.nome === o.cenaPrograma) return 'verde';
+      return o.estudio === true && a.nome === o.cenaPreview ? 'vermelho' : false;
+    }
+    // Áudio: verde = som ativo, vermelho = mudo (era verde no mudo)
+    case 'audioMudo': {
+      const f = (o.fontesAudio || []).find((x) => x.nome === a.fonte);
+      return f ? (f.mudo === true ? 'vermelho' : 'verde') : false;
+    }
+    default: return obsTeclaLigada(t) ? 'verde' : false;
+  }
+}
+function vmixTeclaEstado(t) {
+  const o = vmixInfo || {};
+  if (!o.conectado || !t.vmixAcao) return null;
+  const a = t.vmixAlvo || {};
+  const ent = (ref) => (o.entradas || []).find((e) => String(e.numero) === String(ref) || e.chave === ref || e.titulo === ref) || null;
+  switch (t.vmixAcao) {
+    case 'entrada': {
+      const e = ent(a.entrada);
+      if (!e) return false;
+      return e.numero === o.programa ? 'verde' : e.numero === o.preview ? 'vermelho' : false;
+    }
+    // entrada sem áudio (mudo não é booleano) fica apagada — não «som ativo»
+    case 'audioMudo': { const e = ent(a.entrada); return e && typeof e.mudo === 'boolean' ? (e.mudo ? 'vermelho' : 'verde') : false; }
+    case 'masterMudo': return o.master && typeof o.master.mudo === 'boolean' ? (o.master.mudo ? 'vermelho' : 'verde') : false;
+    default: return vmixTeclaLigada(t) ? 'verde' : false;
+  }
+}
+const teclaEstadoAnterior = new Map(); // 🎭 v0.156: id da tecla → último estado mostrado
 function renderTrilhas() {
   const grade = document.getElementById('trilhasGrade');
   if (!grade) return;
@@ -7141,6 +7161,22 @@ function renderTrilhas() {
   const ultima = celulas.size ? Math.max(...celulas.keys()) : 0;
   const paginas = Math.max(1, Math.floor(ultima / porPag) + 1);
   if (pTrilhasPagina >= paginas) pTrilhasPagina = paginas - 1;
+  // 🎭 v0.156: o estado de TODAS as teclas 🎬/🎛️ é lido a cada retrato —
+  // também as fora da página/pasta visível — para que o pulinho aconteça
+  // quando o estado MUDA, e não quando a pessoa navega até a tecla; ids que
+  // sumiram da Mesa saem da memória junto
+  const estadosAgora = new Map();
+  {
+    const conhecido = (e) => e === 'verde' || e === 'vermelho' || e === false;
+    for (const t of trilhasLista) {
+      if (t.tipo !== 'obs' && t.tipo !== 'vmix') continue;
+      const estado = t.tipo === 'obs' ? obsTeclaEstado(t) : vmixTeclaEstado(t);
+      const antes = teclaEstadoAnterior.get(t.id);
+      estadosAgora.set(t.id, { estado, trocou: conhecido(estado) && conhecido(antes) && antes !== estado });
+    }
+    teclaEstadoAnterior.clear();
+    for (const [id, e] of estadosAgora) teclaEstadoAnterior.set(id, e.estado);
+  }
   grade.innerHTML = '';
   const inicio = pTrilhasPagina * porPag;
   const itens = [...celulas.values()];
@@ -7155,26 +7191,16 @@ function renderTrilhas() {
       grade.appendChild(vazio);
       continue;
     }
-    if (item.cena) {
-      const t = item.cena;
-      const b = montarBotaoTrilha(
-        { id: t.id, nome: t.nome, emoji: t.noAr ? '🔴' : (t.noPreview ? '👁' : '🎬'), textoPos: 'baixo', cor: t.noAr ? '#c62828' : '' },
-        { tocando: t.noAr }
-      );
-      b.classList.add('trilha-cena');
-      b.classList.remove('pendente'); // cena não tem url e nem precisa: não é tecla "vazia"
-      b.title = OBS_I18N.t(t.noAr ? 'Cena no ar' : ((obsInfo || {}).estudio ? 'Escolher esta cena no preview 👁' : 'Trocar para esta cena no OBS')) + ' — ' + t.nome;
-      if (!pTrilhasOrdenando) b.onclick = () => hub.send({ type: 'obsCena', cena: t.nome });
-      grade.appendChild(b);
-      continue;
-    }
     const { t, abs } = item;
     const ehPasta = trilhaEhPasta(t);
+    // 🎭 v0.156: a tecla 🎬/🎛️ lembra o último estado que mostrou — quando
+    // ele muda, a cara nova entra com um pulinho (opts.trocou)
+    const comEstado = () => estadosAgora.get(t.id) || { estado: null, trocou: false };
     const b = montarBotaoTrilha(t, ehPasta
       ? { tocando: t.id === pastaTocandoId, filhos: trilhasLista.filter((x) => x.pastaId === t.id).length }
-      // 🎬 A tecla de OBS acende quando o que ela controla está ligado
-      : t.tipo === 'obs' ? { ligado: obsTeclaLigada(t) }
-        : t.tipo === 'vmix' ? { ligado: vmixTeclaLigada(t) } // 🎛️ v0.122
+      // 🎬 A tecla de OBS acende (verde/vermelho) conforme o que ela controla
+      : t.tipo === 'obs' ? comEstado()
+        : t.tipo === 'vmix' ? comEstado() // 🎛️ v0.122
         // 🖼️🎞️ A tecla de mídia acende enquanto a mídia dela está na tela
         : (t.tipo === 'imagem' || t.tipo === 'video') ? { ligado: !!(trilhaTelaPainel && trilhaTelaPainel.id === t.id) }
           : { tocando: t.id === trilhaTocandoId });
@@ -7244,14 +7270,7 @@ function renderTrilhas() {
     }
     grade.appendChild(b);
   }
-  document.getElementById('trilhasVazioHint').style.display = itens.some((x) => x.cena
-    || (x.t && (x.t.url || x.t.obsAcao || x.t.vmixAcao || trilhaEhPasta(x.t)))) ? 'none' : '';
-  {
-    const s = settings || {};
-    const querCenas = s.trilhasCenas === true;
-    const semObs = !(s.labs && s.labs.obs === true) || !(obsInfo || {}).conectado;
-    document.getElementById('trilhasCenasHint').style.display = querCenas && semObs ? '' : 'none';
-  }
+  document.getElementById('trilhasVazioHint').style.display = itens.some((x) => x.t && (x.t.url || x.t.obsAcao || x.t.vmixAcao || trilhaEhPasta(x.t))) ? 'none' : '';
   // 🪆 v0.89: o ⬅ da barra aparece dentro de pasta e SOBE um nível
   document.getElementById('pTrilhasVoltarBtn').style.display = pTrilhasPastaAberta ? '' : 'none';
   document.getElementById('pTrilhasPagLabel').textContent = `${pTrilhasPagina + 1}/${paginas}`;
@@ -7306,7 +7325,6 @@ function arrastaTrilhaPainel(ev, botao, indice, grade) {
       return;
     }
     let tecla = sob && sob.closest ? sob.closest('.trilha-tecla') : null;
-    if (tecla && tecla.classList.contains('trilha-cena')) tecla = null; // 🎬 não é da lista
     if (!tecla || tecla === botao) return;
     // v0.52.1: espaço VAZIO é alvo — a tecla passa a morar naquela célula
     if (tecla.classList.contains('trilha-slot-vazio')) {

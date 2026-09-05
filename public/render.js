@@ -1729,8 +1729,10 @@ const OBS_ACOES_INFO = [
     modos: [['alternar', 'Alternar'], ['mostrar', 'Mostrar'], ['esconder', 'Esconder']] },
   { id: 'filtro', emoji: '🎚', rotulo: 'Ligar/desligar filtro', grupo: 'Fontes', fonte: 'comFiltro', filtro: true,
     modos: [['alternar', 'Alternar'], ['ligar', 'Ligar'], ['desligar', 'Desligar']] },
-  { id: 'audioMudo', emoji: '🔇', rotulo: 'Mudo do áudio', grupo: 'Fontes', fonte: 'audio',
-    modos: [['alternar', 'Alternar'], ['mudo', 'Deixar mudo'], ['som', 'Devolver o som']] },
+  // 🎙️ v0.156: era «🔇 Mudo do áudio» — o 🔇 parecia o ESTADO (já mudo) e
+  // «mudo do áudio» confundia; agora o nome diz as duas direções
+  { id: 'audioMudo', emoji: '🎙️', rotulo: 'Silenciar/liberar o áudio', grupo: 'Fontes', fonte: 'audio',
+    modos: [['alternar', 'Alternar'], ['mudo', 'Silenciar'], ['som', 'Liberar o som']] },
   { id: 'audioVolume', emoji: '🔊', rotulo: 'Volume do áudio', grupo: 'Fontes', fonte: 'audio', db: true,
     modos: [['definir', 'Deixar em'], ['ajustar', 'Somar/tirar']] },
   { id: 'midia', emoji: '⏯', rotulo: 'Controle de mídia', grupo: 'Fontes', fonte: 'midia',
@@ -1796,14 +1798,14 @@ const VMIX_ACOES_INFO = [
     modos: [['alternar', 'Alternar'], ['entrar', 'Entrar'], ['sair', 'Sair'], ['desligar', 'Desligar']] },
   { id: 'overlaysDesligar', emoji: '🧹', rotulo: 'Desligar todos os overlays', grupo: 'Overlays' },
   // — Áudio —
-  { id: 'audioMudo', emoji: '🔇', rotulo: 'Mudo da entrada', grupo: 'Áudio', entrada: 'audio',
-    modos: [['alternar', 'Alternar'], ['mudo', 'Deixar mudo'], ['som', 'Devolver o som']] },
+  { id: 'audioMudo', emoji: '🎙️', rotulo: 'Silenciar/liberar a entrada', grupo: 'Áudio', entrada: 'audio',
+    modos: [['alternar', 'Alternar'], ['mudo', 'Silenciar'], ['som', 'Liberar o som']] },
   { id: 'audioVolume', emoji: '🔊', rotulo: 'Volume da entrada', grupo: 'Áudio', entrada: 'audio', volume: true,
     modos: [['definir', 'Deixar em'], ['ajustar', 'Somar/tirar']] },
   { id: 'audioSolo', emoji: '🎧', rotulo: 'Solo da entrada', grupo: 'Áudio', entrada: 'audio',
     modos: [['alternar', 'Alternar'], ['ligar', 'Ligar'], ['desligar', 'Desligar']] },
-  { id: 'masterMudo', emoji: '🔇', rotulo: 'Mudo do master', grupo: 'Áudio',
-    modos: [['alternar', 'Alternar'], ['mudo', 'Deixar mudo'], ['som', 'Devolver o som']] },
+  { id: 'masterMudo', emoji: '🔈', rotulo: 'Silenciar/liberar o master', grupo: 'Áudio',
+    modos: [['alternar', 'Alternar'], ['mudo', 'Silenciar'], ['som', 'Liberar o som']] },
   { id: 'masterVolume', emoji: '🔊', rotulo: 'Volume do master', grupo: 'Áudio', volume: true,
     modos: [['definir', 'Deixar em'], ['ajustar', 'Somar/tirar']] },
   // — Conteúdo —
@@ -1840,6 +1842,51 @@ function vmixAcaoTexto(acao, alvo) {
   return obsT(info.emoji + ' ' + info.rotulo) + (partes.length ? ' · ' + partes.join(' · ') : '');
 }
 
+// 🎭 v0.156: o ESTADO de uma tecla 🎬/🎛️ tem três cores — o que
+// obsTeclaEstado/vmixTeclaEstado (painel) devolvem:
+//   'verde'    = ligado: no ar, gravando, fonte visível, som ATIVO...
+//   'vermelho' = no PREVIEW (modo estúdio / preview do vMix) ou áudio MUDO
+//   false      = apagado · null = desconhecido (programa desconectado)
+// A tecla ganha o contorno da cor; e a cara (emoji) pode mudar junto: o
+// trio automático de cada ação mora aqui. «vermelho» só existe para quem
+// tem preview ou mudo.
+const ESTADO_EMOJI_AUTO = {
+  obs: {
+    transmitir: { verde: '🔴', apagado: '📡' }, gravar: { verde: '⏺', apagado: '⏹' }, gravarPausa: { verde: '⏸', apagado: '⏺' },
+    camVirtual: { verde: '📹', apagado: '📷' }, replay: { verde: '⏪', apagado: '⏹' }, estudio: { verde: '🎭', apagado: '🎬' },
+    cena: { verde: '🔴', vermelho: '👁', apagado: '🎬' }, colecao: { verde: '📂', apagado: '🗂' }, perfil: { verde: '✅', apagado: '👤' },
+    transicao: { verde: '✅', apagado: '🔀' }, fonte: { verde: '👁', apagado: '🙈' }, filtro: { verde: '🎚', apagado: '⚪' },
+    audioMudo: { verde: '🎙️', vermelho: '🔇', apagado: '🎙️' }, midia: { verde: '▶️', apagado: '⏸' },
+  },
+  vmix: {
+    transmitir: { verde: '🔴', apagado: '📡' }, gravar: { verde: '⏺', apagado: '⏹' }, externa: { verde: '📤', apagado: '⚪' },
+    multiCorder: { verde: '⏺', apagado: '⏹' }, telaCheia: { verde: '⛶', apagado: '⚪' }, playlist: { verde: '📃', apagado: '⚪' },
+    escurecer: { verde: '⬛', apagado: '🟦' }, entrada: { verde: '🔴', vermelho: '👁', apagado: '📺' }, overlay: { verde: '🧩', apagado: '⚪' },
+    audioMudo: { verde: '🎙️', vermelho: '🔇', apagado: '🎙️' }, audioSolo: { verde: '🎧', apagado: '⚪' },
+    masterMudo: { verde: '🔊', vermelho: '🔇', apagado: '🔈' }, midia: { verde: '▶️', apagado: '⏸' },
+  },
+};
+// Esta ação tem o estado vermelho (preview ou mudo)?
+function acaoTemVermelho(tipo, acao) {
+  const p = (ESTADO_EMOJI_AUTO[tipo] || {})[acao];
+  return !!(p && p.vermelho);
+}
+// O trio que vale para esta tecla: null = cara fixa (o emoji escolhido)
+function trilhaEmojiEstado(t) {
+  const conf = (t && t.estadoEmoji) || {};
+  const acao = t.tipo === 'vmix' ? t.vmixAcao : t.tipo === 'obs' ? t.obsAcao : '';
+  if (!acao) return null;
+  if (conf.modo === 'manual') {
+    if (!conf.verde && !conf.vermelho && !conf.apagado) return null;
+    return { verde: conf.verde || '', vermelho: conf.vermelho || '', apagado: conf.apagado || '' };
+  }
+  if (conf.modo === 'auto') {
+    const p = (ESTADO_EMOJI_AUTO[t.tipo] || {})[acao];
+    return p ? { verde: p.verde || '', vermelho: p.vermelho || '', apagado: p.apagado || '' } : null;
+  }
+  return null;
+}
+
 function montarBotaoTrilha(t, opts = {}) {
   const b = document.createElement('button');
   b.type = 'button';
@@ -1847,12 +1894,16 @@ function montarBotaoTrilha(t, opts = {}) {
   const ehVmix = t.tipo === 'vmix'; // 🎛️ v0.122: veste o mesmo visual da tecla do OBS
   const ehObs = t.tipo === 'obs' || ehVmix;
   const ehMidia = t.tipo === 'imagem' || t.tipo === 'video'; // 🖼️🎞️ v0.86
+  // 🎭 v0.156: o estado em três cores (opts.estado); opts.ligado (true/false)
+  // continua valendo para quem só conhece ligado/desligado
+  const estado = opts.estado !== undefined ? opts.estado
+    : opts.ligado === true ? 'verde' : opts.ligado === false ? false : undefined;
   b.className = 'trilha-tecla'
     + (ehPasta ? ' trilha-pasta' : '')
     + (t.tipo === 'pastaSimples' ? ' trilha-pasta-simples' : '')
     + (ehObs ? ' trilha-obs' : '')
     + (opts.tocando ? ' tocando' : '')
-    + (opts.ligado ? ' obs-ligado' : '')
+    + (estado === 'verde' ? ' obs-ligado' : estado === 'vermelho' ? ' obs-preview' : '')
     + (ehVmix ? ' trilha-vmix' : '')
     + (!ehPasta && (ehVmix ? !t.vmixAcao : ehObs ? !t.obsAcao : !t.url) ? ' pendente' : '');
   if (t.cor) b.style.setProperty('--trilha-cor', t.cor);
@@ -1877,18 +1928,33 @@ function montarBotaoTrilha(t, opts = {}) {
   }
   // 🖼️ v0.86: a tecla de IMAGEM sem cara própria usa a própria mídia de cara
   const cara = t.imagem || (t.tipo === 'imagem' ? t.url : '');
+  const emojiBase = t.emoji || (t.tipo === 'pastaSimples' ? '📁' : ehPasta ? '🎛️'
+    : ehVmix ? ((vmixAcaoInfo(t.vmixAcao) || {}).emoji || '🎛️')
+      : ehObs ? ((obsAcaoInfo(t.obsAcao) || {}).emoji || '🎬')
+      : t.tipo === 'imagem' ? '🖼️' : t.tipo === 'video' ? '🎞️' : '🎵');
+  // 🎭 v0.156: com o estado conhecido (verde/vermelho/false — null e
+  // undefined = sem conexão) e um trio configurado, a cara é a do estado;
+  // trocou de estado → um pulinho
+  const trio = ehObs ? trilhaEmojiEstado(t) : null;
+  const emojiEstado = trio && (estado === 'verde' || estado === 'vermelho' || estado === false)
+    ? ((estado === 'verde' ? trio.verde : estado === 'vermelho' ? trio.vermelho : trio.apagado) || '') // caixa vazia = emoji de sempre
+    : '';
   if (cara) {
     const img = document.createElement('div');
     img.className = 'trilha-fundo';
     img.style.backgroundImage = `url("${cara}")`;
     b.appendChild(img);
+    if (emojiEstado) {
+      // com imagem, o estado vira um selo no canto — a arte continua inteira
+      const selo = document.createElement('span');
+      selo.className = 'trilha-estado' + (opts.trocou ? ' estado-trocou' : '');
+      selo.textContent = emojiEstado;
+      b.appendChild(selo);
+    }
   } else {
     const em = document.createElement('span');
-    em.className = 'trilha-emoji';
-    em.textContent = t.emoji || (t.tipo === 'pastaSimples' ? '📁' : ehPasta ? '🎛️'
-      : ehVmix ? ((vmixAcaoInfo(t.vmixAcao) || {}).emoji || '🎛️')
-        : ehObs ? ((obsAcaoInfo(t.obsAcao) || {}).emoji || '🎬')
-        : t.tipo === 'imagem' ? '🖼️' : t.tipo === 'video' ? '🎞️' : '🎵');
+    em.className = 'trilha-emoji' + (emojiEstado && opts.trocou ? ' estado-trocou' : '');
+    em.textContent = emojiEstado || emojiBase;
     b.appendChild(em);
   }
   if (ehPasta && Number.isFinite(opts.filhos)) {
@@ -1945,6 +2011,12 @@ function montarBotaoTrilha(t, opts = {}) {
     box-shadow: inset 0 0 0 1px rgba(67, 160, 71, 0.6), 0 0 0 2px rgba(67, 160, 71, 0.55);
   }
   .trilha-obs.obs-ligado .trilha-emoji { filter: drop-shadow(0 0 4px rgba(67, 160, 71, 0.9)); }
+  /* 🎭 v0.156: o mesmo contorno em VERMELHO = no preview (modo estúdio) ou áudio mudo */
+  .trilha-obs.obs-preview {
+    border-color: #e53935;
+    box-shadow: inset 0 0 0 1px rgba(229, 57, 53, 0.6), 0 0 0 2px rgba(229, 57, 53, 0.55);
+  }
+  .trilha-obs.obs-preview .trilha-emoji { filter: drop-shadow(0 0 4px rgba(229, 57, 53, 0.9)); }
   .trilha-qtd {
     position: absolute; top: 4px; right: 6px; font-size: 10px; font-weight: 700;
     background: var(--accent, #7c4dff); color: #fff; border-radius: 8px;
@@ -1952,6 +2024,13 @@ function montarBotaoTrilha(t, opts = {}) {
   }
   .trilha-fundo { position: absolute; inset: 0; background-size: cover; background-position: center; }
   .trilha-emoji { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 42%, 34px); }
+  /* 🎭 v0.156: o emoji do estado sobre uma tecla com imagem (selo no canto)
+     e o pulinho de quem acabou de trocar de estado */
+  .trilha-estado { position: absolute; right: 4px; top: 4px; font-size: clamp(13px, 26%, 22px); line-height: 1;
+    padding: 2px 3px; border-radius: 8px; background: rgba(0, 0, 0, 0.55); pointer-events: none; }
+  .estado-trocou { animation: trilhaEstadoPulo 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) 1; }
+  @keyframes trilhaEstadoPulo { 0% { transform: scale(0.6); opacity: 0.4; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); } }
+  body.a11y-sem-animacao .estado-trocou { animation: none; }
   .trilha-rotulo {
     position: absolute; left: 3px; right: 3px; text-align: center;
     font-size: var(--trilha-txt-tam, 11px); font-weight: var(--trilha-txt-peso, 700);

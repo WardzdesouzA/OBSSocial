@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.156.0",
+    "titulo": "🎭 Mesa de trilhas: a tecla muda de cor e de cara com o estado",
+    "itens": [
+      "🟢🔴 Nas teclas 🎬 Ação do OBS e 🎛️ Ação do vMix o contorno agora tem duas cores: VERDE quando o que a tecla controla está ligado (cena no ar, gravando, fonte visível, som ativo) e VERMELHO, do mesmo estilo, quando a cena está no preview do modo estúdio ou o áudio está mudo. Antes a cena do preview e o microfone mudo acendiam verde — dava para confundir com «no ar».",
+      "🎭 Nova opção «Emoji pelo estado» nessas teclas: o emoji também conta a história — 🎙️ falando / 🔇 mudo, ⏺ gravando / ⏹ parado, 🔴 no ar / 👁 no preview… Em «Automático» o programa escolhe o trio; em «Eu escolho» você define o emoji de cada cor (🟢 ligado, 🔴 preview/mudo, ⚪ apagado). A troca vem com um pulinho, a tecla com imagem ganha o emoji como selo no canto e, sem o programa conectado, fica o emoji de sempre.",
+      "🎙️ A ação «🔇 Mudo do áudio» virou «🎙️ Silenciar/liberar o áudio» (e «Silenciar» / «Liberar o som» no que ela faz) — o 🔇 parecia o estado, não a ação, e «mudo do áudio» confundia. No vMix, a entrada e o master idem.",
+      "👻 As cenas-espelho do OBS — teclas que entravam sozinhas no fim da Mesa do painel sem ninguém ter criado nada (o seletor experimental do Labs) — saíram de vez. Na Mesa só mora o que você cria: tecla de cena é pelo 🎬 criador ou pelo editor, como qualquer outra.",
+      "🧹 No editor da tecla, o ▶ Testar agora vazava por cima do «O que faz» (era um botão quadrado com texto comprido). Agora é um botão de texto de verdade e cada coisa fica no seu lugar."
+    ]
+  },
+  {
     "version": "0.155.2",
     "titulo": "🔊 Sons dos overlays: três sobras da varredura",
     "itens": [

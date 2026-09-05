@@ -1,4 +1,14 @@
 {
+  "0.156.0": {
+    "titulo": "🎭 Ses masası: tuşun rengi ve yüzü durumla değişiyor",
+    "itens": [
+      "🟢🔴 🎬 OBS eylemi ve 🎛️ vMix eylemi tuşlarında çerçeve artık iki renkli: tuşun kontrol ettiği şey açıkken (sahne yayında, kayıtta, kaynak görünür, ses açık) YEŞİL; sahne stüdyo modunun önizlemesindeyken veya ses susturulmuşken aynı stilde KIRMIZI. Önceden önizleme sahnesi ve susturulmuş mikrofon yeşil yanıyordu — «yayında» ile karışıyordu.",
+      "🎭 Bu tuşlarda yeni «Duruma göre emoji» seçeneği: emoji de hikâyeyi anlatıyor — 🎙️ konuşuyor / 🔇 susturulmuş, ⏺ kayıtta / ⏹ durdu, 🔴 yayında / 👁 önizlemede… «Otomatik»te üçlüyü program seçer; «Ben seçerim»de her rengin emojisini siz belirlersiniz (🟢 açık, 🔴 önizleme/susturulmuş, ⚪ kapalı). Değişim küçük bir zıplamayla gelir, resimli tuş emojiyi köşede rozet olarak gösterir ve program bağlı değilse her zamanki emoji kalır.",
+      "🎙️ «🔇 Ses susturma» eylemi «🎙️ Sesi sustur/aç» oldu (yaptığı işte «Sustur» / «Sesi aç») — 🔇 eylem değil durum gibi görünüyordu ve «ses susturma» kafa karıştırıyordu. vMix giriş ve master için de aynı.",
+      "👻 OBS ayna sahneleri — kimse oluşturmadan panel masasının sonunda kendiliğinden beliren tuşlar (Labs’teki deneysel anahtar) — tamamen kaldırıldı. Masada yalnızca sizin oluşturduklarınız yaşar: sahne tuşu 🎬 oluşturucudan ya da düzenleyiciden, diğerleri gibi.",
+      "🧹 Tuş düzenleyicisinde ▶ Şimdi dene, «Ne yapar»ın üstüne taşıyordu (uzun yazılı kare bir düğmeydi). Artık gerçek bir metin düğmesi ve her şey yerli yerinde."
+    ]
+  },
   "0.155.2": {
     "titulo": "🔊 Overlay sesleri: taramadan kalan üç şey",
     "itens": [
