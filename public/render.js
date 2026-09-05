@@ -1909,7 +1909,8 @@ function montarBotaoTrilha(t, opts = {}) {
     + (opts.tocando ? ' tocando' : '')
     + (estado === 'verde' ? ' obs-ligado' : estado === 'vermelho' ? ' obs-preview' : '')
     + (ehVmix ? ' trilha-vmix' : '')
-    + (!ehPasta && (ehVmix ? !t.vmixAcao : ehObs ? !t.obsAcao : !t.url) ? ' pendente' : '');
+    // 🔗 v0.161: tecla apontada para um arquivo que sumiu também fica «pendente»
+    + (!ehPasta && (ehVmix ? !t.vmixAcao : ehObs ? !t.obsAcao : (!t.url || t.localSumiu === true)) ? ' pendente' : '');
   if (t.cor) b.style.setProperty('--trilha-cor', t.cor);
   b.dataset.trilha = t.id;
   const MODO_DICA = { solo: 'toca/para', sobrepor: 'toca por cima', recomecar: 'recomeça por cima', loop: '🔁 repete' };

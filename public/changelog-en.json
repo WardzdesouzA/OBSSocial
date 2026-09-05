@@ -1,4 +1,13 @@
 {
+  "0.161.0": {
+    "titulo": "🔗 The Mesa magnifier points keys to your sound files, without copying anything",
+    "itens": [
+      "🔎 The magnifier in “Import from Stream Deck” now only POINTS each key to the file found in the folder: the sound stays where it is on your computer and OBS Social plays it from there. Nothing is copied into the program — unless you tick “📥 Copy the files into the Mesa library”, which works as before.",
+      "🏷️ It matches by the file name Stream Deck used OR by the key name: a key called “Applause” finds Applause.wav (or .mp3, .ogg…), ignoring accents, case and punctuation. It works for keys created by hand, not only imported ones.",
+      "🔁 Searching again works: keys without sound, keys whose library copy was lost and keys already pointing to the computer join the search (folder moved? point to the new one and click again). Keys with a healthy copy in the library are left alone.",
+      "🔒 Each file path lives only on the server: the screens never send any path, and the sound is served by the key id. The full Mesa backup keeps the pointed key but not the file (it lives in your folder)."
+    ]
+  },
   "0.160.0": {
     "titulo": "🎁 Stock sounds: alert, likemeter, QR Code and highlight come with their own sound",
     "itens": [

@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.161.0",
+    "titulo": "🔗 A lupa da Mesa aponta as teclas para os seus arquivos de som, sem copiar nada",
+    "itens": [
+      "🔎 A lupa de «Importar do Stream Deck» agora só APONTA cada tecla para o arquivo encontrado na pasta: o som fica onde está no seu computador e o OBS Social toca de lá. Nada é copiado para dentro do programa — a não ser que você marque «📥 Copiar os arquivos para a biblioteca da Mesa», que faz como antes.",
+      "🏷️ Ela casa pelo nome do arquivo que o Stream Deck usava OU pelo nome da tecla: uma tecla chamada «Aplausos» encontra Aplausos.wav (ou .mp3, .ogg…), sem ligar para acento, maiúscula ou pontuação. Serve para teclas criadas na mão, não só para as importadas.",
+      "🔁 Buscar de novo funciona: entram na busca as teclas sem som, as que perderam a cópia na biblioteca e as que já apontam para o computador (a pasta mudou de lugar? aponte a nova e clique de novo). Tecla com cópia boa na biblioteca não é mexida.",
+      "🔒 O caminho de cada arquivo mora só no servidor: as telas nunca mandam caminho nenhum, e o som é servido pelo id da tecla. O backup total da Mesa guarda a tecla apontada, mas não o arquivo (ele mora na sua pasta)."
+    ]
+  },
+  {
     "version": "0.160.0",
     "titulo": "🎁 Sons de fábrica: aviso, likômetro, QR Code e destaque já vêm com o seu som",
     "itens": [

@@ -2807,11 +2807,13 @@
               <input type="file" id="sdBackupArquivo" accept=".streamDeckProfilesBackup,.streamDeckProfile,.sdProfile,.zip" style="padding:6px">
             <span id="sdImportandoHint" class="hint" style="display:none;margin:0">⏳ Lendo o backup...</span>
             </div>
-            <div class="hint">No programa Stream Deck: <b>Preferências → Perfis → exportar backup</b>. Cada perfil vira uma 📁 pasta da Mesa com tudo dentro no lugar: as pastas do Stream Deck viram pastas aninhadas, cada Multi Action vira um 🎛️ botão de multi ação (as esperas viram o ⏱), os botões "Tocar áudio" viram trilhas prontas (nome, volume, 🔁 e fade), as ações do OBS Studio viram teclas 🎬 e a arte de cada tecla vem junto. Os arquivos de som não vêm no backup — aponte a pasta deles aqui embaixo que eu encontro e copio sozinho.</div>
+            <div class="hint">No programa Stream Deck: <b>Preferências → Perfis → exportar backup</b>. Cada perfil vira uma 📁 pasta da Mesa com tudo dentro no lugar: as pastas do Stream Deck viram pastas aninhadas, cada Multi Action vira um 🎛️ botão de multi ação (as esperas viram o ⏱), os botões "Tocar áudio" viram trilhas prontas (nome, volume, 🔁 e fade), as ações do OBS Studio viram teclas 🎬 e a arte de cada tecla vem junto. Os arquivos de som não vêm no backup — aponte a pasta deles aqui embaixo que eu encontro sozinho.</div>
             <div class="row" style="margin-top:6px;align-items:center">
               <input type="text" id="sdPastaInput" placeholder="ex.: C:\Users\você\Música  ou  /Users/você/Coisas da live" style="flex:1">
-              <button id="sdCasarBtn" class="icon-btn" title="Procurar os sons das trilhas pendentes nessa pasta">🔎</button>
+              <button id="sdCasarBtn" class="icon-btn" title="Procurar nessa pasta (e nas de dentro) o som de cada tecla sem som — pelo nome do arquivo do Stream Deck ou pelo nome da tecla — e apontar a tecla para ele">🔎</button>
             </div>
+            <label class="hint" style="display:flex;align-items:center;gap:6px;margin:4px 0 0;cursor:pointer"><input type="checkbox" id="sdCopiarCheck"> 📥 Copiar os arquivos para a biblioteca da Mesa (sem marcar, a tecla só aponta para o arquivo, que fica onde está)</label>
+            <div class="hint" style="margin:4px 0 0">🔎 A lupa casa pelo nome do arquivo que o Stream Deck usava ou pelo nome da tecla (Aplausos → Aplausos.wav; acento, maiúscula e pontuação não contam). Tecla sem som, com a cópia perdida ou já apontando para o computador entra na busca; tecla com cópia boa na biblioteca fica como está. Se a pasta mudar de lugar, é só apontar a nova e clicar de novo.</div>
             <div class="hint" id="sdPendentesHint" style="display:none;margin-bottom:0"></div>
           </div>
           <!-- 💾 v0.90: backup próprio da Mesa (simples/total) + restauração -->
@@ -2825,6 +2827,7 @@
               <input type="file" id="mesaRestArquivo" accept=".json,.zip,.streamDeckProfilesBackup,.streamDeckProfile,.sdProfile" style="padding:6px">
               <span id="mesaRestHint" class="hint" style="display:none;margin:0">⏳ Restaurando...</span>
             </div>
+            <div class="hint" style="margin:0 0 4px">🔗 Tecla apontada para um arquivo do computador (pela lupa 🔎) entra no backup só como apontamento — o arquivo fica na sua pasta e não vai junto.</div>
             <div class="hint" style="margin-bottom:0">O simples guarda só as teclas; o total inclui os arquivos da biblioteca da Mesa (e o que as teclas usam da geral). Restaurar um backup da Mesa substitui as teclas atuais; um backup do Stream Deck continua entrando por adição, como sempre. Só no computador do streamer.</div>
           </div>
         </div>
@@ -3283,8 +3286,12 @@ const hub = connectHub((event) => {
         : 'Não deu: ' + (event.erro || 'arquivo não reconhecido'), 'Importar do Stream Deck', '🎛️');
       break;
     case 'trilhasCasadas':
+      // (frases inteiras traduzíveis, com os números por fora)
       obsAviso(event.ok
-        ? `🔎 ${event.casadas || 0} som(ns) encontrado(s) e copiado(s)!` + (event.faltando && event.faltando.length ? ` Ainda faltam: ${event.faltando.slice(0, 5).join(', ')}${event.faltando.length > 5 ? '…' : ''}` : '')
+        ? `${OBS_I18N.t(event.copiar ? '🔎 Sons encontrados e copiados:' : '🔎 Sons encontrados e apontados:')} ${event.casadas || 0}.`
+          + (event.religadas ? ` ${OBS_I18N.t('Religados:')} ${event.religadas}.` : '')
+          + (event.faltando && event.faltando.length ? ` ${OBS_I18N.t('Ainda faltam:')} ${event.faltando.slice(0, 5).join(', ')}${event.faltando.length > 5 ? '…' : ''}` : '')
+          + (!event.casadas && !event.religadas && !(event.faltando || []).length ? ' ' + OBS_I18N.t('Nenhuma tecla precisava de som.') : '')
         : 'Não deu: ' + (event.erro || 'pasta não encontrada'), 'Procurar os sons', '🔎');
       break;
     case 'pix':
@@ -6378,12 +6385,15 @@ function renderTrilhasDeck() {
   document.getElementById('trilhasPagProx').disabled = trilhaPagina >= paginas - 1;
   // Pendentes do importador
   const pend = cfgTrilhas.filter((t) => !t.url && t.origem);
+  // 🔗 v0.161: tecla apontada para um arquivo que não está mais lá
+  const sumidas = cfgTrilhas.filter((t) => t.localSumiu === true);
   const hint = document.getElementById('sdPendentesHint');
   if (hint) {
-    hint.style.display = pend.length ? '' : 'none';
-    hint.textContent = pend.length
-      ? `⏳ ${pend.length} trilha(s) importada(s) ainda sem arquivo de som — aponte a pasta dos áudios acima e clique em 🔎.`
-      : '';
+    hint.style.display = pend.length || sumidas.length ? '' : 'none';
+    hint.textContent = [
+      pend.length ? `⏳ ${pend.length} trilha(s) importada(s) ainda sem arquivo de som — aponte a pasta dos áudios acima e clique em 🔎.` : '',
+      sumidas.length ? `${OBS_I18N.t('🔗 Teclas apontando para arquivos que sumiram:')} ${sumidas.length} ${OBS_I18N.t('— aponte a pasta onde eles estão agora e clique em 🔎.')}` : '',
+    ].filter(Boolean).join(' ');
   }
   renderTrilhasDeckPasta(); // 🎛️➡ v0.85: a grade lateral acompanha sempre
 }
@@ -7026,7 +7036,8 @@ function montarEditorTecla(card, slot, idSel) {
     }
     if (t.url && ![...arq.options].some((o) => o.selected && o.value)) {
       const op = document.createElement('option');
-      op.value = t.url; op.textContent = decodeURIComponent(t.url.split('/').pop()); op.selected = true;
+      // 🔗 v0.161: tecla apontada para um arquivo do computador (pela lupa 🔎)
+      op.value = t.url; op.textContent = t.url.startsWith('/trilha-local/') ? (t.localSumiu ? '⚠️ ' : '🔗 ') + (t.localNome || t.url) : decodeURIComponent(t.url.split('/').pop()); op.selected = true;
       arq.appendChild(op);
     }
   }
@@ -7883,7 +7894,7 @@ document.getElementById('sdBackupArquivo').onchange = async () => {
 document.getElementById('sdCasarBtn').onclick = () => {
   const pasta = document.getElementById('sdPastaInput').value.trim();
   if (!pasta) { obsAviso('Escreva o caminho da pasta onde estão os arquivos de som.', 'Procurar os sons', '🔎'); return; }
-  hub.send({ type: 'trilhasCasarPasta', pasta });
+  hub.send({ type: 'trilhasCasarPasta', pasta, copiar: !!document.getElementById('sdCopiarCheck')?.checked });
 };
 
 // ---------- 💾 v0.90: backup próprio da Mesa de Trilhas ----------

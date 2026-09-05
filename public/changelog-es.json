@@ -1,4 +1,13 @@
 {
+  "0.161.0": {
+    "titulo": "🔗 La lupa de la Mesa apunta las teclas a tus archivos de sonido, sin copiar nada",
+    "itens": [
+      "🔎 La lupa de «Importar del Stream Deck» ahora solo APUNTA cada tecla al archivo encontrado en la carpeta: el sonido se queda donde está en tu computadora y OBS Social lo toca desde ahí. Nada se copia dentro del programa — salvo que marques «📥 Copiar los archivos a la biblioteca de la Mesa», que funciona como antes.",
+      "🏷️ Casa por el nombre del archivo que usaba el Stream Deck O por el nombre de la tecla: una tecla llamada «Aplausos» encuentra Aplausos.wav (o .mp3, .ogg…), sin importar acento, mayúscula o puntuación. Sirve para teclas creadas a mano, no solo para las importadas.",
+      "🔁 Buscar de nuevo funciona: entran en la búsqueda las teclas sin sonido, las que perdieron la copia en la biblioteca y las que ya apuntan a la computadora (¿la carpeta cambió de lugar? apunta la nueva y haz clic de nuevo). La tecla con copia buena en la biblioteca no se toca.",
+      "🔒 La ruta de cada archivo vive solo en el servidor: las pantallas nunca mandan ninguna ruta, y el sonido se sirve por el id de la tecla. La copia total de la Mesa guarda la tecla apuntada, pero no el archivo (vive en tu carpeta)."
+    ]
+  },
   "0.160.0": {
     "titulo": "🎁 Sonidos de fábrica: aviso, likómetro, código QR y destacado ya vienen con su sonido",
     "itens": [
