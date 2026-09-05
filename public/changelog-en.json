@@ -1,4 +1,12 @@
 {
+  "0.162.0": {
+    "titulo": "🎬 Widgets play their exit animation again, and the Mesa no longer “eats” the start of the track",
+    "itens": [
+      "🎵 Mesa de Trilhas: when switching tracks with an exit fade, the new one skipped its first seconds (the length of the fade) — the sync that lets a late screen join at the right point was counting the fade time as if the new track were already playing. Now the new track starts from zero after the fade, and late-screen sync keeps working.",
+      "🎬 QR Code, raffle, likemeter, audience, winstreak, alerts and clock/stopwatch/timer entered with the chosen animation but simply disappeared on exit — whatever exit animation and time was set in 🎨 Themes. The cause: the entrance animation rule stayed in force while the widget was leaving and beat the exit rule; the program waited the exit time and then removed the widget at once. Now only the exit animation stands while leaving, for the chosen time, and the entrance one comes back for the next appearance.",
+      "💬 The highlighted comment and the media (enlarged avatar, subscriber media, direct media, image/video keys) already left with an animation and stay the same."
+    ]
+  },
   "0.161.0": {
     "titulo": "🔗 The Mesa magnifier points keys to your sound files, without copying anything",
     "itens": [

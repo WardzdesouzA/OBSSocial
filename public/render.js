@@ -1495,7 +1495,16 @@ const TRILHA_PLAYER = (() => {
       const velha = atual;
       atual = null;
       if (fadeSaida(velha)) {
-        rampa(0, Math.min(Math.max(0, Number(velha.fade) || 0), 3), () => { try { el.pause(); } catch {} comecarBase(trilha, desde); });
+        // 🎵 v0.162: a nova só começa DEPOIS do fade da antiga — e o «desde»
+        // (o instante em que o servidor mandou tocar, usado para uma tela que
+        // chega atrasada entrar no ponto certo) anda junto com essa espera.
+        // Sem isso, comecarBase achava que a trilha já tocava há N segundos
+        // e pulava o começo dela (o tamanho do fade) — «comia» a introdução.
+        const esperaDesde = Date.now();
+        rampa(0, Math.min(Math.max(0, Number(velha.fade) || 0), 3), () => {
+          try { el.pause(); } catch {}
+          comecarBase(trilha, desde ? desde + (Date.now() - esperaDesde) : desde);
+        });
       } else {
         try { el.pause(); } catch {}
         comecarBase(trilha, desde);
