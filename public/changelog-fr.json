@@ -1,4 +1,11 @@
 {
+  "0.158.2": {
+    "titulo": "🧹 Effacer les commentaires de test efface aussi leurs chiffres",
+    "itens": [
+      "🧹 Le bouton d’effacement des commentaires de test retirait les messages des colonnes, de la file et des enregistrés, mais les chiffres restaient : le total en tête de chaque colonne et les compteurs des onglets (En direct, Membres, Super Chats, WhatsApp, Telegram, Soutiens) continuaient d’additionner ce qui était faux. Chaque test effacé est maintenant déduit, et les chiffres reviennent à ce qu’ils étaient avant lui.",
+      "🔁 Au redémarrage, les commentaires de test conservés dans le journal du jour ne reviennent plus — ni à l’écran ni dans le compte. Les vrais restent tels quels."
+    ]
+  },
   "0.158.1": {
     "titulo": "🎚️ Table de pistes : changer de musique respecte à nouveau le fondu choisi",
     "itens": [

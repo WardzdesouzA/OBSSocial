@@ -1,4 +1,11 @@
 {
+  "0.158.2": {
+    "titulo": "🧹 Test yorumlarını silmek sayılarını da siliyor",
+    "itens": [
+      "🧹 Test yorumlarını silme düğmesi mesajları sütunlardan, kuyruktan ve kayıtlılardan kaldırıyordu ama sayılar kalıyordu: her sütun başlığındaki toplam ve sekme sayaçları (Canlı, Üyeler, Süper Sohbetler, WhatsApp, Telegram, Destekler) sahte olanı saymaya devam ediyordu. Artık silinen her test düşülüyor ve sayılar ondan önceki hâline dönüyor.",
+      "🔁 Program yeniden başlatıldığında, günün günlüğünde kalan test yorumları artık geri gelmiyor — ne ekrana ne de sayıma. Gerçek olanlar olduğu gibi kalıyor."
+    ]
+  },
   "0.158.1": {
     "titulo": "🎚️ Ses masası: müzik geçişi yeniden seçilen fade’e uyuyor",
     "itens": [

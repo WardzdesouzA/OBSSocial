@@ -1,4 +1,11 @@
 {
+  "0.158.2": {
+    "titulo": "🧹 Borrar los comentarios de prueba también borra sus números",
+    "itens": [
+      "🧹 El botón de borrar los comentarios de prueba quitaba los mensajes de las columnas, de la cola y de los guardados, pero los números seguían ahí: el total en la cabecera de cada columna y las cuentas de las pestañas (En vivo, Miembros, Super Chats, WhatsApp, Telegram, Apoyos) seguían sumando lo que era falso. Ahora cada prueba borrada se descuenta, y los números vuelven a lo que eran antes de ella.",
+      "🔁 Al reiniciar el programa, los comentarios de prueba guardados en el registro del día ya no vuelven — ni a la pantalla ni a la cuenta. Lo real sigue igual."
+    ]
+  },
   "0.158.1": {
     "titulo": "🎚️ Mesa de pistas: cambiar de música vuelve a respetar el fade elegido",
     "itens": [

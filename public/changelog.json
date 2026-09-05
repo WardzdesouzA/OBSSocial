@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.158.2",
+    "titulo": "🧹 Apagar os comentários de teste também apaga os números deles",
+    "itens": [
+      "🧹 O botão de apagar os comentários de teste tirava as mensagens das colunas, da fila e dos salvos, mas os números continuavam lá: o total no cabeçalho de cada coluna e as contagens das abas (Ao vivo, Membros, Super Chats, WhatsApp, Telegram, Apoios) seguiam somando o que era de mentira. Agora cada teste apagado é descontado, e os números voltam ao que eram antes dele.",
+      "🔁 Ao reiniciar o programa, os comentários de teste guardados no log do dia não voltam mais — nem para a tela, nem para a conta. O que é de verdade continua igual."
+    ]
+  },
+  {
     "version": "0.158.1",
     "titulo": "🎚️ Mesa de trilhas: a troca de música voltou a respeitar o fade escolhido",
     "itens": [

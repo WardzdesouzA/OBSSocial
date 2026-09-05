@@ -1,4 +1,11 @@
 {
+  "0.158.2": {
+    "titulo": "🧹 Clearing the test comments also clears their numbers",
+    "itens": [
+      "🧹 The clear-test-comments button removed the messages from the columns, the queue and the saved list, but the numbers stayed: the total on each column header and the tab counts (Live, Members, Super Chats, WhatsApp, Telegram, Support) kept adding up what was fake. Now every cleared test is subtracted, and the numbers go back to what they were before it.",
+      "🔁 On restart, test comments kept in the day’s log no longer come back — neither to the screen nor to the count. Real ones stay as they are."
+    ]
+  },
   "0.158.1": {
     "titulo": "🎚️ Sound deck: switching songs respects the chosen fade again",
     "itens": [
