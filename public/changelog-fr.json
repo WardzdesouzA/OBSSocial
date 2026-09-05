@@ -1,4 +1,12 @@
 {
+  "0.162.0": {
+    "titulo": "🎬 Les widgets refont leur animation de sortie, et la Mesa ne « mange » plus le début de la piste",
+    "itens": [
+      "🎵 Mesa de Trilhas : en changeant de piste avec un fondu de sortie, la nouvelle sautait ses premières secondes (la durée du fondu) — la synchronisation qui fait entrer un écran en retard au bon endroit comptait le temps du fondu comme si la nouvelle piste jouait déjà. Maintenant la nouvelle piste part de zéro après le fondu, et la synchronisation des écrans en retard continue de fonctionner.",
+      "🎬 QR Code, tirage, likomètre, audience, winstreak, avis et horloge/chronomètre/minuteur entraient avec l’animation choisie mais disparaissaient simplement à la sortie — quels que soient l’animation et le temps de sortie réglés dans 🎨 Thèmes. La cause : la règle de l’animation d’entrée restait en vigueur pendant la sortie et l’emportait sur celle de sortie ; le programme attendait le temps de sortie puis retirait le widget d’un coup. Maintenant, à la sortie, seule l’animation de sortie tient, pour le temps choisi, et celle d’entrée revient pour la prochaine apparition.",
+      "💬 Le commentaire mis en avant et les médias (avatar agrandi, média de l’abonné, média direct, touches image/vidéo) sortaient déjà avec une animation et restent tels quels."
+    ]
+  },
   "0.161.0": {
     "titulo": "🔗 La loupe de la Mesa fait pointer les touches vers vos fichiers son, sans rien copier",
     "itens": [

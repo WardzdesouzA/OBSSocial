@@ -1,4 +1,12 @@
 {
+  "0.162.0": {
+    "titulo": "🎬 Die Widgets spielen ihre Ausblend-Animation wieder, und die Mesa „frisst“ den Anfang der Spur nicht mehr",
+    "itens": [
+      "🎵 Mesa de Trilhas: beim Spurwechsel mit Ausblend-Fade übersprang die neue Spur ihre ersten Sekunden (die Länge des Fades) — die Synchronisation, die einen verspäteten Bildschirm an der richtigen Stelle einsteigen lässt, zählte die Fade-Zeit, als liefe die neue Spur schon. Jetzt startet die neue Spur nach dem Fade bei null, und die Synchronisation verspäteter Bildschirme funktioniert weiter.",
+      "🎬 QR-Code, Verlosung, Likemeter, Zuschauer, Winstreak, Hinweise und Uhr/Stoppuhr/Timer erschienen mit der gewählten Animation, verschwanden beim Ausblenden aber einfach — egal welche Ausblend-Animation und Zeit unter 🎨 Themen eingestellt war. Die Ursache: die Regel der Einblend-Animation galt weiter, während das Widget ausgeblendet wurde, und schlug die Ausblend-Regel; das Programm wartete die Ausblendzeit ab und entfernte das Widget dann auf einmal. Jetzt gilt beim Ausblenden nur die Ausblend-Animation, in der gewählten Zeit, und die Einblend-Animation kommt für das nächste Erscheinen zurück.",
+      "💬 Der hervorgehobene Kommentar und die Medien (vergrößerter Avatar, Abonnenten-Medien, Direktmedien, Bild-/Videotasten) wurden schon mit Animation ausgeblendet und bleiben gleich."
+    ]
+  },
   "0.161.0": {
     "titulo": "🔗 Die Lupe der Mesa lässt Tasten auf deine Klangdateien zeigen, ohne etwas zu kopieren",
     "itens": [

@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.162.0",
+    "titulo": "🎬 Os widgets voltam a fazer a animação de saída e a Mesa não «come» mais o começo da trilha",
+    "itens": [
+      "🎵 Mesa de Trilhas: ao trocar de trilha com fade de saída, a nova pulava os primeiros segundos (o tamanho do fade) — a sincronia que faz uma tela atrasada entrar no ponto certo contava o tempo do fade como se a nova já estivesse tocando. Agora a nova começa do zero depois do fade, e a sincronia das telas atrasadas continua valendo.",
+      "🎬 QR Code, sorteio, likômetro, audiência, winstreak, avisos e relógio/cronômetro/timer entravam com a animação escolhida, mas na hora de sair simplesmente desapareciam — qualquer que fosse a animação e o tempo de saída configurados em 🎨 Temas. A causa: a regra da animação de entrada continuava valendo enquanto o widget saía e ganhava da regra de saída; o programa esperava o tempo da saída e então tirava o widget de uma vez. Agora, ao sair, só a animação de saída fica de pé, no tempo escolhido, e a de entrada volta ao lugar para a próxima aparição.",
+      "💬 O comentário em destaque e as mídias (avatar ampliado, mídia do inscrito, mídia direta, teclas de imagem/vídeo) já saíam com animação e seguem iguais."
+    ]
+  },
+  {
     "version": "0.161.0",
     "titulo": "🔗 A lupa da Mesa aponta as teclas para os seus arquivos de som, sem copiar nada",
     "itens": [

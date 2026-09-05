@@ -1,4 +1,12 @@
 {
+  "0.162.0": {
+    "titulo": "🎬 Los widgets vuelven a hacer la animación de salida y la Mesa ya no «se come» el comienzo de la pista",
+    "itens": [
+      "🎵 Mesa de Trilhas: al cambiar de pista con fade de salida, la nueva saltaba sus primeros segundos (el tamaño del fade) — la sincronía que hace que una pantalla atrasada entre en el punto correcto contaba el tiempo del fade como si la nueva ya estuviera sonando. Ahora la nueva empieza desde cero después del fade, y la sincronía de las pantallas atrasadas sigue valiendo.",
+      "🎬 Código QR, sorteo, likómetro, audiencia, winstreak, avisos y reloj/cronómetro/timer entraban con la animación elegida, pero al salir simplemente desaparecían — fuera cual fuera la animación y el tiempo de salida configurados en 🎨 Temas. La causa: la regla de la animación de entrada seguía valiendo mientras el widget salía y le ganaba a la de salida; el programa esperaba el tiempo de salida y entonces quitaba el widget de una vez. Ahora, al salir, solo queda en pie la animación de salida, en el tiempo elegido, y la de entrada vuelve a su lugar para la próxima aparición.",
+      "💬 El comentario destacado y los medios (avatar ampliado, medio del suscriptor, medio directo, teclas de imagen/video) ya salían con animación y siguen iguales."
+    ]
+  },
   "0.161.0": {
     "titulo": "🔗 La lupa de la Mesa apunta las teclas a tus archivos de sonido, sin copiar nada",
     "itens": [

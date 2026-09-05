@@ -1,4 +1,12 @@
 {
+  "0.162.0": {
+    "titulo": "🎬 Widget’lar çıkış animasyonunu yeniden oynatıyor ve Mesa artık parçanın başını “yemiyor”",
+    "itens": [
+      "🎵 Mesa de Trilhas: çıkış fade’iyle parça değiştirince yeni parça ilk saniyelerini (fade uzunluğu kadar) atlıyordu — geç açılan bir ekranı doğru noktadan başlatan eşitleme, fade süresini yeni parça zaten çalıyormuş gibi sayıyordu. Artık yeni parça fade’den sonra sıfırdan başlıyor ve geç ekranların eşitlemesi çalışmaya devam ediyor.",
+      "🎬 QR Kod, çekiliş, beğeni ölçer, izleyici, galibiyet serisi, duyurular ve saat/kronometre/zamanlayıcı seçilen animasyonla giriyor ama çıkarken düpedüz kayboluyordu — 🎨 Temalar’da hangi çıkış animasyonu ve süresi ayarlanmış olursa olsun. Sebep: widget çıkarken giriş animasyonunun kuralı geçerli kalmaya devam edip çıkış kuralını yeniyordu; program çıkış süresini bekleyip widget’ı bir anda kaldırıyordu. Artık çıkarken yalnızca çıkış animasyonu, seçilen sürede geçerli; giriş animasyonu bir sonraki görünüm için yerine dönüyor.",
+      "💬 Öne çıkan yorum ve medyalar (büyütülmüş avatar, abone medyası, doğrudan medya, görsel/video tuşları) zaten animasyonla çıkıyordu ve aynı kalıyor."
+    ]
+  },
   "0.161.0": {
     "titulo": "🔗 Mesa’nın büyüteci tuşları hiçbir şey kopyalamadan ses dosyalarınıza yönlendiriyor",
     "itens": [

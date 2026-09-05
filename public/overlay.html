@@ -529,32 +529,6 @@
   .fout-blur { animation: foBlur var(--out-dur, 0.5s) ease-in forwards; }
   @keyframes foBlur { to { opacity: 0; filter: blur(16px); } }
 
-  /* ---------- Animações de saída dos widgets (compostas com --pos-tf) ---------- */
-  .widget.visible.wout-fade { animation: foFade var(--out-dur, 0.4s) ease-in forwards; }
-  .widget.visible.wout-slide-up { animation: woSlideUp var(--out-dur, 0.35s) ease-in forwards; }
-  @keyframes woSlideUp { to { opacity: 0; transform: var(--pos-tf, none) translateY(-70px); } }
-  .widget.visible.wout-slide-down { animation: woSlideDown var(--out-dur, 0.35s) ease-in forwards; }
-  @keyframes woSlideDown { to { opacity: 0; transform: var(--pos-tf, none) translateY(70px); } }
-  .widget.visible.wout-slide-left { animation: woSlideLeft var(--out-dur, 0.4s) ease-in forwards; }
-  @keyframes woSlideLeft { to { opacity: 0; transform: var(--pos-tf, none) translateX(-90px); } }
-  .widget.visible.wout-slide-right { animation: woSlideRight var(--out-dur, 0.4s) ease-in forwards; }
-  @keyframes woSlideRight { to { opacity: 0; transform: var(--pos-tf, none) translateX(90px); } }
-  .widget.visible.wout-pop { animation: woPop var(--out-dur, 0.3s) ease-in forwards; }
-  @keyframes woPop { to { opacity: 0; transform: var(--pos-tf, none) scale(0.5); } }
-  .widget.visible.wout-zoom { animation: woZoom var(--out-dur, 0.4s) ease-in forwards; }
-  @keyframes woZoom { to { opacity: 0; transform: var(--pos-tf, none) scale(2.2); } }
-  .widget.visible.wout-flip { animation: woFlip var(--out-dur, 0.45s) ease-in forwards; }
-  @keyframes woFlip { to { opacity: 0; transform: var(--pos-tf, none) perspective(700px) rotateY(90deg); } }
-  .widget.visible.wout-spin { animation: woSpin var(--out-dur, 0.5s) ease-in forwards; }
-  @keyframes woSpin { to { opacity: 0; transform: var(--pos-tf, none) rotate(360deg) scale(0.3); } }
-  .widget.visible.wout-bounce { animation: woBounce var(--out-dur, 0.6s) ease-in forwards; }
-  @keyframes woBounce {
-    0% { transform: var(--pos-tf, none) translateY(0); }
-    25% { transform: var(--pos-tf, none) translateY(-30px); }
-    100% { opacity: 0; transform: var(--pos-tf, none) translateY(240px); }
-  }
-  .widget.visible.wout-blur { animation: foBlur var(--out-dur, 0.5s) ease-in forwards; }
-
   /* ---------- Animações de entrada dos widgets ----------
      Compostas com a transformação de posição (--pos-tf) para os
      widgets centralizados não pularem durante a animação. */
@@ -585,6 +559,34 @@
   .widget.visible.wanim-spin { animation: wSpin var(--in-dur, 0.5s) cubic-bezier(0.2, 0.9, 0.3, 1.1); }
   @keyframes wSpin { from { opacity: 0; transform: var(--pos-tf, none) rotate(-360deg) scale(0.3); } to { transform: var(--pos-tf, none); } }
   .widget.visible.wanim-blur { animation: blurIn var(--in-dur, 0.55s) ease-out; }
+
+  /* ---------- Animações de saída dos widgets (compostas com --pos-tf) ----------
+     🎬 v0.162: DEPOIS das de entrada de propósito — mesma força de seletor,
+     e a última escrita vence: a saída precisa ganhar da entrada. */
+  .widget.visible.wout-fade { animation: foFade var(--out-dur, 0.4s) ease-in forwards; }
+  .widget.visible.wout-slide-up { animation: woSlideUp var(--out-dur, 0.35s) ease-in forwards; }
+  @keyframes woSlideUp { to { opacity: 0; transform: var(--pos-tf, none) translateY(-70px); } }
+  .widget.visible.wout-slide-down { animation: woSlideDown var(--out-dur, 0.35s) ease-in forwards; }
+  @keyframes woSlideDown { to { opacity: 0; transform: var(--pos-tf, none) translateY(70px); } }
+  .widget.visible.wout-slide-left { animation: woSlideLeft var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes woSlideLeft { to { opacity: 0; transform: var(--pos-tf, none) translateX(-90px); } }
+  .widget.visible.wout-slide-right { animation: woSlideRight var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes woSlideRight { to { opacity: 0; transform: var(--pos-tf, none) translateX(90px); } }
+  .widget.visible.wout-pop { animation: woPop var(--out-dur, 0.3s) ease-in forwards; }
+  @keyframes woPop { to { opacity: 0; transform: var(--pos-tf, none) scale(0.5); } }
+  .widget.visible.wout-zoom { animation: woZoom var(--out-dur, 0.4s) ease-in forwards; }
+  @keyframes woZoom { to { opacity: 0; transform: var(--pos-tf, none) scale(2.2); } }
+  .widget.visible.wout-flip { animation: woFlip var(--out-dur, 0.45s) ease-in forwards; }
+  @keyframes woFlip { to { opacity: 0; transform: var(--pos-tf, none) perspective(700px) rotateY(90deg); } }
+  .widget.visible.wout-spin { animation: woSpin var(--out-dur, 0.5s) ease-in forwards; }
+  @keyframes woSpin { to { opacity: 0; transform: var(--pos-tf, none) rotate(360deg) scale(0.3); } }
+  .widget.visible.wout-bounce { animation: woBounce var(--out-dur, 0.6s) ease-in forwards; }
+  @keyframes woBounce {
+    0% { transform: var(--pos-tf, none) translateY(0); }
+    25% { transform: var(--pos-tf, none) translateY(-30px); }
+    100% { opacity: 0; transform: var(--pos-tf, none) translateY(240px); }
+  }
+  .widget.visible.wout-blur { animation: foBlur var(--out-dur, 0.5s) ease-in forwards; }
 
   /* ---------- Animações em loop (sai e volta, repetindo) ---------- */
   .loop-pulse { animation: loopPulse var(--loop-dur, 3s) ease-in-out infinite; }
@@ -1022,6 +1024,8 @@ function clearWidgetLeaving(el) {
   // 🔒 v0.127.1: a saída anterior (ainda no meio) não pode esconder o widget que voltou
   if (el._hideTimer) { clearTimeout(el._hideTimer); el._hideTimer = null; }
   el.classList.remove(...ANIM_OUT.map((a) => 'wout-' + a));
+  // 🎬 v0.162: a classe da entrada (tirada durante a saída) volta ao lugar
+  if (el.dataset.wanim) { el.classList.add('wanim-' + el.dataset.wanim); delete el.dataset.wanim; }
 }
 
 function showWidgetEl(el, kind) {
@@ -1044,6 +1048,12 @@ function hideWidgetEl(el, kind) {
     return;
   }
   el.dataset.leaving = '1';
+  // 🎬 v0.162: a classe da ENTRADA (wanim-*) fica no widget o tempo todo e a
+  // regra dela vinha depois da de saída no CSS — mesma força, a última
+  // vence: a saída nunca tocava e o widget sumia seco. Durante a saída só a
+  // classe de saída fica (a de entrada volta em clearWidgetLeaving).
+  const entrada = ANIMATIONS.find((a) => el.classList.contains('wanim-' + a));
+  if (entrada) { el.dataset.wanim = entrada; el.classList.remove('wanim-' + entrada); }
   el.classList.add('wout-' + anim);
   el._hideTimer = setTimeout(() => {
     el._hideTimer = null;
