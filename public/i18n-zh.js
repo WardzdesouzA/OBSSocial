@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "✏️ Editor da tecla — botões principais": "✏️ 按键编辑器 — 主按钮",
+    "✏️ Editor da tecla — botões de dentro": "✏️ 按键编辑器 — 内部按钮",
+    "Restaurar o editor": "还原编辑器",
+    "Minimizar (fica só a barra de cima)": "最小化（只留顶部栏）",
+    "Soltar: virar uma janela flutuante": "分离：变成浮动窗口",
+    "Grudar embaixo da grade de botões (um editor por grade)": "贴在按钮网格下方（每个网格一个编辑器）",
+    "🗑️ Apagar": "🗑️ 删除",
     "Escolha primeiro a ação da tecla — o emoji pelo estado depende dela.": "请先选择按键的操作，按状态显示的表情取决于它。",
     "🟢 Ligado / no ar / som ativo": "🟢 开启 / 直播中 / 声音开启",
     "🔴 No preview / mudo": "🔴 预览中 / 已静音",

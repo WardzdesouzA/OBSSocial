@@ -2772,6 +2772,10 @@
                 <button id="trilhasPagProx" class="icon-btn" title="Próxima página" style="width:28px;height:28px">▶</button>
                 <button id="trilhaNovaBtn" class="icon-btn" title="Adicionar uma trilha (o editor abre embaixo)" style="width:28px;height:28px">➕</button>
               </div>
+              <!-- 🪟 v0.157: o editor da tecla dos botões PRINCIPAIS mora aqui —
+                   grudado, ele abre logo abaixo desta grade; solto, é a janela
+                   flutuante de sempre (a posição fixa não liga para o pai) -->
+              <div id="trilhaEditorCard" style="display:none"></div>
             </div>
             <div id="trilhasDeckPastaWrap" style="flex:0 0 auto;display:none;border-left:1px solid var(--border);padding-left:24px">
               <div class="row" style="align-items:center;margin:0 0 6px">
@@ -2787,9 +2791,12 @@
                 <span id="trilhasPaginasPasta" style="display:flex;gap:6px"></span>
                 <button id="trilhasPagPastaProx" class="icon-btn" title="Próxima página" style="width:28px;height:28px">▶</button>
               </div>
+              <!-- 🪟 v0.157: o segundo editor — o da tecla dos botões DE DENTRO.
+                   Só existe com o editor grudado: assim a tecla-mãe (à esquerda)
+                   e a tecla-filha (à direita) ficam abertas ao mesmo tempo -->
+              <div id="trilhaEditorCardPasta" style="display:none"></div>
             </div>
           </div>
-          <div id="trilhaEditorCard" style="display:none"></div>
           <div class="field" style="margin-top:12px">
             <label>🎛️ Importar do Stream Deck (backup de perfis)</label>
             <div class="row">
@@ -6039,8 +6046,64 @@ setInterval(() => { try { renderVmixTeclasGerador(); } catch {} }, 1200);
 // arrastar uma tecla sobre outra troca as duas de lugar (a ordem viaja para o
 // painel e volta, é a mesma lista).
 let trilhaPagina = 0;
-let trilhaSelecionada = null; // id da trilha com o editor aberto
+let trilhaSelecionada = null; // id da trilha com o editor aberto (grade principal / janela solta)
 let cfgPastaAberta = null;    // 📁 id da pasta aberta no deck (null = raiz)
+// 🪟 v0.157: com o editor GRUDADO nas grades, dois editores convivem — o da
+// tecla-mãe embaixo da grade principal e o da tecla-filha embaixo da grade
+// da pasta aberta. Este é o id da tecla aberta no editor da direita.
+let trilhaSelecionadaPasta = null;
+const JAN_EDITOR_TECLA = 'janela:editorTecla';
+function editorGrudado() { return !!(geoLer(JAN_EDITOR_TECLA) || {}).grudado; }
+function editorGrudar(sim) {
+  const g = geoLer(JAN_EDITOR_TECLA) || {};
+  g.grudado = !!sim;
+  geoGravar(JAN_EDITOR_TECLA, g);
+}
+// Em qual editor uma tecla abre: grudado, quem mora na pasta aberta vai para
+// o da direita; todo o resto (e a janela solta, sempre) vai para o principal
+function slotDaTecla(t) {
+  return editorGrudado() && t && t.pastaId && t.pastaId === cfgPastaAberta ? 'pasta' : 'principal';
+}
+function selecionarTecla(id) {
+  const t = id ? cfgTrilhas.find((x) => x.id === id) : null;
+  if (!t) { trilhaSelecionada = null; return; }
+  if (slotDaTecla(t) === 'pasta') trilhaSelecionadaPasta = t.id;
+  else trilhaSelecionada = t.id;
+  if (!editorGrudado()) trilhaSelecionadaPasta = null; // janela solta = um editor só
+}
+// A tecla pode mudar de casa (arraste, «📁 Dentro da pasta», colar): ela
+// segue para o editor da grade onde passou a morar
+function normalizarSelecao() {
+  if (!editorGrudado()) {
+    if (trilhaSelecionadaPasta) { trilhaSelecionada = trilhaSelecionadaPasta; trilhaSelecionadaPasta = null; }
+    return;
+  }
+  const p = trilhaSelecionadaPasta ? cfgTrilhas.find((x) => x.id === trilhaSelecionadaPasta) : null;
+  const m = trilhaSelecionada ? cfgTrilhas.find((x) => x.id === trilhaSelecionada) : null;
+  if (p && slotDaTecla(p) !== 'pasta') { trilhaSelecionadaPasta = null; trilhaSelecionada = p.id; }
+  else if (m && slotDaTecla(m) === 'pasta') { trilhaSelecionada = null; trilhaSelecionadaPasta = m.id; }
+}
+function fecharEditor(slot) {
+  if (slot === 'pasta') trilhaSelecionadaPasta = null; else trilhaSelecionada = null;
+  renderTrilhasDeck();
+  renderTrilhaEditorCard();
+}
+// 🗑️ v0.157: apagar uma tecla — pelo 🗑️ do editor ou pelo botão direito
+async function apagarTrilha(t) {
+  const filhos = cfgTrilhas.filter((x) => x.pastaId === t.id).length;
+  const temConteudo = !!(t.nome || t.url || t.origem || filhos);
+  const aviso = trilhaEhPasta(t)
+    ? `Remover a pasta "${t.nome || 'sem nome'}"?` + (filhos ? ` As ${filhos} tecla(s) de dentro voltam soltas para a Mesa.` : '')
+    : `Remover a trilha "${t.nome || t.origem || 'sem nome'}"? O arquivo de som continua nas mídias.`;
+  if (temConteudo && !await obsConfirmar(aviso, { icone: trilhaEhPasta(t) ? '📁' : '🎵', nivel: 'perigo', ok: 'Remover' })) return;
+  const idx = cfgTrilhas.findIndex((x) => x.id === t.id);
+  if (idx >= 0) cfgTrilhas.splice(idx, 1);
+  if (trilhaSelecionada === t.id) trilhaSelecionada = null;
+  if (trilhaSelecionadaPasta === t.id) trilhaSelecionadaPasta = null;
+  enviarTrilhas();
+  renderTrilhasDeck();
+  renderTrilhaEditorCard();
+}
 
 function trilhasPorPagina() { return trilhasGradeDe(settings || {}); }
 
@@ -6064,9 +6127,11 @@ function abrirMenuTrilha(x, y, itens) {
     b.type = 'button';
     b.textContent = it.rotulo;
     b.style.cssText = 'text-align:left;background:none;border:0;color:inherit;padding:7px 10px;border-radius:8px;font-size:13px;'
-      + (it.off ? 'opacity:0.4;cursor:default' : 'cursor:pointer');
+      + (it.off ? 'opacity:0.4;cursor:default' : 'cursor:pointer')
+      + (it.perigo ? ';color:#ef5350' : ''); // 🗑️ v0.157: item perigoso em vermelho
+    if (it.perigo) b.dataset.perigo = '1';
     if (!it.off) {
-      b.onmouseenter = () => { b.style.background = 'rgba(124,77,255,0.18)'; };
+      b.onmouseenter = () => { b.style.background = it.perigo ? 'rgba(239,83,80,0.18)' : 'rgba(124,77,255,0.18)'; };
       b.onmouseleave = () => { b.style.background = 'none'; };
       b.onclick = (e) => { e.stopPropagation(); fecharMenuTrilha(); it.acao(); };
     }
@@ -6119,10 +6184,10 @@ function colarTecla(dentro, celula) {
     alvo.pastaId = dentro;
     alvo.pos = pos;
     cfgTrilhaClipboard = null;
-    trilhaSelecionada = alvo.id;
+    selecionarTecla(alvo.id);
   } else {
     const copia = clonarTrilhaProfundo(alvo.id, dentro, pos);
-    if (copia) trilhaSelecionada = copia.id;
+    if (copia) selecionarTecla(copia.id);
   }
   enviarTrilhas();
   renderTrilhasDeck();
@@ -6168,6 +6233,8 @@ function menuDaTecla(ev, t) {
       acao: () => colarTecla(t.id, null),
     });
   }
+  // 🗑️ v0.157: apagar direto pelo botão direito (com a mesma confirmação do editor)
+  itens.push('-', { rotulo: OBS_I18N.t('🗑️ Apagar'), perigo: true, acao: () => { apagarTrilha(t); } });
   abrirMenuTrilha(ev.clientX, ev.clientY, itens);
 }
 
@@ -6184,7 +6251,8 @@ function renderTrilhasDeck() {
   // 🎛️➡ v0.85: a grade principal mostra SEMPRE a raiz — a pasta aberta ganha
   // a PRÓPRIA grade ao lado direito (renderTrilhasDeckPasta), então abrir uma
   // pasta não esconde mais os botões principais
-  if (cfgPastaAberta && !cfgTrilhas.some((t) => trilhaEhPasta(t) && t.id === cfgPastaAberta)) cfgPastaAberta = null;
+  // (🪟 v0.157: a pasta sumiu ou deixou de ser pasta — o editor de dentro fecha junto)
+  if (cfgPastaAberta && !cfgTrilhas.some((t) => trilhaEhPasta(t) && t.id === cfgPastaAberta)) { cfgPastaAberta = null; trilhaSelecionadaPasta = null; }
   normalizarPosTrilhas(cfgTrilhas);
   const paginas = paginasDaVisao(cfgTrilhas, null, porPag);
   if (trilhaPagina >= paginas) trilhaPagina = paginas - 1;
@@ -6215,7 +6283,7 @@ function renderTrilhasDeck() {
       ? { filhos: cfgTrilhas.filter((x) => x.pastaId === t.id).length }
       : {});
     b.dataset.celula = String(c);
-    if (t.id === trilhaSelecionada) b.classList.add('selecionada');
+    if (t.id === trilhaSelecionada || t.id === trilhaSelecionadaPasta) b.classList.add('selecionada');
     // Clique = selecionar e abrir o editor; arrastar = mudar de lugar
     if (trilhaEhPasta(t)) {
       b.title += ' — clique e os botões de dentro abrem AO LADO';
@@ -6258,7 +6326,7 @@ function renderTrilhasDeckPasta() {
   const wrap = document.getElementById('trilhasDeckPastaWrap');
   const deck = document.getElementById('trilhasDeckPasta');
   if (!wrap || !deck) return;
-  if (cfgPastaAberta && !cfgTrilhas.some((t) => trilhaEhPasta(t) && t.id === cfgPastaAberta)) cfgPastaAberta = null;
+  if (cfgPastaAberta && !cfgTrilhas.some((t) => trilhaEhPasta(t) && t.id === cfgPastaAberta)) { cfgPastaAberta = null; trilhaSelecionadaPasta = null; }
   // A faixa-espelho da grade principal acompanha: as duas grades começam
   // na MESMA linha quando a lateral está aberta (v0.85.2)
   const topo = document.getElementById('trilhasDeckTopo');
@@ -6309,7 +6377,7 @@ function renderTrilhasDeckPasta() {
       ? { filhos: cfgTrilhas.filter((x) => x.pastaId === t.id).length } // 🪆 v0.89
       : {});
     b.dataset.celula = String(c);
-    if (t.id === trilhaSelecionada) b.classList.add('selecionada');
+    if (t.id === trilhaSelecionada || t.id === trilhaSelecionadaPasta) b.classList.add('selecionada');
     b.addEventListener('pointerdown', (ev) => arrastaOuSeleciona(ev, b, cfgTrilhas.indexOf(t), deck, opts));
     b.oncontextmenu = (ev) => menuDaTecla(ev, t); // 🧭 v0.89
     deck.appendChild(b);
@@ -6329,14 +6397,22 @@ function renderTrilhasDeckPasta() {
 }
 document.getElementById('trilhasPagPastaAnt').onclick = () => { trilhaPaginaPasta = Math.max(0, trilhaPaginaPasta - 1); renderTrilhasDeckPasta(); };
 document.getElementById('trilhasPagPastaProx').onclick = () => { trilhaPaginaPasta += 1; renderTrilhasDeckPasta(); };
-document.getElementById('trilhasDeckPastaFechar').onclick = () => { cfgPastaAberta = null; renderTrilhasDeck(); };
+// 🪟 v0.157: fechar ou trocar a grade de dentro fecha o editor que morava embaixo dela
+document.getElementById('trilhasDeckPastaFechar').onclick = () => {
+  cfgPastaAberta = null;
+  trilhaSelecionadaPasta = null;
+  renderTrilhasDeck();
+  renderTrilhaEditorCard();
+};
 // 🪆 v0.89: ⬅ sobe um nível — a grade lateral passa a mostrar a pasta de fora
 document.getElementById('trilhasDeckPastaSubir').onclick = () => {
   const pasta = cfgTrilhas.find((t) => t.id === cfgPastaAberta);
   if (!pasta || !pasta.pastaId) return;
   cfgPastaAberta = pasta.pastaId;
   trilhaPaginaPasta = 0;
+  trilhaSelecionadaPasta = null;
   renderTrilhasDeck();
+  renderTrilhaEditorCard();
 };
 
 // Um pointerdown numa tecla: se mover de verdade vira arraste; se soltar
@@ -6496,8 +6572,9 @@ function arrastaOuSeleciona(ev, botao, indice, deck, opts) {
     if (t && trilhaEhPasta(t) && cfgPastaAberta !== t.id) {
       cfgPastaAberta = t.id;
       trilhaPaginaPasta = 0;
+      trilhaSelecionadaPasta = null; // 🪟 v0.157: a grade de dentro trocou — o editor de lá fecha
     }
-    trilhaSelecionada = t ? t.id : null;
+    selecionarTecla(t ? t.id : null); // 🪟 v0.157: cada grade tem o seu editor quando grudado
     renderTrilhasDeck();
     renderTrilhaEditorCard();
   };
@@ -6509,9 +6586,20 @@ function arrastaOuSeleciona(ev, botao, indice, deck, opts) {
 
 // 🪟 v0.89: o editor da tecla é uma JANELA — arrasta pela barra de cima,
 // estica pelo canto, 🗖 maximiza e o lugar/tamanho ficam gravados neste
-// navegador (os padrões das janelas que estabelecemos)
-const JAN_EDITOR_TECLA = 'janela:editorTecla';
-function montarJanelaDoEditor(card) {
+// navegador (os padrões das janelas que estabelecemos).
+// 🪟 v0.157: a janela ganhou os botões de sempre (🗕 🗖 ↩ ✖) e pode nascer
+// GRUDADA embaixo da grade a que a tecla pertence — assim um editor abre
+// embaixo dos botões principais e outro embaixo dos botões de dentro.
+// 🗕 e 🗖 do editor grudado valem só enquanto a página está aberta.
+const editorJanEstado = { principal: { min: false, max: false }, pasta: { min: false, max: false } };
+// Cada editor guarda como se atualizar quando o OBS/vMix conectar (as listas
+// chegam DEPOIS de ele já estar aberto) — um por grade
+const editorAoConectar = { principal: { obs: null, vmix: null }, pasta: { obs: null, vmix: null } };
+janelaEditorObs = () => { for (const s of Object.values(editorAoConectar)) if (s.obs) { try { s.obs(); } catch {} } };
+janelaEditorVmix = () => { for (const s of Object.values(editorAoConectar)) if (s.vmix) { try { s.vmix(); } catch {} } };
+function montarJanelaDoEditor(card, slot, ctx) {
+  const grudado = editorGrudado();
+  const est = editorJanEstado[slot] || editorJanEstado.principal;
   // 🪟 v0.91: o lugar desta janela passou a morar no MESMO cofre das outras
   // (obsSocialGeo, no render.js). Quem já tinha uma posição guardada na
   // chave antiga não perde nada: ela é lida uma vez e migrada.
@@ -6523,91 +6611,195 @@ function montarJanelaDoEditor(card) {
     } catch {}
   }
   const grava = () => {
-    geoGravar(JAN_EDITOR_TECLA, {
+    if (grudado || est.min) return; // grudado não tem lugar; encolhido não é o tamanho de verdade
+    const atual = geoLer(JAN_EDITOR_TECLA) || {};
+    // maximizada, o retângulo da tela cheia NÃO é o tamanho normal da janela:
+    // só o «max» fica anotado — o lugar/tamanho de verdade continuam guardados
+    if (card.dataset.max === '1') { geoGravar(JAN_EDITOR_TECLA, Object.assign(atual, { max: true })); return; }
+    g = Object.assign(atual, {
       x: card.offsetLeft, y: card.offsetTop, w: card.offsetWidth, h: card.offsetHeight,
-      max: card.dataset.max === '1',
+      max: false,
     });
+    geoGravar(JAN_EDITOR_TECLA, g);
   };
   const base = 'position:fixed;z-index:230;background:var(--card,#111827);border:1px solid var(--border);'
     + 'border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,0.55);overflow:auto;padding:44px 14px 14px;';
-  const normal = () => {
+  const geoNormal = () => {
+    // sempre o que está GUARDADO agora (arrastar/esticar gravam sem remontar)
+    g = geoLer(JAN_EDITOR_TECLA) || g || {};
     const w = Math.min(Math.max(Number(g.w) || 780, 340), window.innerWidth - 16);
     const h = Math.min(Math.max(Number(g.h) || Math.round(window.innerHeight * 0.6), 240), window.innerHeight - 16);
     const x = Math.min(Math.max(Number.isFinite(Number(g.x)) ? Number(g.x) : (window.innerWidth - w) / 2, 0), window.innerWidth - 80);
     const y = Math.min(Math.max(Number.isFinite(Number(g.y)) ? Number(g.y) : window.innerHeight - h - 20, 0), window.innerHeight - 60);
-    card.style.cssText = base + `resize:both;left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+    return { w, h, x, y };
+  };
+  // Grudado: o cartão mora no fluxo da página, logo abaixo da grade, com a
+  // MESMA largura dela — assim abrir/fechar um editor não empurra a grade
+  // do lado (os campos quebram linha; 🗖 dá a tela cheia quando precisar)
+  const larguraGrudado = () => {
+    const deck = document.getElementById(slot === 'pasta' ? 'trilhasDeckPasta' : 'trilhasDeck');
+    const grade = deck ? parseInt(deck.style.width, 10) || 0 : 0;
+    return grade || 460;
+  };
+  const normal = () => {
+    card.dataset.max = '';
+    if (grudado) {
+      card.style.cssText = 'position:relative;width:' + larguraGrudado() + 'px;max-width:calc(100vw - 48px);'
+        + 'margin-top:10px;padding:44px 12px 12px;background:var(--card,#111827);border:1px solid var(--border);'
+        + 'border-radius:12px;overflow:visible';
+    } else {
+      const { w, h, x, y } = geoNormal();
+      card.style.cssText = base + `resize:both;left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+    }
+    if (est.min) {
+      // 🗕 encolhido: fica só a barra de cima (a janela solta mantém o lugar)
+      card.style.height = '36px';
+      card.style.minHeight = '0';
+      card.style.padding = '34px 0 0'; // sem o recheio, senão o cartão não encolhe
+      card.style.overflow = 'hidden';
+      card.style.resize = 'none';
+    }
   };
   const cheia = () => {
+    card.dataset.max = '1';
     card.style.cssText = base + 'resize:none;left:8px;top:8px;width:calc(100vw - 16px);height:calc(100vh - 16px)';
   };
-  card.dataset.max = g.max ? '1' : '';
-  if (g.max) cheia(); else normal();
+  const maximizada = grudado ? est.max : !!g.max;
+  if (maximizada && !est.min) cheia(); else normal();
   const barra = document.createElement('div');
+  barra.className = 'trilha-edit-barra';
   barra.style.cssText = 'position:absolute;top:0;left:0;right:0;height:34px;display:flex;align-items:center;'
-    + 'gap:6px;padding:0 10px;cursor:move;user-select:none;touch-action:none;'
+    + 'gap:6px;padding:0 10px;user-select:none;touch-action:none;'
+    + (grudado ? 'cursor:default;' : 'cursor:move;')
     + 'border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);background:rgba(255,255,255,0.04)';
   const titulo = document.createElement('span');
-  titulo.textContent = OBS_I18N.t('✏️ Editor da tecla — arraste para mover · estique pelo canto');
+  titulo.textContent = grudado
+    ? (slot === 'pasta' ? OBS_I18N.t('✏️ Editor da tecla — botões de dentro') : OBS_I18N.t('✏️ Editor da tecla — botões principais'))
+    : OBS_I18N.t('✏️ Editor da tecla — arraste para mover · estique pelo canto');
   titulo.style.cssText = 'flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
-  // ↺ v0.91: devolve a janela ao lugar e ao tamanho de fábrica
-  const resetBtn = document.createElement('button');
-  resetBtn.className = 'icon-btn';
-  resetBtn.textContent = '↺';
-  resetBtn.title = OBS_I18N.t('Voltar esta janela ao lugar e ao tamanho padrão');
-  resetBtn.style.cssText = 'width:26px;height:26px';
-  resetBtn.onclick = (e) => {
-    e.stopPropagation();
-    geoEsquecer(JAN_EDITOR_TECLA);
-    g = {};
-    card.dataset.max = '';
-    normal();
+  barra.appendChild(titulo);
+  const botao = (txt, dica, acao) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'icon-btn';
+    b.textContent = txt;
+    b.title = dica;
+    b.style.cssText = 'width:26px;height:26px;flex:none';
+    b.onclick = (e) => { e.stopPropagation(); acao(); };
+    barra.appendChild(b);
+    return b;
   };
-  const maxBtn = document.createElement('button');
-  maxBtn.className = 'icon-btn';
-  maxBtn.textContent = '🗖';
-  maxBtn.title = OBS_I18N.t('Maximizar / restaurar');
-  maxBtn.style.cssText = 'width:26px;height:26px';
-  maxBtn.onclick = (e) => {
-    e.stopPropagation();
-    if (card.dataset.max === '1') { card.dataset.max = ''; normal(); } else { card.dataset.max = '1'; cheia(); }
-    grava();
-  };
-  barra.append(titulo, resetBtn, maxBtn);
-  barra.addEventListener('pointerdown', (ev) => {
-    if (ev.button !== undefined && ev.button !== 0) return;
-    if (ev.target.closest('button')) return; // 🗖 e ↺ não arrastam a janela
-    if (card.dataset.max === '1') return; // maximizada não arrasta
-    ev.preventDefault();
-    const dx = ev.clientX - card.offsetLeft;
-    const dy = ev.clientY - card.offsetTop;
-    const move = (e) => {
-      card.style.left = Math.max(0, Math.min(window.innerWidth - 80, e.clientX - dx)) + 'px';
-      card.style.top = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - dy)) + 'px';
-    };
-    const solta = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', solta);
-      grava();
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', solta);
+  // ↺ v0.91: devolve a janela ao lugar e ao tamanho de fábrica (só solta)
+  if (!grudado) {
+    botao('↺', OBS_I18N.t('Voltar esta janela ao lugar e ao tamanho padrão'), () => {
+      geoEsquecer(JAN_EDITOR_TECLA);
+      g = {};
+      est.min = false;
+      normal();
+      minBtn.textContent = '🗕';
+      minBtn.title = OBS_I18N.t('Minimizar (fica só a barra de cima)');
+      maxBtn.textContent = '🗖';
+      maxBtn.style.display = '';
+    });
+  }
+  // 🗕 encolhe até a barra; de novo, volta
+  const minBtn = botao(est.min ? '🗗' : '🗕', est.min ? OBS_I18N.t('Restaurar o editor') : OBS_I18N.t('Minimizar (fica só a barra de cima)'), () => {
+    est.min = !est.min;
+    minBtn.textContent = est.min ? '🗗' : '🗕';
+    minBtn.title = est.min ? OBS_I18N.t('Restaurar o editor') : OBS_I18N.t('Minimizar (fica só a barra de cima)');
+    maxBtn.style.display = est.min ? 'none' : '';
+    if (est.min) normal();
+    else if (grudado ? est.max : !!g.max) cheia();
+    else normal();
   });
+  const maxBtn = botao(maximizada ? '🗗' : '🗖', OBS_I18N.t('Maximizar / restaurar'), () => {
+    const vaiMax = card.dataset.max !== '1';
+    if (grudado) est.max = vaiMax;
+    if (vaiMax) cheia(); else normal();
+    maxBtn.textContent = vaiMax ? '🗗' : '🗖';
+    grava();
+  });
+  if (est.min) maxBtn.style.display = 'none';
+  // ↩ gruda embaixo da grade / 🪟 solta de novo como janela (a preferência
+  // fica gravada neste navegador, com o lugar da janela)
+  if (grudado) {
+    botao('🪟', OBS_I18N.t('Soltar: virar uma janela flutuante'), () => {
+      editorGrudar(false);
+      editorJanEstado.principal.min = editorJanEstado.pasta.min = false;
+      editorJanEstado.principal.max = editorJanEstado.pasta.max = false;
+      // a janela solta é uma só: fica a tecla do editor em que a pessoa clicou
+      if (slot === 'principal' && trilhaSelecionada) trilhaSelecionadaPasta = null;
+      normalizarSelecao();
+      renderTrilhasDeck();
+      renderTrilhaEditorCard();
+    });
+  } else {
+    botao('↩', OBS_I18N.t('Grudar embaixo da grade de botões (um editor por grade)'), () => {
+      editorGrudar(true);
+      editorJanEstado.principal.min = editorJanEstado.pasta.min = false;
+      normalizarSelecao();
+      renderTrilhasDeck();
+      renderTrilhaEditorCard();
+    });
+  }
+  botao('✖', OBS_I18N.t('Fechar este editor'), () => { if (ctx && ctx.fechar) ctx.fechar(); });
+  // o cartão é o mesmo elemento em toda remontagem: o gravador de tamanho
+  // da rodada anterior sai antes (senão, grudado, ele gravaria o lugar errado)
+  if (card._gravaGeo) { card.removeEventListener('pointerup', card._gravaGeo); card._gravaGeo = null; }
+  if (!grudado) {
+    barra.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== undefined && ev.button !== 0) return;
+      if (ev.target.closest('button')) return; // os botões não arrastam a janela
+      if (card.dataset.max === '1') return; // maximizada não arrasta
+      ev.preventDefault();
+      const dx = ev.clientX - card.offsetLeft;
+      const dy = ev.clientY - card.offsetTop;
+      const move = (e) => {
+        card.style.left = Math.max(0, Math.min(window.innerWidth - 80, e.clientX - dx)) + 'px';
+        card.style.top = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - dy)) + 'px';
+      };
+      const solta = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', solta);
+        // encolhida, só o LUGAR muda (o tamanho de verdade continua guardado)
+        if (est.min) {
+          const atual = geoLer(JAN_EDITOR_TECLA) || {};
+          geoGravar(JAN_EDITOR_TECLA, Object.assign(atual, { x: card.offsetLeft, y: card.offsetTop }));
+        } else grava();
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', solta);
+    });
+    // o tamanho esticado pelo canto também fica gravado quando o mouse solta
+    card._gravaGeo = grava;
+    card.addEventListener('pointerup', grava);
+  }
   card.appendChild(barra);
-  // o tamanho esticado pelo canto também fica gravado quando o mouse solta
-  card.addEventListener('pointerup', grava);
 }
 
-// O editor de UMA trilha (agora numa janela flutuante — v0.89)
+// O editor de UMA trilha — um por grade quando grudado (v0.157), ou a
+// janela flutuante única (v0.89)
 function renderTrilhaEditorCard() {
-  const card = document.getElementById('trilhaEditorCard');
-  if (!card) return;
-  const i = cfgTrilhas.findIndex((t) => t.id === trilhaSelecionada);
-  janelaEditorObs = null; // o editor vai ser remontado (ou fechado)
-  if (i < 0) { card.style.cssText = 'display:none'; card.innerHTML = ''; return; }
+  normalizarSelecao();
+  const grudado = editorGrudado();
+  const cardP = document.getElementById('trilhaEditorCard');
+  const cardF = document.getElementById('trilhaEditorCardPasta');
+  if (cardP) montarEditorTecla(cardP, 'principal', trilhaSelecionada);
+  if (cardF) montarEditorTecla(cardF, 'pasta', grudado ? trilhaSelecionadaPasta : null);
+}
+function montarEditorTecla(card, slot, idSel) {
+  const i = cfgTrilhas.findIndex((t) => t.id === idSel);
+  editorAoConectar[slot].obs = null; // o editor vai ser remontado (ou fechado)
+  editorAoConectar[slot].vmix = null;
+  if (i < 0) { card.style.cssText = 'display:none'; card.innerHTML = ''; card.className = ''; delete card.dataset.trilha; return; }
   const t = cfgTrilhas[i];
+  // outra tecla neste editor: abre inteira (sem herdar o 🗕/🗖 da anterior)
+  if (card.dataset.trilha !== t.id) { editorJanEstado[slot].min = false; editorJanEstado[slot].max = false; }
+  card.dataset.trilha = t.id;
   card.innerHTML = '';
   card.className = 'trilha-edit';
-  montarJanelaDoEditor(card); // 🪟 v0.89: o editor agora é uma JANELA
+  montarJanelaDoEditor(card, slot, { fechar: () => fecharEditor(slot) }); // 🪟 v0.89/v0.157
+  const sufixoId = slot === 'pasta' ? 'Pasta' : ''; // ids únicos com dois editores abertos
   const salva = () => { enviarTrilhas(); renderTrilhasDeck(); };
   const campo = (rotulo, el) => {
     const w = document.createElement('label');
@@ -6658,10 +6850,7 @@ function renderTrilhaEditorCard() {
   const tipoW = campo('Tipo da tecla', tipoSel);
   tipoW.title = '🎵 toca um som · 🖼️/🎞️ mostra uma imagem ou vídeo no painel e no overlay (janela redimensionável ou tela cheia) · 🎬 Ação do OBS: comanda o OBS Studio (gravar, trocar de cena, mudo...) · 🎛️ Botão de multi ação: guarda teclas e o clique toca tudo em fila (segurar abre) · 📁 Pasta simples: só guarda teclas — o clique abre, nada toca';
   topo.appendChild(tipoW);
-  const fechar = document.createElement('button');
-  fechar.className = 'icon-btn'; fechar.textContent = '✖'; fechar.title = 'Fechar este editor';
-  fechar.onclick = () => { trilhaSelecionada = null; renderTrilhasDeck(); renderTrilhaEditorCard(); };
-  topo.appendChild(fechar);
+  // (o ✖ de fechar mora na barra da janela — v0.157)
   // Visual: emoji OU imagem, posição do texto, cor da borda
   const visu = linha();
   const emoji = document.createElement('input');
@@ -6697,7 +6886,7 @@ function renderTrilhaEditorCard() {
   // catálogo em render.js) ou os dois emojis escolhidos pela pessoa
   const estadoLinha = linha();
   const estadoModo = document.createElement('select');
-  estadoModo.id = 'trEstadoModo';
+  estadoModo.id = 'trEstadoModo' + sufixoId;
   for (const [v, r] of [['fixo', 'Fixo — o emoji acima'], ['auto', 'Automático — o programa escolhe o par'], ['manual', 'Eu escolho os dois emojis']]) {
     const op = document.createElement('option');
     op.value = v; op.textContent = r;
@@ -6712,9 +6901,9 @@ function renderTrilhaEditorCard() {
     el.type = 'text'; el.id = id; el.maxLength = 8; el.style.width = '54px'; el.placeholder = dica;
     return el;
   };
-  const estadoVerde = caixaEstado('trEstadoVerde', '🎙️');
-  const estadoVermelho = caixaEstado('trEstadoVermelho', '🔇');
-  const estadoApagado = caixaEstado('trEstadoApagado', '⚪');
+  const estadoVerde = caixaEstado('trEstadoVerde' + sufixoId, '🎙️');
+  const estadoVermelho = caixaEstado('trEstadoVermelho' + sufixoId, '🔇');
+  const estadoApagado = caixaEstado('trEstadoApagado' + sufixoId, '⚪');
   estadoVerde.value = (t.estadoEmoji || {}).verde || '';
   estadoVermelho.value = (t.estadoEmoji || {}).vermelho || '';
   estadoApagado.value = (t.estadoEmoji || {}).apagado || '';
@@ -6723,7 +6912,7 @@ function renderTrilhaEditorCard() {
   const estadoApagadoW = campo('⚪ Desligado', estadoApagado);
   estadoLinha.append(estadoVerdeW, estadoVermelhoW, estadoApagadoW);
   const estadoDica = document.createElement('span');
-  estadoDica.className = 'hint'; estadoDica.id = 'trEstadoDica';
+  estadoDica.className = 'hint'; estadoDica.id = 'trEstadoDica' + sufixoId;
   estadoDica.style.cssText = 'margin:0;flex:1 0 100%';
   estadoLinha.appendChild(estadoDica);
   // (obsAcaoSel/vmixAcaoSel nascem mais abaixo; isto só roda depois deles)
@@ -7081,7 +7270,7 @@ function renderTrilhaEditorCard() {
   };
   // O card guarda como se atualizar quando o OBS conectar/desconectar: as
   // listas de cenas e fontes chegam DEPOIS de o editor já estar aberto
-  janelaEditorObs = () => {
+  editorAoConectar[slot].obs = () => { // 🪟 v0.157: um por editor
     if (tipoSel.value !== 'obs') return;
     if (obsCamposDe !== obsAcaoSel.value) renderObsCampos();
     else atualizarObsAuxiliares();
@@ -7257,7 +7446,7 @@ function renderTrilhaEditorCard() {
     vmixParams.appendChild(testar);
     atualizarVmixAuxiliares();
   };
-  janelaEditorVmix = () => {
+  editorAoConectar[slot].vmix = () => { // 🪟 v0.157: um por editor
     if (tipoSel.value !== 'vmix') return;
     if (vmixCamposDe !== vmixAcaoSel.value) renderVmixCampos();
     else atualizarVmixAuxiliares();
@@ -7351,20 +7540,7 @@ function renderTrilhaEditorCard() {
   acoes.appendChild(espaco);
   const lixo = document.createElement('button');
   lixo.className = 'icon-btn danger'; lixo.textContent = '🗑️'; lixo.title = 'Remover esta trilha';
-  lixo.onclick = async () => {
-    const filhos = cfgTrilhas.filter((x) => x.pastaId === t.id).length;
-    const temConteudo = !!(t.nome || t.url || t.origem || filhos);
-    const aviso = trilhaEhPasta(t)
-      ? `Remover a pasta "${t.nome || 'sem nome'}"?` + (filhos ? ` As ${filhos} tecla(s) de dentro voltam soltas para a Mesa.` : '')
-      : `Remover a trilha "${t.nome || t.origem || 'sem nome'}"? O arquivo de som continua nas mídias.`;
-    if (temConteudo && !await obsConfirmar(aviso, { icone: trilhaEhPasta(t) ? '📁' : '🎵', nivel: 'perigo', ok: 'Remover' })) return;
-    const idx = cfgTrilhas.findIndex((x) => x.id === t.id);
-    if (idx >= 0) cfgTrilhas.splice(idx, 1);
-    trilhaSelecionada = null;
-    enviarTrilhas();
-    renderTrilhasDeck();
-    renderTrilhaEditorCard();
-  };
+  lixo.onclick = () => { apagarTrilha(t); }; // 🗑️ v0.157: a mesma rotina do botão direito
   acoes.appendChild(lixo);
   // Pasta não toca som próprio: os campos de som somem; no lugar deles
   // aparece a GRADE com o que mora dentro dela (v0.52)
@@ -7461,6 +7637,9 @@ function renderTrilhaEditorCard() {
     aplicarFonteTrilhas(nova, settings || {});
     previaAtual.replaceWith(nova);
     previaAtual = nova;
+    // 🪟 v0.157: mudou de casa pelo seletor «📁 Dentro da pasta»? Grudado, a
+    // tecla segue para o editor da grade onde passou a morar
+    if (mudouDePai && editorGrudado()) { normalizarSelecao(); renderTrilhaEditorCard(); }
   };
   tipoSel.addEventListener('change', async () => {
     // Desfazer uma pasta com teclas dentro solta as teclas de volta na Mesa.
@@ -7484,9 +7663,9 @@ function renderTrilhaEditorCard() {
 
 // A função antiga chama a dupla nova (os eventos do servidor usam este nome)
 function renderTrilhasEditor() {
-  const card = document.getElementById('trilhaEditorCard');
-  // Não atropela quem está digitando no editor aberto
-  if (card && card.contains(document.activeElement)) { renderTrilhasDeck(); return; }
+  // Não atropela quem está digitando num editor aberto (v0.157: são dois)
+  const cards = [document.getElementById('trilhaEditorCard'), document.getElementById('trilhaEditorCardPasta')];
+  if (cards.some((c) => c && c.contains(document.activeElement))) { renderTrilhasDeck(); return; }
   renderTrilhasDeck();
   renderTrilhaEditorCard();
 }
@@ -7556,7 +7735,7 @@ function criarTrilhaNova(pastaId, celula, tipo) {
   // 🧭 v0.89: a tecla pode nascer já com o TIPO escolhido no menu do ➕
   const nova = { id: 'tr-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nome: '', emoji: '', imagem: '', textoPos: 'baixo', cor: '', tipo: ['trilha', 'imagem', 'video', 'obs', 'vmix', 'pasta', 'pastaSimples'].includes(tipo) ? tipo : 'trilha', pastaId: dentro, espera: 0, url: '', volume: 70, modo: 'solo', fadeTipo: 'ambos', fade: 3, destino: 'live', telaModo: 'janela', telaEscala: 45, pos, obsAcao: '', obsAlvo: {}, vmixAcao: '', vmixAlvo: {} };
   cfgTrilhas.push(nova);
-  trilhaSelecionada = nova.id;
+  selecionarTecla(nova.id); // 🪟 v0.157: abre no editor da grade onde nasceu
   // pula para a página da célula onde ela nasceu — na grade certa (v0.85:
   // a raiz e a pasta ao lado têm páginas independentes)
   if (!dentro) trilhaPagina = Math.floor(pos / trilhasPorPagina());
@@ -7591,7 +7770,7 @@ document.getElementById('trilhaArquivo').onchange = async () => {
     const casa = celulaLivre(cfgTrilhas, dentro, primeiraCelulaDaVisao(dentro));
     const nova = { id: 'tr-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nome: file.name.replace(/\.[^.]+$/, '').slice(0, 50), emoji: '', imagem: '', textoPos: 'baixo', cor: '', tipo: ehImg ? 'imagem' : ehVid ? 'video' : 'trilha', pastaId: dentro, espera: 0, url: data.url, volume: 70, modo: 'solo', fadeTipo: 'ambos', fade: 3, destino: 'live', telaModo: 'janela', telaEscala: 45, pos: casa };
     cfgTrilhas.push(nova);
-    trilhaSelecionada = nova.id;
+    selecionarTecla(nova.id); // 🪟 v0.157
     if (dentro) trilhaPaginaPasta = Math.floor(casa / trilhasPorPagina());
     else trilhaPagina = Math.floor(casa / trilhasPorPagina());
     enviarTrilhas();

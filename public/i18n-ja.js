@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    "✏️ Editor da tecla — botões principais": "✏️ キーエディター — メインボタン",
+    "✏️ Editor da tecla — botões de dentro": "✏️ キーエディター — 中のボタン",
+    "Restaurar o editor": "エディターを元に戻す",
+    "Minimizar (fica só a barra de cima)": "最小化（上のバーだけ残る）",
+    "Soltar: virar uma janela flutuante": "切り離す: フローティングウィンドウにする",
+    "Grudar embaixo da grade de botões (um editor por grade)": "ボタングリッドの下にくっつける（グリッドごとに1つ）",
+    "🗑️ Apagar": "🗑️ 削除",
     "Escolha primeiro a ação da tecla — o emoji pelo estado depende dela.": "先にキーの操作を選んでください。状態による絵文字はそれに依存します。",
     "🟢 Ligado / no ar / som ativo": "🟢 オン / 放送中 / 音声オン",
     "🔴 No preview / mudo": "🔴 プレビュー中 / ミュート",

@@ -1,4 +1,12 @@
 {
+  "0.157.0": {
+    "titulo": "🪟 Sound deck: the key editor got the window buttons and can dock to the grid",
+    "itens": [
+      "🪟 The key editor window now has the same buttons as the other windows: 🗕 minimize (only the top bar stays), 🗖 maximize/restore, ↩ dock and ✖ close — plus the ↺ that puts it back in its default place. The ✖ that sat loose in the middle of the form moved to the bar.",
+      "📌 New DOCKED mode (↩ on the bar; 🪟 detaches again): the editor opens right below the grid the key belongs to. With a folder open on the side, two editors coexist — the parent key’s below the main buttons (left) and the child key’s below the buttons inside (right). The preference is kept in this browser.",
+      "🗑️ Right-click on a key now offers “Delete” (in red, at the end of the menu), with the same confirmation as the editor’s 🗑️."
+    ]
+  },
   "0.156.0": {
     "titulo": "🎭 Sound deck: the key changes color and face with the state",
     "itens": [

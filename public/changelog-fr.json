@@ -1,4 +1,12 @@
 {
+  "0.157.0": {
+    "titulo": "🪟 Table de pistes : l’éditeur de touche a reçu les boutons de fenêtre et peut s’ancrer à la grille",
+    "itens": [
+      "🪟 La fenêtre de l’éditeur de touche a maintenant les mêmes boutons que les autres fenêtres : 🗕 réduire (seule la barre du haut reste), 🗖 agrandir/restaurer, ↩ ancrer et ✖ fermer — en plus du ↺ qui la remet à sa place par défaut. Le ✖ qui traînait au milieu du formulaire est passé dans la barre.",
+      "📌 Nouveau mode ANCRÉ (↩ sur la barre ; 🪟 détache à nouveau) : l’éditeur s’ouvre juste sous la grille à laquelle la touche appartient. Avec un dossier ouvert à côté, deux éditeurs coexistent — celui de la touche mère sous les boutons principaux (à gauche) et celui de la touche fille sous les boutons intérieurs (à droite). La préférence est conservée dans ce navigateur.",
+      "🗑️ Le clic droit sur une touche propose maintenant « Supprimer » (en rouge, en fin de menu), avec la même confirmation que le 🗑️ de l’éditeur."
+    ]
+  },
   "0.156.0": {
     "titulo": "🎭 Table de pistes : la touche change de couleur et de visage avec l’état",
     "itens": [

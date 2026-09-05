@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    "✏️ Editor da tecla — botões principais": "✏️ Editor de la tecla — botones principales",
+    "✏️ Editor da tecla — botões de dentro": "✏️ Editor de la tecla — botones de dentro",
+    "Restaurar o editor": "Restaurar el editor",
+    "Minimizar (fica só a barra de cima)": "Minimizar (queda solo la barra de arriba)",
+    "Soltar: virar uma janela flutuante": "Soltar: convertir en ventana flotante",
+    "Grudar embaixo da grade de botões (um editor por grade)": "Pegar debajo de la cuadrícula de botones (un editor por cuadrícula)",
+    "🗑️ Apagar": "🗑️ Eliminar",
     "Escolha primeiro a ação da tecla — o emoji pelo estado depende dela.": "Elige primero la acción de la tecla: el emoji por estado depende de ella.",
     "🟢 Ligado / no ar / som ativo": "🟢 Activo / al aire / sonido activo",
     "🔴 No preview / mudo": "🔴 En preview / silenciado",

@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    "✏️ Editor da tecla — botões principais": "✏️ Редактор клавиши — основные кнопки",
+    "✏️ Editor da tecla — botões de dentro": "✏️ Редактор клавиши — кнопки внутри",
+    "Restaurar o editor": "Развернуть редактор",
+    "Minimizar (fica só a barra de cima)": "Свернуть (остаётся только верхняя полоса)",
+    "Soltar: virar uma janela flutuante": "Открепить: сделать плавающим окном",
+    "Grudar embaixo da grade de botões (um editor por grade)": "Прикрепить под сетку кнопок (по редактору на сетку)",
+    "🗑️ Apagar": "🗑️ Удалить",
     "Escolha primeiro a ação da tecla — o emoji pelo estado depende dela.": "Сначала выберите действие клавиши — эмодзи по состоянию зависит от него.",
     "🟢 Ligado / no ar / som ativo": "🟢 Включено / в эфире / звук активен",
     "🔴 No preview / mudo": "🔴 В превью / без звука",
