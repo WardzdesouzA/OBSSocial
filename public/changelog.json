@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.157.1",
+    "titulo": "🎲 Áudios dos overlays: o som do sorteio se chama pelo que é",
+    "itens": [
+      "🎲 Em 🔊 Áudios dos overlays, o quarto momento tinha um nome só para todo mundo — «🏁 Finalização (timer/cronômetro e sorteio)» — e no sorteio isso enganava: o som toca quando o dado COMEÇA a rolar, para acompanhar o giro, não quando o pódio aparece. Agora o nome acompanha o overlay escolhido: no 🎁 Sorteio é «🎲 Dado rolando (enquanto sorteia)», no 🕐 Relógio é «🏁 Finalização (timer/cronômetro zerando)», e nos outros overlays a linha nem aparece, porque nada dispara esse momento neles. O som que você já escolheu continua no lugar."
+    ]
+  },
+  {
     "version": "0.157.0",
     "titulo": "🪟 Mesa de trilhas: o editor da tecla ganhou os botões de janela e pode grudar na grade",
     "itens": [

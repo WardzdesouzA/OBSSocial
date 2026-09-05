@@ -2028,14 +2028,14 @@
       </div>
       <div class="field" style="margin-bottom:0">
         <label>🔊 Som do dado</label>
-        <div class="hint" style="margin:0 0 6px">Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.</div>
+        <div class="hint" style="margin:0 0 6px">Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.</div>
         <button type="button" class="btn-link" data-aov-ir="raffle">🔊 Abrir em Áudios dos overlays</button>
       </div>
     </div>
 
     <div class="card" id="cardAudiosOv">
       <h3>🔊 Áudios dos overlays</h3>
-      <div class="hint">Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).</div>
+      <div class="hint">Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).</div>
       <div class="field">
         <label>Overlay</label>
         <select id="aov-widget">
@@ -4633,8 +4633,16 @@ const AOV_MOMENTOS = [
   ['entrada', '🎬 Entrada (quando aparece)'],
   ['saida', '🚪 Saída (quando some)'],
   ['tempo', '⏳ Tempo de tela (enquanto está visível)'],
-  ['fim', '🏁 Finalização (timer/cronômetro e sorteio)'],
+  ['fim', '🏁 Finalização (timer/cronômetro zerando)'],
 ];
+// 🎲 v0.157.1: o 4º momento é de quem tem um «acontecimento» próprio — e ele
+// não é o mesmo em todos: no relógio é o timer/cronômetro zerando; no sorteio
+// é o dado COMEÇANDO a rolar (o som acompanha o giro, não o pódio). Nos outros
+// overlays nada dispara esse momento, então a linha nem aparece.
+const AOV_FIM_ROTULO = {
+  relogio: '🏁 Finalização (timer/cronômetro zerando)',
+  raffle: '🎲 Dado rolando (enquanto sorteia)',
+};
 function aovMontarLinhas() {
   const caixa = document.getElementById('aov-linhas');
   if (!caixa || caixa.childElementCount) return;
@@ -4642,8 +4650,9 @@ function aovMontarLinhas() {
     const linha = document.createElement('div');
     linha.className = 'field';
     linha.style.cssText = 'border-top:1px solid var(--border);padding-top:10px';
+    linha.id = `aov-${momento}-linha`;
     linha.innerHTML = `
-      <label>${rotulo}</label>
+      <label id="aov-${momento}-rotulo">${rotulo}</label>
       <select id="aov-${momento}-som"><option value="">— sem som —</option></select>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:12px">
         <label style="display:flex;align-items:center;gap:6px;margin:0" title="Volume deste som (0 a 100)">🔉 <input type="number" id="aov-${momento}-volume" min="0" max="100" step="5" value="100" style="width:64px"> %</label>
@@ -4698,6 +4707,11 @@ function fillAudiosOv() {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el) el.value = valor;
   };
+  // 🎲 v0.157.1: o 4º momento tem nome próprio por overlay (e só existe onde há o que disparar)
+  const linhaFim = document.getElementById('aov-fim-linha');
+  const rotuloFim = document.getElementById('aov-fim-rotulo');
+  if (linhaFim) linhaFim.style.display = AOV_FIM_ROTULO[chave] ? '' : 'none';
+  if (rotuloFim && AOV_FIM_ROTULO[chave]) rotuloFim.textContent = AOV_FIM_ROTULO[chave];
   for (const [momento] of AOV_MOMENTOS) {
     const s = conf[momento] || {};
     aovPreencherSons(document.getElementById(`aov-${momento}-som`), s.url || '');

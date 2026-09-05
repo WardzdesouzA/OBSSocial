@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 Abschluss (Timer/Stoppuhr auf null)",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 Würfel rollt (während der Verlosung)",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Er wohnt in 🔊 Overlay-Sounds, unter 🎁 Verlosung → 🎲 Würfel rollt — zusammen mit den Sounds aller anderen Overlays: Datei, Lautstärke, wo er spielt und die Anhören-Taste.",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Alle Overlay-Sounds wohnen hier. Jedes Overlay kann beim Erscheinen, beim Verschwinden, während der Bildschirmzeit (solange sichtbar) und, wo es einen eigenen Moment gibt, auch dort (🏁 Timer/Stoppuhr auf null oder 🎲 der Würfel der Verlosung rollt) einen Sound spielen — jeder mit Lautstärke, Versatz, Wiederholung und Abspielort. Laden Sie die Audios unter 🎨 Themen → 🖼️ Ihre Grafiken hoch — ohne Größen- oder Längenlimit. Negativer Versatz startet früher (überspringt den Anfang der Datei); positiver verzögert den Start. Im Stream kommt der Ton aus der Overlay-Quelle in OBS: prüfen Sie, ob ihr Audio aktiviert ist (Audio über OBS steuern, an der Browser-Quelle).",
     "✏️ Editor da tecla — botões principais": "✏️ Tasten-Editor — Haupttasten",
     "✏️ Editor da tecla — botões de dentro": "✏️ Tasten-Editor — Tasten darin",
     "Restaurar o editor": "Editor wiederherstellen",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.de = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 Die Zwischenablage ist für das Netzwerk geschlossen. Der Streamer gibt sie frei unter Einstellungen → Sicherheit → was das Netzwerk nutzen darf.",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Er wohnt in 🔊 Overlay-Sounds, unter 🕐 Uhr → 🏁 Abschluss — zusammen mit den Sounds aller anderen Overlays: Datei, Lautstärke, wo er spielt und die Anhören-Taste.",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "Er wohnt in 🔊 Overlay-Sounds, unter 🎁 Verlosung → 🏁 Abschluss — zusammen mit den Sounds aller anderen Overlays: Datei, Lautstärke, wo er spielt und die Anhören-Taste.",
     "🔊 Abrir em Áudios dos overlays": "🔊 In Overlay-Sounds öffnen",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "Alle Overlay-Sounds wohnen hier. Jedes Overlay kann beim Erscheinen, beim Verschwinden, während der Bildschirmzeit (solange sichtbar) und beim Abschluss (⏱ Timer/Stoppuhr auf null, 🎁 Verlosung wird aufgedeckt) einen Sound spielen — jeder mit Lautstärke, Versatz, Wiederholung und Abspielort. Laden Sie die Audios unter 🎨 Themen → 🖼️ Ihre Grafiken hoch — ohne Größen- oder Längenlimit. Negativer Versatz startet früher (überspringt den Anfang der Datei); positiver verzögert den Start. Im Stream kommt der Ton aus der Overlay-Quelle in OBS: prüfen Sie, ob ihr Audio aktiviert ist (Audio über OBS steuern, an der Browser-Quelle).",
     "Volume deste som (0 a 100)": "Lautstärke dieses Sounds (0 bis 100)",
     "▶️ Ouvir": "▶️ Anhören",
     "Ouvir este som agora, no volume escolhido": "Diesen Sound jetzt in der gewählten Lautstärke anhören",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.de = {
     "🎬 Entrada (quando aparece)": "🎬 Erscheinen (wenn es auftaucht)",
     "🚪 Saída (quando some)": "🚪 Verschwinden (wenn es weggeht)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ Bildschirmzeit (solange sichtbar)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 Abschluss (Timer/Stoppuhr und Gewinnspiel)",
     "— sem som —": "— kein Klang —",
     "🔁 Repetir na tela": "🔁 Auf dem Bildschirm wiederholen",
     "🔊 No overlay e no painel": "🔊 Im Overlay und im Panel",

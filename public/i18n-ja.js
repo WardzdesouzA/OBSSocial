@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    "🏁 Finalização (timer/cronômetro zerando)": "🏁 終了（タイマー/ストップウォッチがゼロになる）",
+    "🎲 Dado rolando (enquanto sorteia)": "🎲 サイコロが転がる（抽選中）",
+    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🎲 Dado rolando — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 オーバーレイの音 の 🎁 抽選 → 🎲 サイコロが転がる — ほかのすべてのオーバーレイの音と一緒に: ファイル、音量、どこで鳴るか、聴くボタン。",
+    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "オーバーレイの音はすべてここにあります。各オーバーレイは、登場時、退場時、画面にある間（表示中）、固有の瞬間があるものではその瞬間（🏁 タイマー/ストップウォッチがゼロになる、🎲 抽選のサイコロが転がる）に音を鳴らせます — それぞれに音量、ずらし、繰り返し、どこで鳴るかを設定できます。音声ファイルは 🎨 テーマ → 🖼️ あなたのアート で送ってください — サイズも長さも制限なし。ずらしがマイナスだと早く始まり（ファイルの頭を飛ばす）、プラスだと遅れて始まります。配信では、音は OBS のオーバーレイソースから出ます: ソースの音声が有効か確認してください（ブラウザソースの「OBS で音声を制御」）。",
     "✏️ Editor da tecla — botões principais": "✏️ キーエディター — メインボタン",
     "✏️ Editor da tecla — botões de dentro": "✏️ キーエディター — 中のボタン",
     "Restaurar o editor": "エディターを元に戻す",
@@ -38,9 +42,7 @@ window.OBS_I18N_DICTS.ja = {
     "🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.": "🔒 クリップボードはネットワークに対して閉じられています。配信者が 設定 → セキュリティ → ネットワークが使えるもの で開放できます。",
     // 🔊 v0.155: todos os sons dos overlays num lugar só
     "Mora em 🔊 Áudios dos overlays, em 🕐 Relógio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 オーバーレイの音 の 🕐 時計 → 🏁 終了 にあります — ほかのすべてのオーバーレイの音と一緒に: ファイル、音量、どこで鳴るか、聴くボタン。",
-    "Mora em 🔊 Áudios dos overlays, em 🎁 Sorteio → 🏁 Finalização — junto com os sons de todos os outros overlays: arquivo, volume, onde toca e o botão de ouvir.": "🔊 オーバーレイの音 の 🎁 抽選 → 🏁 終了 にあります — ほかのすべてのオーバーレイの音と一緒に: ファイル、音量、どこで鳴るか、聴くボタン。",
     "🔊 Abrir em Áudios dos overlays": "🔊 オーバーレイの音で開く",
-    "Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e na finalização (o ⏱ timer/cronômetro zerando e o 🎁 sorteio revelando) — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).": "オーバーレイの音はすべてここにあります。各オーバーレイは、登場時、退場時、画面にある間（表示中）、終了時（⏱ タイマー/ストップウォッチがゼロになる、🎁 抽選の発表）に音を鳴らせます — それぞれに音量、ずらし、繰り返し、どこで鳴るかを設定できます。音声ファイルは 🎨 テーマ → 🖼️ あなたのアート で送ってください — サイズも長さも制限なし。ずらしがマイナスだと早く始まり（ファイルの頭を飛ばす）、プラスだと遅れて始まります。配信では、音は OBS のオーバーレイソースから出ます: ソースの音声が有効か確認してください（ブラウザソースの「OBS で音声を制御」）。",
     "Volume deste som (0 a 100)": "この音の音量（0〜100）",
     "▶️ Ouvir": "▶️ 聴く",
     "Ouvir este som agora, no volume escolhido": "この音を選んだ音量で今すぐ聴く",
@@ -2531,7 +2533,6 @@ window.OBS_I18N_DICTS.ja = {
     "🎬 Entrada (quando aparece)": "🎬 登場(現れたとき)",
     "🚪 Saída (quando some)": "🚪 退場(消えたとき)",
     "⏳ Tempo de tela (enquanto está visível)": "⏳ 画面表示中(見えている間)",
-    "🏁 Finalização (timer/cronômetro e sorteio)": "🏁 完了(タイマー/ストップウォッチと抽選)",
     "— sem som —": "— サウンドなし —",
     "🔁 Repetir na tela": "🔁 表示中はリピート",
     "🔊 No overlay e no painel": "🔊 オーバーレイとパネルの両方",
