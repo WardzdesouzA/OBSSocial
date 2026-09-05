@@ -426,6 +426,7 @@ const DEFAULT_SETTINGS = {
     captura: true,     // 📸 print da cena direto para as mídias do programa
     stats: true,       // 📊 v0.83: saúde do OBS (fps, cpu, disco, quadros perdidos, tempos)
     atalhos: false,    // ⌨️ v0.83: disparar atalhos do OBS por nome (vem desligado)
+    monitor: true,     // 🖥️ v0.159: a imagem do que está no ar (e do preview) na janela
   },
   // 🎛️ v0.122: os blocos do controle do vMix no painel (cada um com o seu
   // liga/desliga, como os do OBS)
@@ -439,6 +440,7 @@ const DEFAULT_SETTINGS = {
     titulos: true,     // 🔤 textos dos títulos (GT/XAML) editáveis
     stats: true,       // 📊 versão, edição, preset, tempo de gravação/transmissão
     avancado: false,   // 🧰 replay, presets, scripts, tecla e função livre (vem desligado)
+    monitor: true,     // 🖥️ v0.159: a imagem da saída e do preview (vMix neste computador)
   },
   // 📁 Segurar a tecla de uma pasta por este tempo (segundos, 0 a 5) abre a
   // pasta; soltar antes toca tudo de dentro em fila. 0 = abre no toque.
@@ -773,6 +775,10 @@ function mergeSettings(base) {
       [k, { ...DEFAULT_SETTINGS.pecas[k], ...((src.pecas || {})[k] || {}) }]
     ))),
     labs: { ...DEFAULT_SETTINGS.labs, ...(src.labs || {}) },
+    // 🖥️ v0.159: bloco novo nas janelas 🎬/🎛️ (monitor) nasce ligado também
+    // em quem já tinha a configuração gravada de versões anteriores
+    obsPainel: { ...DEFAULT_SETTINGS.obsPainel, ...(src.obsPainel || {}) },
+    vmixPainel: { ...DEFAULT_SETTINGS.vmixPainel, ...(src.vmixPainel || {}) },
     perfilAuto: { ...DEFAULT_SETTINGS.perfilAuto, ...(src.perfilAuto || {}) },
     acessibilidade: { ...DEFAULT_SETTINGS.acessibilidade, ...(src.acessibilidade || {}) },
     trilhasTexto: { ...DEFAULT_SETTINGS.trilhasTexto, ...(src.trilhasTexto || {}) },
@@ -3499,6 +3505,8 @@ const OP_CATEGORY = {
   obsAoVivo: 'obs', obsGravacao: 'obs', obsAtualizar: 'obs', obsAcao: 'obs',
   // 🎛️ v0.122: comandar o vMix é do MESMO seletor 🎬 (mesa de corte = mesa de corte)
   vmixAcao: 'obs', vmixAtualizar: 'obs',
+  // 🖥️ v0.159: ver o monitor pela rede também é do seletor 🎬
+  obsMonitor: 'obs', vmixMonitor: 'obs',
 };
 
 // 🔊 v0.77: última vez que cada momento de áudio foi repassado (anti-eco)
@@ -4465,6 +4473,8 @@ function limparDados(escopo) {
     } catch {}
     // 📚 v0.88: a biblioteca da Mesa (uploads/trilhas/) sai junto
     try { fs.rmSync(TRILHAS_UP_DIR, { recursive: true, force: true }); } catch {}
+    // 🖥️ v0.159: os prints passageiros do monitor do vMix (data/tmp) também
+    try { fs.rmSync(VMIX_MONITOR_DIR, { recursive: true, force: true }); } catch {}
     broadcast({ type: 'media', media: listMedia() });
     feito.push('midias');
   }
@@ -8428,6 +8438,10 @@ async function obsAtualizarTudo() {
     obsRt.versao = String(versao.obsVersion || '');
     obsRt.recursos = (Array.isArray(versao.availableRequests) ? versao.availableRequests : [])
       .map((x) => String(x)).slice(0, 400);
+    // 🖥️ v0.159: o OBS diz que formatos de imagem sabe gerar — o monitor
+    // pede jpg (leve) quando dá, senão png; a cada conexão a escolha recomeça
+    const formatos = (Array.isArray(versao.supportedImageFormats) ? versao.supportedImageFormats : []).map((x) => String(x).toLowerCase());
+    obsMonitorFormato = formatos.length && !formatos.includes('jpg') && !formatos.includes('jpeg') ? 'png' : 'jpg';
   }
   const [cenas, colecoes, perfis, trans, transAtual] = await Promise.all([
     obsPedir('GetSceneList'),
@@ -8609,6 +8623,48 @@ function podarPrints() {
     }
   } catch {}
 }
+// 🖥️ v0.159: o MONITOR da janela 🎬 do painel — a imagem do que está no ar
+// (e do preview, no modo estúdio), pequena e comprimida, pedida pelo painel
+// a cada segundo enquanto a seção está aberta. Uma captura serve a todos os
+// painéis que pedirem no mesmo instante (cache curto), e o formato jpg cai
+// para png se o OBS não souber comprimir.
+const MONITOR_CACHE_MS = 600;
+const MONITOR_LARGURA = 480;
+let obsMonitorCache = { em: 0, dados: null, pendente: null };
+let obsMonitorFormato = 'jpg';
+async function obsMonitorFoto(cena) {
+  if (!cena) return null;
+  const pedir = (formato) => obsPedir('GetSourceScreenshot', {
+    sourceName: cena, imageFormat: formato, imageWidth: MONITOR_LARGURA,
+    ...(formato === 'jpg' ? { imageCompressionQuality: 55 } : {}),
+  });
+  let r = await pedir(obsMonitorFormato);
+  // jpg falhou? tenta png — e só fica no png se ELE funcionou (uma falha
+  // passageira — timeout, cena recém-trocada — não pode trocar o formato para sempre)
+  if (!r && obsMonitorFormato === 'jpg') { r = await pedir('png'); if (r) obsMonitorFormato = 'png'; }
+  const dados = String(r?.imageData || '');
+  return /^data:image\/(jpeg|jpg|png);base64,[A-Za-z0-9+/=]+$/.test(dados) && dados.length < 2 * 1024 * 1024 ? dados : null;
+}
+function obsMonitorCapturar() {
+  if (!obsRt.conectado || !obsTem('GetSourceScreenshot')) return Promise.resolve({ erro: obsRt.conectado ? 'sem-recurso' : 'desconectado' });
+  if (Date.now() - obsMonitorCache.em < MONITOR_CACHE_MS && obsMonitorCache.dados) return Promise.resolve(obsMonitorCache.dados);
+  if (obsMonitorCache.pendente) return obsMonitorCache.pendente;
+  obsMonitorCache.pendente = (async () => {
+    try {
+      const programa = obsRt.cenaPrograma;
+      const preview = obsRt.estudio ? obsRt.cenaPreview : null;
+      const [fp, fv] = await Promise.all([obsMonitorFoto(programa), preview && preview !== programa ? obsMonitorFoto(preview) : Promise.resolve(null)]);
+      const dados = { programa: fp, preview: obsRt.estudio ? (preview === programa ? fp : fv) : null, cena: programa, cenaPreview: preview, estudio: obsRt.estudio };
+      obsMonitorCache = { em: Date.now(), dados, pendente: null };
+      return dados;
+    } catch {
+      obsMonitorCache = { em: 0, dados: null, pendente: null };
+      return { erro: 'desconectado' };
+    }
+  })();
+  return obsMonitorCache.pendente;
+}
+
 async function obsCapturar(fonte) {
   const alvo = fonte || obsRt.cenaPrograma;
   if (!alvo) { obsAviso(false, 'não sei o que capturar: o OBS não tem cena no ar'); return; }
@@ -8970,6 +9026,7 @@ function desligarObs(motivo) {
   obsRt.conectado = false;
   obsRt.erro = motivo || null;
   obsRt.recursos = [];
+  obsMonitorCache = { em: 0, dados: null, pendente: null }; // 🖥️ v0.159: a última imagem vai junto
   obsRt.cenas = []; obsRt.cenaPrograma = null; obsRt.cenaPreview = null;
   obsRt.fontesAudio = []; obsRt.transmitindo = false; obsRt.gravando = false; obsRt.estudio = false;
   obsRt.gravandoPausado = false; obsRt.camVirtual = false; obsRt.replay = false;
@@ -9124,6 +9181,69 @@ function vmixResumo() {
     saidas: vmixRt.saidas, master: vmixRt.master, tally: vmixRt.tally,
   };
 }
+// 🖥️ v0.159: o MONITOR da janela 🎛️ — a API do vMix não devolve imagem, só
+// GRAVA um print em disco (Snapshot / SnapshotInput). Então o monitor só
+// existe quando o vMix roda NESTE computador: o print vai para data/tmp e
+// é lido daqui, pequeno, a cada segundo enquanto a seção está aberta.
+const VMIX_MONITOR_DIR = path.join(DATA_DIR, 'tmp');
+let vmixMonitorCache = { em: 0, dados: null, pendente: null };
+function hostEhEsteComputador(host) {
+  const h = String(host || '').replace(/^\[|\]$/g, '').toLowerCase().replace(/\.$/, '');
+  if (!h || h === 'localhost' || h === '::1' || h.startsWith('127.') || h.startsWith('::ffff:127.')) return true;
+  // o nome da própria máquina (com ou sem domínio / .local) também é "aqui"
+  const meu = String(os.hostname() || '').toLowerCase();
+  if (meu && (h === meu || h.split('.')[0] === meu.split('.')[0])) return true;
+  for (const lista of Object.values(os.networkInterfaces())) {
+    for (const ni of lista || []) if (String(ni.address).toLowerCase() === h) return true;
+  }
+  return false;
+}
+async function vmixMonitorFoto(nomeArquivo, funcao, params) {
+  const caminho = path.join(VMIX_MONITOR_DIR, nomeArquivo);
+  // o print velho sai ANTES do pedido: "o arquivo existe" passa a significar
+  // "é o print novo" (sem depender do relógio do disco)
+  try { fs.unlinkSync(caminho); } catch { /* não existia */ }
+  // silencioso: um print não muda nada no vMix — não vale reler o XML por ele
+  const r = await vmixRt.cliente.funcao(funcao, { ...(params || {}), Value: caminho }, { silencioso: true });
+  if (!r || !r.ok) return null;
+  // o vMix responde antes de terminar de gravar: espera o arquivo aparecer
+  // INTEIRO (jpeg termina em FF D9) — até ~800 ms
+  for (let i = 0; i < 16; i++) {
+    try {
+      const st = fs.statSync(caminho);
+      if (st.size > 0 && st.size < 4 * 1024 * 1024) {
+        const buf = fs.readFileSync(caminho);
+        if (buf.length >= 4 && buf[buf.length - 2] === 0xFF && buf[buf.length - 1] === 0xD9) {
+          return 'data:image/jpeg;base64,' + buf.toString('base64');
+        }
+      }
+    } catch { /* ainda gravando */ }
+    await new Promise((r2) => setTimeout(r2, 50));
+  }
+  return null;
+}
+function vmixMonitorCapturar() {
+  if (!vmixRt.conectado || !vmixRt.cliente) return Promise.resolve({ erro: 'desconectado' });
+  if (!hostEhEsteComputador(vmixConfig.host)) return Promise.resolve({ erro: 'remoto' });
+  if (Date.now() - vmixMonitorCache.em < 900 && vmixMonitorCache.dados) return Promise.resolve(vmixMonitorCache.dados);
+  if (vmixMonitorCache.pendente) return vmixMonitorCache.pendente;
+  vmixMonitorCache.pendente = (async () => {
+    try {
+      try { fs.mkdirSync(VMIX_MONITOR_DIR, { recursive: true }); } catch { /* sem pasta, sem foto */ }
+      const programa = await vmixMonitorFoto('vmix-programa.jpg', 'Snapshot', {});
+      const preview = vmixRt.preview ? await vmixMonitorFoto('vmix-preview.jpg', 'SnapshotInput', { Input: vmixRt.preview }) : null;
+      const dados = { programa, preview, entradaPrograma: vmixRt.programa, entradaPreview: vmixRt.preview };
+      vmixMonitorCache = { em: Date.now(), dados, pendente: null };
+      return dados;
+    } catch {
+      // o vMix caiu no meio da foto: solta a fila para o próximo pedido tentar de novo
+      vmixMonitorCache = { em: 0, dados: null, pendente: null };
+      return { erro: 'desconectado' };
+    }
+  })();
+  return vmixMonitorCache.pendente;
+}
+
 // A mesma contenção do OBS: no máximo uma foto a cada 100 ms para as telas
 let vmixAvisoTimer = null;
 let vmixAvisoUltimo = 0;
@@ -9189,7 +9309,16 @@ function desligarVmix(motivo) {
   vmixRt.gravando = false; vmixRt.transmitindo = false; vmixRt.externa = false;
   vmixRt.multiCorder = false; vmixRt.telaCheia = false; vmixRt.playlist = false;
   vmixRt.saidas = {}; vmixRt.master = { volume: 100, mudo: false }; vmixRt.tally = '';
+  // 🖥️ v0.159: a última imagem do monitor não sobrevive à desconexão (nem
+  // na memória, nem os prints em data/tmp)
+  vmixMonitorCache = { em: 0, dados: null, pendente: null };
+  vmixMonitorApagarPrints();
   broadcastVmix();
+}
+function vmixMonitorApagarPrints() {
+  for (const n of ['vmix-programa.jpg', 'vmix-preview.jpg']) {
+    try { fs.unlinkSync(path.join(VMIX_MONITOR_DIR, n)); } catch { /* não existia */ }
+  }
 }
 
 function agendarReconexaoVmix() {
@@ -10842,6 +10971,15 @@ function tratarMensagem(ws, raw) {
     case 'obsAtualizar':
       if (state.settings.labs?.obs === true) obsAtualizarTudo();
       break;
+    case 'obsMonitor':
+      // 🖥️ v0.159: a imagem do monitor vai SÓ para quem pediu (e só para quem
+      // pode mexer no OBS — pela rede, no modo restrito, é o seletor 🎬)
+      if (state.settings.labs?.obs !== true || !podeObs(ws)) break;
+      // uma tela lenta (pela rede) não acumula imagens: com mais de ~1,5 MB
+      // ainda por sair, esta é pulada — a próxima vem daqui a um segundo
+      if (ws.bufferedAmount > 1.5 * 1024 * 1024) break;
+      obsMonitorCapturar().then((m) => { try { ws.send(JSON.stringify({ type: 'obsMonitor', ...m })); } catch { /* fechou */ } });
+      break;
     // ---------- 🎛️ vMix (Labs, v0.122) — o espelho das mensagens do OBS ----------
     case 'vmixConfig':
       if (typeof msg.host === 'string') vmixConfig.host = hostDoObs(msg.host);
@@ -10859,6 +10997,12 @@ function tratarMensagem(ws, raw) {
     }
     case 'vmixAtualizar':
       if (state.settings.labs?.vmix === true) vmixAtualizarTudo();
+      break;
+    case 'vmixMonitor':
+      // 🖥️ v0.159: idem ao obsMonitor (a imagem só sai com o vMix neste computador)
+      if (state.settings.labs?.vmix !== true || !podeObs(ws)) break;
+      if (ws.bufferedAmount > 1.5 * 1024 * 1024) break;
+      vmixMonitorCapturar().then((m) => { try { ws.send(JSON.stringify({ type: 'vmixMonitor', ...m })); } catch { /* fechou */ } });
       break;
     // ---------- 🕹️ Controle externo (Labs, v0.126) ----------
     case 'controleConfig':

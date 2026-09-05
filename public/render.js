@@ -691,6 +691,10 @@ function connectHub(onEvent) {
       if (ws && ws.readyState === 1) ws.send(raw);
       else if (fila.length < 100) fila.push(raw);
     },
+    // 🖥️ v0.159: pedidos que não valem a pena guardar (o monitor pede a
+    // imagem a cada segundo) só saem com a conexão aberta — nada de encher
+    // a fila de reconexão com pedidos velhos
+    aberto() { return !!(ws && ws.readyState === 1); },
   };
 }
 

@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.159.0",
+    "titulo": "🖥️ Monitor: a imagem do OBS e do vMix dentro das janelas de controle do painel",
+    "itens": [
+      "🎬 A janela 🎬 OBS do painel ganhou a seção 🖥️ Monitor: a imagem do que está no ar e, no modo estúdio, também a do preview — pequenas, lado a lado, com o nome da cena na legenda. Atualiza a cada segundo só enquanto a janela e a seção estão abertas e a aba está visível; fechou, o OBS para de ser incomodado. Funciona com o OBS em outro computador, porque a imagem vem pela própria conexão.",
+      "🎛️ A janela 🎛️ vMix ganhou a mesma seção, com a saída e o preview. Um detalhe honesto: a API do vMix não devolve a imagem, só grava um print em disco — por isso o monitor do vMix só funciona quando ele roda no mesmo computador do OBS Social (o print vai para a pasta data/tmp e é lido dali). Com o vMix em outra máquina, a seção explica o porquê em vez de ficar em branco.",
+      "⚙️ Nas páginas 🎬 OBS Studio Remoto e 🎛️ vMix das configurações, o bloco 🖥️ Monitor pode ser desligado como os outros blocos da janela. Vem ligado."
+    ]
+  },
+  {
     "version": "0.158.2",
     "titulo": "🧹 Apagar os comentários de teste também apaga os números deles",
     "itens": [
