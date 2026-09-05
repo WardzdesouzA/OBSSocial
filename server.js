@@ -4925,6 +4925,9 @@ function restoreFromLog() {
     const recentes = []; // janela deslizante com as últimas mensagens
     const porRede = {};  // e a janela de cada rede
     const guardar = (message) => {
+      // 🧪 v0.158.2: comentário de teste não volta do log — nem na tela, nem
+      // na conta do dia (senão o que foi apagado reapareceria ao reiniciar)
+      if (ehMensagemDeTeste(message)) return;
       total += 1;
       trackParticipant(message, false);
       // Os contadores e o filtro de repetidas valem para o dia inteiro
@@ -5011,13 +5014,22 @@ function ehSuperchat(message) {
 function ehMembro(message) {
   return (message.badges || []).includes('membro');
 }
-function contarCategorias(message) {
-  if (message.platform === 'doacao') categoryTotals.apoio += 1;
-  else if (ehSuperchat(message)) categoryTotals.superchat += 1;
-  if (ehMembro(message)) categoryTotals.member += 1;
+function contarCategorias(message, sinal = 1) {
+  if (message.platform === 'doacao') categoryTotals.apoio += sinal;
+  else if (ehSuperchat(message)) categoryTotals.superchat += sinal;
+  if (ehMembro(message)) categoryTotals.member += sinal;
   // 💬📨 v0.124: as abas WhatsApp e Telegram, cada uma com a sua conta
-  if (message.platform === 'telegram') categoryTotals.telegram += 1;
-  if (message.platform === 'whatsapp') categoryTotals.whatsapp += 1;
+  if (message.platform === 'telegram') categoryTotals.telegram += sinal;
+  if (message.platform === 'whatsapp') categoryTotals.whatsapp += sinal;
+  for (const k of Object.keys(categoryTotals)) if (categoryTotals[k] < 0) categoryTotals[k] = 0;
+}
+// 🧪 v0.158.2: apagar os comentários de teste também desconta o que eles
+// somaram — o número da coluna e das abas volta ao que era antes deles
+function descontarDosTotais(message) {
+  if (!message) return;
+  const p = message.platform;
+  if (p && platformTotals[p]) { platformTotals[p] -= 1; if (platformTotals[p] <= 0) delete platformTotals[p]; }
+  contarCategorias(message, -1);
 }
 
 // Participantes únicos de cada rede (a chave é "plataforma:autor")
@@ -5083,16 +5095,24 @@ function removerMensagens({ platform, ids, autor, tudo, teste }) {
   };
 
   const saíram = [];
-  const limpar = (lista) => {
+  const descontadas = new Map(); // 🧪 v0.158.2: cada teste apagado desconta UMA vez dos totais
+  const limpar = (lista, contada) => {
     for (let i = lista.length - 1; i >= 0; i--) {
-      if (combina(lista[i])) { saíram.push(String(lista[i].id)); lista.splice(i, 1); }
+      if (combina(lista[i])) {
+        const m = lista[i];
+        saíram.push(String(m.id));
+        // (só o que entrou na conta do dia desconta — um salvo de outro dia, não)
+        if (teste && contada && !descontadas.has(String(m.id))) descontadas.set(String(m.id), m);
+        lista.splice(i, 1);
+      }
     }
   };
-  limpar(state.recent);
-  for (const lista of Object.values(state.recentByPlatform)) limpar(lista);
-  limpar(feedQueue);
-  limpar(feedReleasing);
-  limpar(state.saved);
+  limpar(state.recent, true);
+  for (const lista of Object.values(state.recentByPlatform)) limpar(lista, true);
+  limpar(feedQueue, true);
+  limpar(feedReleasing, true);
+  limpar(state.saved, false);
+  for (const m of descontadas.values()) descontarDosTotais(m);
 
   if (!saíram.length && !tudo) return;
   const idsFora = [...new Set(saíram)];

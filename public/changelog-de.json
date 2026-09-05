@@ -1,4 +1,11 @@
 {
+  "0.158.2": {
+    "titulo": "🧹 Testkommentare löschen löscht auch ihre Zahlen",
+    "itens": [
+      "🧹 Der Knopf zum Löschen der Testkommentare entfernte die Nachrichten aus den Spalten, der Warteschlange und den Gespeicherten, aber die Zahlen blieben: die Summe im Kopf jeder Spalte und die Zähler der Reiter (Live, Mitglieder, Super Chats, WhatsApp, Telegram, Unterstützung) zählten weiter, was erfunden war. Jetzt wird jeder gelöschte Test abgezogen, und die Zahlen sind wieder wie vor ihm.",
+      "🔁 Beim Neustart kommen Testkommentare aus dem Tagesprotokoll nicht mehr zurück — weder auf den Bildschirm noch in die Zählung. Echte bleiben, wie sie sind."
+    ]
+  },
   "0.158.1": {
     "titulo": "🎚️ Soundboard: der Musikwechsel respektiert wieder das gewählte Fade",
     "itens": [
