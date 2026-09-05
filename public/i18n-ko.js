@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "✏️ Editor da tecla — botões principais": "✏️ 키 편집기 — 메인 버튼",
+    "✏️ Editor da tecla — botões de dentro": "✏️ 키 편집기 — 안쪽 버튼",
+    "Restaurar o editor": "편집기 복원",
+    "Minimizar (fica só a barra de cima)": "최소화(위쪽 바만 남음)",
+    "Soltar: virar uma janela flutuante": "떼어내기: 떠 있는 창으로",
+    "Grudar embaixo da grade de botões (um editor por grade)": "버튼 격자 아래에 붙이기(격자마다 편집기 하나)",
+    "🗑️ Apagar": "🗑️ 삭제",
     "Escolha primeiro a ação da tecla — o emoji pelo estado depende dela.": "먼저 키의 동작을 고르세요. 상태별 이모지는 그것에 따라 달라집니다.",
     "🟢 Ligado / no ar / som ativo": "🟢 켜짐 / 방송 중 / 소리 켜짐",
     "🔴 No preview / mudo": "🔴 미리보기 / 음소거",

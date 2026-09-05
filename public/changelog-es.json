@@ -1,4 +1,12 @@
 {
+  "0.157.0": {
+    "titulo": "🪟 Mesa de pistas: el editor de la tecla ganó los botones de ventana y puede pegarse a la cuadrícula",
+    "itens": [
+      "🪟 La ventana del editor de la tecla tiene ahora los mismos botones que las otras ventanas: 🗕 minimizar (queda solo la barra de arriba), 🗖 maximizar/restaurar, ↩ pegar y ✖ cerrar — además del ↺ que la devuelve a su lugar predeterminado. El ✖ que quedaba suelto en medio del formulario pasó a la barra.",
+      "📌 Nuevo modo PEGADO (↩ en la barra; 🪟 la suelta de nuevo): el editor se abre justo debajo de la cuadrícula a la que pertenece la tecla. Con una carpeta abierta al lado, conviven dos editores — el de la tecla madre debajo de los botones principales (izquierda) y el de la tecla hija debajo de los botones de dentro (derecha). La preferencia se guarda en este navegador.",
+      "🗑️ El botón derecho sobre la tecla ganó «Eliminar» (en rojo, al final del menú), con la misma confirmación del 🗑️ del editor."
+    ]
+  },
   "0.156.0": {
     "titulo": "🎭 Mesa de pistas: la tecla cambia de color y de cara con el estado",
     "itens": [

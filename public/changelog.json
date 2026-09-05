@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.157.0",
+    "titulo": "🪟 Mesa de trilhas: o editor da tecla ganhou os botões de janela e pode grudar na grade",
+    "itens": [
+      "🪟 A janela do editor da tecla tem agora os mesmos botões das outras janelas: 🗕 minimizar (fica só a barra de cima), 🗖 maximizar/restaurar, ↩ grudar e ✖ fechar — além do ↺ que devolve ao lugar padrão. O ✖ que ficava solto no meio do formulário foi para a barra.",
+      "📌 Novo modo GRUDADO (↩ na barra; 🪟 solta de novo): o editor abre logo abaixo da grade a que a tecla pertence. Com uma pasta aberta ao lado, dois editores convivem — o da tecla-mãe embaixo dos botões principais (à esquerda) e o da tecla-filha embaixo dos botões de dentro (à direita). A preferência fica guardada neste navegador.",
+      "🗑️ O botão direito na tecla ganhou «Apagar» (em vermelho, no fim do menu), com a mesma confirmação do 🗑️ do editor."
+    ]
+  },
+  {
     "version": "0.156.0",
     "titulo": "🎭 Mesa de trilhas: a tecla muda de cor e de cara com o estado",
     "itens": [

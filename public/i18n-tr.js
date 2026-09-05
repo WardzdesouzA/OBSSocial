@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "✏️ Editor da tecla — botões principais": "✏️ Tuş düzenleyici — ana düğmeler",
+    "✏️ Editor da tecla — botões de dentro": "✏️ Tuş düzenleyici — içteki düğmeler",
+    "Restaurar o editor": "Düzenleyiciyi geri getir",
+    "Minimizar (fica só a barra de cima)": "Küçült (yalnızca üst çubuk kalır)",
+    "Soltar: virar uma janela flutuante": "Ayır: yüzen pencereye dönüştür",
+    "Grudar embaixo da grade de botões (um editor por grade)": "Düğme ızgarasının altına yapıştır (ızgara başına bir düzenleyici)",
+    "🗑️ Apagar": "🗑️ Sil",
     "Escolha primeiro a ação da tecla — o emoji pelo estado depende dela.": "Önce tuşun eylemini seçin; duruma göre emoji ona bağlıdır.",
     "🟢 Ligado / no ar / som ativo": "🟢 Açık / yayında / ses açık",
     "🔴 No preview / mudo": "🔴 Önizlemede / susturulmuş",

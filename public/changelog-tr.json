@@ -1,4 +1,12 @@
 {
+  "0.157.0": {
+    "titulo": "🪟 Ses masası: tuş düzenleyici pencere düğmelerini aldı ve ızgaraya yapışabiliyor",
+    "itens": [
+      "🪟 Tuş düzenleyici penceresinde artık diğer pencerelerle aynı düğmeler var: 🗕 küçült (yalnızca üst çubuk kalır), 🗖 büyüt/geri getir, ↩ yapıştır ve ✖ kapat — ayrıca varsayılan yerine döndüren ↺. Formun ortasında başıboş duran ✖ çubuğa taşındı.",
+      "📌 Yeni YAPIŞIK mod (çubuktaki ↩; 🪟 yeniden ayırır): düzenleyici, tuşun ait olduğu ızgaranın hemen altında açılır. Yanda bir klasör açıkken iki düzenleyici bir arada durur — ana tuşunki ana düğmelerin altında (solda), alt tuşunki içteki düğmelerin altında (sağda). Tercih bu tarayıcıda saklanır.",
+      "🗑️ Tuşa sağ tıklamada «Sil» (kırmızı, menünün sonunda) eklendi; düzenleyicinin 🗑️ düğmesiyle aynı onayı ister."
+    ]
+  },
   "0.156.0": {
     "titulo": "🎭 Ses masası: tuşun rengi ve yüzü durumla değişiyor",
     "itens": [

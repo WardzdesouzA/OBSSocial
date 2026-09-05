@@ -1,4 +1,12 @@
 {
+  "0.157.0": {
+    "titulo": "🪟 Soundboard: der Tasten-Editor hat die Fensterknöpfe bekommen und kann am Raster andocken",
+    "itens": [
+      "🪟 Das Fenster des Tasten-Editors hat jetzt dieselben Knöpfe wie die anderen Fenster: 🗕 minimieren (nur die obere Leiste bleibt), 🗖 maximieren/wiederherstellen, ↩ andocken und ✖ schließen — dazu das ↺, das es an den Standardplatz zurücksetzt. Das ✖, das lose mitten im Formular stand, ist in die Leiste gewandert.",
+      "📌 Neuer ANGEDOCKTER Modus (↩ in der Leiste; 🪟 löst wieder): der Editor öffnet direkt unter dem Raster, zu dem die Taste gehört. Mit einem daneben geöffneten Ordner leben zwei Editoren zusammen — der der Muttertaste unter den Haupttasten (links) und der der Kindtaste unter den Tasten darin (rechts). Die Einstellung bleibt in diesem Browser gespeichert.",
+      "🗑️ Der Rechtsklick auf eine Taste bietet jetzt „Löschen“ (rot, am Ende des Menüs), mit derselben Rückfrage wie das 🗑️ des Editors."
+    ]
+  },
   "0.156.0": {
     "titulo": "🎭 Soundboard: die Taste wechselt Farbe und Gesicht mit dem Zustand",
     "itens": [
