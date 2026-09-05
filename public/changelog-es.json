@@ -1,4 +1,12 @@
 {
+  "0.159.0": {
+    "titulo": "🖥️ Monitor: la imagen del OBS y del vMix dentro de las ventanas de control del panel",
+    "itens": [
+      "🎬 La ventana 🎬 OBS del panel ganó la sección 🖥️ Monitor: la imagen de lo que está al aire y, en modo estudio, también la del preview — pequeñas, lado a lado, con el nombre de la escena en la leyenda. Se actualiza cada segundo solo mientras la ventana y la sección están abiertas y la pestaña está visible; al cerrar, el OBS deja de ser molestado. Funciona con el OBS en otra computadora, porque la imagen viene por la propia conexión.",
+      "🎛️ La ventana 🎛️ vMix ganó la misma sección, con la salida y el preview. Un detalle honesto: la API del vMix no devuelve la imagen, solo guarda una captura en disco — por eso el monitor del vMix solo funciona cuando corre en la misma computadora que OBS Social (la captura va a la carpeta data/tmp y se lee desde ahí). Con el vMix en otra máquina, la sección explica el porqué en vez de quedar en blanco.",
+      "⚙️ En las páginas 🎬 OBS Studio Remoto y 🎛️ vMix de la configuración, el bloque 🖥️ Monitor se puede apagar como los demás bloques de la ventana. Viene encendido."
+    ]
+  },
   "0.158.2": {
     "titulo": "🧹 Borrar los comentarios de prueba también borra sus números",
     "itens": [

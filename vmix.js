@@ -123,7 +123,9 @@ function linhaFuncao(nome, params) {
   const partes = [];
   for (const [k, v] of Object.entries(params || {})) {
     if (v === undefined || v === null || v === '') continue;
-    partes.push(k + '=' + encodeURIComponent(String(v)).replace(/%20/g, ' '));
+    // 🖥️ v0.159: ':' '\' '/' ficam como estão — um caminho de arquivo
+    // (Snapshot Value=C:\…) chega inteiro ao vMix, decodifique ele ou não
+    partes.push(k + '=' + encodeURIComponent(String(v)).replace(/%20/g, ' ').replace(/%3A/gi, ':').replace(/%5C/gi, '\\').replace(/%2F/gi, '/'));
   }
   return 'FUNCTION ' + nome + (partes.length ? ' ' + partes.join('&') : '');
 }
@@ -198,10 +200,12 @@ class VmixCliente {
   }
 
   // Um pedido FUNCTION; devolve { ok, erro }
-  funcao(nome, params) {
+  // 🖥️ v0.159: opts.silencioso — a função não muda nada no vMix (um print,
+  // por exemplo): a resposta dela não dispara a releitura do XML
+  funcao(nome, params, opts) {
     return new Promise((resolve) => {
       if (!this.conectado || !this.enviar(linhaFuncao(nome, params))) return resolve({ ok: false, erro: 'desconectado' });
-      const p = { resolve, timer: null };
+      const p = { resolve, timer: null, silencioso: !!(opts && opts.silencioso) };
       p.timer = setTimeout(() => {
         const i = this.filaFuncoes.indexOf(p);
         if (i >= 0) this.filaFuncoes.splice(i, 1);
@@ -287,7 +291,8 @@ class VmixCliente {
         const p = this.filaFuncoes.shift();
         if (p) { clearTimeout(p.timer); p.resolve(status === 'OK' ? { ok: true } : { ok: false, erro: resto.trim() || 'o vMix recusou' }); }
         // Toda função muda alguma coisa: as telas veem o retrato novo
-        this.relerLogo();
+        // (fora as silenciosas — um print a cada segundo não é motivo para reler)
+        if (!p || !p.silencioso) this.relerLogo();
         break;
       }
       case 'TALLY':

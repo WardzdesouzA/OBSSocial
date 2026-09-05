@@ -1,4 +1,12 @@
 {
+  "0.159.0": {
+    "titulo": "🖥️ Moniteur : l’image d’OBS et de vMix dans les fenêtres de contrôle du panneau",
+    "itens": [
+      "🎬 La fenêtre 🎬 OBS du panneau a gagné la section 🖥️ Moniteur : l’image de ce qui est à l’antenne et, en mode studio, celle du preview aussi — petites, côte à côte, avec le nom de la scène en légende. Elle se rafraîchit chaque seconde seulement tant que la fenêtre et la section sont ouvertes et que l’onglet est visible ; fermée, OBS n’est plus sollicité. Ça marche avec OBS sur un autre ordinateur, car l’image passe par la connexion elle-même.",
+      "🎛️ La fenêtre 🎛️ vMix a gagné la même section, avec la sortie et le preview. Un détail honnête : l’API de vMix ne renvoie pas l’image, elle enregistre seulement une capture sur le disque — le moniteur vMix ne marche donc que quand vMix tourne sur le même ordinateur qu’OBS Social (la capture va dans le dossier data/tmp et est lue de là). Avec vMix sur une autre machine, la section explique pourquoi au lieu de rester vide.",
+      "⚙️ Dans les pages 🎬 OBS Studio à distance et 🎛️ vMix des réglages, le bloc 🖥️ Moniteur peut être désactivé comme les autres blocs de la fenêtre. Il est activé par défaut."
+    ]
+  },
   "0.158.2": {
     "titulo": "🧹 Effacer les commentaires de test efface aussi leurs chiffres",
     "itens": [

@@ -124,6 +124,18 @@
     color: var(--muted);
   }
   .obs-stats .ruim { color: var(--red, #ff5c5c); }
+  /* 🖥️ v0.159: o monitor das janelas 🎬/🎛️ — duas miniaturas 16:9 lado a lado */
+  .obs-monitor { display: flex; gap: 8px; }
+  .obs-monitor figure { margin: 0; flex: 1 1 0; min-width: 0; }
+  .obs-monitor img {
+    display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain;
+    background: #000; border-radius: 6px; border: 1px solid var(--border);
+  }
+  .obs-monitor #obsMonitorProgramaFig img, .obs-monitor #vmixMonitorProgramaFig img { border-color: #e53935; }
+  .obs-monitor figcaption {
+    font-size: 11px; color: var(--muted); text-align: center; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   .obs-audio-linha .icon-btn { padding: 2px 6px; font-size: 13px; }
   .icon-btn.ativo { border-color: #43a047; box-shadow: 0 0 0 1px #43a047 inset; }
   #obsRecado {
@@ -1416,6 +1428,16 @@
           <button id="obsPrintBtn" class="icon-btn" title="Print da cena no ar — cai direto nas mídias do programa">📸</button>
           <span class="hint" id="obsSaidasTag" style="margin:0;flex:1 0 100%"></span>
         </div>
+        <!-- 🖥️ v0.159: o monitor — a imagem do que está no ar (e do preview
+             no modo estúdio), pedida a cada segundo enquanto a seção está aberta -->
+        <details class="obs-secao" id="obsMonitorCampo" data-sec="monitor" open style="display:none">
+          <summary>🖥️ Monitor</summary>
+          <div class="obs-monitor" id="obsMonitor">
+            <figure id="obsMonitorProgramaFig"><img id="obsMonitorPrograma" alt="No ar"><figcaption id="obsMonitorProgramaLeg">🔴 No ar</figcaption></figure>
+            <figure id="obsMonitorPreviewFig" style="display:none"><img id="obsMonitorPreview" alt="Preview"><figcaption id="obsMonitorPreviewLeg">👁 Preview</figcaption></figure>
+          </div>
+          <div class="hint" id="obsMonitorHint" style="margin:4px 0 0;display:none"></div>
+        </details>
         <!-- 🗂 v0.83: o resto em SEÇÕES recolhíveis, com memória por navegador -->
         <details class="obs-secao" id="obsCenasCampo" data-sec="cenas" open style="display:none">
           <summary><span id="obsCenasRotulo">Cenas</span> <span class="obs-cont" id="obsContCenas"></span></summary>
@@ -1495,6 +1517,15 @@
           <button id="vmixMarcadorBtn" class="icon-btn" title="Marcador no log da gravação">🔖</button>
           <span class="hint" id="vmixSaidasTag" style="margin:0;flex:1 0 100%"></span>
         </div>
+        <!-- 🖥️ v0.159: o monitor do vMix (a saída e o preview) — só com o vMix neste computador -->
+        <details class="obs-secao" id="vmixMonitorCampo" data-sec="monitor" open style="display:none">
+          <summary>🖥️ Monitor</summary>
+          <div class="obs-monitor" id="vmixMonitor">
+            <figure id="vmixMonitorProgramaFig"><img id="vmixMonitorPrograma" alt="Saída"><figcaption id="vmixMonitorProgramaLeg">🔴 Saída</figcaption></figure>
+            <figure id="vmixMonitorPreviewFig" style="display:none"><img id="vmixMonitorPreview" alt="Preview"><figcaption id="vmixMonitorPreviewLeg">👁 Preview</figcaption></figure>
+          </div>
+          <div class="hint" id="vmixMonitorHint" style="margin:4px 0 0;display:none"></div>
+        </details>
         <details class="obs-secao" id="vmixEntradasCampo" data-sec="entradas" open style="display:none">
           <summary>📺 Entradas (clique escolhe o preview 👁) <span class="obs-cont" id="vmixContEntradas"></span></summary>
           <div id="vmixEntradas"></div>
@@ -2138,10 +2169,29 @@ const hub = connectHub((event) => {
     case 'obsAviso':
       mostrarRecadoObs(event.ok, event.texto);
       break;
-    case 'obs':
+    case 'obs': {
+      const ligadoAntes = !!(obsInfo && obsInfo.conectado);
       obsInfo = event.obs || null;
+      // 🖥️ v0.159: (re)conectou ou caiu → o monitor tenta de novo do zero
+      if (!!(obsInfo && obsInfo.conectado) !== ligadoAntes) { monitorParado.obs = false; monitorEmVoo.obs = 0; }
       renderObs();
       renderTrilhas(); // 🎬 as teclas de cena da Mesa acompanham o OBS ao vivo
+      break;
+    }
+    // 🖥️ v0.159: a imagem do monitor (resposta ao pedido desta tela)
+    case 'obsMonitor':
+      pintarMonitor('obs', event, {
+        programa: (m) => OBS_I18N.t('No ar') + (m.cena ? ': ' + m.cena : ''),
+        preview: (m) => OBS_I18N.t('Preview') + (m.cenaPreview ? ': ' + m.cenaPreview : ''),
+        erros: { 'sem-recurso': OBS_I18N.t('Este OBS não sabe fotografar a cena — atualize o OBS Studio.') },
+      });
+      break;
+    case 'vmixMonitor':
+      pintarMonitor('vmix', event, {
+        programa: (m) => OBS_I18N.t('Saída') + (m.entradaPrograma ? ': ' + OBS_I18N.t('entrada') + ' ' + m.entradaPrograma : ''),
+        preview: (m) => OBS_I18N.t('Preview') + (m.entradaPreview ? ': ' + OBS_I18N.t('entrada') + ' ' + m.entradaPreview : ''),
+        erros: { remoto: OBS_I18N.t('O vMix só entrega a imagem quando roda neste computador — a API dele grava o print em disco, não devolve a foto.') },
+      });
       break;
     // 🎛️ v0.122: o vMix, nos mesmos moldes
     case 'vmixAviso':
@@ -2151,11 +2201,14 @@ const hub = connectHub((event) => {
       // 🕹️ v0.126: um aparelho (Stream Deck e afins) acabou de mandar uma ação
       mostrarRecadoObs(true, event.texto, '🕹️ ');
       break;
-    case 'vmix':
+    case 'vmix': {
+      const ligadoAntes = !!(vmixInfo && vmixInfo.conectado);
       vmixInfo = event.vmix || null;
+      if (!!(vmixInfo && vmixInfo.conectado) !== ligadoAntes) { monitorParado.vmix = false; monitorEmVoo.vmix = 0; } // 🖥️ v0.159
       renderVmix();
       renderTrilhas(); // as teclas 🎛️ da Mesa acendem conforme o vMix
       break;
+    }
     case 'qr':
       updateQrTool(event.qrs);
       break;
@@ -7888,6 +7941,9 @@ function renderObs() {
     }
   }
 
+  // 🖥️ v0.159: o monitor só aparece com o OBS conectado, o bloco ligado e um
+  // OBS que sabe fotografar a cena (GetSourceScreenshot)
+  document.getElementById('obsMonitorCampo').style.display = o.conectado && blocos.monitor && (!o.podeFazer || o.podeFazer.captura !== false) ? '' : 'none';
   document.getElementById('obsAcoesRow').style.display = o.conectado && blocos.saidas ? '' : 'none';
   document.getElementById('obsLiveLabel').textContent = o.transmitindo ? 'Encerrar transmissão' : 'Iniciar transmissão';
   document.getElementById('obsRecLabel').textContent = o.gravando ? 'Parar gravação' : 'Gravar';
@@ -7940,6 +7996,61 @@ document.getElementById('obsAtalhoBtn').onclick = () => {
       mem[chave] = det.open;
       try { localStorage.setItem('obs-secoes', JSON.stringify(mem)); } catch {}
     });
+  }
+}
+// 🖥️ v0.159: o monitor pede a imagem a cada segundo — SÓ com a janela
+// aberta, a seção 🖥️ aberta e a aba visível. Fechou qualquer um dos três,
+// parou de pedir: nada de CPU do OBS/vMix gasta à toa.
+function monitorAtivo(popId, campoId) {
+  const pop = document.getElementById(popId);
+  const campo = document.getElementById(campoId);
+  return !!(pop && campo && !document.hidden && pop.classList.contains('open') && campo.open && campo.style.display !== 'none');
+}
+// Um pedido de cada vez por janela (o próximo só sai quando a resposta chegou
+// ou 4 s se passaram), nunca com a conexão caída (senão a fila de reconexão
+// enche de pedidos velhos) e nunca depois de um "não dá" definitivo (vMix em
+// outro computador, OBS sem o recurso) — esse só volta quando reconectar.
+const monitorEmVoo = { obs: 0, vmix: 0 };
+const monitorParado = { obs: false, vmix: false };
+let monitorTique = 0;
+setInterval(() => {
+  monitorTique++;
+  if (!hub.aberto()) return;
+  const agora = Date.now();
+  const pedir = (prefixo) => {
+    if (monitorParado[prefixo] || agora - monitorEmVoo[prefixo] < 4000) return;
+    monitorEmVoo[prefixo] = agora;
+    hub.send({ type: prefixo + 'Monitor' });
+  };
+  if (monitorAtivo('obsPop', 'obsMonitorCampo')) pedir('obs');
+  // o print do vMix sai em tamanho cheio (a API não encolhe): a cada 2 s basta
+  if (monitorTique % 2 === 0 && monitorAtivo('vmixPop', 'vmixMonitorCampo')) pedir('vmix');
+}, 1000);
+function pintarMonitor(prefixo, m, legendas) {
+  monitorEmVoo[prefixo] = 0;
+  const img = document.getElementById(prefixo + 'MonitorPrograma');
+  const figP = document.getElementById(prefixo + 'MonitorPreviewFig');
+  const imgP = document.getElementById(prefixo + 'MonitorPreview');
+  const hint = document.getElementById(prefixo + 'MonitorHint');
+  const caixa = document.getElementById(prefixo + 'Monitor');
+  if (!img || !figP || !imgP || !hint || !caixa) return;
+  const erro = m && m.erro ? (legendas.erros[m.erro] || '') : '';
+  hint.textContent = erro;
+  hint.style.display = erro ? '' : 'none';
+  caixa.style.display = erro ? 'none' : '';
+  if (erro) { monitorParado[prefixo] = true; return; }
+  // só a data URL do próprio servidor entra no <img> (nada de endereço de fora);
+  // sem imagem nova, a antiga sai — um monitor não pode mostrar a cena errada
+  const imagemOk = (s) => typeof s === 'string' && /^data:image\/(jpeg|jpg|png);base64,/.test(s);
+  if (imagemOk(m.programa)) img.src = m.programa; else img.removeAttribute('src');
+  document.getElementById(prefixo + 'MonitorProgramaLeg').textContent = '🔴 ' + legendas.programa(m);
+  if (imagemOk(m.preview)) {
+    imgP.src = m.preview;
+    figP.style.display = '';
+    document.getElementById(prefixo + 'MonitorPreviewLeg').textContent = '👁 ' + legendas.preview(m);
+  } else {
+    figP.style.display = 'none';
+    imgP.removeAttribute('src');
   }
 }
 document.getElementById('obsLiveBtn').onclick = async () => {
@@ -8225,6 +8336,7 @@ function renderVmix() {
     }
   }
   document.getElementById('vmixAvancadoCampo').style.display = on && blocos.avancado ? '' : 'none';
+  document.getElementById('vmixMonitorCampo').style.display = on && blocos.monitor ? '' : 'none'; // 🖥️ v0.159
   document.getElementById('vmixAcoesRow').style.display = on && blocos.saidas ? '' : 'none';
   document.getElementById('vmixLiveLabel').textContent = o.transmitindo ? 'Encerrar transmissão' : 'Iniciar transmissão';
   document.getElementById('vmixRecLabel').textContent = o.gravando ? 'Parar gravação' : 'Gravar';

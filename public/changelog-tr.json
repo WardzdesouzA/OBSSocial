@@ -1,4 +1,12 @@
 {
+  "0.159.0": {
+    "titulo": "🖥️ Monitör: OBS ve vMix görüntüsü panelin kontrol pencerelerinin içinde",
+    "itens": [
+      "🎬 Panelin 🎬 OBS penceresine 🖥️ Monitör bölümü eklendi: yayında olanın görüntüsü ve stüdyo modunda önizlemenin de — küçük, yan yana, alt yazıda sahne adıyla. Yalnızca pencere ile bölüm açıkken ve sekme görünürken her saniye yenilenir; kapatınca OBS rahat bırakılır. Görüntü bağlantının kendisi üzerinden geldiği için OBS başka bir bilgisayardayken de çalışır.",
+      "🎛️ 🎛️ vMix penceresine de aynı bölüm eklendi: çıkış ve önizleme. Dürüst bir ayrıntı: vMix API’si görüntüyü geri döndürmez, yalnızca diske bir anlık görüntü kaydeder — bu yüzden vMix monitörü yalnızca vMix, OBS Social ile aynı bilgisayarda çalışırken işler (anlık görüntü data/tmp klasörüne gider ve oradan okunur). vMix başka bir makinedeyse bölüm boş kalmak yerine nedenini açıklar.",
+      "⚙️ Ayarlardaki 🎬 OBS Studio Uzaktan ve 🎛️ vMix sayfalarında 🖥️ Monitör bloğu, pencerenin diğer blokları gibi kapatılabilir. Varsayılan olarak açık gelir."
+    ]
+  },
   "0.158.2": {
     "titulo": "🧹 Test yorumlarını silmek sayılarını da siliyor",
     "itens": [

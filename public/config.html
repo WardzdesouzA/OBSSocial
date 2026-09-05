@@ -5470,6 +5470,7 @@ const OBS_PAINEL_BLOCOS = [
   ['stats', '📊 Saúde do OBS: fps, CPU, memória, disco, quadros perdidos e tempos de transmissão/gravação'],
   ['atalhos', '⌨️ Disparar atalhos do OBS por nome — o coringa do que não tem botão próprio (vem desligado)'],
   ['perfis', '🗂 Coleções de cenas e 👤 perfis (troca pesada — vem desligado)'],
+  ['monitor', '🖥️ Monitor: a imagem do que está no ar (e do preview, no modo estúdio), atualizada a cada segundo enquanto a janela está aberta'],
 ];
 function fillObsPainel() {
   const caixa = document.getElementById('obsPainelChecks');
@@ -5537,6 +5538,7 @@ const VMIX_PAINEL_BLOCOS = [
   ['titulos', '🔤 Textos dos títulos (GT/XAML), editáveis na hora'],
   ['stats', '📊 Versão, edição, preset e tempo de gravação/transmissão'],
   ['avancado', '🧰 Replay, presets, scripts, tecla de atalho e função livre (vem desligado)'],
+  ['monitor', '🖥️ Monitor: a imagem da saída e do preview, a cada 2 segundos — só quando o vMix roda neste computador (a API dele grava o print em disco)'],
 ];
 function fillVmixPainel() {
   const caixa = document.getElementById('vmixPainelChecks');

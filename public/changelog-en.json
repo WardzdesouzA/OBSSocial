@@ -1,4 +1,12 @@
 {
+  "0.159.0": {
+    "titulo": "🖥️ Monitor: the OBS and vMix picture inside the panel’s control windows",
+    "itens": [
+      "🎬 The panel’s 🎬 OBS window has a new 🖥️ Monitor section: the picture of what is on air and, in studio mode, the preview too — small, side by side, with the scene name in the caption. It refreshes every second only while the window and the section are open and the tab is visible; close it and OBS is left alone. It works with OBS on another computer, because the picture comes over the connection itself.",
+      "🎛️ The 🎛️ vMix window got the same section, with the output and the preview. One honest detail: the vMix API does not return the picture, it only saves a snapshot to disk — so the vMix monitor only works when vMix runs on the same computer as OBS Social (the snapshot goes to the data/tmp folder and is read from there). With vMix on another machine, the section explains why instead of staying blank.",
+      "⚙️ On the 🎬 OBS Studio Remote and 🎛️ vMix settings pages, the 🖥️ Monitor block can be turned off like the other blocks of the window. It comes on."
+    ]
+  },
   "0.158.2": {
     "titulo": "🧹 Clearing the test comments also clears their numbers",
     "itens": [

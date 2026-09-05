@@ -1,4 +1,12 @@
 {
+  "0.159.0": {
+    "titulo": "🖥️ Monitor: das Bild von OBS und vMix in den Steuerfenstern des Panels",
+    "itens": [
+      "🎬 Das 🎬 OBS-Fenster des Panels hat einen neuen Abschnitt 🖥️ Monitor: das Bild dessen, was auf Sendung ist, und im Studio-Modus auch die Vorschau — klein, nebeneinander, mit dem Szenennamen in der Beschriftung. Es wird jede Sekunde aktualisiert, aber nur solange Fenster und Abschnitt offen sind und der Tab sichtbar ist; geschlossen, wird OBS in Ruhe gelassen. Es funktioniert mit OBS auf einem anderen Computer, weil das Bild über die Verbindung selbst kommt.",
+      "🎛️ Das 🎛️ vMix-Fenster hat denselben Abschnitt bekommen, mit Ausgang und Vorschau. Ein ehrliches Detail: die vMix-API gibt das Bild nicht zurück, sie speichert nur einen Schnappschuss auf der Festplatte — deshalb funktioniert der vMix-Monitor nur, wenn vMix auf demselben Computer wie OBS Social läuft (der Schnappschuss landet im Ordner data/tmp und wird von dort gelesen). Mit vMix auf einer anderen Maschine erklärt der Abschnitt warum, statt leer zu bleiben.",
+      "⚙️ Auf den Einstellungsseiten 🎬 OBS Studio Fernsteuerung und 🎛️ vMix lässt sich der Block 🖥️ Monitor wie die anderen Blöcke des Fensters abschalten. Er ist standardmäßig an."
+    ]
+  },
   "0.158.2": {
     "titulo": "🧹 Testkommentare löschen löscht auch ihre Zahlen",
     "itens": [
