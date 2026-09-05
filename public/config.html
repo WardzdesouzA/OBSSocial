@@ -2036,6 +2036,10 @@
     <div class="card" id="cardAudiosOv">
       <h3>🔊 Áudios dos overlays</h3>
       <div class="hint">Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).</div>
+      <div class="field" id="aov-fabrica" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button type="button" class="btn-link" id="aov-fabrica-btn" style="margin:0" title="Põe o som de fábrica de cada momento que ainda está sem som: destaque entrando, aviso entrando, likômetro e QR Code entrando e saindo, dado rolando e timer zerando. O que você já escolheu fica.">🎁 Sons de fábrica nos momentos vazios</button>
+        <span class="hint" id="aov-fabrica-aviso" style="margin:0"></span>
+      </div>
       <div class="field">
         <label>Overlay</label>
         <select id="aov-widget">
@@ -4643,6 +4647,54 @@ const AOV_FIM_ROTULO = {
   relogio: '🏁 Finalização (timer/cronômetro zerando)',
   raffle: '🎲 Dado rolando (enquanto sorteia)',
 };
+// 🎁 v0.160: os sons que vêm com o programa — na lista de todos os momentos
+// (qualquer um serve em qualquer lugar) e, pelo botão, cada um no seu lugar
+const AOV_SONS_FABRICA = [
+  ['/sons/destaque-entrada.wav', '💬 Destaque entrando (OBS Social)'],
+  ['/sons/aviso-entrada.wav', '📢 Aviso entrando (OBS Social)'],
+  ['/sons/likometro-entrada.wav', '📊 Likômetro entrando (OBS Social)'],
+  ['/sons/likometro-saida.wav', '📊 Likômetro saindo (OBS Social)'],
+  ['/sons/qr-entrada.wav', '📱 QR Code entrando (OBS Social)'],
+  ['/sons/qr-saida.wav', '📱 QR Code saindo (OBS Social)'],
+  ['/sons/dado-padrao.wav', '🎲 Dado padrão do OBS Social'],
+  ['/sons/timer-padrao.wav', '⏰ Alerta padrão do OBS Social'],
+];
+// onde cada som de fábrica mora (o mesmo mapa dos padrões do servidor)
+const AOV_FABRICA_LUGAR = {
+  featured: { entrada: '/sons/destaque-entrada.wav' },
+  aviso: { entrada: '/sons/aviso-entrada.wav' },
+  likemeter: { entrada: '/sons/likometro-entrada.wav', saida: '/sons/likometro-saida.wav' },
+  qr: { entrada: '/sons/qr-entrada.wav', saida: '/sons/qr-saida.wav' },
+  raffle: { fim: '/sons/dado-padrao.wav' },
+  relogio: { fim: '/sons/timer-padrao.wav' },
+};
+// Põe cada som de fábrica no seu momento — SÓ onde ainda não há som (o que
+// o streamer escolheu fica). Devolve quantos momentos ganharam som.
+function aovAplicarFabrica() {
+  const atual = settings?.audiosOverlay || {};
+  const novo = {};
+  let n = 0;
+  for (const [chave, momentos] of Object.entries(AOV_FABRICA_LUGAR)) {
+    const widget = { ...(atual[chave] || {}) };
+    let mudou = 0;
+    for (const [momento, url] of Object.entries(momentos)) {
+      if (widget[momento] && widget[momento].url) continue;
+      widget[momento] = { url, volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' };
+      mudou++;
+    }
+    if (mudou) { novo[chave] = widget; n += mudou; }
+  }
+  const aviso = document.getElementById('aov-fabrica-aviso');
+  if (!n) {
+    if (aviso) aviso.textContent = OBS_I18N.t('Todos os momentos com som de fábrica já têm som — nada mudou.');
+    return 0;
+  }
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { audiosOverlay: novo } });
+  setTimeout(() => { applyingSettings = false; fillAudiosOv(); }, 300);
+  if (aviso) aviso.textContent = OBS_I18N.t('Sons de fábrica aplicados nos momentos que estavam vazios:') + ' ' + n;
+  return n;
+}
 function aovMontarLinhas() {
   const caixa = document.getElementById('aov-linhas');
   if (!caixa || caixa.childElementCount) return;
@@ -4674,6 +4726,8 @@ function aovMontarLinhas() {
   }
   const selW = document.getElementById('aov-widget');
   if (selW && !selW.dataset.ligado) { selW.dataset.ligado = '1'; selW.addEventListener('change', fillAudiosOv); }
+  const btnFab = document.getElementById('aov-fabrica-btn');
+  if (btnFab && !btnFab.dataset.ligado) { btnFab.dataset.ligado = '1'; btnFab.addEventListener('click', aovAplicarFabrica); }
 }
 function aovPreencherSons(sel, atual) {
   if (!sel) return;
@@ -4682,8 +4736,8 @@ function aovPreencherSons(sel, atual) {
   nenhum.value = '';
   nenhum.textContent = OBS_I18N.t('— sem som —');
   sel.appendChild(nenhum);
-  // Sons que já vêm com o programa (os padrões dedicados chegam no futuro)
-  for (const [url, nome] of [['/sons/dado-padrao.wav', '🎲 Dado padrão do OBS Social'], ['/sons/timer-padrao.wav', '⏰ Alerta padrão do OBS Social']]) {
+  // Sons que já vêm com o programa (🎁 v0.160: um para cada momento que tem o seu)
+  for (const [url, nome] of AOV_SONS_FABRICA) {
     const op = document.createElement('option');
     op.value = url;
     op.textContent = OBS_I18N.t(nome);

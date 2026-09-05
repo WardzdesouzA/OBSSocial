@@ -1,4 +1,12 @@
 {
+  "0.160.0": {
+    "titulo": "🎁 Fabrika sesleri: duyuru, beğeni ölçer, QR Kod ve öne çıkan kendi sesiyle geliyor",
+    "itens": [
+      "🔊 Programla altı yeni ses geliyor, kendi anı olan her şeye bir tane: 📢 duyuru giriyor, 📊 beğeni ölçer giriyor ve çıkıyor, 📱 QR Kod giriyor ve çıkıyor ve 💬 öne çıkan yorum giriyor. 🔊 Katman sesleri’nde her anın listesinde (adında “(OBS Social)” ile) 🎲 zar ve ⏰ zamanlayıcı uyarısının yanında görünürler — hangisi olursa olsun her yerde kullanılabilir.",
+      "🆕 Yeni kurulum, her ses kendi anında, %70 seste, hem katmanda hem panelde olarak başlar.",
+      "🎁 Programı zaten kullananlara istemeden ses eklenmez: kartın üstündeki “🎁 Boş anlara fabrika sesleri” düğmesi her birini yerine koyar — yalnızca henüz ses olmayan yerlere. Seçtikleriniz olduğu gibi kalır ve “— ses yok —” sonrasında da geçerlidir."
+    ]
+  },
   "0.159.0": {
     "titulo": "🖥️ Monitör: OBS ve vMix görüntüsü panelin kontrol pencerelerinin içinde",
     "itens": [

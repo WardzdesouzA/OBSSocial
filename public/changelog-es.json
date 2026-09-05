@@ -1,4 +1,12 @@
 {
+  "0.160.0": {
+    "titulo": "🎁 Sonidos de fábrica: aviso, likómetro, código QR y destacado ya vienen con su sonido",
+    "itens": [
+      "🔊 Seis sonidos nuevos vienen con el programa, uno para cada momento que tiene el suyo: 📢 aviso entrando, 📊 likómetro entrando y saliendo, 📱 código QR entrando y saliendo y 💬 comentario destacado entrando. Aparecen en la lista de todos los momentos en 🔊 Audios de los overlays (con «(OBS Social)» en el nombre), junto al 🎲 dado y a la ⏰ alerta del timer — cualquiera sirve en cualquier lugar.",
+      "🆕 Una instalación nueva ya nace con cada sonido en su momento, al 70% de volumen, en el overlay y en el panel.",
+      "🎁 Quien ya usa el programa no gana sonido sin pedirlo: el botón «🎁 Sonidos de fábrica en los momentos vacíos», arriba en la tarjeta, pone cada uno en su lugar — solo donde todavía no había sonido. Lo que elegiste se queda, y «— sin sonido —» sigue valiendo después."
+    ]
+  },
   "0.159.0": {
     "titulo": "🖥️ Monitor: la imagen del OBS y del vMix dentro de las ventanas de control del panel",
     "itens": [

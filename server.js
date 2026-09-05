@@ -387,9 +387,22 @@ const DEFAULT_SETTINGS = {
   // tela, finalização). v0.155: os sons do fim do timer e do dado moram AQUI
   // — antes viviam em relogio/raffle, e o programa tocava os dois caminhos.
   // Estes dois já vêm com o programa; instalação antiga traz os seus.
+  // 🎁 v0.160: mais sons de fábrica — aviso entrando, likômetro entrando e
+  // saindo, QR Code entrando e saindo, destaque entrando. Instalação nova
+  // nasce com todos; quem já tem o card gravado escolhe (🎁 Sons de fábrica).
   audiosOverlay: {
     relogio: { fim: { url: '/sons/timer-padrao.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' } },
     raffle: { fim: { url: '/sons/dado-padrao.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' } },
+    aviso: { entrada: { url: '/sons/aviso-entrada.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' } },
+    likemeter: {
+      entrada: { url: '/sons/likometro-entrada.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' },
+      saida: { url: '/sons/likometro-saida.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' },
+    },
+    qr: {
+      entrada: { url: '/sons/qr-entrada.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' },
+      saida: { url: '/sons/qr-saida.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' },
+    },
+    featured: { entrada: { url: '/sons/destaque-entrada.wav', volume: 70, desloc: 0, repetir: false, duracao: 0, onde: 'ambos' } },
   },
   // 🪟 v0.79: opções das janelas (compartilhadas entre os navegadores)
   janelas: {
@@ -1314,6 +1327,17 @@ function audiosOverlayNaCarga(src) {
     const nuncaTeve = nova && !('somUrl' in ((src && src[secao]) || {}));
     const padrao = DEFAULT_SETTINGS.audiosOverlay[chave];
     if (nuncaTeve && padrao && !(base[chave] && base[chave].fim)) base[chave] = { ...(base[chave] || {}), ...padrao };
+  }
+  // 🎁 v0.160: os outros sons de fábrica (aviso, likômetro, QR, destaque)
+  // também só numa instalação NOVA — instalação antiga escolhe pelo botão
+  if (nova) {
+    const legadas = new Set(sonsLegados().map(([, chave]) => chave));
+    for (const [chave, padrao] of Object.entries(DEFAULT_SETTINGS.audiosOverlay)) {
+      if (legadas.has(chave)) continue;
+      for (const [momento, som] of Object.entries(padrao)) {
+        if (!(base[chave] && base[chave][momento])) base[chave] = { ...(base[chave] || {}), [momento]: { ...som } };
+      }
+    }
   }
   return base;
 }

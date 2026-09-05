@@ -1,4 +1,12 @@
 {
+  "0.160.0": {
+    "titulo": "🎁 Stock sounds: alert, likemeter, QR Code and highlight come with their own sound",
+    "itens": [
+      "🔊 Six new sounds ship with the program, one for each moment that has its own: 📢 alert entering, 📊 likemeter entering and leaving, 📱 QR Code entering and leaving and 💬 highlighted comment entering. They show up in the list of every moment in 🔊 Overlay sounds (with “(OBS Social)” in the name), next to the 🎲 dice and the ⏰ timer alert — any of them works anywhere.",
+      "🆕 A fresh install starts with each sound in its moment, at 70% volume, on the overlay and on the panel.",
+      "🎁 Existing installs get no sound they did not ask for: the “🎁 Stock sounds in the empty moments” button, at the top of the card, puts each one in its place — only where there was no sound yet. What you chose stays, and “— no sound —” still works afterwards."
+    ]
+  },
   "0.159.0": {
     "titulo": "🖥️ Monitor: the OBS and vMix picture inside the panel’s control windows",
     "itens": [
