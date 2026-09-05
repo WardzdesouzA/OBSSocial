@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.158.0",
+    "titulo": "🎚️ Mesa de trilhas: apertar outra música troca na hora",
+    "itens": [
+      "🎚️ Nas teclas «Tocar / Parar (uma por vez)» e «🔁 Repetir / Parar (BGM)», apertar outra música agora entra NA HORA: a nova começa com o fade de entrada dela enquanto a antiga sai ao lado, num fade curto (o fade da trilha, mas no máximo 1 s). Antes a nova só começava depois do fade inteiro da antiga (até 3 s) — e com os dois fades somados dava até 6 s de espera, com a antiga ainda soando; parecia que ela «continuava tocando por cima». O ⏹ e o clique de parar continuam com o fade inteiro da trilha, e as teclas «Sobrepor» e «Recomeçar» seguem tocando por cima, como sempre."
+    ]
+  },
+  {
     "version": "0.157.1",
     "titulo": "🎲 Áudios dos overlays: o som do sorteio se chama pelo que é",
     "itens": [

@@ -1,4 +1,10 @@
 {
+  "0.158.0": {
+    "titulo": "🎚️ Mesa de pistas: pulsar otra música cambia al instante",
+    "itens": [
+      "🎚️ En las teclas «Tocar / Parar (una a la vez)» y «🔁 Repetir / Parar (BGM)», pulsar otra música ahora entra AL INSTANTE: la nueva empieza con su propio fade de entrada mientras la antigua sale al lado, en un fade corto (el fade de la pista, como máximo 1 s). Antes la nueva solo empezaba tras el fade completo de la antigua (hasta 3 s) — y con los dos fades sumados podían pasar 6 s, con la antigua aún sonando; parecía que «seguía sonando por encima». El ⏹ y el clic de parar conservan el fade completo de la pista, y las teclas «Superponer» y «Reiniciar» siguen sonando por encima, como siempre."
+    ]
+  },
   "0.157.1": {
     "titulo": "🎲 Sonidos de los overlays: el sonido del sorteo se llama por lo que es",
     "itens": [

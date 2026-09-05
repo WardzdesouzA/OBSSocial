@@ -1,4 +1,10 @@
 {
+  "0.158.0": {
+    "titulo": "🎚️ Ses masası: başka bir müziğe basınca hemen geçiyor",
+    "itens": [
+      "🎚️ «Çal / Durdur (teker teker)» ve «🔁 Tekrarla / Durdur (BGM)» tuşlarında başka bir müziğe basmak artık HEMEN giriyor: yeni parça kendi giriş fade’iyle başlarken eskisi yanında kısa bir fade’le (parçanın fade’i, en fazla 1 sn) çıkıyor. Önceden yeni parça ancak eskisinin tüm fade’i bittikten sonra (3 sn’ye kadar) başlıyordu — iki fade toplanınca 6 sn’ye varıyor ve eskisi hâlâ duyuluyordu; «üstte çalmaya devam ediyor» gibi geliyordu. ⏹ ve durdurma tıklaması parçanın tam fade’ini koruyor; «Üst üste» ve «Yeniden başlat» tuşları her zamanki gibi üstte çalmaya devam ediyor."
+    ]
+  },
   "0.157.1": {
     "titulo": "🎲 Overlay sesleri: çekiliş sesi olduğu şeyin adını aldı",
     "itens": [
