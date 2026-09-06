@@ -1,4 +1,13 @@
 {
+  "0.164.1": {
+    "titulo": "🐦 Direktmedien: der Extraktor findet jetzt das Video von X (und von anderen Seiten, die keine Codecs angeben)",
+    "itens": [
+      "🎬 Beim Einfügen des Links eines X-Beitrags mit Video fand der 🎬 Extraktor aus 🧪 Labs die mp4-Datei, aber OBS Social verwarf die Antwort: X liefert die Datei ohne Codec-Angabe, und das Programm nahm „nicht gesagt“ als „nicht vorhanden“ — es sah aus, als wäre der Extraktor nie aufgerufen worden. Jetzt landet das Video in unserem Player, mit Play, Leiste, Lautstärke, Geschwindigkeit, 🔁 und Vollbild. Das gilt für jede Seite, die es genauso macht; nur ein ausdrücklich erklärtes „ohne Ton“ wird weiter abgelehnt.",
+      "📱 Hochkant-Videos (720×1280, 1080×1920) messen die Qualität an der kürzeren Seite: vorher rutschte ein 1080p-Handyvideo ans Ende der Reihe, als wäre es 1920p, und der Extraktor wählte eine kleinere Version.",
+      "🛠️ Eine alte Option, die yt-dlp als veraltet meldete, wurde aus dem Aufruf entfernt, bevor sie in künftigen Versionen zum Fehler wird.",
+      "ℹ️ Zur Erinnerung, wann der Extraktor einspringt: nur wenn die Seite die Datei nicht in ihren Metatags veröffentlicht, mit eingeschaltetem 🎬-Schalter in 🧪 Labs und in 🔌 Verbindungen heruntergeladenem Programm — während der Suche zeigt das Panel „🔎 Suche…“ und dann „🎬 Frage den Extraktor…“."
+    ]
+  },
   "0.164.0": {
     "titulo": "🎬 Animierte Themen in ganz OBS Social — und eine Themenliste für Computer und Handy",
     "itens": [

@@ -1,4 +1,13 @@
 {
+  "0.164.1": {
+    "titulo": "🐦 Doğrudan medya: çıkarıcı artık X videosunu buluyor (ve codec bildirmeyen diğer sitelerinkini)",
+    "itens": [
+      "🎬 Videolu bir X gönderisinin bağlantısı yapıştırıldığında 🧪 Labs’taki 🎬 çıkarıcı mp4 dosyasını buluyordu ama OBS Social yanıtı çöpe atıyordu: X dosyayı codec belirtmeden veriyor ve program «söylemedi»yi «yok» sayıyordu — çıkarıcı hiç çağrılmamış gibi görünüyordu. Artık video oynat, çubuk, ses, hız, 🔁 ve tam ekranla bizim oynatıcımıza gidiyor. Aynısını yapan her site için geçerli; yalnızca açıkça bildirilen «sessiz» hâlâ reddediliyor.",
+      "📱 Dikey videolar (720×1280, 1080×1920) kaliteyi kısa kenara göre ölçüyor: önceden 1080p bir telefon videosu 1920p’ymiş gibi sıranın sonuna gidiyor ve çıkarıcı daha küçük bir sürüm seçiyordu.",
+      "🛠️ yt-dlp’nin kullanımdan kalktığını bildirdiği eski bir seçenek, gelecek sürümlerde hataya dönüşmeden çağrıdan çıkarıldı.",
+      "ℹ️ Çıkarıcının ne zaman devreye girdiğini hatırlatma: yalnızca sayfa dosyayı meta etiketlerinde yayınlamadığında, 🧪 Labs’taki 🎬 anahtarı açık ve program 🔌 Bağlantılar’dan indirilmişken — arama sırasında panel «🔎 Aranıyor…» ve sonra «🎬 Çıkarıcıya soruluyor…» gösterir."
+    ]
+  },
   "0.164.0": {
     "titulo": "🎬 Tüm OBS Social’da hareketli temalar — bilgisayar ve telefonda tek tema listesi",
     "itens": [

@@ -214,7 +214,7 @@ class Extrator {
       const bruto = await this._rodar(onde.comando, [
         '--ignore-config',    // um arquivo de configuração perdido não muda nada
         '--no-playlist',      // o link de um vídeo é um vídeo, não uma lista
-        '--no-warnings', '--no-progress', '--no-call-home',
+        '--no-warnings', '--no-progress',
         '--socket-timeout', '15', '--retries', '1',
         '-J',                 // só conta o que achou; não baixa nada
         '--', chave,
@@ -270,15 +270,36 @@ function escolherFormato(bruto) {
     const p = String(f.protocol || 'https');
     return /^https?$/.test(p) && /^https?:\/\//i.test(String(f.url || ''));
   };
-  const temVideo = (f) => f.vcodec && f.vcodec !== 'none';
-  const temSom = (f) => f.acodec && f.acodec !== 'none';
+  // 🐦 v0.164.1: o X (e outros sites) entregam o arquivo mp4 sem dizer os
+  // codecs — o yt-dlp só anota vcodec/acodec quando SABE. «Não disse» não é
+  // «não tem»: um arquivo inteiro por http, com largura e altura, é um vídeo,
+  // e vídeo inteiro vem com o som junto. Quando o site sabe que não vem, o
+  // yt-dlp manda 'none', e aí sim o formato é recusado. Antes, esses arquivos
+  // eram descartados e o extrator parecia nem ter sido chamado.
+  const sabe = (v) => typeof v === 'string' && v !== '';
+  const EXT_DE_VIDEO = /^(mp4|m4v|webm|mov|mkv|ogv|3gp)$/i;
+  // (o video_ext que o yt-dlp deriva só vale como NÃO: fora do 'none' ele é
+  // a mera extensão do arquivo — um podcast .mp3 sem codecs vem com
+  // video_ext 'mp3', e isso não faz dele um vídeo)
+  const temVideo = (f) => (sabe(f.vcodec) ? f.vcodec !== 'none'
+    : f.video_ext === 'none' ? false
+      : (Number(f.width) > 0 || Number(f.height) > 0 || EXT_DE_VIDEO.test(String(f.ext || ''))));
+  const temSom = (f) => (sabe(f.acodec) ? f.acodec !== 'none' : true);
+  // a «linha» de qualidade é o lado MENOR: um vídeo em pé de 1080×1920 é um
+  // 1080p, não um 1920p (senão todo vídeo de celular ia para o fim da fila)
+  const linha = (f) => {
+    const l = Number(f.width) || 0;
+    const a = Number(f.height) || 0;
+    return l && a ? Math.min(l, a) : (a || l);
+  };
   const nota = (f) => {
-    const alt = Number(f.height) || 0;
+    const alt = linha(f);
     // acima de 1080 o navegador só sofre numa live: fica atrás de qualquer
     // outro (mas ainda serve, se for o único que existe)
     if (alt > 1080) return -100000 + alt;
-    // quanto maior, melhor; no empate ganha o mp4, que toca em todo lugar
-    return alt * 10 + (String(f.ext || '') === 'mp4' ? 3 : 0);
+    // quanto maior, melhor; no empate ganha o mp4, que toca em todo lugar, e
+    // depois quem tem os codecs conhecidos
+    return alt * 10 + (String(f.ext || '') === 'mp4' ? 3 : 0) + (sabe(f.vcodec) && sabe(f.acodec) ? 1 : 0);
   };
   const completos = formatos.filter((f) => direto(f) && temVideo(f) && temSom(f));
   completos.sort((a, b) => nota(b) - nota(a));

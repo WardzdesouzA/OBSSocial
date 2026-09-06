@@ -1,4 +1,13 @@
 {
+  "0.164.1": {
+    "titulo": "🐦 Média direct : l’extracteur trouve maintenant la vidéo de X (et celle d’autres sites qui n’indiquent pas les codecs)",
+    "itens": [
+      "🎬 En collant le lien d’un post X avec vidéo, l’🎬 extracteur du 🧪 Labs trouvait le fichier mp4, mais OBS Social jetait la réponse : X livre le fichier sans nommer les codecs, et le programme prenait « n’a pas dit » pour « n’a pas » — on aurait cru que l’extracteur n’avait jamais été appelé. Désormais la vidéo va dans notre lecteur, avec lecture, barre, volume, vitesse, 🔁 et plein écran. Cela vaut pour tout site qui fait pareil ; seul le « sans son » déclaré reste refusé.",
+      "📱 Les vidéos verticales (720×1280, 1080×1920) mesurent la qualité par le petit côté : avant, une vidéo de téléphone en 1080p passait en fin de file comme si elle était en 1920p, et l’extracteur choisissait une version plus petite.",
+      "🛠️ Une vieille option que yt-dlp signalait comme obsolète a été retirée de l’appel, avant qu’elle ne devienne une erreur dans les prochaines versions.",
+      "ℹ️ Rappel de quand l’extracteur intervient : seulement quand la page ne publie pas le fichier dans ses métabalises, avec le sélecteur 🎬 du 🧪 Labs activé et le programme téléchargé dans 🔌 Connexions — pendant la recherche, le panneau affiche « 🔎 Recherche… » puis « 🎬 Je demande à l’extracteur… »."
+    ]
+  },
   "0.164.0": {
     "titulo": "🎬 Thèmes animés dans tout OBS Social — et une seule liste de thèmes sur l’ordinateur et le téléphone",
     "itens": [
