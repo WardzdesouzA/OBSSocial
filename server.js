@@ -159,6 +159,8 @@ function tcons(texto, ...args) {
 
 const qrcodeFactory = require('qrcode-generator');
 const currency = require('./currency');
+// 🌤️ v0.167: o tempo agora, de uma ou mais fontes, para o overlay
+const { Clima: ClimaServico, sanitizeClima, sanitizeCidade: sanitizeCidadeClima, procurarCidade: procurarCidadeClima, buscarJsonPadrao: buscarJsonClima, FONTES: CLIMA_FONTES, CAPITAIS_BR: CLIMA_CAPITAIS } = require('./clima');
 // 🧲 v0.154: a lista de ferramentas/abas/colunas do painel é a MESMA que as
 // páginas usam — o sanitizador só aceita o que existe, e o que existe mora
 // num lugar só (nunca mais um botão novo sumindo da ordem salva)
@@ -419,7 +421,23 @@ const DEFAULT_SETTINGS = {
   // entregam o vídeo logado). '' = nenhum. O arquivo cookies.txt, quando
   // enviado, mora em data/ytdlp e manda mais que isto.
   ytdlp: {
-    cookiesNavegador: '', // '' | firefox | chrome | edge | brave | chromium | opera | vivaldi | safari | whale
+    cookiesNavegador: '', // '' | firefox | chrome | edge | brave | chromium | opera | vivaldi | safari
+  },
+  // 🌤️ v0.167: o Clima — o QUE mostrar e de ONDE (o visual mora em widgets.clima)
+  clima: {
+    fontes: ['open-meteo', 'met.no'], // em ordem: a primeira que responder vale
+    cidades: [],                       // [{ id, nome, uf, pais, lat, lon }] (até 27)
+    mostrarCidade: true,
+    mostrarSensacao: true,
+    mostrarUmidade: true,
+    mostrarVento: true,
+    mostrarDescricao: true,
+    mostrarFonte: false,
+    unidade: 'C',                      // C | F
+    rodizio: false,                    // passa pelas cidades, uma de cada vez
+    rodizioSegundos: 15,               // 5 … 600
+    atualizarMin: 15,                  // 10 … 60 — de quanto em quanto tempo perguntar às fontes
+    estilo: 'cartao',                  // cartao | compacto | grande
   },
   // 🎵 A cara da Mesa de trilhas (vale nas configurações E no painel):
   // quantos botões por página e a fonte global do texto dos botões
@@ -544,7 +562,7 @@ const DEFAULT_SETTINGS = {
   // overlay, de baixo para cima. O padrão reproduz o comportamento de sempre:
   // a moldura do usuário embaixo, o destaque sobre ela, os widgets por cima.
   layers: {
-    ordem: ['media', 'featured', 'qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'aviso', 'relogio'],
+    ordem: ['media', 'featured', 'qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'aviso', 'relogio', 'clima'],
   },
   // 🧩 Modo peças soltas do destaque: cada parte do cartão em posição própria
   // (arrastadas no 🖱️ Organizar a tela). x/y em % do cartão; escala em %.
@@ -694,6 +712,16 @@ const DEFAULT_SETTINGS = {
       fontFamily: '', fontSize: 44, bold: true,
       mostrarData: true, mostrarSegundos: true, formato24h: true, mostrarRotulo: true, mostrarDecimos: true,
     },
+    // 🌤️ v0.167: Clima (o conteúdo — cidades, fontes, rodízio — mora em settings.clima)
+    clima: {
+      pecasLivre: false, pecasLargura: 340, pecasAltura: 150,
+      pecas: { icone: PECA(6, 14), temp: PECA(34, 14), cidade: PECA(6, 62), detalhes: PECA(34, 62) },
+      position: 'top-left', scale: 100, bgColor: '#0b1a2e', bgOpacity: 0.9,
+      textColor: '#ffffff', accentColor: '#ffb703', borderRadius: 18,
+      x: 4, y: 8, animation: 'fade', animationOut: 'fade', animationSeconds: 0, animationOutSeconds: 0,
+      loopAnimation: 'none', loopSeconds: 3, loopDurationSeconds: 0, screenSeconds: 0, mediaUrl: '', customCSS: '',
+      fontFamily: '', fontSize: 40, bold: true,
+    },
   },
   // Chat ao vivo fixo (/chat)
   chat: {
@@ -759,7 +787,7 @@ let migrarArteDosPerfis = false; // 🖼️ v0.102: os moldes passam pela mesma 
 // settings.json (mergeSettings) — declarados mais abaixo, davam ReferenceError
 // (zona morta do const) em qualquer instalação com um som configurado, e
 // loadSettings engolia o erro e voltava TUDO ao padrão de fábrica (v0.155).
-const AUDIO_OV_CHAVES = new Set(['featured', 'midia', 'qr', 'raffle', 'likemeter', 'audience', 'winstreak', 'aviso', 'relogio']);
+const AUDIO_OV_CHAVES = new Set(['featured', 'midia', 'qr', 'raffle', 'likemeter', 'audience', 'winstreak', 'aviso', 'relogio', 'clima']);
 const AUDIO_OV_MOMENTOS = ['entrada', 'saida', 'tempo', 'fim'];
 
 // 📱 v0.163: o bloco do mini Mesa só aceita o que conhece — nomes de tema e
@@ -835,8 +863,17 @@ function mergeSettings(base) {
     panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}) },
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
     relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
+    clima: sanitizeClima(src.clima, DEFAULT_SETTINGS.clima), // 🌤️ v0.167
     selos: { ...DEFAULT_SETTINGS.selos, ...(src.selos || {}) },
-    layers: { ...DEFAULT_SETTINGS.layers, ...(src.layers || {}) },
+    // 🪟 Camadas: uma configuração gravada por versão antiga não conhece as
+    // camadas novas (🌤️ v0.167) — elas entram no fim, na ordem padrão
+    layers: (() => {
+      const l = { ...DEFAULT_SETTINGS.layers, ...(src.layers || {}) };
+      const conhecidas = DEFAULT_SETTINGS.layers.ordem;
+      const ordem = [...new Set((Array.isArray(l.ordem) ? l.ordem : []).filter((c) => conhecidas.includes(c)))];
+      for (const c of conhecidas) if (!ordem.includes(c)) ordem.push(c);
+      return { ...l, ordem };
+    })(),
     pecas: Object.fromEntries(Object.keys(DEFAULT_SETTINGS.pecas).map((k) => (
       [k, { ...DEFAULT_SETTINGS.pecas[k], ...((src.pecas || {})[k] || {}) }]
     ))),
@@ -980,6 +1017,9 @@ const state = {
     cronometro: { visible: false, rodando: false, inicio: 0, acumulado: 0 },
     timer: { visible: false, rodando: false, inicio: 0, acumulado: 0, duracao: 300000, tocouFim: 0 },
   },
+  // 🌤️ v0.167: o Clima na tela + o rodízio (índice e desde quando — cada tela
+  // calcula sozinha em que cidade está, sem o servidor mandar mensagem a cada troca)
+  clima: { visible: false, indice: 0, desde: Date.now() }, // «desde» nunca é 0: as telas contam o rodízio a partir dele
   clipboard: loadClipboard(), // 📋 v0.90: HISTÓRICO da área de transferência (lista de entradas)
   connections: loadConnections(), // memoria das conexoes: plataforma -> { channel, active }
   readIds: loadRead(),      // ids de comentarios que ja foram para a tela ("lidos")
@@ -1736,6 +1776,69 @@ function relogioPublico() {
     },
     agora: Date.now(), // referência para o cliente acertar o relógio dele
   };
+}
+
+// ---------- 🌤️ v0.167: Clima ----------
+// As chaves das fontes moram em data/clima.json, criptografadas com a chave
+// local (como os tokens dos conectores). Nunca saem do servidor: o painel só
+// fica sabendo SE há chave.
+const CLIMA_FILE = path.join(DATA_DIR, 'clima.json');
+const climaChaves = {}; // fonte → chave (aberta, em memória)
+function loadClimaChaves() {
+  for (const k of Object.keys(climaChaves)) delete climaChaves[k];
+  try {
+    const raw = JSON.parse(fs.readFileSync(CLIMA_FILE, 'utf8'));
+    for (const [fonte, valor] of Object.entries((raw && raw.chaves) || {})) {
+      if (CLIMA_FONTES[fonte] && typeof valor === 'string' && valor) climaChaves[fonte] = abrirSegredo(valor).slice(0, 400);
+    }
+  } catch { /* sem arquivo ainda */ }
+}
+function saveClimaChaves() {
+  const chaves = {};
+  for (const [fonte, valor] of Object.entries(climaChaves)) if (valor) chaves[fonte] = guardarSegredo(valor);
+  try {
+    if (!Object.keys(chaves).length) { apagarArquivos(['clima.json']); return; }
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    gravarPrivado(CLIMA_FILE, JSON.stringify({ chaves }, null, 2));
+  } catch (err) { console.error('  ⚠️ Não consegui gravar as chaves do clima:', err && err.message); }
+}
+// Nos testes automáticos as fontes de clima são um servidor local
+// (OBS_TESTE_CLIMA_BASE): a URL real vira «base/host/caminho», como o extrator
+const climaBuscarJson = process.env.OBS_TESTE_CLIMA_BASE
+  ? (url, opcoes) => { const u = new URL(url); return buscarJsonClima(String(process.env.OBS_TESTE_CLIMA_BASE).replace(/\/+$/, '') + '/' + u.host + u.pathname + u.search, opcoes); }
+  : undefined;
+const climaServico = new ClimaServico({
+  buscarJson: climaBuscarJson,
+  chaves: () => climaChaves,
+  aoMudar: () => broadcastClima(),
+});
+function climaPublico() {
+  return { visible: state.clima.visible, indice: state.clima.indice, desde: state.clima.desde, agora: Date.now(), ...climaServico.retratoGeral() };
+}
+function broadcastClima() { broadcast({ type: 'clima', clima: climaPublico() }); }
+let climaUltimaForcada = 0; // o último «atualizar agora» (🔄, controle externo)
+// O resumo das fontes para o card de 🔌 Conexões: só o computador local vê
+// se há chave (e nem ele vê a chave)
+function climaChavesResumo(ws) {
+  const local = !ws || ws.role === 'local';
+  const fontes = {};
+  for (const [id, f] of Object.entries(CLIMA_FONTES)) {
+    fontes[id] = { nome: f.nome, precisaChave: f.chave, site: f.site, ...(local ? { temChave: !!climaChaves[id] } : {}), erro: climaServico.ultimoErroFonte[id] || null };
+  }
+  return { fontes, capitais: CLIMA_CAPITAIS };
+}
+function broadcastClimaChaves() {
+  for (const client of wss.clients) {
+    if (client.readyState !== 1 || client.role === 'viewer') continue;
+    try { client.send(JSON.stringify({ type: 'climaChaves', climaChaves: climaChavesResumo(client) })); } catch { /* já caiu */ }
+  }
+}
+// Liga a busca só enquanto o Clima está na tela (as fontes gratuitas pedem
+// calma e a cota das pagas é curta); desligado, o que já veio fica guardado
+function sincronizarClima() {
+  climaServico.configurar(state.settings.clima);
+  if (state.clima.visible && state.settings.clima.cidades.length) climaServico.ligar();
+  else climaServico.desligar();
 }
 
 // ⏰ v0.80: campos do «sumir sozinho» do Aviso — tudo em zero é o padrão e
@@ -3619,6 +3722,7 @@ const OP_CATEGORY = {
   winstreakSub: 'tools', winstreakToggle: 'tools',
   winstreakRecord: 'tools', winstreakSet: 'tools',
   avisoSet: 'tools', avisoToggle: 'tools', relogioSet: 'tools', relogioToggle: 'tools',
+  climaToggle: 'tools', climaProxima: 'tools', climaAtualizar: 'tools', climaProcurar: 'settings', // 🌤️ v0.167
   avisoNew: 'tools', avisoRemove: 'tools', avisoMove: 'tools', avisoLabel: 'tools', // 📢 v0.128
   exemploOverlay: 'tools', // 🧪 v0.99: exemplo de qualquer overlay, do editor
   cronometro: 'tools', timer: 'tools',
@@ -3681,7 +3785,9 @@ const LOCAL_ONLY_OPS = new Set(['securityPassword', 'securityMode', 'securityPer
   // do streamer: só o computador local configura o Pix
   'pixConfig',
   // 🕹️ v0.126: gerar um token novo do controle externo é coisa do dono
-  'controleConfig']);
+  'controleConfig',
+  // 🌤️ v0.167: as chaves das fontes de clima são da máquina do streamer
+  'climaConfig']);
 
 function securitySummary() {
   return {
@@ -4651,6 +4757,10 @@ function limparDados(escopo) {
     apagarArquivos(['vmix.json']);
     desligarVmix(null);
     broadcastVmix();
+    // 🌤️ v0.167: as chaves das fontes de clima também
+    for (const k of Object.keys(climaChaves)) delete climaChaves[k];
+    apagarArquivos(['clima.json']);
+    broadcastClimaChaves();
     feito.push('conexoes');
   }
   if (tudo || escopo === 'ferramentas') {
@@ -4715,7 +4825,7 @@ const BACKUP_ITENS = {
   // numa instalação nova traz os arquivos cifrados e nada mais — a senha do
   // OBS e os tokens voltariam vazios, sem avisar. A chave é o que abre o
   // backup do próprio streamer; ela mora na pasta de backup dele.
-  conexoes: { files: () => [CONNECTIONS_FILE, OBS_FILE, CHAVE_LOCAL_FILE, VMIX_FILE, CONTROLE_FILE] },
+  conexoes: { files: () => [CONNECTIONS_FILE, OBS_FILE, CHAVE_LOCAL_FILE, VMIX_FILE, CONTROLE_FILE, CLIMA_FILE] }, // 🌤️ v0.167: as chaves do clima vão junto
   ferramentas: { files: () => [QRS_FILE, WINSTREAK_FILE, TRILHAS_FILE, AVISOS_FILE] },
   // O arquivo pode estar "atrasado" pelo debounce: grava antes de copiar.
   // A assinatura é o CONTEÚDO (não o relógio do arquivo): salvar sem mudar
@@ -4896,6 +5006,7 @@ function restaurarBackup(item, marcaBruta) {
       // é ela que abre a senha do OBS e os tokens que acabaram de voltar
       recarregarChaveLocal();
       state.connections = loadConnections();
+      loadClimaChaves(); broadcastClimaChaves(); // 🌤️ v0.167
       // A configuração do OBS voltou do backup: religa com ela
       Object.assign(obsConfig, loadObsConfig());
       desligarObs(null);
@@ -4931,6 +5042,9 @@ function restaurarBackup(item, marcaBruta) {
       state.settings = mergeSettings(bruto);
       saveSettingsAgora();
       broadcast({ type: 'settings', settings: state.settings });
+      // 🌤️ o Clima segue a lista de cidades restaurada (não a de antes)
+      state.clima.indice = 0; state.clima.desde = Date.now();
+      sincronizarClima(); broadcastClima();
       // 🎭 Perfis de overlay: o arquivo já voltou para o lugar; relê e avisa.
       // Backup de uma época SEM perfis (o arquivo não existe lá): a restauração
       // volta para "nenhum perfil" — senão o usuário ficava com um híbrido de
@@ -9897,6 +10011,8 @@ wss.on('connection', (ws, req) => {
     avisos: state.avisos,      // 📢 v0.128: o principal + adicionais
     aviso: state.avisos[0],    // (clientes antigos)
     relogio: relogioPublico(),
+    clima: climaPublico(),                       // 🌤️ v0.167 (o público vê só cidades e retratos)
+    climaChaves: ws.role === 'viewer' ? null : climaChavesResumo(ws),          // (só «tem chave», nunca a chave)
     audience: state.audience,
     exemplo: exemploAntes ? exemploAntes.alvo : null, // 🧪 v0.99
     exemploQr: exemploQrMatriz(), // 📺 v0.103: o QR de exemplo da prévia do editor
@@ -10352,6 +10468,8 @@ function tratarMensagem(ws, raw) {
         // 🔊 v0.155: os campos antigos de som saem ANTES da fusão — a migração
         // para o card só vale na carga do disco, nunca por uma tela antiga
         relogio: semSonsLegados({ ...state.settings.relogio, ...(incoming.relogio || {}) }),
+        // 🌤️ v0.167: a lista de cidades chega inteira (é uma lista, não um ajuste)
+        clima: sanitizeClima({ ...state.settings.clima, ...(incoming.clima || {}) }, DEFAULT_SETTINGS.clima),
         layoutV: {
           ...state.settings.layoutV,
           ...(incoming.layoutV || {}),
@@ -10759,6 +10877,8 @@ function tratarMensagem(ws, raw) {
       if (incoming.labs) broadcastControle(); // 🕹️ v0.126: a página do controle acompanha o seletor
       // 💠 E o do Pix (re)arranca ou para a consulta ao banco na hora
       if (incoming.labs && 'pix' in incoming.labs) arrancarPix();
+      // 🌤️ v0.167: cidades/fontes/intervalo mudaram → a busca acompanha
+      if (incoming.clima) { if (incoming.clima.cidades) { state.clima.indice = 0; state.clima.desde = Date.now(); } sincronizarClima(); broadcastClima(); }
       // Mexer nas fichas do sorteio muda o total em jogo: o painel acompanha
       broadcast({
         type: 'participants',
@@ -11667,6 +11787,74 @@ function tratarMensagem(ws, raw) {
       broadcast({ type: 'relogio', relogio: relogioPublico() });
       break;
     }
+    // ---------- 🌤️ v0.167: Clima ----------
+    case 'climaToggle': {
+      const antes = state.clima.visible;
+      // sem cidade não há o que mostrar: fica fora da tela (senão a primeira
+      // cidade cadastrada depois apareceria na live sem ninguém pedir)
+      if (!state.settings.clima.cidades.length) { state.clima.visible = false; sincronizarClima(); broadcastClima(); break; }
+      state.clima.visible = typeof msg.visible === 'boolean' ? msg.visible : !state.clima.visible;
+      if (state.clima.visible && !antes) { state.clima.desde = Date.now(); scheduleWidgetHide('clima', '', () => { state.clima.visible = false; sincronizarClima(); broadcastClima(); }); }
+      sincronizarClima();
+      broadcastClima();
+      break;
+    }
+    case 'climaProxima': {
+      // pula para a próxima cidade (ou volta: passo -1); o rodízio recomeça a contar daqui
+      const n = state.settings.clima.cidades.length;
+      if (!n) break;
+      const passo = msg.passo === -1 ? -1 : 1;
+      const per = state.settings.clima.rodizioSegundos * 1000;
+      // a mesma conta das telas (overlay e painel), para o ▶ partir da cidade que está aparecendo
+      const decorrido = state.settings.clima.rodizio ? Math.max(0, Math.floor((Date.now() - (state.clima.desde || 0)) / per)) : 0;
+      state.clima.indice = ((state.clima.indice + decorrido + passo) % n + n) % n;
+      state.clima.desde = Date.now();
+      broadcastClima();
+      break;
+    }
+    case 'climaAtualizar':
+      // busca agora, de todas as cidades, mesmo que o retrato ainda valha —
+      // no máximo uma vez a cada 15 s (a cota das fontes pagas é curta); fora
+      // disso só reenvia o que há, para o painel sair do «atualizando…»
+      if (Date.now() - climaUltimaForcada < 15000) { broadcastClima(); break; }
+      climaUltimaForcada = Date.now();
+      climaServico.configurar(state.settings.clima);
+      climaServico.atualizar(true).catch(() => {});
+      break;
+    case 'climaProcurar': {
+      // geocodificação (Open-Meteo, sem chave): responde só para quem pediu;
+      // uma busca por segundo por cliente
+      if (ws.climaProcurouEm && Date.now() - ws.climaProcurouEm < 1000) break;
+      ws.climaProcurouEm = Date.now();
+      const nome = String(msg.nome || '').trim().slice(0, 80);
+      const pais = /^[A-Za-z]{2}$/.test(String(msg.pais || '')) ? String(msg.pais).toUpperCase() : (msg.pais === '' ? '' : 'BR');
+      procurarCidadeClima(nome, climaBuscarJson, pais)
+        .then((resultados) => { try { ws.send(JSON.stringify({ type: 'climaCidades', nome, resultados })); } catch {} })
+        .catch((err) => { try { ws.send(JSON.stringify({ type: 'climaCidades', nome, resultados: [], erro: String(err && err.message || err).slice(0, 160) })); } catch {} });
+      break;
+    }
+    case 'climaConfig': {
+      // as chaves: em branco = não mexer; «APAGAR» = tirar. Nunca ecoadas.
+      const chaves = (msg.chaves && typeof msg.chaves === 'object') ? msg.chaves : {};
+      let mudou = false;
+      for (const [fonte, bruto] of Object.entries(chaves)) {
+        if (!CLIMA_FONTES[fonte] || !CLIMA_FONTES[fonte].chave) continue;
+        const valor = String(bruto || '').trim().slice(0, 400);
+        if (!valor) continue;
+        if (valor === 'APAGAR') { if (climaChaves[fonte]) { delete climaChaves[fonte]; mudou = true; } continue; }
+        if (/[\r\n]/.test(valor)) continue;
+        climaChaves[fonte] = valor;
+        mudou = true;
+      }
+      if (mudou) {
+        saveClimaChaves();
+        for (const d of climaServico.dados.values()) { d.em = 0; d.memoria = {}; } // as fontes mudaram: perguntar de novo
+        for (const f of Object.keys(chaves)) delete climaServico.ultimoErroFonte[f];
+        sincronizarClima();
+        broadcastClimaChaves();
+      }
+      break;
+    }
     case 'cronometro': {
       // acao: iniciar | pausar | zerar — mexe SÓ no cronômetro
       const c = state.relogio.cronometro;
@@ -11855,6 +12043,7 @@ function tratarMensagem(ws, raw) {
       state.relogio.relogio.visible = false;
       state.relogio.cronometro.visible = false;
       state.relogio.timer.visible = false;
+      if (state.clima.visible) { state.clima.visible = false; sincronizarClima(); broadcastClima(); } // 🌤️ v0.167
       if (state.trilhaTela) setTrilhaTela(null); // 🖼️🎞️ v0.86
       // 🎞️ v0.129: a mídia direta sai da tela (o item fica carregado no painel)
       if (state.midiaDireta.visible) { state.midiaDireta.visible = false; state.midiaDireta.player = midiaDiretaPlayerInicial(state.midiaDireta.player); broadcastMidiaDireta(); }
@@ -12014,7 +12203,7 @@ function controleNomeTrilha(t) {
 // português: a página das configurações traduz pelo dicionário (i18n).
 const CONTROLE_GRUPOS = {
   tela: '🖥️ Tela e destaque', sorteio: '🎁 Sorteio', widgets: '📊 Widgets', avisos: '📢 Avisos',
-  relogio: '🕐 Relógio, cronômetro e timer', conexoes: '🔌 Conexões', mesa: '🎵 Mesa de trilhas',
+  relogio: '🕐 Relógio, cronômetro e timer', clima: '🌤️ Clima', conexoes: '🔌 Conexões', mesa: '🎵 Mesa de trilhas',
   obs: '🎬 OBS Studio', vmix: '🎛️ vMix', outros: '🧰 Outros',
 };
 const CP = {
@@ -12064,6 +12253,12 @@ const CONTROLE_ACOES = [
   { id: 'relogio/mostrar', grupo: 'relogio', nome: 'Relógio: mostrar', desc: 'Põe o relógio na tela', msg: () => ({ type: 'relogioToggle', alvo: 'relogio', visible: true }) },
   { id: 'relogio/esconder', grupo: 'relogio', nome: 'Relógio: esconder', desc: 'Tira o relógio da tela', msg: () => ({ type: 'relogioToggle', alvo: 'relogio', visible: false }) },
   { id: 'relogio/alternar', grupo: 'relogio', nome: 'Relógio: mostrar/esconder', desc: 'Alterna o relógio na tela', msg: () => ({ type: 'relogioToggle', alvo: 'relogio' }) },
+  // 🌤️ v0.167: Clima
+  { id: 'clima/mostrar', grupo: 'clima', nome: 'Clima: mostrar', desc: 'Põe o clima na tela', msg: () => ({ type: 'climaToggle', visible: true }) },
+  { id: 'clima/esconder', grupo: 'clima', nome: 'Clima: esconder', desc: 'Tira o clima da tela', msg: () => ({ type: 'climaToggle', visible: false }) },
+  { id: 'clima/alternar', grupo: 'clima', nome: 'Clima: mostrar/esconder', desc: 'Alterna o clima na tela', msg: () => ({ type: 'climaToggle' }) },
+  { id: 'clima/proxima', grupo: 'clima', nome: 'Clima: próxima cidade', desc: 'Pula para a próxima cidade da lista', msg: () => ({ type: 'climaProxima' }) },
+  { id: 'clima/atualizar', grupo: 'clima', nome: 'Clima: atualizar agora', desc: 'Pergunta às fontes de novo, sem esperar o intervalo', msg: () => ({ type: 'climaAtualizar' }) },
   { id: 'cronometro/iniciar', grupo: 'relogio', nome: 'Cronômetro: iniciar', desc: 'Começa (ou continua) a contar', msg: () => ({ type: 'cronometro', acao: 'iniciar' }) },
   { id: 'cronometro/pausar', grupo: 'relogio', nome: 'Cronômetro: pausar', desc: 'Pausa a contagem', msg: () => ({ type: 'cronometro', acao: 'pausar' }) },
   { id: 'cronometro/zerar', grupo: 'relogio', nome: 'Cronômetro: zerar', desc: 'Volta o cronômetro para zero', msg: () => ({ type: 'cronometro', acao: 'zerar' }) },
@@ -12212,6 +12407,7 @@ function controleEstado() {
     aviso: { visivel: !!state.avisos[0].visible, texto: state.avisos[0].texto },
     avisos: state.avisos.map((a) => ({ id: a.id, nome: a.label, visivel: !!a.visible, texto: a.texto })), // 📢 v0.128
     relogio: relogioPublico(),
+    clima: (() => { const c = climaPublico(); return { visivel: c.visible, cidades: c.cidades.map((x) => ({ nome: x.nome, uf: x.uf, temp: x.retrato ? x.retrato.temp : null, condicao: x.retrato ? x.retrato.condicao : null })) }; })(), // 🌤️ v0.167
     winstreaks: state.winstreaks.map((w) => ({ id: w.id, nome: w.label, vitorias: w.wins, recorde: w.record, visivel: !!w.visible })),
     qrs: state.qrs.map((q) => ({ id: q.id, nome: q.name, visivel: !!q.visible })),
     fila: feedQueue.length + feedReleasing.length,
@@ -12342,6 +12538,8 @@ const recargaTimer = setInterval(vigiarRecarga, 30000);
 if (recargaTimer.unref) recargaTimer.unref();
 
 currency.init(DATA_DIR);
+loadClimaChaves(); // 🌤️ v0.167 (a busca só liga quando o Clima vai para a tela)
+climaServico.configurar(state.settings.clima);
 restoreFromLog();
 cleanOldLogs();
 const logCleanTimer = setInterval(cleanOldLogs, 6 * 60 * 60 * 1000);

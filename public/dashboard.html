@@ -1065,6 +1065,34 @@
         <div class="hint">O QR só sai da tela por este botão — os botões de limpar não mexem nele. Use as setas ◀ ▶ para navegar entre os seus QRs; a posição de cada um se ajusta no 🖱️.</div>
       </div>
     </div>
+    <!-- 🌤️ v0.167: Clima -->
+    <div class="tool-wrap">
+      <button class="icon-btn pop-toggle" id="climaToolBtn" data-pop="climaPop" title="Clima: o tempo agora na tela">🌤️</button>
+      <div class="popover" id="climaPop" style="width: 330px">
+        <div class="pop-title">🌤️ Clima <span class="pop-extra" id="climaPageTag"></span></div>
+        <div id="climaPrevia" data-no-i18n style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,0.22);margin-bottom:8px;min-height:64px">
+          <div id="climaPreviaIcone" style="font-size:44px;line-height:1;flex:none"></div>
+          <div style="flex:1;min-width:0">
+            <div id="climaPreviaTemp" style="font-size:26px;font-weight:800;line-height:1.1">--°</div>
+            <div id="climaPreviaCidade" style="font-size:13px;opacity:0.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            <div id="climaPreviaDet" style="font-size:12px;opacity:0.7"></div>
+          </div>
+        </div>
+        <div class="pop-row mini-pager">
+          <button id="climaPrevBtn" class="icon-btn" title="Cidade anterior">◀</button>
+          <span class="mini-page-label" id="climaPageLabel">0/0</span>
+          <button id="climaNextBtn" class="icon-btn" title="Próxima cidade">▶</button>
+          <span style="margin-left:auto"></span>
+          <button id="climaRefreshBtn" class="icon-btn" title="Atualizar agora (sem esperar o intervalo)">🔄</button>
+        </div>
+        <div class="pop-row">
+          <button id="climaBtn" class="icon-btn" title="Mostrar/tirar da tela">👁️</button>
+          <span id="climaBtnLabel">Mostrar na tela</span>
+        </div>
+        <div id="climaSemCidade" class="hint" style="display:none">Nenhuma cidade cadastrada ainda: em Configurações → 🎨 Aparência → 🌤️ Clima, procure a sua cidade ou adicione as capitais do Brasil.</div>
+        <div class="hint">O tempo vem das fontes escolhidas em 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e é atualizado a cada 10–60 minutos. Cidades, rodízio e o que aparece se ajustam em 🎨 Aparência → 🌤️ Clima; posição e tamanho no 🖱️.</div>
+      </div>
+    </div>
 
     <div class="tool-wrap">
       <button class="icon-btn pop-toggle" id="raffleToolBtn" data-pop="rafflePop" title="Sorteio">🎁<span class="mini-badge" id="raffleBadge">0</span></button>
@@ -1971,6 +1999,7 @@ const hub = connectHub((event) => {
       mdRoleLocal = (event.security?.role ?? 'local') === 'local';
       updateMidiaDireta(event.midiaDireta || null);
       updateRelogio(event.relogio);
+      updateClima(event.clima || null); // 🌤️ v0.167
       updateParticipants(event.participantCount || 0, event.fichasTotais || 0);
       updateClipboard(event.clipboard, event.clipboardFechado === true);
       prepararSomDoTimer();
@@ -2268,6 +2297,9 @@ const hub = connectHub((event) => {
       break;
     case 'relogio':
       updateRelogio(event.relogio, event.fim);
+      break;
+    case 'clima': // 🌤️ v0.167
+      updateClima(event.clima);
       break;
     case 'clipboard':
       updateClipboard(event.itens, event.fechado === true);
@@ -6412,6 +6444,71 @@ function desenharMdPastas() {
 // 🕐 v0.80: os três instrumentos são INDEPENDENTES — o servidor manda o
 // estado de cada um; a aba escolhida aqui é só uma janela de visualização
 // deste navegador (trocar de aba não para nada em lugar nenhum).
+// ---------- 🌤️ v0.167: Clima ----------
+let climaState = null;
+let climaDeltaPainel = 0;
+function climaIndicePainel() {
+  const c = climaState;
+  const conf = (settings && settings.clima) || {};
+  const n = c && Array.isArray(c.cidades) ? c.cidades.length : 0;
+  if (!n) return 0;
+  if (!conf.rodizio || n < 2) return ((Number(c.indice) || 0) % n + n) % n;
+  const per = Math.max(5, Number(conf.rodizioSegundos) || 15) * 1000;
+  const decorrido = Math.max(0, Math.floor((Date.now() + climaDeltaPainel - (Number(c.desde) || 0)) / per));
+  return (((Number(c.indice) || 0) + decorrido) % n + n) % n;
+}
+function updateClima(clima) {
+  if (clima) { climaState = clima; if (Number(clima.agora)) climaDeltaPainel = clima.agora - Date.now(); }
+  pintarClimaPainel();
+}
+let climaIndicePintado = -1;
+function pintarClimaPainel(soSeTrocou) {
+  const c = climaState;
+  const cidades = c && Array.isArray(c.cidades) ? c.cidades : [];
+  const i = climaIndicePainel();
+  if (soSeTrocou && i === climaIndicePintado) return;
+  climaIndicePintado = i;
+  const cidade = cidades[i] || null;
+  const conf = (settings && settings.clima) || {};
+  const visivel = !!(c && c.visible && cidades.length);
+  const btn = document.getElementById('climaToolBtn');
+  if (btn) btn.classList.toggle('active', visivel);
+  const olho = document.getElementById('climaBtn');
+  if (olho) { olho.innerHTML = visivel ? EYE_OPEN : EYE_CLOSED; olho.classList.toggle('active', visivel); }
+  const rot = document.getElementById('climaBtnLabel');
+  if (rot) rot.textContent = visivel ? OBS_I18N.t('Tirar da tela') : OBS_I18N.t('Mostrar na tela');
+  const tag = document.getElementById('climaPageTag');
+  if (tag) tag.textContent = visivel ? OBS_I18N.t('na tela') : '';
+  const lab = document.getElementById('climaPageLabel');
+  if (lab) lab.textContent = cidades.length ? (i + 1) + '/' + cidades.length : '0/0';
+  const sem = document.getElementById('climaSemCidade');
+  if (sem) sem.style.display = cidades.length ? 'none' : '';
+  const previa = document.getElementById('climaPrevia');
+  if (previa) previa.style.display = cidades.length ? 'flex' : 'none';
+  if (!cidade) return;
+  climaGarantirCss();
+  const r = cidade.retrato || {};
+  document.getElementById('climaPreviaIcone').innerHTML = climaIconeSvg(r.condicao, r.dia);
+  document.getElementById('climaPreviaTemp').textContent = cidade.retrato ? climaTemp(r.temp, conf.unidade) : '--°';
+  document.getElementById('climaPreviaCidade').textContent = cidade.nome + (cidade.uf ? ' · ' + cidade.uf : '') + (cidade.retrato && r.descricao ? ' — ' + r.descricao : '');
+  const det = [];
+  if (cidade.retrato) {
+    if (r.sensacao !== null && r.sensacao !== undefined) det.push('🌡️ ' + climaTemp(r.sensacao, conf.unidade));
+    if (r.umidade !== null && r.umidade !== undefined) det.push('💧 ' + r.umidade + '%');
+    if (r.vento !== null && r.vento !== undefined) det.push('💨 ' + Math.round(r.vento) + ' km/h');
+    if (r.fonte) det.push((c.fontes && c.fontes[r.fonte] && c.fontes[r.fonte].nome) || r.fonte);
+  }
+  if (cidade.erro && !cidade.retrato) det.push('⚠️ ' + cidade.erro);
+  else if (cidade.erro) det.push('⚠️ ' + OBS_I18N.t('fonte fora do ar — mostrando o último retrato'));
+  else if (!cidade.retrato) det.push(visivel ? OBS_I18N.t('buscando…') : OBS_I18N.t('busca quando estiver na tela'));
+  document.getElementById('climaPreviaDet').textContent = det.join(' · ');
+}
+setInterval(() => { if (climaState && climaState.cidades && climaState.cidades.length > 1) pintarClimaPainel(true); }, 700);
+document.getElementById('climaBtn').addEventListener('click', () => hub.send({ type: 'climaToggle' }));
+document.getElementById('climaNextBtn').addEventListener('click', () => hub.send({ type: 'climaProxima', passo: 1 }));
+document.getElementById('climaPrevBtn').addEventListener('click', () => hub.send({ type: 'climaProxima', passo: -1 }));
+document.getElementById('climaRefreshBtn').addEventListener('click', () => { hub.send({ type: 'climaAtualizar' }); const d = document.getElementById('climaPreviaDet'); if (d) d.textContent = OBS_I18N.t('atualizando…'); });
+
 let relogioState = {
   relogio: { visible: false },
   cronometro: { visible: false, rodando: false, corrido: 0 },

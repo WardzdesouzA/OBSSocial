@@ -947,7 +947,107 @@ const OBS_TAMANHOS_ITEM = {
   audience: { w: 12, h: 14 },
   aviso: { w: 34, h: 10 },
   relogio: { w: 14, h: 9 },
+  clima: { w: 19, h: 11 }, // 🌤️ v0.167
 };
+
+// ===========================================================================
+// 🌤️ v0.167: os ícones animados do Clima — SVG desenhado aqui mesmo, sem
+// biblioteca, com as animações em CSS (param sozinhas no ♿ «reduzir
+// animações» e no prefers-reduced-motion). Usados na tela do público, na
+// prévia do editor e no botão do painel.
+// ===========================================================================
+const CLIMA_CONDICOES = ['sol', 'lua', 'parcial', 'nublado', 'nevoa', 'chuvisco', 'chuva', 'chuvaForte', 'trovoada', 'neve', 'granizo'];
+const CLIMA_DESCRICAO = {
+  sol: 'Céu limpo', lua: 'Céu limpo', parcial: 'Parcialmente nublado', nublado: 'Nublado',
+  nevoa: 'Névoa', chuvisco: 'Chuvisco', chuva: 'Chuva', chuvaForte: 'Chuva forte',
+  trovoada: 'Trovoada', neve: 'Neve', granizo: 'Granizo',
+};
+const CLIMA_EMOJI = { sol: '☀️', lua: '🌙', parcial: '⛅', nublado: '☁️', nevoa: '🌫️', chuvisco: '🌦️', chuva: '🌧️', chuvaForte: '🌧️', trovoada: '⛈️', neve: '🌨️', granizo: '🌨️' };
+const CLIMA_ICONES_CSS = `
+.clima-ico { width: 1em; height: 1em; display: block; overflow: visible; }
+.clima-ico * { transform-box: fill-box; transform-origin: center; }
+.clima-ico .cl-raios { animation: climaGira 28s linear infinite; }
+.clima-ico .cl-nucleo { animation: climaPulsa 3.2s ease-in-out infinite; }
+.clima-ico .cl-nuvem { animation: climaBoia 4.5s ease-in-out infinite; }
+.clima-ico .cl-nuvem2 { animation: climaBoia 6s ease-in-out infinite reverse; }
+.clima-ico .cl-gota { animation: climaCai 1.1s linear infinite; }
+.clima-ico .cl-gota.cl-forte { animation-duration: 0.65s; }
+.clima-ico .cl-floco { animation: climaNeva 2.6s ease-in-out infinite; }
+.clima-ico .cl-pedra { animation: climaQuica 1.3s ease-in infinite; }
+.clima-ico .cl-raio { animation: climaRelampago 2.8s ease-out infinite; }
+.clima-ico .cl-estrela { animation: climaPisca 2.2s ease-in-out infinite; }
+.clima-ico .cl-neblina { animation: climaDesliza 3.6s ease-in-out infinite; }
+.clima-ico .cl-lua { animation: climaBalanca 6s ease-in-out infinite; }
+@keyframes climaGira { to { transform: rotate(360deg); } }
+@keyframes climaPulsa { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes climaBoia { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+@keyframes climaCai { 0% { transform: translateY(-4px); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+@keyframes climaNeva { 0% { transform: translate(0, -4px); opacity: 0; } 25% { opacity: 1; } 50% { transform: translate(3px, 5px); } 75% { opacity: 1; } 100% { transform: translate(-2px, 14px); opacity: 0; } }
+@keyframes climaQuica { 0% { transform: translateY(-4px); opacity: 0; } 15% { opacity: 1; } 70% { transform: translateY(12px); } 85% { transform: translateY(8px); } 100% { transform: translateY(12px); opacity: 0; } }
+@keyframes climaRelampago { 0%, 84%, 100% { opacity: 0; } 86%, 90% { opacity: 1; } 88% { opacity: 0.2; } 92% { opacity: 0; } 94% { opacity: 1; } 97% { opacity: 0; } }
+@keyframes climaPisca { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes climaDesliza { 0%, 100% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
+@keyframes climaBalanca { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) { .clima-ico * { animation: none !important; } }
+body.a11y-sem-animacao .clima-ico * { animation: none !important; }
+`;
+let climaCssPosto = false;
+function climaGarantirCss() {
+  if (climaCssPosto || typeof document === 'undefined') return;
+  climaCssPosto = true;
+  const s = document.createElement('style');
+  s.id = 'obs-clima-css';
+  s.textContent = CLIMA_ICONES_CSS;
+  document.head.appendChild(s);
+}
+// O SVG de uma condição (viewBox 0 0 100 100). Cores fixas de propósito: um
+// sol é amarelo em qualquer tema; o «traço» acompanha a cor do texto.
+function climaIconeSvg(condicao, dia) {
+  const cond = CLIMA_CONDICOES.includes(condicao) ? condicao : null;
+  const SOL = '#ffb703', LUA = '#f4e9b8', NUVEM = '#e8eef6', NUVEM_ESCURA = '#9aa8bd', CHUVA = '#6cb6ff', NEVE = '#ffffff', RAIO = '#ffd23f', NEBLINA = '#cfd8e3';
+  const raios = (cx, cy, r) => {
+    let s = `<g class="cl-raios" style="transform-origin:${cx}px ${cy}px">`;
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      const x1 = cx + Math.cos(a) * (r + 7), y1 = cy + Math.sin(a) * (r + 7);
+      const x2 = cx + Math.cos(a) * (r + 16), y2 = cy + Math.sin(a) * (r + 16);
+      s += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${SOL}" stroke-width="6" stroke-linecap="round"/>`;
+    }
+    return s + '</g>';
+  };
+  const sol = (cx, cy, r) => `<g class="cl-sol">${raios(cx, cy, r)}<circle class="cl-nucleo" cx="${cx}" cy="${cy}" r="${r}" fill="${SOL}" style="transform-origin:${cx}px ${cy}px"/></g>`;
+  const lua = (cx, cy, r) => `<path class="cl-lua" d="M${cx + r * 0.2} ${cy - r} a${r} ${r} 0 1 0 ${r * 0.9} ${r * 1.55} a${r * 0.78} ${r * 0.78} 0 0 1 -${r * 0.9} -${r * 1.55}z" fill="${LUA}" style="transform-origin:${cx}px ${cy}px"/>`;
+  const estrelas = (pts) => pts.map(([x, y, d]) => `<circle class="cl-estrela" cx="${x}" cy="${y}" r="2.6" fill="${LUA}" style="animation-delay:${d}s;transform-origin:${x}px ${y}px"/>`).join('');
+  const nuvem = (x, y, esc, fill, classe) => `<path class="${classe || 'cl-nuvem'}" transform="translate(${x} ${y}) scale(${esc})" d="M14 40 h44 a13 13 0 0 0 1 -26 a19 19 0 0 0 -36 -4 a13 13 0 0 0 -9 30z" fill="${fill}" stroke="rgba(0,0,0,0.12)" stroke-width="1.5"/>`;
+  const gotas = (xs, y, forte) => xs.map((x, i) => `<line class="cl-gota${forte ? ' cl-forte' : ''}" x1="${x}" y1="${y}" x2="${x - 3}" y2="${y + 9}" stroke="${CHUVA}" stroke-width="4" stroke-linecap="round" style="animation-delay:${(i * 0.23).toFixed(2)}s"/>`).join('');
+  const flocos = (xs, y) => xs.map((x, i) => `<circle class="cl-floco" cx="${x}" cy="${y}" r="3.4" fill="${NEVE}" style="animation-delay:${(i * 0.6).toFixed(2)}s"/>`).join('');
+  const pedras = (xs, y) => xs.map((x, i) => `<circle class="cl-pedra" cx="${x}" cy="${y}" r="3" fill="${NEVE}" stroke="${CHUVA}" stroke-width="1.5" style="animation-delay:${(i * 0.35).toFixed(2)}s"/>`).join('');
+  const raio = (x, y) => `<path class="cl-raio" d="M${x} ${y} l-8 16 h7 l-5 14 l14 -20 h-7 l6 -10z" fill="${RAIO}"/>`;
+  const neblina = (ys) => ys.map((y, i) => `<line class="cl-neblina" x1="18" y1="${y}" x2="${82 - i * 8}" y2="${y}" stroke="${NEBLINA}" stroke-width="6" stroke-linecap="round" style="animation-delay:${(i * 0.7).toFixed(1)}s"/>`).join('');
+  let corpo;
+  switch (cond) {
+    case 'sol': corpo = sol(50, 50, 20); break;
+    case 'lua': corpo = lua(46, 48, 22) + estrelas([[78, 24, 0], [84, 46, 0.8], [70, 74, 1.5]]); break;
+    case 'parcial': corpo = (dia === false ? lua(40, 34, 16) : sol(38, 34, 15)) + nuvem(26, 30, 0.95, NUVEM); break;
+    case 'nublado': corpo = nuvem(30, 16, 0.75, NUVEM_ESCURA, 'cl-nuvem2') + nuvem(18, 34, 1, NUVEM); break;
+    case 'nevoa': corpo = nuvem(22, 8, 0.85, NUVEM) + neblina([66, 78, 90]); break;
+    case 'chuvisco': corpo = nuvem(18, 10, 1, NUVEM) + gotas([38, 58], 66, false); break;
+    case 'chuva': corpo = nuvem(18, 10, 1, NUVEM) + gotas([32, 50, 68], 66, false); break;
+    case 'chuvaForte': corpo = nuvem(18, 8, 1, NUVEM_ESCURA) + gotas([26, 38, 50, 62, 74], 64, true); break;
+    case 'trovoada': corpo = nuvem(18, 6, 1, NUVEM_ESCURA) + gotas([30, 70], 62, true) + raio(54, 58); break;
+    case 'neve': corpo = nuvem(18, 8, 1, NUVEM) + flocos([32, 50, 68], 66); break;
+    case 'granizo': corpo = nuvem(18, 8, 1, NUVEM_ESCURA) + pedras([32, 50, 68], 66); break;
+    default: corpo = `<rect x="42" y="14" width="16" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="50" cy="76" r="11" fill="#ff5c5c"/><rect class="cl-nucleo" x="46" y="34" width="8" height="34" fill="#ff5c5c" style="transform-origin:50px 68px"/>`;
+  }
+  return `<svg class="clima-ico clima-ico-${cond || 'x'}" viewBox="0 0 100 100" aria-hidden="true">${corpo}</svg>`;
+}
+// Temperatura pronta para a tela: «23°» ou «73°» (a fonte entrega em °C)
+function climaTemp(c, unidade) {
+  if (c === null || c === undefined || !Number.isFinite(Number(c))) return '--°';
+  const v = unidade === 'F' ? Math.round((Number(c) * 9) / 5 + 32) : Math.round(Number(c));
+  return v + '°';
+}
+if (typeof window !== 'undefined') Object.assign(window, { CLIMA_CONDICOES, CLIMA_DESCRICAO, CLIMA_EMOJI, climaGarantirCss, climaIconeSvg, climaTemp });
 function obsTamanhoItemPct(kind, s, telaW, telaH, escalaPct) {
   s = s || {};
   if (kind === 'featured') {

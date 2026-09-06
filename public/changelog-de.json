@@ -1,4 +1,13 @@
 {
+  "0.167.0": {
+    "titulo": "🌤️ Wetter auf dem Bildschirm — das aktuelle Wetter mit animierten Symbolen, mehrere Städte in Rotation und die Quelle deiner Wahl",
+    "itens": [
+      "🌤️ Neuer Wetter-Knopf und -Overlay: Temperatur, gefühlte Temperatur, Luftfeuchtigkeit, Wind und der Himmel mit animiertem Symbol (drehende Sonne, Mond und Sterne, treibende Wolken, Regen, starker Regen, Gewitter mit Blitz, Schnee, Hagel, Nebel). Drei Stile (Karte, kompakt, groß), °C oder °F, und du wählst, was angezeigt wird — auch ob der Stadtname erscheint. Position, Größe, Farben, Schrift, Ein-/Aus-Animationen, Sounds und lose Teile wie bei jedem anderen Widget im 🖱️ Bildschirm anordnen; der 🌤️-Knopf im Panel zeigt/versteckt es, mit ◀ ▶ zum Stadtwechsel und 🔄 zum sofortigen Aktualisieren.",
+      "🗺️ Unter 🎨 Aussehen → 🌤️ Wetter: Stadt nach Namen suchen (überall auf der Welt — außerhalb Brasiliens „Lisboa, PT“) oder Brasiliens 27 Hauptstädte mit einem Klick hinzufügen (bis 27 Städte). Mit Rotation wechselt der Bildschirm alle X Sekunden (5 bis 600) die Stadt, alle Bildschirme gleichzeitig.",
+      "🔌 Unter 🔌 Verbindungen → 🌤️ Wetterquellen: eine oder mehrere Quellen in gewünschter Reihenfolge — die erste, die antwortet, zählt, und fällt sie aus, übernimmt die nächste. Open-Meteo und MET Norway funktionieren ohne Anmeldung (Open-Meteo ist Standard); OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo und Weather Underground (private Stationen) kommen mit dem jeweiligen kostenlosen Schlüssel dazu, verschlüsselt nur auf deinem Computer gespeichert. Die Daten werden alle 10 bis 60 Minuten aktualisiert (deine Wahl), nur solange das Wetter auf dem Bildschirm ist — aus Rücksicht auf die Grenzen der kostenlosen Quellen.",
+      "🕹️ Externe Steuerung (Stream Deck & Co.): clima/mostrar, esconder, alternar, próxima cidade und atualizar. Die Quellen-Schlüssel reisen im Verbindungs-Backup mit und verschwinden mit „Verbindungen löschen“."
+    ]
+  },
   "0.166.0": {
     "titulo": "🍪 Extraktor mit den Cookies deines Logins (Instagram & Co.) — und wenn er scheitert, sagt das Panel warum",
     "itens": [
