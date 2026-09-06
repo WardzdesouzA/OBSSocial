@@ -3024,19 +3024,30 @@ const server = http.createServer((req, res) => {
   // 🍪 v0.166: o cookies.txt do extrator — só o computador do streamer, só
   // texto, no máximo 2 MB; fica em data/ytdlp e nunca sai de lá
   if (req.method === 'POST' && urlPath === '/ytdlp-cookies') {
-    const responde = (codigo, corpo) => { res.writeHead(codigo, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(corpo)); };
+    const responde = (codigo, corpo) => {
+      if (res.headersSent) return;
+      res.writeHead(codigo, { 'Content-Type': 'application/json', Connection: 'close' });
+      res.end(JSON.stringify(corpo));
+    };
     if (role !== 'local') { responde(403, { ok: false, erro: 'os cookies só podem ser enviados no computador do streamer' }); req.resume(); return; }
     if (!originAllowed(req.headers.origin, req.headers.host)) { responde(403, { ok: false, erro: 'origem não permitida' }); req.resume(); return; }
     const partes = [];
     let total = 0;
     let estourou = false;
     req.on('data', (p) => {
+      if (estourou) return;
       total += p.length;
-      if (total > 2 * 1024 * 1024) { estourou = true; req.destroy(); return; }
+      if (total > 2 * 1024 * 1024) {
+        // responde o 413 de verdade e SÓ DEPOIS corta o resto do envio
+        estourou = true;
+        partes.length = 0;
+        responde(413, { ok: false, erro: 'arquivo grande demais para ser um cookies.txt' });
+        res.once('finish', () => { try { req.destroy(); } catch { /* já foi */ } });
+        return;
+      }
       partes.push(p);
     });
-    req.on('error', () => { if (!res.headersSent) responde(400, { ok: false, erro: 'falha ao receber o arquivo' }); });
-    req.on('close', () => { if (estourou && !res.headersSent) responde(413, { ok: false, erro: 'arquivo grande demais para ser um cookies.txt' }); });
+    req.on('error', () => responde(400, { ok: false, erro: 'falha ao receber o arquivo' }));
     req.on('end', () => {
       if (estourou) return;
       const r = extratorYtDlp.guardarCookies(Buffer.concat(partes).toString('utf8'));
@@ -7304,7 +7315,9 @@ async function conferirMidiaDaUrl(idDoItem, endereco, tipoAtual, provedorAtual) 
 // 🧭 v0.166: no «nada», vai junto o motivo do extrator ({ motivo, detalhe })
 function avisarSondaMidiaDireta(idDoItem, estado, falha) {
   if (state.midiaDireta.item && state.midiaDireta.item.id === idDoItem) {
-    broadcast({ type: 'midiaDiretaSonda', id: idDoItem, estado, ...(falha ? { motivo: falha.motivo, detalhe: falha.detalhe || '' } : {}) });
+    // o texto cru do yt-dlp só vai quando o motivo é «erro» (o painel só o
+    // mostra nesse caso, e a sonda é transmitida para todo mundo)
+    broadcast({ type: 'midiaDiretaSonda', id: idDoItem, estado, ...(falha ? { motivo: falha.motivo, detalhe: falha.motivo === 'erro' ? (falha.detalhe || '') : '' } : {}) });
   }
 }
 
@@ -10261,6 +10274,7 @@ function tratarMensagem(ws, raw) {
           };
         }
       }
+      const navCookiesAntes = (state.settings.ytdlp || {}).cookiesNavegador || ''; // 🍪 v0.166
       state.settings = mergeSettings({
         ...state.settings,
         ...incoming,
@@ -10351,6 +10365,8 @@ function tratarMensagem(ws, raw) {
         }),
         widgets,
       });
+      // 🍪 v0.166: trocou o navegador dos cookies? o que falhou pode passar agora
+      if (((state.settings.ytdlp || {}).cookiesNavegador || '') !== navCookiesAntes) extratorYtDlp.esquecer();
       // 🏷️ Selos: tudo aqui é liga/desliga
       {
         const sel = state.settings.selos;

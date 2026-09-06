@@ -117,6 +117,9 @@ class Extrator {
     try {
       fs.mkdirSync(this.dir, { recursive: true });
       fs.writeFileSync(this.arquivoCookies(), conferido.texto, { mode: 0o600 });
+      // (o mode do writeFileSync só vale na criação: um arquivo já existente
+      // fica com o que tinha — reforça)
+      if (process.platform !== 'win32') { try { fs.chmodSync(this.arquivoCookies(), 0o600); } catch { /* sem permissão */ } }
     } catch (err) { return { ok: false, erro: 'não consegui gravar o arquivo: ' + (err && err.message) }; }
     this.esquecer();
     this._avisaEstado();
