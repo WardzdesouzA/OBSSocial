@@ -1,4 +1,10 @@
 {
+  "0.168.1": {
+    "titulo": "🪟 Deckkraft der Karten — derselbe Regler wie bei den Panels, jetzt auch für Karten und Kommentare",
+    "itens": [
+      "🪟 Unter 🎨 Themen → 🪟 Wo die Animation erscheint gibt es neben der Deckkraft der Panels (Spalten, Leisten und Boxen) jetzt die Deckkraft der Karten (die Karten und die Kommentare des Panels). Jede mit eigenem Regler, Standard 100 % (deckend): senke die eine, die andere oder beide, damit die Hintergrundanimation durchscheint, wo du willst."
+    ]
+  },
   "0.168.0": {
     "titulo": "🎬 Lebendige, komplett anpassbare Animationen — Sterne mit dem James-Webb-Glanz, und die Animation überall auf dem Bildschirm",
     "itens": [

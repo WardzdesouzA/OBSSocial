@@ -641,7 +641,7 @@ const DEFAULT_SETTINGS = {
     // limites mora em public/render.js — TEMA_ANIM_PADROES; o tema é pessoal,
     // gravado no navegador, e este bloco é só o padrão de quem nunca escolheu)
     animacao: 'nenhuma', animIntensidade: 60, animVelocidade: 100, animQuantidade: 100, animTamanho: 100,
-    animBrilho: 60, animRastro: 0, animVento: 0, animOpacidade: 100, animCamada: 'atras', painelOpacidade: 100,
+    animBrilho: 60, animRastro: 0, animVento: 0, animOpacidade: 100, animCamada: 'atras', painelOpacidade: 100, cartaoOpacidade: 100,
     animCores: 'tema', animCor1: '#ffffff', animCor2: '#7c3aed', animCor3: '#ffb300',
     animPontas: 6, animCintilacao: 70, animCadentes: 30, animNebulosa: 40, animFaixas: 4,
     animFlocos: 'cristais', animReflexo: true, animHorizonte: 42, animSol: true, animFormas: 'mistas',

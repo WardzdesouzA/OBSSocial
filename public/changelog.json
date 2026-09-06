@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.168.1",
+    "titulo": "🪟 Opacidade dos cartões — o mesmo seletor dos painéis, agora também para os cards e os comentários",
+    "itens": [
+      "🪟 Em 🎨 Temas → 🪟 Onde a animação aparece, ao lado da opacidade dos painéis (colunas, barras e caixas), entrou a opacidade dos cartões (os cards e os comentários do painel). Cada uma no seu seletor, padrão 100% (opaco): baixe uma, a outra ou as duas para a animação de fundo atravessar onde você quiser."
+    ]
+  },
+  {
     "version": "0.168.0",
     "titulo": "🎬 Animações vívidas e totalmente personalizáveis — estrelas com o brilho do James Webb, e a animação em qualquer lugar da tela",
     "itens": [

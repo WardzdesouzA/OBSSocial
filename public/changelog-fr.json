@@ -1,4 +1,10 @@
 {
+  "0.168.1": {
+    "titulo": "🪟 Opacité des cartes — le même curseur que les panneaux, désormais aussi pour les cartes et les commentaires",
+    "itens": [
+      "🪟 Dans 🎨 Thèmes → 🪟 Où l’animation apparaît, à côté de l’opacité des panneaux (colonnes, barres et boîtes), s’ajoute l’opacité des cartes (les cartes et les commentaires du panneau). Chacune sur son curseur, 100 % par défaut (opaque) : baissez l’une, l’autre ou les deux pour que l’animation de fond traverse où vous voulez."
+    ]
+  },
   "0.168.0": {
     "titulo": "🎬 Animations vives et entièrement personnalisables — des étoiles à l’éclat du James Webb, et l’animation n’importe où sur l’écran",
     "itens": [

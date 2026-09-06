@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    "Opacidade dos cartões:": "Card opacity:",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "Aurora, stars, snow, bubbles, retro grid or confetti — in the panel and in the settings. Ready-made themes marked 🎬 come with their own; here you can switch it, turn it off and tune everything: strength, speed, amount, size, glow, trail, wind, colours and the details of each effect. This page is the preview — whatever you change shows in its background. With ♿ “reduce animations” on, nothing moves.",
     "Velocidade:": "Speed:",
     "Quantidade:": "Amount:",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.en = {
     "↺ Padrão da animação": "↺ Animation defaults",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "Resets the animation settings to their defaults (the chosen animation stays)",
     "🪟 Onde a animação aparece": "🪟 Where the animation shows",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "By default the animation sits behind everything and the panels are opaque (100%): it only shows in the gaps. Lower the panel opacity so it shines through cards, columns and boxes anywhere on screen, or put the layer on top of everything — it never gets in the way of the mouse.",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "By default the animation sits behind everything, and panels and cards are opaque (100%): it only shows in the gaps. Lower the panel opacity (columns, bars and boxes) and the card opacity (the cards and the comments) so it shines through anywhere on screen, or put the layer on top of everything — it never gets in the way of the mouse.",
     "Atrás de tudo": "Behind everything",
     "Por cima de tudo": "On top of everything",
     "Opacidade da animação:": "Animation opacity:",

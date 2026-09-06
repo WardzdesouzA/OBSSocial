@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    "Opacidade dos cartões:": "Opacidad de las tarjetas:",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "Aurora, estrellas, nieve, burbujas, grilla retro o confeti — en el panel y en la configuración. Los temas listos marcados con 🎬 ya traen la suya; aquí puedes cambiarla, apagarla y afinar todo: fuerza, velocidad, cantidad, tamaño, brillo, estela, viento, colores y los detalles de cada efecto. Esta página es la vista previa — lo que muevas aparece en su fondo. Con ♿ «reducir animaciones» activado, nada se mueve.",
     "Velocidade:": "Velocidad:",
     "Quantidade:": "Cantidad:",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.es = {
     "↺ Padrão da animação": "↺ Animación al estándar",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "Vuelve los ajustes de la animación al estándar (la animación elegida se mantiene)",
     "🪟 Onde a animação aparece": "🪟 Dónde aparece la animación",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "De fábrica la animación queda detrás de todo y los paneles son opacos (100%): solo aparece en los huecos. Baja la opacidad de los paneles para que atraviese tarjetas, columnas y cajas en cualquier lugar de la pantalla, o pon la capa por encima de todo — nunca estorba al ratón.",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "De fábrica la animación queda detrás de todo, y paneles y tarjetas son opacos (100%): solo aparece en los huecos. Baja la opacidad de los paneles (columnas, barras y cajas) y la de las tarjetas (las tarjetas y los comentarios) para que atraviese cualquier lugar de la pantalla, o pon la capa por encima de todo — nunca estorba al ratón.",
     "Atrás de tudo": "Detrás de todo",
     "Por cima de tudo": "Por encima de todo",
     "Opacidade da animação:": "Opacidad de la animación:",

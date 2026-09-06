@@ -2414,7 +2414,7 @@
       <!-- 🪟 v0.168: onde a animação aparece — camada, opacidade e os painéis translúcidos -->
       <div class="field">
         <label>🪟 Onde a animação aparece</label>
-        <div class="hint" style="margin:0 0 6px">De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.</div>
+        <div class="hint" style="margin:0 0 6px">De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.</div>
         <div class="temas-fundo-ops">
           <label>Camada
             <select id="t-animCamada">
@@ -2427,6 +2427,9 @@
           </label>
           <label>Opacidade dos painéis: <b id="t-painelOpacidadeVal">100%</b>
             <input type="range" id="t-painelOpacidade" min="20" max="100" step="5">
+          </label>
+          <label>Opacidade dos cartões: <b id="t-cartaoOpacidadeVal">100%</b>
+            <input type="range" id="t-cartaoOpacidade" min="20" max="100" step="5">
           </label>
         </div>
       </div>
@@ -5475,7 +5478,7 @@ function fillTema() {
     const op = temaAnimOpcoes(t);
     const por = (id, valor) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = String(valor); const r = document.getElementById(id + 'Val'); if (r) r.textContent = id === 't-animFaixas' ? String(valor) : valor + '%'; };
     por('t-animVelocidade', op.velocidade); por('t-animQuantidade', op.quantidade); por('t-animTamanho', op.tamanho); por('t-animBrilho', op.brilho);
-    por('t-animRastro', op.rastro); por('t-animVento', op.vento); por('t-animOpacidade', op.opacidade); por('t-painelOpacidade', op.painelOpacidade);
+    por('t-animRastro', op.rastro); por('t-animVento', op.vento); por('t-animOpacidade', op.opacidade); por('t-painelOpacidade', op.painelOpacidade); por('t-cartaoOpacidade', op.cartaoOpacidade);
     por('t-animCintilacao', op.cintilacao); por('t-animCadentes', op.cadentes); por('t-animNebulosa', op.nebulosa); por('t-animFaixas', op.faixas); por('t-animHorizonte', op.horizonte);
     for (const [id, valor] of [['t-animCamada', op.camada], ['t-animCores', op.cores], ['t-animPontas', op.pontas], ['t-animFlocos', op.flocos], ['t-animFormas', op.formas], ['t-animCor1', op.cor1], ['t-animCor2', op.cor2], ['t-animCor3', op.cor3]]) {
       const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = String(valor);
@@ -5533,7 +5536,7 @@ for (const btn of document.querySelectorAll('.tema-limpar')) {
     });
   };
   // 🎬 v0.168: as faixas da animação
-  for (const campo of ['animVelocidade', 'animQuantidade', 'animTamanho', 'animBrilho', 'animRastro', 'animVento', 'animOpacidade', 'painelOpacidade', 'animCintilacao', 'animCadentes', 'animNebulosa', 'animFaixas', 'animHorizonte']) ligarFaixa('t-' + campo, campo, (v) => Number(v));
+  for (const campo of ['animVelocidade', 'animQuantidade', 'animTamanho', 'animBrilho', 'animRastro', 'animVento', 'animOpacidade', 'painelOpacidade', 'cartaoOpacidade', 'animCintilacao', 'animCadentes', 'animNebulosa', 'animFaixas', 'animHorizonte']) ligarFaixa('t-' + campo, campo, (v) => Number(v));
   for (const [id, campo, converte] of [['t-animCamada', 'animCamada', (v) => v], ['t-animCores', 'animCores', (v) => v], ['t-animPontas', 'animPontas', (v) => Number(v)], ['t-animFlocos', 'animFlocos', (v) => v], ['t-animFormas', 'animFormas', (v) => v], ['t-animCor1', 'animCor1', (v) => v], ['t-animCor2', 'animCor2', (v) => v], ['t-animCor3', 'animCor3', (v) => v]]) {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', () => { mandarTema({ [campo]: converte(el.value) }); if (campo === 'animCores') fillTema(); });

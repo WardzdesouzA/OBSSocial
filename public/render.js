@@ -1286,12 +1286,14 @@ function aplicarTema(tema) {
   raiz.style.setProperty('--tema-cantos', num(t.cantos, 0, 28, 14) + 'px');
   raiz.style.setProperty('--tema-densidade', num(t.densidade, 80, 130, 100) / 100);
   raiz.style.setProperty('--tema-fonte', t.fonte ? `'${String(t.fonte).replace(/['"\\]/g, '')}', 'Segoe UI', system-ui, sans-serif` : '');
-  // 🪟 v0.168: opacidade dos painéis — abaixo de 100 % os cards, colunas e
-  // caixas ficam translúcidos e a animação de fundo aparece em qualquer lugar
-  // (o padrão é 100 %: opaco, como sempre foi)
+  // 🪟 v0.168: opacidade dos painéis (--panel: colunas, barras, caixas) e,
+  // v0.168.1, dos cartões (--panel2: cards e comentários) — cada uma no seu
+  // seletor; abaixo de 100 % a superfície fica translúcida e a animação de
+  // fundo aparece em qualquer lugar (o padrão é 100 %: opaco, como sempre foi)
   {
-    const pct = num(t.painelOpacidade, 20, 100, 100);
-    for (const [chave, cssVar] of [['corPainel', '--panel'], ['corPainel2', '--panel2']]) {
+    for (const [chave, cssVar, campo, cssPct] of [['corPainel', '--panel', 'painelOpacidade', '--tema-painel-opacidade'], ['corPainel2', '--panel2', 'cartaoOpacidade', '--tema-cartao-opacidade']]) {
+      const pct = num(t[campo], 20, 100, 100);
+      raiz.style.setProperty(cssPct, String(pct / 100));
       if (pct >= 100) continue; // a cor sólida já foi posta (ou tirada) acima
       const base = typeof t[chave] === 'string' && /^#[0-9a-f]{6}$/i.test(t[chave]) ? t[chave] : (getComputedStyle(raiz).getPropertyValue(cssVar).trim() || '');
       const m = /^#([0-9a-f]{6})$/i.exec(base);
@@ -1299,7 +1301,6 @@ function aplicarTema(tema) {
       const n = parseInt(m[1], 16);
       raiz.style.setProperty(cssVar, `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${pct / 100})`);
     }
-    raiz.style.setProperty('--tema-painel-opacidade', String(pct / 100));
   }
 
   // Imagem de fundo do programa (só das mídias enviadas)
@@ -2348,7 +2349,8 @@ const TEMA_ANIM_PADROES = {
   animVento: 0,             // -100–100: deriva horizontal (neve, confete, bolhas, cadentes)
   animOpacidade: 100,       // 0–100: opacidade da camada animada
   animCamada: 'atras',      // atras (fundo) | frente (por cima de tudo, sem pegar o mouse)
-  painelOpacidade: 100,     // 20–100: opacidade dos painéis/cards — abaixo de 100 a animação atravessa
+  painelOpacidade: 100,     // 20–100: opacidade dos painéis (colunas, barras, caixas — --panel)
+  cartaoOpacidade: 100,     // 20–100: opacidade dos cartões (cards e comentários — --panel2) — abaixo de 100 a animação atravessa
   animCores: 'tema',        // tema | personalizadas
   animCor1: '#ffffff', animCor2: '#7c3aed', animCor3: '#ffb300',
   // ✨ estrelas
@@ -2386,6 +2388,7 @@ function temaAnimOpcoes(t) {
     opacidade: num(o.animOpacidade, 0, 100, P.animOpacidade),
     camada: o.animCamada === 'frente' ? 'frente' : 'atras',
     painelOpacidade: num(o.painelOpacidade, 20, 100, P.painelOpacidade),
+    cartaoOpacidade: num(o.cartaoOpacidade, 20, 100, P.cartaoOpacidade),
     cores: o.animCores === 'personalizadas' ? 'personalizadas' : 'tema',
     cor1: hex(o.animCor1, P.animCor1), cor2: hex(o.animCor2, P.animCor2), cor3: hex(o.animCor3, P.animCor3),
     pontas: [0, 4, 6, 8].includes(Number(o.animPontas)) ? Number(o.animPontas) : P.animPontas,
