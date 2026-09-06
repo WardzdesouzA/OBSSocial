@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.167.2",
+    "titulo": "🗂️ Recolher/expandir padronizado: agora também em 🔌 Conexões e em 🗄️ Logs e dados",
+    "itens": [
+      "🔌 Cada card da página Conexões (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, Fontes de clima, Reiniciar conexões…) recolhe e expande pelo título, como já acontecia na página Temas e no Labs. Nascem recolhidos, a escolha fica lembrada neste navegador, e a linha de status (● Conectado / Desconectado) continua à vista mesmo com o card fechado.",
+      "🗂️ A regra virou padrão: toda página das configurações com mais de um card ganha o recolher/expandir (🗄️ Logs e dados também). Página de card único não recolhe, e o Editor visual de overlay segue sempre aberto."
+    ]
+  },
+  {
     "version": "0.167.1",
     "titulo": "🌤️ O Clima ganhou lugar fixo no painel: ao lado do relógio, no centro da barra, com mostrador próprio",
     "itens": [
