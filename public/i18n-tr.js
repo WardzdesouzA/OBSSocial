@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "sem cidade": "şehir yok",
     "🌤️ Clima": "🌤️ Hava durumu",
     "Clima: o tempo agora na tela": "Hava durumu: şu anki hava ekranda",
     "Cidade anterior": "Önceki şehir",

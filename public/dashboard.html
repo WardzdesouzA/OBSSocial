@@ -67,6 +67,16 @@
   .conn-chip:hover { border-color: var(--accent); }
   /* 🕐 Mostrador do relógio no centro do cabeçalho */
   .relogio-wrap { display: flex; align-items: center; }
+  /* 🌤️ v0.167.1: o Clima ao lado do relógio, no mesmo molde */
+  .clima-wrap { margin-left: 8px; }
+  .clima-topo { min-width: 84px; }
+  .clima-topo-linha { display: flex; align-items: center; gap: 6px; }
+  #climaTopoIcone { display: inline-flex; width: 26px; height: 26px; line-height: 1; font-size: 20px; }
+  #climaTopoIcone svg { width: 26px; height: 26px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  #climaTopoTemp { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+  #climaTopoCidade { font-size: 10px; opacity: 0.75; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #climaTopoCidade:empty { display: none; }
+  .clima-topo.velho #climaTopoTemp { opacity: 0.6; }
   .relogio-topo {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 1px; padding: 4px 14px; cursor: pointer; line-height: 1.15;
@@ -1065,34 +1075,6 @@
         <div class="hint">O QR só sai da tela por este botão — os botões de limpar não mexem nele. Use as setas ◀ ▶ para navegar entre os seus QRs; a posição de cada um se ajusta no 🖱️.</div>
       </div>
     </div>
-    <!-- 🌤️ v0.167: Clima -->
-    <div class="tool-wrap">
-      <button class="icon-btn pop-toggle" id="climaToolBtn" data-pop="climaPop" title="Clima: o tempo agora na tela">🌤️</button>
-      <div class="popover" id="climaPop" style="width: 330px">
-        <div class="pop-title">🌤️ Clima <span class="pop-extra" id="climaPageTag"></span></div>
-        <div id="climaPrevia" data-no-i18n style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,0.22);margin-bottom:8px;min-height:64px">
-          <div id="climaPreviaIcone" style="font-size:44px;line-height:1;flex:none"></div>
-          <div style="flex:1;min-width:0">
-            <div id="climaPreviaTemp" style="font-size:26px;font-weight:800;line-height:1.1">--°</div>
-            <div id="climaPreviaCidade" style="font-size:13px;opacity:0.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-            <div id="climaPreviaDet" style="font-size:12px;opacity:0.7"></div>
-          </div>
-        </div>
-        <div class="pop-row mini-pager">
-          <button id="climaPrevBtn" class="icon-btn" title="Cidade anterior">◀</button>
-          <span class="mini-page-label" id="climaPageLabel">0/0</span>
-          <button id="climaNextBtn" class="icon-btn" title="Próxima cidade">▶</button>
-          <span style="margin-left:auto"></span>
-          <button id="climaRefreshBtn" class="icon-btn" title="Atualizar agora (sem esperar o intervalo)">🔄</button>
-        </div>
-        <div class="pop-row">
-          <button id="climaBtn" class="icon-btn" title="Mostrar/tirar da tela">👁️</button>
-          <span id="climaBtnLabel">Mostrar na tela</span>
-        </div>
-        <div id="climaSemCidade" class="hint" style="display:none">Nenhuma cidade cadastrada ainda: em Configurações → 🎨 Aparência → 🌤️ Clima, procure a sua cidade ou adicione as capitais do Brasil.</div>
-        <div class="hint">O tempo vem das fontes escolhidas em 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e é atualizado a cada 10–60 minutos. Cidades, rodízio e o que aparece se ajustam em 🎨 Aparência → 🌤️ Clima; posição e tamanho no 🖱️.</div>
-      </div>
-    </div>
 
     <div class="tool-wrap">
       <button class="icon-btn pop-toggle" id="raffleToolBtn" data-pop="rafflePop" title="Sorteio">🎁<span class="mini-badge" id="raffleBadge">0</span></button>
@@ -1658,6 +1640,39 @@
         </div>
       </div>
   </div>
+    <!-- 🌤️ v0.167.1: o Clima mora no centro, ao lado do relógio, com
+         mostrador próprio (ícone animado, temperatura e cidade) que acende
+         quando está na tela — como o relógio -->
+    <div class="tool-wrap relogio-wrap clima-wrap">
+  <button class="relogio-topo clima-topo pop-toggle" id="climaTopo" data-pop="climaPop" title="Clima: o tempo agora na tela">
+    <span class="clima-topo-linha"><span id="climaTopoIcone">🌤️</span><span id="climaTopoTemp">--°</span></span>
+    <span id="climaTopoCidade"></span>
+  </button>
+      <div class="popover" id="climaPop" style="width: 330px">
+        <div class="pop-title">🌤️ Clima <span class="pop-extra" id="climaPageTag"></span></div>
+        <div id="climaPrevia" data-no-i18n style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,0.22);margin-bottom:8px;min-height:64px">
+          <div id="climaPreviaIcone" style="font-size:44px;line-height:1;flex:none"></div>
+          <div style="flex:1;min-width:0">
+            <div id="climaPreviaTemp" style="font-size:26px;font-weight:800;line-height:1.1">--°</div>
+            <div id="climaPreviaCidade" style="font-size:13px;opacity:0.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            <div id="climaPreviaDet" style="font-size:12px;opacity:0.7"></div>
+          </div>
+        </div>
+        <div class="pop-row mini-pager">
+          <button id="climaPrevBtn" class="icon-btn" title="Cidade anterior">◀</button>
+          <span class="mini-page-label" id="climaPageLabel">0/0</span>
+          <button id="climaNextBtn" class="icon-btn" title="Próxima cidade">▶</button>
+          <span style="margin-left:auto"></span>
+          <button id="climaRefreshBtn" class="icon-btn" title="Atualizar agora (sem esperar o intervalo)">🔄</button>
+        </div>
+        <div class="pop-row">
+          <button id="climaBtn" class="icon-btn" title="Mostrar/tirar da tela">👁️</button>
+          <span id="climaBtnLabel">Mostrar na tela</span>
+        </div>
+        <div id="climaSemCidade" class="hint" style="display:none">Nenhuma cidade cadastrada ainda: em Configurações → 🎨 Aparência → 🌤️ Clima, procure a sua cidade ou adicione as capitais do Brasil.</div>
+        <div class="hint">O tempo vem das fontes escolhidas em 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e é atualizado a cada 10–60 minutos. Cidades, rodízio e o que aparece se ajustam em 🎨 Aparência → 🌤️ Clima; posição e tamanho no 🖱️.</div>
+      </div>
+    </div>
     <span style="flex:1"></span>
     <label class="feed-rate" title="De quanto em quanto tempo as mensagens novas entram no painel e no chat fixo — elas sempre aparecem suavemente, nunca todas de uma vez">⏱️
       <select id="feedRateQuick">
@@ -6471,8 +6486,21 @@ function pintarClimaPainel(soSeTrocou) {
   const cidade = cidades[i] || null;
   const conf = (settings && settings.clima) || {};
   const visivel = !!(c && c.visible && cidades.length);
-  const btn = document.getElementById('climaToolBtn');
-  if (btn) btn.classList.toggle('active', visivel);
+  // o mostrador do centro (ao lado do relógio): acende quando está na tela
+  const topo = document.getElementById('climaTopo');
+  if (topo) {
+    topo.classList.toggle('ativo', visivel);
+    topo.classList.toggle('velho', !!(cidade && cidade.erro && cidade.retrato));
+    const rt = cidade && cidade.retrato ? cidade.retrato : null;
+    const chaveIcone = rt ? rt.condicao + '|' + rt.dia : (cidade ? 'vazio' : 'nada');
+    if (topo.dataset.icone !== chaveIcone) {
+      topo.dataset.icone = chaveIcone;
+      if (rt) { climaGarantirCss(); document.getElementById('climaTopoIcone').innerHTML = climaIconeSvg(rt.condicao, rt.dia); }
+      else document.getElementById('climaTopoIcone').textContent = '🌤️';
+    }
+    document.getElementById('climaTopoTemp').textContent = rt ? climaTemp(rt.temp, conf.unidade) : '--°';
+    document.getElementById('climaTopoCidade').textContent = cidade ? cidade.nome + (cidade.uf ? ' · ' + cidade.uf : '') : OBS_I18N.t('sem cidade');
+  }
   const olho = document.getElementById('climaBtn');
   if (olho) { olho.innerHTML = visivel ? EYE_OPEN : EYE_CLOSED; olho.classList.toggle('active', visivel); }
   const rot = document.getElementById('climaBtnLabel');

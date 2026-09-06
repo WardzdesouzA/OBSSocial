@@ -1,4 +1,12 @@
 {
+  "0.167.1": {
+    "titulo": "🌤️ Das Wetter hat jetzt einen festen Platz im Panel: neben der Uhr, mittig in der Leiste, mit eigener Anzeige",
+    "itens": [
+      "🕐🌤️ Das Wetter ist aus der Symbolreihe ausgezogen und wohnt jetzt neben der Uhr, in der Mitte der Panel-Leiste — beide sind relativ zum Bildschirm zentriert.",
+      "🌡️ Eigene Anzeige nach dem Muster der Uhr: das animierte Wettersymbol, die Temperatur und die aktuelle Stadt, die mit der Rotation wechselt. Ist das Wetter auf dem Bildschirm, leuchtet die Anzeige wie die der Uhr; ein Klick öffnet die gewohnten Optionen (◀ ▶, 🔄, 👁️).",
+      "🧲 Da es jetzt einen festen Platz hat, taucht das Wetter nicht mehr unter 🎨 Themen → 🧲 Panel ordnen auf (die gespeicherte Reihenfolge gilt weiter für die anderen Symbole)."
+    ]
+  },
   "0.167.0": {
     "titulo": "🌤️ Wetter auf dem Bildschirm — das aktuelle Wetter mit animierten Symbolen, mehrere Städte in Rotation und die Quelle deiner Wahl",
     "itens": [

@@ -1,4 +1,12 @@
 {
+  "0.167.1": {
+    "titulo": "🌤️ Weather gets a fixed spot in the panel: next to the clock, centred in the bar, with its own display",
+    "itens": [
+      "🕐🌤️ Weather left the row of tool icons and now lives next to the clock, in the centre of the panel bar — both are centred relative to the screen.",
+      "🌡️ Its own display, in the same mould as the clock: the animated condition icon, the temperature and the current city, switching along with the rotation. While Weather is on screen the display lights up like the clock’s; clicking it opens the usual options (◀ ▶, 🔄, 👁️).",
+      "🧲 Since it now has a fixed spot, Weather no longer appears in 🎨 Themes → 🧲 Arrange the panel (the saved order still applies to the other icons)."
+    ]
+  },
   "0.167.0": {
     "titulo": "🌤️ Weather on screen — current conditions with animated icons, several cities in rotation and the source you choose",
     "itens": [
