@@ -435,6 +435,18 @@
   .widget[data-widget="clima"] .cl-miolo.cl-entra { animation: climaEntra 0.55s ease-out; }
   @keyframes climaEntra { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
   body.a11y-sem-animacao .widget[data-widget="clima"] .cl-miolo.cl-entra { animation: none; }
+  /* 🗂️ v0.169: o cartão completo do Clima — temporário, no meio da tela (como
+     o pódio do sorteio), fora do editor; veste as cores do widget 🌤️ Clima */
+  #climaCompleto {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 250;
+    width: min(92vw, 54em); --clc-size: clamp(11px, 1.05vw, 22px);
+  }
+  #climaCompleto.clc-entra { animation: clcEntra 0.5s ease-out; }
+  #climaCompleto.clc-sai { animation: clcSai 0.4s ease-in forwards; }
+  @keyframes clcEntra { from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  @keyframes clcSai { to { opacity: 0; transform: translate(-50%, -50%) scale(0.94); } }
+  body.a11y-sem-animacao #climaCompleto { animation: none !important; }
+  @media (prefers-reduced-motion: reduce) { #climaCompleto { animation: none !important; } }
 
   /* 🔇 Convite para liberar o som quando o overlay é aberto num navegador
      comum (celular, tablet, outro PC). Dentro do OBS ele nunca aparece. */
@@ -846,6 +858,7 @@
 <div id="avisoWidget" class="widget" data-widget="aviso"></div>
 <div id="relogioWidget" class="widget" data-widget="relogio"></div>
 <div id="climaWidget" class="widget" data-widget="clima"></div>
+<div id="climaCompleto" style="display:none" data-no-i18n></div>
 <div id="somBloqueadoOv" title="Toque uma vez para o navegador liberar o som">🔇 Toque aqui para liberar o som dos alertas</div>
 
 <div id="raffleWidget" class="widget" data-widget="raffle"><div id="raffleBox" style="display:flex;flex-direction:column;align-items:center;gap:20px"></div></div>
@@ -3187,42 +3200,48 @@ let climaIndiceMostrado = -1;
 let climaIdMostrado = '';
 // Em que cidade o rodízio está agora: contado a partir do «desde» do servidor,
 // para todas as telas trocarem juntas sem o servidor mandar mensagem
-function climaIndiceAgora() {
+// 🗺️ v0.169: quantas cidades o rodízio tem (as soltas, ou o Brasil / um estado)
+function climaTotalRodizio() {
   const c = climaAtual;
-  const conf = settings?.clima || {};
-  const n = c && Array.isArray(c.cidades) ? c.cidades.length : 0;
-  if (!n) return 0;
-  if (!conf.rodizio || n < 2) return ((Number(c.indice) || 0) % n + n) % n;
-  const per = Math.max(5, Number(conf.rodizioSegundos) || 15) * 1000;
-  const decorrido = Math.max(0, Math.floor((Date.now() + climaDeltaOv - (Number(c.desde) || 0)) / per));
-  return (((Number(c.indice) || 0) + decorrido) % n + n) % n;
+  if (!c) return 0;
+  return c.lista ? (Number(c.lista.total) || 0) : (Array.isArray(c.cidades) ? c.cidades.length : 0);
+}
+function climaIndiceAgora(n) {
+  return climaIndiceRodizio(climaAtual, settings?.clima || {}, n === undefined ? climaTotalRodizio() : n, Date.now() + climaDeltaOv);
 }
 function showClima(clima) {
   if (clima) {
     climaAtual = clima;
     if (Number(clima.agora)) climaDeltaOv = clima.agora - Date.now();
   }
-  const visivel = !!(climaAtual && climaAtual.visible && climaAtual.cidades && climaAtual.cidades.length);
+  showClimaCompleto(); // 🗂️ v0.169: o cartão completo anda junto (mesma mensagem)
+  const visivel = !!(climaAtual && climaAtual.visible && climaTotalRodizio());
   if (!visivel) {
     if (!PREVIA) { hideWidgetEl(climaEl, 'clima'); climaIndiceMostrado = -1; climaIdMostrado = ''; return; }
     // 📺 na prévia do editor, o Clima desligado mostra o exemplo
-    if (!climaAtual || !climaAtual.cidades || !climaAtual.cidades.length) climaAtual = EXEMPLO_PREVIA.clima;
+    if (!climaTotalRodizio()) climaAtual = EXEMPLO_PREVIA.clima;
     else climaAtual = { ...climaAtual, visible: true };
   }
   pintarClimaOverlay(true);
   showWidgetEl(climaEl, 'clima');
 }
 function pintarClimaOverlay(forcar) {
-  if (!climaAtual || !climaAtual.cidades || !climaAtual.cidades.length) return;
+  if (!climaAtual || !climaTotalRodizio()) return;
   const conf = settings?.widgets?.clima || {};
   const cc = settings?.clima || {};
-  const i = climaIndiceAgora();
-  const cidade = climaAtual.cidades[i] || climaAtual.cidades[0];
+  // 🗺️ v0.169: a lista do rodízio — com o Brasil / um estado, vem de
+  // municipios-br.json (baixado uma vez; enquanto não chega, espera)
+  const lista = climaCidadesDoRodizio(climaAtual);
+  if (lista === null) { climaCarregarMunicipios(() => pintarClimaOverlay(true)); return; }
+  if (!lista.length) return;
+  const i = climaIndiceAgora(lista.length);
+  const cidade = lista[i] || lista[0];
   const trocou = i !== climaIndiceMostrado || cidade.id !== climaIdMostrado;
   if (!forcar && !trocou) return;
   climaGarantirCss();
-  const r = cidade.retrato || {};
-  const velho = !!cidade.erro && !!cidade.retrato; // a fonte falhou desta vez: fica o último retrato, apagado
+  const { retrato: rt, erro } = climaRetratoDe(climaAtual, cidade);
+  const r = rt || {};
+  const velho = !!erro && !!rt; // a fonte falhou desta vez: fica o último retrato, apagado
   climaEl.innerHTML = '';
   const miolo = document.createElement('div');
   miolo.className = 'cl-miolo' + (trocou && climaIndiceMostrado >= 0 ? ' cl-entra' : '') + (velho ? ' cl-velho' : '');
@@ -3235,12 +3254,12 @@ function pintarClimaOverlay(forcar) {
   const bloco = document.createElement('div');
   const temp = document.createElement('div');
   temp.className = 'cl-temp';
-  temp.textContent = cidade.retrato ? climaTemp(r.temp, cc.unidade) : '--°';
+  temp.textContent = rt ? climaTemp(r.temp, cc.unidade) : '--°';
   bloco.appendChild(temp);
   if (cc.mostrarDescricao !== false && cc.estilo !== 'compacto') {
     const desc = document.createElement('div');
     desc.className = 'cl-descricao';
-    desc.textContent = cidade.retrato ? (r.descricao || CLIMA_DESCRICAO[r.condicao] || '') : (cidade.erro ? 'sem dados' : 'buscando…');
+    desc.textContent = rt ? (r.descricao || CLIMA_DESCRICAO[r.condicao] || '') : (erro ? 'sem dados' : 'buscando…');
     bloco.appendChild(desc);
   }
   linha.appendChild(bloco);
@@ -3248,10 +3267,10 @@ function pintarClimaOverlay(forcar) {
   if (cc.mostrarCidade !== false) {
     const nome = document.createElement('div');
     nome.className = 'cl-cidade';
-    nome.textContent = cidade.nome + (cidade.uf && cidade.pais === 'BR' ? ' · ' + cidade.uf : cidade.pais && cidade.pais !== 'BR' ? ' · ' + cidade.pais : '');
+    nome.textContent = climaNomeCidade(cidade);
     miolo.appendChild(nome);
   }
-  if (cc.estilo !== 'compacto' && cidade.retrato) {
+  if (cc.estilo !== 'compacto' && rt) {
     const det = document.createElement('div');
     det.className = 'cl-detalhes';
     const partes = [];
@@ -3279,10 +3298,41 @@ function pintarClimaOverlay(forcar) {
 }
 // o rodízio: confere a cada meio segundo se é hora de trocar de cidade
 setInterval(() => {
-  if (!climaAtual || !climaAtual.cidades || climaAtual.cidades.length < 2) return;
+  if (!climaAtual || climaTotalRodizio() < 2) return;
   if (!(climaAtual.visible || PREVIA)) return;
   pintarClimaOverlay(false);
 }, 500);
+// 🗂️ v0.169: o cartão completo — o tempo agora com tudo, as próximas horas e
+// os próximos dias, no meio da tela. Entra e sai pelo painel (✖ tira dos dois
+// lugares); o cartão pequeno não é afetado. Na prévia do editor não aparece.
+const climaCompletoEl = document.getElementById('climaCompleto');
+let climaCompletoMostrado = false;
+function showClimaCompleto() {
+  const comp = climaAtual && climaAtual.completo;
+  const visivel = !!(comp && comp.visible && comp.cidade) && !PREVIA;
+  if (!visivel) {
+    if (!climaCompletoMostrado) return;
+    climaCompletoMostrado = false;
+    climaCompletoEl.classList.remove('clc-entra');
+    climaCompletoEl.classList.add('clc-sai');
+    setTimeout(() => { if (!climaCompletoMostrado) { climaCompletoEl.style.display = 'none'; climaCompletoEl.classList.remove('clc-sai'); } }, 450);
+    return;
+  }
+  const conf = settings?.widgets?.clima || {};
+  climaPintarCompleto(climaCompletoEl, comp, climaRetratoDe(climaAtual, comp.cidade), settings?.clima || {}, { fontes: climaAtual.fontes });
+  // as cores e a letra do widget 🌤️ Clima (as mesmas do cartão pequeno)
+  climaCompletoEl.style.setProperty('--clc-bg', hexToRgba(conf.bgColor || '#0b1a2e', conf.bgOpacity === undefined ? 0.9 : conf.bgOpacity));
+  climaCompletoEl.style.setProperty('--clc-fg', conf.textColor || '#ffffff');
+  climaCompletoEl.style.setProperty('--clc-accent', conf.accentColor || '#ffb703');
+  climaCompletoEl.style.setProperty('--clc-radius', (Number(conf.borderRadius) || 22) + 'px');
+  climaCompletoEl.style.setProperty('--clc-font', conf.fontFamily ? `'${String(conf.fontFamily).replace(/['"\\]/g, '')}', 'Segoe UI', sans-serif` : 'inherit');
+  if (!climaCompletoMostrado) {
+    climaCompletoMostrado = true;
+    climaCompletoEl.style.display = 'block';
+    climaCompletoEl.classList.remove('clc-sai');
+    climaCompletoEl.classList.add('clc-entra');
+  }
+}
 
 // ⏳ Reta final: os últimos segundos antes de o timer acabar.
 // Quantos segundos e se vale para o número ou para o Aviso saem das

@@ -1047,7 +1047,259 @@ function climaTemp(c, unidade) {
   const v = unidade === 'F' ? Math.round((Number(c) * 9) / 5 + 32) : Math.round(Number(c));
   return v + '°';
 }
-if (typeof window !== 'undefined') Object.assign(window, { CLIMA_CONDICOES, CLIMA_DESCRICAO, CLIMA_EMOJI, climaGarantirCss, climaIconeSvg, climaTemp });
+// ===========================================================================
+// 🗺️ v0.169: a lista do rodízio nas telas. Com «cidades soltas» (ou uma
+// lista que cabe, ≤ 27) o servidor manda as cidades prontas, com o tempo de
+// cada uma. Com o Brasil inteiro / um estado grande, a tela baixa
+// municipios-br.json uma vez (o mesmo arquivo do servidor, na MESMA ordem) e
+// pega o tempo de cada cidade em «retratos» (por id).
+// ===========================================================================
+const CLIMA_MAX_CIDADES = 27;
+let climaMunicipiosCache = null;   // [[codigo, nome, uf, lat, lon, capital], …]
+let climaMunicipiosPromessa = null;
+let climaMunicipiosProximaTentativa = 0; // depois de uma falha, espera antes de baixar de novo
+const climaMunicipiosOuvintes = new Set(); // um ouvinte por função (os pintores chamam a cada tique)
+function climaCarregarMunicipios(aoChegar) {
+  if (typeof aoChegar === 'function') { if (climaMunicipiosCache) aoChegar(climaMunicipiosCache); else climaMunicipiosOuvintes.add(aoChegar); }
+  if (climaMunicipiosCache) return Promise.resolve(climaMunicipiosCache);
+  if (!climaMunicipiosPromessa && Date.now() >= climaMunicipiosProximaTentativa) {
+    climaMunicipiosPromessa = fetch('/municipios-br.json').then((r) => r.json()).then((j) => {
+      climaMunicipiosCache = Array.isArray(j && j.municipios) ? j.municipios : [];
+      const ouvintes = [...climaMunicipiosOuvintes];
+      climaMunicipiosOuvintes.clear();
+      for (const fn of ouvintes) { try { fn(climaMunicipiosCache); } catch { /* ouvinte quebrado não derruba os outros */ } }
+      return climaMunicipiosCache;
+    }).catch(() => { climaMunicipiosPromessa = null; climaMunicipiosProximaTentativa = Date.now() + 20000; return null; });
+  }
+  return climaMunicipiosPromessa || Promise.resolve(null);
+}
+let climaListaCache = { chave: '', lista: [] };
+// As cidades do rodízio (sem o tempo): a lista pronta do servidor ou os
+// municípios filtrados. Null enquanto o arquivo ainda não chegou.
+function climaCidadesDoRodizio(estado) {
+  if (!estado) return [];
+  const lista = estado.lista || { modo: 'cidades', uf: '', total: Array.isArray(estado.cidades) ? estado.cidades.length : 0 };
+  if (lista.modo !== 'brasil' && lista.modo !== 'uf') return Array.isArray(estado.cidades) ? estado.cidades : [];
+  if (lista.total <= CLIMA_MAX_CIDADES && Array.isArray(estado.cidades) && estado.cidades.length) return estado.cidades;
+  if (!climaMunicipiosCache) { climaCarregarMunicipios(); return null; }
+  const chave = lista.modo + ':' + (lista.uf || '');
+  if (climaListaCache.chave !== chave) {
+    const uf = lista.modo === 'uf' ? lista.uf : '';
+    const out = [];
+    for (const m of climaMunicipiosCache) {
+      if (!Array.isArray(m) || m.length < 5 || (uf && m[2] !== uf)) continue;
+      out.push({ id: 'm' + m[0], nome: String(m[1]), uf: String(m[2]), pais: 'BR', lat: Number(m[3]), lon: Number(m[4]) });
+    }
+    climaListaCache = { chave, lista: out };
+  }
+  return climaListaCache.lista;
+}
+// O tempo de uma cidade: o que veio nela (lista pronta) ou em «retratos»
+function climaRetratoDe(estado, cidade) {
+  if (!cidade) return { retrato: null, erro: null, em: 0 };
+  if (cidade.retrato || cidade.erro) return { retrato: cidade.retrato || null, erro: cidade.erro || null, em: cidade.em || 0 };
+  const r = estado && estado.retratos && estado.retratos[cidade.id];
+  return r ? { retrato: r.retrato || null, erro: r.erro || null, em: r.em || 0 } : { retrato: null, erro: null, em: 0 };
+}
+// O rodízio que VALE (a mesma regra do clima.js): com o Brasil inteiro / um
+// estado ele está sempre ligado e com no mínimo 15 s por cidade
+function climaRodizioEfetivo(conf) {
+  const c = conf || {};
+  const modo = c.lista && c.lista.modo;
+  const lista = modo === 'brasil' || modo === 'uf';
+  const seg = Math.max(5, Number(c.rodizioSegundos) || 15);
+  return { rodizio: lista || c.rodizio === true, rodizioSegundos: lista ? Math.max(15, seg) : seg };
+}
+// Em que cidade o rodízio está (a mesma conta do servidor)
+function climaIndiceRodizio(estado, conf, n, agora) {
+  if (!n) return 0;
+  const base = ((Math.round(Number(estado && estado.indice) || 0) % n) + n) % n;
+  const ef = climaRodizioEfetivo(conf);
+  if (!ef.rodizio || n < 2) return base;
+  const per = ef.rodizioSegundos * 1000;
+  const decorrido = Math.max(0, Math.floor(((agora || Date.now()) - (Number(estado && estado.desde) || 0)) / per));
+  return ((base + decorrido) % n + n) % n;
+}
+function climaNomeCidade(c) {
+  if (!c) return '';
+  return c.nome + (c.uf && (!c.pais || c.pais === 'BR') ? ' · ' + c.uf : c.pais && c.pais !== 'BR' ? ' · ' + c.pais : '');
+}
+
+// ===========================================================================
+// 🗂️ v0.169: o cartão completo — o tempo agora com tudo, as próximas horas e
+// os próximos dias. O MESMO desenho na tela do público e na janela do painel.
+// ===========================================================================
+const CLIMA_COMPLETO_CSS = `
+.clc { --clc-size: 18px; font-size: var(--clc-size); font-family: var(--clc-font, inherit); color: var(--clc-fg, #fff);
+  background: var(--clc-bg, rgba(11,26,46,0.92)); border-radius: var(--clc-radius, 22px); padding: 1.1em 1.4em;
+  display: flex; flex-direction: column; gap: 0.8em; box-shadow: 0 18px 60px rgba(0,0,0,0.45); box-sizing: border-box; min-width: 0; }
+.clc, .clc * { line-height: 1.2; }
+.clc-topo { display: flex; align-items: center; gap: 1em; }
+.clc-icone { font-size: 4.6em; line-height: 1; flex: none; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.35)); }
+.clc-icone .clima-ico { width: 1em; height: 1em; }
+.clc-agora { display: flex; flex-direction: column; gap: 0.15em; min-width: 0; }
+.clc-temp { font-size: 3.2em; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.clc-desc { font-size: 1.05em; opacity: 0.92; }
+.clc-lugar { margin-left: auto; text-align: right; display: flex; flex-direction: column; gap: 0.2em; align-items: flex-end; }
+.clc-cidade { color: var(--clc-accent, #ffb703); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 1.35em; }
+.clc-quando { font-size: 0.8em; opacity: 0.7; }
+.clc-chips { display: flex; flex-wrap: wrap; gap: 0.4em 0.5em; }
+.clc-chip { background: rgba(255,255,255,0.09); border-radius: 999px; padding: 0.3em 0.75em; font-size: 0.9em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.clc-secao { font-size: 0.72em; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; margin-top: 0.2em; }
+.clc-horas { display: flex; gap: 0.35em; overflow: hidden; }
+.clc-hora { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.2em; padding: 0.45em 0.2em; border-radius: 0.7em; background: rgba(255,255,255,0.06); font-size: 0.85em; }
+.clc-hora .clima-ico { width: 1.8em; height: 1.8em; }
+.clc-hora-h { opacity: 0.75; }
+.clc-hora-t { font-weight: 700; }
+.clc-hora-c, .clc-dia-c { font-size: 0.85em; color: var(--clc-agua, #6cb6ff); }
+.clc-dias { display: grid; grid-template-columns: repeat(var(--clc-ndias, 7), minmax(0, 1fr)); gap: 0.4em; }
+.clc-dia { display: flex; flex-direction: column; align-items: center; gap: 0.25em; padding: 0.6em 0.3em; border-radius: 0.8em; background: rgba(255,255,255,0.07); min-width: 0; }
+.clc-dia.clc-hoje { background: rgba(255,255,255,0.14); box-shadow: inset 0 0 0 1px var(--clc-accent, #ffb703); }
+.clc-dia-n { font-weight: 800; text-transform: capitalize; }
+.clc-dia-d { font-size: 0.75em; opacity: 0.7; }
+.clc-dia .clima-ico { width: 2.4em; height: 2.4em; }
+.clc-dia-t { font-variant-numeric: tabular-nums; }
+.clc-dia-t b { font-weight: 800; }
+.clc-dia-t span { opacity: 0.65; }
+.clc-rodape { font-size: 0.7em; opacity: 0.55; display: flex; justify-content: space-between; gap: 1em; flex-wrap: wrap; }
+.clc-aviso { font-size: 0.9em; opacity: 0.8; padding: 0.4em 0; }
+.clc-compacto .clc-icone { font-size: 3.4em; }
+.clc-compacto .clc-temp { font-size: 2.4em; }
+`;
+let climaCompletoCssPosto = false;
+function climaCompletoGarantirCss() {
+  if (climaCompletoCssPosto || typeof document === 'undefined') return;
+  climaCompletoCssPosto = true;
+  climaGarantirCss();
+  const s = document.createElement('style');
+  s.id = 'obs-clima-completo-css';
+  s.textContent = CLIMA_COMPLETO_CSS;
+  document.head.appendChild(s);
+}
+function climaIdioma() {
+  try {
+    const l = (typeof document !== 'undefined' && document.documentElement.lang) || (typeof navigator !== 'undefined' && navigator.language) || 'pt-BR';
+    return l;
+  } catch { return 'pt-BR'; }
+}
+// «dom», «seg»… no idioma da página; a data como dd/mm
+function climaNomeDia(data, hoje) {
+  const [a, m, d] = String(data).split('-').map(Number);
+  const dt = new Date(a, (m || 1) - 1, d || 1, 12);
+  let nome = '';
+  try { nome = new Intl.DateTimeFormat(climaIdioma(), { weekday: 'short' }).format(dt).replace(/\.$/, ''); } catch { nome = String(data).slice(5); }
+  return { nome: String(data) === String(hoje) ? (typeof OBS_I18N !== 'undefined' ? OBS_I18N.t('hoje') : 'hoje') : nome, dia: String(d).padStart(2, '0') + '/' + String(m).padStart(2, '0') };
+}
+// Monta o cartão completo dentro de «alvo».
+//   completo: { cidade, previsao, erro, em }      atual: { retrato, erro }
+//   conf: settings.clima (unidade, completoDias)   opcoes: { compacto }
+function climaPintarCompleto(alvo, completo, atual, conf, opcoes) {
+  if (!alvo) return;
+  climaCompletoGarantirCss();
+  const t = (s) => (typeof OBS_I18N !== 'undefined' ? OBS_I18N.t(s) : s);
+  const cc = conf || {};
+  const o = opcoes || {};
+  const cidade = completo && completo.cidade;
+  const p = completo && completo.previsao;
+  const r = (atual && atual.retrato) || null;
+  const ndias = Math.max(3, Math.min(7, Number(cc.completoDias) || 7));
+  const el = (tag, cls, texto) => { const e = document.createElement(tag); if (cls) e.className = cls; if (texto !== undefined && texto !== null) e.textContent = String(texto); return e; };
+  alvo.innerHTML = '';
+  alvo.classList.add('clc');
+  alvo.classList.toggle('clc-compacto', !!o.compacto);
+  alvo.style.setProperty('--clc-ndias', String(ndias));
+  alvo.dataset.noI18n = '1';
+  // — o tempo agora —
+  const topo = el('div', 'clc-topo');
+  const icone = el('div', 'clc-icone');
+  const condAgora = r ? r.condicao : (p && p.dias[0] ? p.dias[0].condicao : null);
+  icone.innerHTML = climaIconeSvg(condAgora, r ? r.dia : true);
+  topo.appendChild(icone);
+  const agora = el('div', 'clc-agora');
+  agora.appendChild(el('div', 'clc-temp', r ? climaTemp(r.temp, cc.unidade) : '--°'));
+  agora.appendChild(el('div', 'clc-desc', r ? (r.descricao || CLIMA_DESCRICAO[r.condicao] || '') : (atual && atual.erro ? t('sem dados') : t('buscando…'))));
+  topo.appendChild(agora);
+  const lugar = el('div', 'clc-lugar');
+  lugar.appendChild(el('div', 'clc-cidade', climaNomeCidade(cidade)));
+  if (r && r.atualizadoEm) {
+    const d = new Date(r.atualizadoEm);
+    if (!Number.isNaN(d.getTime())) lugar.appendChild(el('div', 'clc-quando', t('agora') + ' · ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')));
+  }
+  topo.appendChild(lugar);
+  alvo.appendChild(topo);
+  // — os detalhes do momento —
+  const ex = (p && p.extras) || {};
+  const chips = [];
+  const n = (v) => (v === null || v === undefined || !Number.isFinite(Number(v)) ? null : Number(v));
+  if (r && n(r.sensacao) !== null) chips.push(['🌡️', climaTemp(r.sensacao, cc.unidade), t('Sensação térmica')]);
+  if (r && n(r.umidade) !== null) chips.push(['💧', r.umidade + '%', t('Umidade')]);
+  if (r && n(r.vento) !== null) chips.push(['💨', Math.round(r.vento) + ' km/h', t('Vento')]);
+  if (n(ex.pressao) !== null) chips.push(['🔽', Math.round(ex.pressao) + ' hPa', t('Pressão')]);
+  if (n(ex.uv) !== null) chips.push(['☀️', 'UV ' + Math.round(ex.uv), t('Índice UV')]);
+  if (n(ex.nuvens) !== null) chips.push(['☁️', ex.nuvens + '%', t('Nuvens')]);
+  if (n(ex.visibilidade) !== null) chips.push(['👁️', (Math.round(ex.visibilidade * 10) / 10) + ' km', t('Visibilidade')]);
+  if (n(ex.orvalho) !== null) chips.push(['💦', climaTemp(ex.orvalho, cc.unidade), t('Ponto de orvalho')]);
+  if (n(ex.precipitacao) !== null && ex.precipitacao > 0) chips.push(['🌧️', ex.precipitacao + ' mm', t('Chuva agora')]);
+  if (ex.nascer) chips.push(['🌅', ex.nascer, t('Nascer do sol')]);
+  if (ex.por) chips.push(['🌇', ex.por, t('Pôr do sol')]);
+  if (chips.length) {
+    const box = el('div', 'clc-chips');
+    for (const [emoji, valor, titulo] of chips) { const c = el('span', 'clc-chip', emoji + ' ' + valor); c.title = titulo; box.appendChild(c); }
+    alvo.appendChild(box);
+  }
+  // — as próximas horas —
+  if (p && Array.isArray(p.horas) && p.horas.length) {
+    const passo = Math.max(1, Math.ceil(p.horas.length / 8));
+    const horas = p.horas.filter((_, i) => i % passo === 0).slice(0, 8);
+    alvo.appendChild(el('div', 'clc-secao', t('Próximas horas')));
+    const box = el('div', 'clc-horas');
+    for (const h of horas) {
+      const c = el('div', 'clc-hora');
+      c.appendChild(el('div', 'clc-hora-h', String(h.hora).slice(11, 16)));
+      const ic = el('div'); ic.innerHTML = climaIconeSvg(h.condicao, !/^(lua)$/.test(h.condicao || '')); c.appendChild(ic);
+      c.appendChild(el('div', 'clc-hora-t', climaTemp(h.temp, cc.unidade)));
+      if (n(h.chuvaPct) !== null) c.appendChild(el('div', 'clc-hora-c', '💧' + h.chuvaPct + '%'));
+      box.appendChild(c);
+    }
+    alvo.appendChild(box);
+  }
+  // — os próximos dias —
+  if (p && Array.isArray(p.dias) && p.dias.length) {
+    alvo.appendChild(el('div', 'clc-secao', t('Próximos dias')));
+    const box = el('div', 'clc-dias');
+    const hoje = p.dias[0].data;
+    for (const d of p.dias.slice(0, ndias)) {
+      const c = el('div', 'clc-dia' + (d.data === hoje ? ' clc-hoje' : ''));
+      const nd = climaNomeDia(d.data, hoje);
+      c.appendChild(el('div', 'clc-dia-n', nd.nome));
+      c.appendChild(el('div', 'clc-dia-d', nd.dia));
+      const ic = el('div'); ic.innerHTML = climaIconeSvg(d.condicao, true); ic.title = d.descricao || ''; c.appendChild(ic);
+      const tt = el('div', 'clc-dia-t');
+      const bx = el('b', '', climaTemp(d.tmax, cc.unidade)); tt.appendChild(bx);
+      tt.appendChild(document.createTextNode(' '));
+      tt.appendChild(el('span', '', climaTemp(d.tmin, cc.unidade)));
+      c.appendChild(tt);
+      if (n(d.chuvaPct) !== null) c.appendChild(el('div', 'clc-dia-c', '💧' + d.chuvaPct + '%'));
+      box.appendChild(c);
+    }
+    alvo.appendChild(box);
+  } else if (completo && completo.erro && !p) {
+    alvo.appendChild(el('div', 'clc-aviso', '⚠️ ' + t('sem previsão') + ' — ' + completo.erro));
+  } else if (!p) {
+    alvo.appendChild(el('div', 'clc-aviso', t('buscando a previsão…')));
+  }
+  // — o rodapé —
+  const rod = el('div', 'clc-rodape');
+  const fontes = (o.fontes) || {};
+  const nomeFonte = (f) => (f && fontes[f] && fontes[f].nome) || f || '';
+  const partes = [];
+  if (r && r.fonte) partes.push(t('agora') + ': ' + nomeFonte(r.fonte));
+  if (p && p.fonte) partes.push(t('previsão') + ': ' + nomeFonte(p.fonte));
+  rod.appendChild(el('span', '', partes.join(' · ')));
+  if (p && p.atualizadoEm) { const d = new Date(p.atualizadoEm); if (!Number.isNaN(d.getTime())) rod.appendChild(el('span', '', t('previsão atualizada às') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'))); }
+  alvo.appendChild(rod);
+}
+if (typeof window !== 'undefined') Object.assign(window, { CLIMA_CONDICOES, CLIMA_DESCRICAO, CLIMA_EMOJI, CLIMA_MAX_CIDADES, climaGarantirCss, climaIconeSvg, climaTemp, climaCarregarMunicipios, climaCidadesDoRodizio, climaRetratoDe, climaIndiceRodizio, climaRodizioEfetivo, climaNomeCidade, climaPintarCompleto, climaCompletoGarantirCss, climaNomeDia });
 function obsTamanhoItemPct(kind, s, telaW, telaH, escalaPct) {
   s = s || {};
   if (kind === 'featured') {

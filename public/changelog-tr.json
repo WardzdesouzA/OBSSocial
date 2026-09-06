@@ -1,4 +1,14 @@
 {
+  "0.169.0": {
+    "titulo": "🗺️ Tüm Brezilya veya bir eyalet boyunca hava, sizin şehrinizle panel göstergesi ve sonraki günlerle 🗂️ tam kart",
+    "itens": [
+      "🗺️ Hava döngüsü («Şehirleri tek tek dolaş») «Şunları dolaş» seçicisini kazandı: kayıtlı şehirler, Brezilya’nın tüm belediyeleri (IBGE listesi, 5.570) veya bir eyaletin belediyeleri — tek tek kaydetmeden. Liste eyalet eyalet alfabetik gider; bu modlarda döngü açık kalır ve şehir başına en az 15 s’dir. Sunucu yalnızca sıradaki şehrin ve sonrakilerin havasını (girmeden az önce) çeker, binlercesini bir anda değil — ücretsiz kaynakların kotalarına uyulur.",
+      "📍 Paneldeki saatin yanındaki gösterge SİZİN şehrinizi gösterir (kayıtlılardan biri — ilki ya da «Panel göstergesi: sizin şehriniz»de seçilen), ekranda geçeni değil. Döngüyü takip etmek isteyen «ekranı takip et»i açar (varsayılan kapalı).",
+      "🗂️ Tam kart: panelin 🌤️’sindeki yeni düğme, ekranın ortasına geçici olarak şu anki havayı tüm ayrıntılarıyla (hissedilen, nem, rüzgâr, basınç, UV, bulut, görüş, çiy noktası, gün doğumu ve batımı), sonraki saatleri ve sonraki günleri (3–7, seçime bağlı) koyar. Panelde tam bir pencere olarak görünür — izleyicinin gördüğünün aynısı — şehir seçici ve aramayla; ✖ köşedeki küçük karta dokunmadan her iki yerden kaldırır. Tahmin aynı kaynak sırasından gelir: Open-Meteo, MET Norway, OpenWeatherMap, WeatherAPI, AccuWeather ve Climatempo (Weather Underground tahmin vermez).",
+      "🎛️ Dış kontrol: clima/completo, clima/completoFechar ve clima/completoAlternar; /status döngü listesini, gösterge şehrini ve tam kartı taşır.",
+      "ℹ️ Bir belediyenin mahalleleri hava kaynaklarında yoktur: tahmin yaklaşık 10 km’lik bir ızgarada gelir, bu yüzden bir şehrin tüm mahalleleri aynı havayı alır — bu yüzden mahalle seçici yoktur."
+    ]
+  },
   "0.168.3": {
     "titulo": "🌤️ Hava durumu ekran dışındayken de güncelleniyor — panel göstergesi hep güncel",
     "itens": [

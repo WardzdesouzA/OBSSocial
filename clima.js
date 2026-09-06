@@ -24,10 +24,21 @@ const http = require('http');
 
 const UA = 'OBSSocial/clima (+https://github.com/WardzdesouzA/OBSSocial)';
 const TEMPO_MS = 12000;
-const MAX_CIDADES = 27; // cabem as 27 capitais de uma vez
+const MAX_CIDADES = 27; // cabem as 27 capitais de uma vez (cidades soltas)
 const MIN_ATUALIZAR_MIN = 10;
 const MAX_ATUALIZAR_MIN = 60;
 const REPETE_FALHA_MS = 2 * 60 * 1000; // uma busca que falhou tenta de novo em 2 min
+// 🗺️ v0.169: listas grandes (o Brasil inteiro, um estado) — o rodízio passa
+// por milhares de municípios; buscar o tempo de todos a cada 10 min estouraria
+// qualquer cota. Então só a cidade da vez e as próximas ficam buscadas (a
+// «janela»), cada uma pouco antes de entrar na tela; o cache tem teto.
+const JANELA_RODIZIO = 3;
+const TETO_CACHE = 120;
+const PREVISAO_MS = 30 * 60 * 1000; // a previsão dos próximos dias (cartão completo) vale meia hora
+const PAUSA_FONTE_MS = 10 * 60 * 1000; // fonte com cota esgotada / chave recusada: 10 min sem insistir
+const MAX_DIAS = 7;
+const LISTA_MODOS = ['cidades', 'brasil', 'uf'];
+const UFS_SIGLAS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
 
 const FONTES = {
   'open-meteo':     { nome: 'Open-Meteo', chave: false, site: 'https://open-meteo.com' },
@@ -299,15 +310,7 @@ const FETCHERS = {
   async accuweather({ cidade, chave, buscarJson, memoria }) {
     // duas chamadas: a chave da localidade (guardada por cidade) e as condições
     const k = encodeURIComponent(chave);
-    let loc = memoria && memoria.accuLocal;
-    if (!loc) {
-      const r1 = await buscarJson(`https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=${k}&q=${cidade.lat},${cidade.lon}&language=pt-br`);
-      if (r1.status === 401) throw new Error('AccuWeather: chave recusada');
-      if (r1.status === 503 || r1.status === 429) throw new Error('AccuWeather: cota do dia esgotada');
-      if (r1.status !== 200 || !r1.json || !r1.json.Key) throw new Error('AccuWeather: localidade não achada (HTTP ' + r1.status + ')');
-      loc = String(r1.json.Key);
-      if (memoria) memoria.accuLocal = loc;
-    }
+    const loc = await accuLocalidade({ cidade, chave, buscarJson, memoria });
     const r = await buscarJson(`https://dataservice.accuweather.com/currentconditions/v1/${encodeURIComponent(loc)}?apikey=${k}&language=pt-br&details=true`);
     const c = Array.isArray(r.json) ? r.json[0] : null;
     if (r.status === 401) throw new Error('AccuWeather: chave recusada');
@@ -322,16 +325,7 @@ const FETCHERS = {
     // então o tempo atual (o Advisor só responde para cidades registradas)
     const k = encodeURIComponent(chave);
     const base = 'https://apiadvisor.climatempo.com.br'; // o token vai na URL: só por TLS
-    let id = memoria && memoria.climatempoId;
-    if (!id) {
-      const r1 = await buscarJson(`${base}/api/v1/locale/city?name=${encodeURIComponent(cidade.nome)}${cidade.uf ? '&state=' + encodeURIComponent(cidade.uf) : ''}&token=${k}`);
-      if (r1.status === 401 || r1.status === 403) throw new Error('Climatempo: token recusado');
-      const lista = Array.isArray(r1.json) ? r1.json : [];
-      if (!lista.length || !lista[0].id) throw new Error('Climatempo: cidade não achada');
-      id = String(lista[0].id);
-      await buscarJson(`${base}/api-manager/user-token/${k}/locales`, { metodo: 'PUT', cabecalhos: { 'Content-Type': 'application/x-www-form-urlencoded' }, corpo: 'localeId[]=' + encodeURIComponent(id) });
-      if (memoria) memoria.climatempoId = id;
-    }
+    const id = await climatempoCidadeId({ cidade, chave, buscarJson, memoria });
     const r = await buscarJson(`${base}/api/v1/weather/locale/${encodeURIComponent(id)}/current?token=${k}`);
     const d = r.json && r.json.data;
     if (r.status === 401 || r.status === 403) throw new Error('Climatempo: token recusado');
@@ -354,6 +348,235 @@ const FETCHERS = {
     const dia = num(o.solarRadiation) !== null ? o.solarRadiation > 5 : null;
     return retrato({ temp: m.temp, sensacao: m.heatIndex !== undefined && num(m.heatIndex) !== null && m.temp >= 24 ? m.heatIndex : m.windChill, umidade: o.humidity, vento: m.windSpeed, condicao: chovendo ? 'chuva' : dia === false ? 'lua' : 'sol', dia, fonte: 'wunderground' });
   },
+};
+
+// ---------- 🗂️ v0.169: a previsão (cartão completo) ----------
+// Os próximos dias (até 7), as próximas horas (até 24) e uns extras do
+// momento (pressão, UV, nuvens, visibilidade, orvalho, nascer e pôr do sol),
+// num formato único seja qual for a fonte. O que a fonte não dá fica null.
+const hhmm = (v) => { const m = /(\d{1,2}):(\d{2})/.exec(String(v || '')); return m ? m[1].padStart(2, '0') + ':' + m[2] : null; };
+// «06:12 AM» / «05:48 PM» (WeatherAPI) → 06:12 / 17:48
+function hora12para24(v) {
+  const m = /(\d{1,2}):(\d{2})\s*([AaPp][Mm])/.exec(String(v || ''));
+  if (!m) return hhmm(v);
+  let h = Number(m[1]) % 12;
+  if (/p/i.test(m[3])) h += 12;
+  return String(h).padStart(2, '0') + ':' + m[2];
+}
+// O fuso de uma cidade brasileira pela UF (a longitude erraria 1 h no litoral
+// do Nordeste: Recife a −34,9° cairia em UTC−2). Fora do Brasil, só o tz.
+const FUSO_UF = { AC: 'America/Rio_Branco', AM: 'America/Manaus', RR: 'America/Boa_Vista', RO: 'America/Porto_Velho', MT: 'America/Cuiaba', MS: 'America/Campo_Grande' };
+function fusoDaCidade(cidade) {
+  if (!cidade) return '';
+  if (cidade.tz) return cidade.tz;
+  if (!cidade.pais || cidade.pais === 'BR') return FUSO_UF[String(cidade.uf || '').toUpperCase()] || 'America/Sao_Paulo';
+  return '';
+}
+// hora local de um instante numa cidade: pelo fuso quando há; senão pela longitude
+function horaLocal(epochMs, cidade) {
+  const d = new Date(epochMs);
+  const tz = fusoDaCidade(cidade);
+  if (tz) {
+    try {
+      const f = new Intl.DateTimeFormat('en-CA', { timeZone: tz, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const p = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value]));
+      return `${p.year}-${p.month}-${p.day}T${p.hour === '24' ? '00' : p.hour}:${p.minute}`;
+    } catch { /* fuso desconhecido: cai na longitude */ }
+  }
+  const off = Math.round((Number(cidade && cidade.lon) || 0) / 15);
+  return new Date(epochMs + off * 3600 * 1000).toISOString().slice(0, 16);
+}
+const PIOR_CONDICAO = ['trovoada', 'granizo', 'chuvaForte', 'chuva', 'neve', 'chuvisco', 'nevoa', 'nublado', 'parcial', 'sol', 'lua'];
+// Fontes que só dão hora a hora (MET Norway, OpenWeatherMap): os dias saem
+// das horas — máxima, mínima, a pior condição do dia, a maior chance de chuva
+// e a soma da precipitação
+function diasDeHoras(itens) {
+  const porDia = new Map();
+  for (const h of itens) { const k = String(h.hora).slice(0, 10); if (!porDia.has(k)) porDia.set(k, []); porDia.get(k).push(h); }
+  const dias = [];
+  for (const [data, lista] of porDia) {
+    const temps = lista.map((h) => num(h.temp)).filter((v) => v !== null);
+    let cond = null;
+    for (const h of lista) { const c = h.condicao === 'lua' ? 'sol' : h.condicao; if (c && (cond === null || PIOR_CONDICAO.indexOf(c) < PIOR_CONDICAO.indexOf(cond))) cond = c; }
+    const pcts = lista.map((h) => num(h.chuvaPct)).filter((v) => v !== null);
+    const mms = lista.map((h) => num(h.chuvaMm)).filter((v) => v !== null);
+    const ventos = lista.map((h) => num(h.vento)).filter((v) => v !== null);
+    dias.push({
+      data, condicao: cond,
+      tmax: temps.length ? Math.max(...temps) : null, tmin: temps.length ? Math.min(...temps) : null,
+      chuvaPct: pcts.length ? Math.max(...pcts) : null, chuvaMm: mms.length ? mms.reduce((a, b) => a + b, 0) : null,
+      ventoMax: ventos.length ? Math.max(...ventos) : null,
+    });
+  }
+  return dias;
+}
+function previsao({ dias, horas, extras, fonte, atualizadoEm }) {
+  const pct = (v) => { const n = num(v); return n === null ? null : Math.max(0, Math.min(100, Math.round(n))); };
+  const cond = (c) => (CONDICOES.includes(c) ? c : null);
+  const ds = (Array.isArray(dias) ? dias : []).filter((d) => d && /^\d{4}-\d{2}-\d{2}/.test(String(d.data || ''))).slice(0, MAX_DIAS).map((d) => {
+    const c = cond(d.condicao) === 'lua' ? 'sol' : cond(d.condicao); // um dia inteiro não é «lua»
+    return {
+      data: String(d.data).slice(0, 10), condicao: c, descricao: String(d.descricao || (c ? DESCRICAO[c] : '') || '').slice(0, 60),
+      tmax: arred(num(d.tmax)), tmin: arred(num(d.tmin)), chuvaPct: pct(d.chuvaPct), chuvaMm: arred(num(d.chuvaMm)),
+      ventoMax: arred(num(d.ventoMax)), uv: arred(num(d.uv)), nascer: hhmm(d.nascer), por: hhmm(d.por),
+    };
+  });
+  const hs = (Array.isArray(horas) ? horas : []).filter((h) => h && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(String(h.hora || ''))).slice(0, 24)
+    .map((h) => ({ hora: String(h.hora).slice(0, 16), temp: arred(num(h.temp)), condicao: cond(h.condicao), chuvaPct: pct(h.chuvaPct) }));
+  const e = extras || {};
+  return {
+    fonte, atualizadoEm: atualizadoEm || new Date().toISOString(), dias: ds, horas: hs,
+    extras: {
+      pressao: arred(num(e.pressao)), uv: arred(num(e.uv)), nuvens: pct(e.nuvens), visibilidade: arred(num(e.visibilidade)),
+      orvalho: arred(num(e.orvalho)), precipitacao: arred(num(e.precipitacao)), nascer: hhmm(e.nascer), por: hhmm(e.por),
+    },
+  };
+}
+// a chave da localidade da AccuWeather e o id de cidade do Climatempo ficam
+// guardados por cidade (memoria) — as duas buscas (tempo agora e previsão) partilham
+async function accuLocalidade({ cidade, chave, buscarJson, memoria }) {
+  const k = encodeURIComponent(chave);
+  let loc = memoria && memoria.accuLocal;
+  if (loc) return loc;
+  const r1 = await buscarJson(`https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=${k}&q=${cidade.lat},${cidade.lon}&language=pt-br`);
+  if (r1.status === 401) throw new Error('AccuWeather: chave recusada');
+  if (r1.status === 503 || r1.status === 429) throw new Error('AccuWeather: cota do dia esgotada');
+  if (r1.status !== 200 || !r1.json || !r1.json.Key) throw new Error('AccuWeather: localidade não achada (HTTP ' + r1.status + ')');
+  loc = String(r1.json.Key);
+  if (memoria) memoria.accuLocal = loc;
+  return loc;
+}
+async function climatempoCidadeId({ cidade, chave, buscarJson, memoria }) {
+  const k = encodeURIComponent(chave);
+  const base = 'https://apiadvisor.climatempo.com.br';
+  let id = memoria && memoria.climatempoId;
+  if (id) return id;
+  const r1 = await buscarJson(`${base}/api/v1/locale/city?name=${encodeURIComponent(cidade.nome)}${cidade.uf ? '&state=' + encodeURIComponent(cidade.uf) : ''}&token=${k}`);
+  if (r1.status === 401 || r1.status === 403) throw new Error('Climatempo: token recusado');
+  const lista = Array.isArray(r1.json) ? r1.json : [];
+  if (!lista.length || !lista[0].id) throw new Error('Climatempo: cidade não achada');
+  id = String(lista[0].id);
+  await buscarJson(`${base}/api-manager/user-token/${k}/locales`, { metodo: 'PUT', cabecalhos: { 'Content-Type': 'application/x-www-form-urlencoded' }, corpo: 'localeId[]=' + encodeURIComponent(id) });
+  if (memoria) memoria.climatempoId = id;
+  return id;
+}
+const PREVISORES = {
+  async 'open-meteo'({ cidade, buscarJson }) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${cidade.lat}&longitude=${cidade.lon}`
+      + '&current=temperature_2m,is_day,weather_code,surface_pressure,cloud_cover,precipitation,uv_index'
+      + '&hourly=temperature_2m,weather_code,precipitation_probability,is_day'
+      + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,sunrise,sunset,uv_index_max'
+      + `&timezone=auto&forecast_days=${MAX_DIAS}`;
+    const r = await buscarJson(url);
+    const j = r.json;
+    if (r.status !== 200 || !j || !j.daily || !Array.isArray(j.daily.time)) throw new Error('Open-Meteo: HTTP ' + r.status);
+    const D = j.daily, H = j.hourly || {}, c = j.current || {};
+    const col = (o, k, i) => (Array.isArray(o[k]) ? o[k][i] : null);
+    const dias = D.time.map((t, i) => ({
+      data: t, condicao: condicaoWmo(col(D, 'weather_code', i), true), tmax: col(D, 'temperature_2m_max', i), tmin: col(D, 'temperature_2m_min', i),
+      chuvaPct: col(D, 'precipitation_probability_max', i), chuvaMm: col(D, 'precipitation_sum', i), ventoMax: col(D, 'wind_speed_10m_max', i),
+      uv: col(D, 'uv_index_max', i), nascer: String(col(D, 'sunrise', i) || '').slice(11, 16), por: String(col(D, 'sunset', i) || '').slice(11, 16),
+    }));
+    const agora = String(c.time || '').slice(0, 13);
+    const horas = (Array.isArray(H.time) ? H.time : []).map((t, i) => ({ hora: t, temp: col(H, 'temperature_2m', i), condicao: condicaoWmo(col(H, 'weather_code', i), col(H, 'is_day', i) !== 0), chuvaPct: col(H, 'precipitation_probability', i) }))
+      .filter((h) => !agora || String(h.hora).slice(0, 13) >= agora);
+    return previsao({ dias, horas, fonte: 'open-meteo', extras: { pressao: c.surface_pressure, uv: c.uv_index, nuvens: c.cloud_cover, precipitacao: c.precipitation, nascer: dias[0] && dias[0].nascer, por: dias[0] && dias[0].por } });
+  },
+  async 'met.no'({ cidade, buscarJson }) {
+    const r = await buscarJson(`https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${Number(cidade.lat).toFixed(4)}&lon=${Number(cidade.lon).toFixed(4)}`);
+    const serie = r.json && r.json.properties && Array.isArray(r.json.properties.timeseries) ? r.json.properties.timeseries : null;
+    if (r.status !== 200 || !serie || !serie.length) throw new Error('met.no: HTTP ' + r.status);
+    const itens = [];
+    for (const s of serie) {
+      const em = Date.parse(s.time);
+      if (!Number.isFinite(em) || !s.data) continue;
+      const inst = (s.data.instant && s.data.instant.details) || {};
+      const n1 = s.data.next_1_hours, n6 = s.data.next_6_hours;
+      const sim = (n1 && n1.summary && n1.summary.symbol_code) || (n6 && n6.summary && n6.summary.symbol_code) || '';
+      const det = (n1 && n1.details) || (n6 && n6.details) || {};
+      itens.push({
+        hora: horaLocal(em, cidade), temp: inst.air_temperature, condicao: condicaoMetNo(sim), horaCheia: !!n1,
+        chuvaPct: det.probability_of_precipitation, chuvaMm: det.precipitation_amount, vento: num(inst.wind_speed) === null ? null : inst.wind_speed * 3.6,
+        pressao: inst.air_pressure_at_sea_level, nuvens: inst.cloud_area_fraction, orvalho: inst.dew_point_temperature, uv: inst.ultraviolet_index_clear_sky,
+      });
+    }
+    const p = itens[0] || {};
+    return previsao({ dias: diasDeHoras(itens), horas: itens.filter((h) => h.horaCheia), fonte: 'met.no', extras: { pressao: p.pressao, nuvens: p.nuvens, orvalho: p.orvalho, uv: p.uv } });
+  },
+  async openweathermap({ cidade, chave, buscarJson }) {
+    const r = await buscarJson(`https://api.openweathermap.org/data/2.5/forecast?lat=${cidade.lat}&lon=${cidade.lon}&appid=${encodeURIComponent(chave)}&units=metric&lang=pt_br`);
+    const j = r.json;
+    if (r.status === 401) throw new Error('OpenWeatherMap: chave recusada');
+    if (r.status !== 200 || !j || !Array.isArray(j.list)) throw new Error('OpenWeatherMap: HTTP ' + r.status);
+    const tz = num(j.city && j.city.timezone) || 0;
+    const local = (dt) => new Date((Number(dt) + tz) * 1000).toISOString().slice(0, 16);
+    const itens = j.list.filter((x) => x && x.main).map((x) => {
+      const w = Array.isArray(x.weather) && x.weather[0] ? x.weather[0] : {};
+      const dia = String(w.icon || '').endsWith('n') ? false : String(w.icon || '').endsWith('d') ? true : null;
+      return { hora: local(x.dt), temp: x.main.temp, condicao: condicaoOwm(w.id, dia), chuvaPct: num(x.pop) === null ? null : x.pop * 100, chuvaMm: x.rain && num(x.rain['3h']) !== null ? x.rain['3h'] : (x.snow && num(x.snow['3h']) !== null ? x.snow['3h'] : 0), vento: x.wind && num(x.wind.speed) !== null ? x.wind.speed * 3.6 : null, pressao: x.main.pressure, nuvens: x.clouds && x.clouds.all, visibilidade: num(x.visibility) === null ? null : x.visibility / 1000 };
+    });
+    const p = itens[0] || {};
+    const c = j.city || {};
+    return previsao({ dias: diasDeHoras(itens), horas: itens.slice(0, 8), fonte: 'openweathermap', extras: { pressao: p.pressao, nuvens: p.nuvens, visibilidade: p.visibilidade, nascer: num(c.sunrise) === null ? null : local(c.sunrise).slice(11, 16), por: num(c.sunset) === null ? null : local(c.sunset).slice(11, 16) } });
+  },
+  async weatherapi({ cidade, chave, buscarJson }) {
+    const r = await buscarJson(`https://api.weatherapi.com/v1/forecast.json?key=${encodeURIComponent(chave)}&q=${cidade.lat},${cidade.lon}&days=${MAX_DIAS}&lang=pt&aqi=no&alerts=no`);
+    const j = r.json;
+    if (r.status === 401 || r.status === 403) throw new Error('WeatherAPI: chave recusada');
+    const fd = j && j.forecast && Array.isArray(j.forecast.forecastday) ? j.forecast.forecastday : null;
+    if (r.status !== 200 || !fd) throw new Error('WeatherAPI: HTTP ' + r.status);
+    const agora = num(j.location && j.location.localtime_epoch) || 0;
+    const dias = fd.map((d) => { const dd = d.day || {}, a = d.astro || {}; return { data: d.date, condicao: condicaoWeatherApi(dd.condition && dd.condition.code, true), descricao: dd.condition && dd.condition.text, tmax: dd.maxtemp_c, tmin: dd.mintemp_c, chuvaPct: dd.daily_chance_of_rain, chuvaMm: dd.totalprecip_mm, ventoMax: dd.maxwind_kph, uv: dd.uv, nascer: hora12para24(a.sunrise), por: hora12para24(a.sunset) }; });
+    const horas = [];
+    for (const d of fd) for (const h of Array.isArray(d.hour) ? d.hour : []) {
+      if (agora && num(h.time_epoch) !== null && h.time_epoch < agora - 3600) continue;
+      horas.push({ hora: String(h.time || '').replace(' ', 'T'), temp: h.temp_c, condicao: condicaoWeatherApi(h.condition && h.condition.code, h.is_day !== 0), chuvaPct: h.chance_of_rain });
+    }
+    const c = j.current || {};
+    return previsao({ dias, horas, fonte: 'weatherapi', extras: { pressao: c.pressure_mb, uv: c.uv, nuvens: c.cloud, visibilidade: c.vis_km, orvalho: c.dewpoint_c, precipitacao: c.precip_mm, nascer: dias[0] && dias[0].nascer, por: dias[0] && dias[0].por } });
+  },
+  async accuweather({ cidade, chave, buscarJson, memoria }) {
+    const k = encodeURIComponent(chave);
+    const loc = encodeURIComponent(await accuLocalidade({ cidade, chave, buscarJson, memoria }));
+    const r = await buscarJson(`https://dataservice.accuweather.com/forecasts/v1/daily/5day/${loc}?apikey=${k}&language=pt-br&details=true&metric=true`);
+    if (r.status === 401) throw new Error('AccuWeather: chave recusada');
+    if (r.status === 503 || r.status === 429) throw new Error('AccuWeather: cota do dia esgotada');
+    const df = r.json && Array.isArray(r.json.DailyForecasts) ? r.json.DailyForecasts : null;
+    if (r.status !== 200 || !df) throw new Error('AccuWeather: HTTP ' + r.status);
+    const m = (o) => (o && o.Value !== undefined ? o.Value : (o && o.Metric ? o.Metric.Value : null));
+    const dias = df.map((d) => {
+      const dd = d.Day || {}, uv = Array.isArray(d.AirAndPollen) ? d.AirAndPollen.find((x) => x && x.Name === 'UVIndex') : null;
+      return { data: String(d.Date || '').slice(0, 10), condicao: condicaoAccu(dd.Icon, true), descricao: dd.IconPhrase, tmax: d.Temperature && m(d.Temperature.Maximum), tmin: d.Temperature && m(d.Temperature.Minimum), chuvaPct: dd.PrecipitationProbability, chuvaMm: m(dd.TotalLiquid), ventoMax: dd.Wind && m(dd.Wind.Speed), uv: uv ? uv.Value : null, nascer: String(d.Sun && d.Sun.Rise || '').slice(11, 16), por: String(d.Sun && d.Sun.Set || '').slice(11, 16) };
+    });
+    let horas = [];
+    try {
+      const r2 = await buscarJson(`https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${loc}?apikey=${k}&language=pt-br&metric=true`);
+      if (r2.status === 200 && Array.isArray(r2.json)) horas = r2.json.map((h) => ({ hora: String(h.DateTime || '').slice(0, 16), temp: m(h.Temperature), condicao: condicaoAccu(h.WeatherIcon, h.IsDaylight !== false), chuvaPct: h.PrecipitationProbability }));
+    } catch { /* as horas são um extra: sem elas o cartão segue com os dias */ }
+    return previsao({ dias, horas, fonte: 'accuweather', extras: { uv: dias[0] && dias[0].uv, nascer: dias[0] && dias[0].nascer, por: dias[0] && dias[0].por } });
+  },
+  async climatempo({ cidade, chave, buscarJson, memoria }) {
+    const k = encodeURIComponent(chave);
+    const base = 'https://apiadvisor.climatempo.com.br';
+    const id = encodeURIComponent(await climatempoCidadeId({ cidade, chave, buscarJson, memoria }));
+    const r = await buscarJson(`${base}/api/v1/forecast/locale/${id}/days/15?token=${k}`);
+    if (r.status === 401 || r.status === 403) throw new Error('Climatempo: token recusado');
+    const dd = r.json && Array.isArray(r.json.data) ? r.json.data : null;
+    if (r.status !== 200 || !dd) throw new Error('Climatempo: HTTP ' + r.status);
+    const dias = dd.map((d) => {
+      const ti = d.text_icon || {}, ic = ti.icon || {}, tx = ti.text || {};
+      const texto = (tx.phrase && tx.phrase.reduced) || tx.pt || '';
+      return { data: String(d.date || '').slice(0, 10), condicao: condicaoClimatempo(ic.day, texto, true), descricao: texto, tmax: d.temperature && d.temperature.max, tmin: d.temperature && d.temperature.min, chuvaPct: d.rain && d.rain.probability, chuvaMm: d.rain && d.rain.precipitation, ventoMax: d.wind && (d.wind.velocity_max !== undefined ? d.wind.velocity_max : d.wind.velocity_avg), uv: d.uv && d.uv.max, nascer: d.sun && d.sun.sunrise, por: d.sun && d.sun.sunset };
+    });
+    let horas = [];
+    try {
+      const r2 = await buscarJson(`${base}/api/v1/forecast/locale/${id}/hours/72?token=${k}`);
+      const hh = r2.status === 200 && r2.json && Array.isArray(r2.json.data) ? r2.json.data : [];
+      horas = hh.map((h) => { const ti = h.text_icon || {}; const chuva = h.rain && num(h.rain.precipitation); return { hora: String(h.date || '').replace(' ', 'T').slice(0, 16), temp: h.temperature && (h.temperature.temperature !== undefined ? h.temperature.temperature : h.temperature), condicao: ti.icon ? condicaoClimatempo(ti.icon.day || ti.icon, (ti.text && (ti.text.pt || (ti.text.phrase && ti.text.phrase.reduced))) || '', true) : (chuva > 0 ? 'chuva' : null), chuvaPct: h.rain && h.rain.probability }; });
+    } catch { /* idem: as horas são um extra */ }
+    return previsao({ dias, horas, fonte: 'climatempo', extras: { uv: dias[0] && dias[0].uv, nascer: dias[0] && dias[0].nascer, por: dias[0] && dias[0].por } });
+  },
+  // Weather Underground (PWS) só dá a observação da estação: sem previsão
 };
 
 // ---------- geocodificação (Open-Meteo, sem chave) ----------
@@ -381,13 +604,19 @@ function sanitizeCidade(c) {
   if (lat === null || lon === null || lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
   const nome = String(c.nome || '').trim().slice(0, 60);
   if (!nome) return null;
+  // o id é estável pelas coordenadas; um id vindo de fora só vale se tiver a
+  // cara certa (e nunca um nome de propriedade do Object, como __proto__)
+  const idBruto = String(c.id || '');
   return {
-    id: /^[a-z0-9_-]{1,40}$/i.test(String(c.id || '')) ? String(c.id) : 'c' + Math.abs(Math.round(lat * 1000) * 100003 + Math.round(lon * 1000)).toString(36),
+    id: /^[a-z0-9_-]{1,40}$/i.test(idBruto) && !/^(__proto__|constructor|prototype)$/i.test(idBruto) ? idBruto : 'c' + Math.abs(Math.round(lat * 1000) * 100003 + Math.round(lon * 1000)).toString(36),
     nome,
     uf: String(c.uf || '').trim().slice(0, 30),
     pais: String(c.pais || 'BR').trim().toUpperCase().slice(0, 2),
     lat: Math.round(lat * 10000) / 10000,
     lon: Math.round(lon * 10000) / 10000,
+    // v0.169: o fuso (vem da geocodificação) — para as fontes que só dão a
+    // hora em UTC; sem ele, vale a longitude (≈ 1 h a cada 15°)
+    tz: /^[A-Za-z_]+\/[A-Za-z0-9_+\-]+(\/[A-Za-z0-9_+\-]+)?$/.test(String(c.tz || '')) ? String(c.tz).slice(0, 40) : '',
   };
 }
 function sanitizeClima(c, padrao) {
@@ -401,9 +630,21 @@ function sanitizeClima(c, padrao) {
   }
   // null, vazio e não-número caem no padrão (não no mínimo)
   const inteiro = (v, min, max, d) => { const n = (typeof v === 'number' || typeof v === 'string') ? num(v) : null; return n === null ? d : Math.max(min, Math.min(max, Math.round(n))); };
+  // 🗺️ v0.169: o que passa na tela — as cidades soltas, o Brasil inteiro ou
+  // um estado (sem UF válida, volta para as cidades soltas)
+  const lb = (s.lista && typeof s.lista === 'object') ? s.lista : {};
+  const uf = UFS_SIGLAS.includes(String(lb.uf || '').toUpperCase()) ? String(lb.uf).toUpperCase() : '';
+  let modo = LISTA_MODOS.includes(lb.modo) ? lb.modo : 'cidades';
+  if (modo === 'uf' && !uf) modo = 'cidades';
+  // o mostrador do painel: a cidade de quem apresenta (uma das soltas) ou,
+  // se a pessoa quiser, o que está passando na tela
+  const pb = (s.painel && typeof s.painel === 'object') ? s.painel : {};
   return {
     fontes: fontes.length ? fontes : FONTES_PADRAO.slice(),
     cidades,
+    lista: { modo, uf },
+    painel: { seguirTela: pb.seguirTela === true, cidadeId: /^[a-z0-9_-]{1,40}$/i.test(String(pb.cidadeId || '')) ? String(pb.cidadeId) : '' },
+    completoDias: inteiro(s.completoDias, 3, MAX_DIAS, MAX_DIAS),
     mostrarCidade: s.mostrarCidade !== false,
     mostrarSensacao: s.mostrarSensacao !== false,
     mostrarUmidade: s.mostrarUmidade !== false,
@@ -411,11 +652,52 @@ function sanitizeClima(c, padrao) {
     mostrarDescricao: s.mostrarDescricao !== false,
     mostrarFonte: s.mostrarFonte === true,
     unidade: s.unidade === 'F' ? 'F' : 'C',
+    // a preferência da pessoa fica guardada como está; com o Brasil inteiro /
+    // um estado o rodízio VALE ligado e com no mínimo 15 s — mas só na leitura
+    // (rodizioEfetivo), para voltar às cidades soltas sem perder o que ela tinha
     rodizio: s.rodizio === true,
     rodizioSegundos: inteiro(s.rodizioSegundos, 5, 600, 15),
     atualizarMin: inteiro(s.atualizarMin, MIN_ATUALIZAR_MIN, MAX_ATUALIZAR_MIN, 15),
     estilo: ['cartao', 'compacto', 'grande'].includes(s.estilo) ? s.estilo : 'cartao',
   };
+}
+
+// 🗺️ v0.169: os municípios do IBGE (public/municipios-br.json) viram cidades
+// do rodízio: [codigo, nome, uf, lat, lon, capital] → { id: 'm' + codigo, … }.
+// A ORDEM é a do arquivo (estado por estado, em ordem alfabética) e vale
+// igual no servidor e nas telas — é ela que dá a cidade da vez.
+function municipiosParaCidades(municipios, uf) {
+  const out = [];
+  for (const m of Array.isArray(municipios) ? municipios : []) {
+    if (!Array.isArray(m) || m.length < 5) continue;
+    if (uf && m[2] !== uf) continue;
+    const lat = num(m[3]), lon = num(m[4]);
+    if (lat === null || lon === null) continue;
+    out.push({ id: 'm' + m[0], nome: String(m[1]), uf: String(m[2]), pais: 'BR', lat, lon, tz: '', capital: m[5] === 1 });
+  }
+  return out;
+}
+// O rodízio que VALE: com o Brasil inteiro / um estado ele está sempre ligado
+// e cada cidade fica no mínimo MIN_SEG_LISTA s (uma consulta por troca — as
+// fontes gratuitas têm cota por dia). A mesma regra mora em render.js.
+const MIN_SEG_LISTA = 15;
+function rodizioEfetivo(conf) {
+  const c = conf || {};
+  const modo = c.lista && c.lista.modo;
+  const lista = modo === 'brasil' || modo === 'uf';
+  const seg = Math.max(5, Number(c.rodizioSegundos) || 15);
+  return { rodizio: lista || c.rodizio === true, rodizioSegundos: lista ? Math.max(MIN_SEG_LISTA, seg) : seg };
+}
+// Em que cidade o rodízio está: a mesma conta das telas (overlay e painel),
+// a partir do «desde» do servidor — ninguém manda mensagem por troca
+function indiceRodizio(pos, conf, n, agora = Date.now()) {
+  if (!n) return 0;
+  const base = ((Math.round(num((pos && pos.indice)) || 0) % n) + n) % n;
+  const ef = rodizioEfetivo(conf);
+  if (!ef.rodizio || n < 2) return base;
+  const per = ef.rodizioSegundos * 1000;
+  const decorrido = Math.max(0, Math.floor((agora - (Number(pos && pos.desde) || 0)) / per));
+  return ((base + decorrido) % n + n) % n;
 }
 
 // ---------- o serviço: cache por cidade + atualização periódica ----------
@@ -432,30 +714,95 @@ class Clima {
     this.relogio = null;
     this.buscando = false;
     this.ultimoErroFonte = {};  // fonte → texto (para o card de 🔌 Conexões)
+    // 🗺️ v0.169: os municípios do IBGE ([codigo, nome, uf, lat, lon, capital])
+    // e onde o rodízio está (o servidor sabe: { indice, desde })
+    this.municipios = Array.isArray(opcoes.municipios) ? opcoes.municipios : [];
+    this.posicaoRodizio = typeof opcoes.posicaoRodizio === 'function' ? opcoes.posicaoRodizio : () => ({ indice: 0, desde: 0 });
+    this.previsoes = new Map();  // id da cidade → { previsao, erro, em, memoria } (cartão completo)
+    this.completo = null;        // a cidade do cartão completo enquanto ele está na tela
+    this.geracao = 0;            // sobe a cada configurar(): uma volta antiga para
+    this._lista = null;          // cache da lista efetiva (o Brasil inteiro são 5.570 objetos)
   }
 
   configurar(conf) {
     const nova = sanitizeClima(conf, this.conf);
     const trocouFontes = JSON.stringify(nova.fontes) !== JSON.stringify(this.conf.fontes);
+    const assinaturaLista = (c) => JSON.stringify([c.lista, c.cidades.map((x) => x.id)]);
+    const trocouLista = assinaturaLista(nova) !== assinaturaLista(this.conf);
     this.conf = nova;
-    // cidade que saiu, sai do cache; fonte trocada, o que estava vale até vencer
-    for (const id of [...this.dados.keys()]) if (!nova.cidades.some((c) => c.id === id)) this.dados.delete(id);
-    if (trocouFontes) for (const d of this.dados.values()) d.em = 0;
+    this._lista = null;
+    this.geracao++;
+    // cidade que saiu (da lista, do mostrador, do cartão), sai do cache — só
+    // quando a lista mudou de verdade: um ajuste qualquer (unidade, estilo…)
+    // não joga fora a janela já buscada do rodízio. Fonte trocada, o que
+    // estava vale até vencer
+    if (trocouLista) {
+      const fica = new Set(this.alvos().map((c) => c.id));
+      for (const id of [...this.dados.keys()]) if (!fica.has(id)) this.dados.delete(id);
+    }
+    if (trocouFontes) { for (const d of this.dados.values()) d.em = 0; for (const p of this.previsoes.values()) p.em = 0; }
     if (this.ativo) this.agendar(true);
   }
 
   ligar() { if (!this.ativo) { this.ativo = true; this.agendar(true); } }
   desligar() { this.ativo = false; clearTimeout(this.relogio); this.relogio = null; }
 
+  // 🗺️ v0.169: o que passa na tela — as cidades soltas, ou os municípios do
+  // Brasil / de um estado (na ordem do arquivo, igual nas telas)
+  listaEfetiva() {
+    const { modo, uf } = this.conf.lista || {};
+    if (modo !== 'brasil' && modo !== 'uf') return this.conf.cidades;
+    if (!this._lista) this._lista = municipiosParaCidades(this.municipios, modo === 'uf' ? uf : '');
+    return this._lista;
+  }
+  // a cidade do mostrador do painel: a escolhida entre as soltas, ou a primeira
+  cidadePainel() {
+    const c = this.conf.cidades;
+    if (!c.length) return null;
+    return c.find((x) => x.id === this.conf.painel.cidadeId) || c[0];
+  }
+  // uma cidade por id — solta, do rodízio, do mostrador ou do cartão
+  cidadePorId(id) {
+    const k = String(id || '');
+    if (!k) return null;
+    return this.conf.cidades.find((c) => c.id === k) || this.listaEfetiva().find((c) => c.id === k) || (this.completo && this.completo.id === k ? this.completo : null) || null;
+  }
+  indiceAtual(agora) { return indiceRodizio(this.posicaoRodizio(), this.conf, this.listaEfetiva().length, agora || this.agora()); }
+  // As cidades que precisam estar buscadas: a do mostrador, a do cartão
+  // completo e — lista pequena — todas; lista grande, só a da vez e as próximas
+  alvos() {
+    const lista = this.listaEfetiva();
+    const alvos = new Map();
+    const painel = this.cidadePainel();
+    if (painel) alvos.set(painel.id, painel);
+    // o cartão completo nunca substitui uma cidade já conhecida com o mesmo id
+    if (this.completo && !alvos.has(this.completo.id)) alvos.set(this.completo.id, this.completo);
+    if (lista.length <= MAX_CIDADES) for (const c of lista) alvos.set(c.id, c);
+    else {
+      const n = lista.length, i = this.indiceAtual();
+      for (let k = 0; k <= JANELA_RODIZIO; k++) { const c = lista[(i + k) % n]; alvos.set(c.id, c); }
+    }
+    return [...alvos.values()];
+  }
+
   agendar(jaAgora) {
     clearTimeout(this.relogio);
-    this.relogio = setTimeout(() => { this.atualizar().catch(() => {}); }, jaAgora ? 50 : 60 * 1000);
+    // lista grande com rodízio: confere mais vezes, para a próxima cidade já
+    // chegar buscada (a janela anda com o rodízio)
+    let ms = 60 * 1000;
+    const ef = rodizioEfetivo(this.conf);
+    if (this.listaEfetiva().length > MAX_CIDADES && ef.rodizio) ms = Math.min(ms, Math.max(2000, Math.floor(ef.rodizioSegundos * 1000 / 2)));
+    this.relogio = setTimeout(() => { this.atualizar().catch(() => {}); }, jaAgora ? 50 : ms);
     if (this.relogio.unref) this.relogio.unref();
   }
 
   vencido(id) {
     const d = this.dados.get(id);
     return !d || (this.agora() - (d.em || 0)) >= this.conf.atualizarMin * 60 * 1000;
+  }
+  previsaoVencida(id) {
+    const p = this.previsoes.get(id);
+    return !p || (this.agora() - (p.em || 0)) >= (p.erro ? REPETE_FALHA_MS : PREVISAO_MS);
   }
 
   // Passa pelas cidades vencidas, uma de cada vez (as fontes gratuitas
@@ -467,11 +814,12 @@ class Clima {
     this.buscando = true;
     let mudou = false;
     try {
-      for (const cidade of this.conf.cidades.slice()) {
-        if (!this.conf.cidades.some((c) => c.id === cidade.id)) continue; // tirada no meio da volta
+      const ger = this.geracao;
+      for (const cidade of this.alvos()) {
+        if (this.geracao !== ger) { this.pendente = true; break; } // a configuração mudou no meio da volta: recomeça
         if (!forcar && !this.vencido(cidade.id)) continue;
         const r = await this.buscarCidade(cidade);
-        if (!this.conf.cidades.some((c) => c.id === cidade.id)) continue;
+        if (this.geracao !== ger) { this.pendente = true; break; }
         const atual = this.dados.get(cidade.id) || { memoria: {} };
         // v0.168.3: quando nenhuma fonte respondeu (ou a que valia caiu), a
         // cidade vence de novo em 2 min — sem isso uma falha passageira (rede
@@ -480,6 +828,12 @@ class Clima {
         this.dados.set(cidade.id, { ...atual, ...r, em: falhou ? this.agora() - this.conf.atualizarMin * 60 * 1000 + REPETE_FALHA_MS : this.agora() });
         mudou = true;
       }
+      // 🗂️ o cartão completo na tela: a previsão dos próximos dias também fica em dia
+      if (this.geracao === ger && this.completo && (forcar || this.previsaoVencida(this.completo.id))) {
+        await this.buscarPrevisao(this.completo);
+        mudou = true;
+      }
+      this.enxugar();
     } finally {
       this.buscando = false;
       if (this.ativo) this.agendar(false);
@@ -489,6 +843,69 @@ class Clima {
     this.pendenteForcar = false; this.pendente = false;
     if (denovo && (this.ativo || denovo === 'forcar')) setTimeout(() => this.atualizar(denovo === 'forcar').catch(() => {}), 50);
     return mudou;
+  }
+
+  // o cache tem teto: fora das cidades-alvo, sai o que está mais velho
+  enxugar() {
+    if (this.dados.size > TETO_CACHE) {
+      const fica = new Set(this.alvos().map((c) => c.id));
+      const sobra = [...this.dados.entries()].filter(([id]) => !fica.has(id)).sort((a, b) => (a[1].em || 0) - (b[1].em || 0));
+      for (const [id] of sobra) { if (this.dados.size <= TETO_CACHE) break; this.dados.delete(id); }
+    }
+    if (this.previsoes.size > 8) {
+      const sobra = [...this.previsoes.entries()].filter(([id]) => !this.completo || this.completo.id !== id).sort((a, b) => (a[1].em || 0) - (b[1].em || 0));
+      for (const [id] of sobra) { if (this.previsoes.size <= 8) break; this.previsoes.delete(id); }
+    }
+  }
+
+  // 🗂️ v0.169: o cartão completo entrou na tela (cidade) ou saiu (null) — a
+  // cidade dele entra nos alvos e a previsão é buscada já
+  acompanharCompleto(cidade) {
+    this.completo = cidade ? sanitizeCidade(cidade) : null;
+    if (this.completo && this.ativo) this.agendar(true);
+  }
+
+  // A previsão dos próximos dias de uma cidade, pela primeira fonte que
+  // responder (o Weather Underground não faz previsão: é pulado)
+  async buscarPrevisao(cidade) {
+    const chaves = this.chaves() || {};
+    const atual = this.previsoes.get(cidade.id) || {};
+    const memoria = (this.dados.get(cidade.id) || {}).memoria || atual.memoria || {};
+    const erros = [];
+    for (const fonte of this.conf.fontes) {
+      const f = PREVISORES[fonte];
+      if (!f) continue;
+      const chave = FONTES[fonte].chave ? String(chaves[fonte] || '') : '';
+      if (FONTES[fonte].chave && !chave) { erros.push(FONTES[fonte].nome + ': sem chave'); continue; }
+      if (this.fonteEmPausa(fonte)) { erros.push(FONTES[fonte].nome + ': ' + this.ultimoErroFonte[fonte].texto); continue; }
+      try {
+        const previsao = await f({ cidade, chave, buscarJson: this.buscarJson, memoria });
+        delete this.ultimoErroFonte[fonte];
+        const r = { previsao, erro: null, em: this.agora(), memoria };
+        this.previsoes.set(cidade.id, r);
+        return r;
+      } catch (e) {
+        const msg = String(e && e.message || e).slice(0, 160);
+        this.ultimoErroFonte[fonte] = { texto: msg, em: this.agora() };
+        erros.push(msg);
+      }
+    }
+    const r = { previsao: atual.previsao || null, erro: erros.join(' · ').slice(0, 300) || 'nenhuma fonte marcada faz previsão', em: this.agora(), memoria };
+    this.previsoes.set(cidade.id, r);
+    return r;
+  }
+  previsaoPublica(id) {
+    const p = this.previsoes.get(String(id || ''));
+    return p ? { previsao: p.previsao || null, erro: p.erro || null, em: p.em || 0 } : { previsao: null, erro: null, em: 0 };
+  }
+
+  // Fonte que respondeu «cota esgotada» / chave recusada há pouco: fica de
+  // molho uns minutos em vez de pagar uma tentativa perdida a cada cidade
+  // nova do rodízio (o Brasil inteiro são milhares delas)
+  fonteEmPausa(fonte) {
+    const e = this.ultimoErroFonte[fonte];
+    if (!e || !/cota|quota|limit|429|503|chave recusada|token recusado/i.test(e.texto || '')) return false;
+    return this.agora() - (e.em || 0) < PAUSA_FONTE_MS;
   }
 
   async buscarCidade(cidade) {
@@ -501,6 +918,7 @@ class Clima {
       if (!f) continue;
       const chave = FONTES[fonte].chave ? String(chaves[fonte] || '') : '';
       if (FONTES[fonte].chave && !chave) { erros.push(FONTES[fonte].nome + ': sem chave'); continue; }
+      if (this.fonteEmPausa(fonte)) { erros.push(FONTES[fonte].nome + ': ' + this.ultimoErroFonte[fonte].texto); continue; }
       try {
         const retrato = await f({ cidade, chave, buscarJson: this.buscarJson, memoria });
         delete this.ultimoErroFonte[fonte];
@@ -516,12 +934,24 @@ class Clima {
   }
 
   // O que vai para a tela e para o painel
+  // 🗺️ v0.169: «cidades» é a lista do rodízio com o tempo de cada uma — só
+  // quando cabe (≤ 27); o Brasil inteiro / um estado grande as telas montam
+  // sozinhas a partir de municipios-br.json e pegam o tempo em «retratos»
+  // (por id: o que está no cache). «painel» é a cidade do mostrador.
   retratoGeral() {
+    const lista = this.listaEfetiva();
+    const comRetrato = (c) => {
+      const d = this.dados.get(c.id) || {};
+      return { id: c.id, nome: c.nome, uf: c.uf, pais: c.pais, retrato: d.retrato || null, erro: d.erro || null, em: d.em || 0 };
+    };
+    const retratos = Object.create(null); // ids são chaves de dados, nunca propriedades do Object
+    for (const [id, d] of this.dados) retratos[id] = { retrato: d.retrato || null, erro: d.erro || null, em: d.em || 0 };
+    const painel = this.cidadePainel();
     return {
-      cidades: this.conf.cidades.map((c) => {
-        const d = this.dados.get(c.id) || {};
-        return { id: c.id, nome: c.nome, uf: c.uf, pais: c.pais, retrato: d.retrato || null, erro: d.erro || null, em: d.em || 0 };
-      }),
+      lista: { modo: this.conf.lista.modo, uf: this.conf.lista.uf, total: lista.length },
+      cidades: lista.length <= MAX_CIDADES ? lista.map(comRetrato) : [],
+      retratos,
+      painel: painel ? { ...comRetrato(painel), seguirTela: this.conf.painel.seguirTela } : null,
       // só o nome de cada fonte: a ordem, as chaves e os erros ficam no
       // resumo de Conexões (climaChaves), que o público (viewer) não recebe
       fontes: Object.fromEntries(Object.keys(FONTES).map((f) => [f, { nome: FONTES[f].nome }])),
@@ -535,7 +965,9 @@ class Clima {
 const paraF = (c) => (c === null || c === undefined ? null : Math.round((c * 9) / 5 + 32));
 
 module.exports = {
-  Clima, FONTES, FONTES_PADRAO, CONDICOES, CAPITAIS_BR, DESCRICAO, FETCHERS, MAX_CIDADES, MIN_ATUALIZAR_MIN, MAX_ATUALIZAR_MIN,
-  sanitizeClima, sanitizeCidade, procurarCidade, buscarJsonPadrao, retrato, paraF,
+  Clima, FONTES, FONTES_PADRAO, CONDICOES, CAPITAIS_BR, DESCRICAO, FETCHERS, PREVISORES, MAX_CIDADES, MIN_ATUALIZAR_MIN, MAX_ATUALIZAR_MIN,
+  JANELA_RODIZIO, TETO_CACHE, PREVISAO_MS, PAUSA_FONTE_MS, MAX_DIAS, MIN_SEG_LISTA, LISTA_MODOS, UFS_SIGLAS,
+  sanitizeClima, sanitizeCidade, procurarCidade, buscarJsonPadrao, retrato, previsao, paraF,
+  municipiosParaCidades, indiceRodizio, rodizioEfetivo, fusoDaCidade, diasDeHoras, horaLocal, hora12para24,
   condicaoWmo, condicaoMetNo, condicaoOwm, condicaoWeatherApi, condicaoAccu, condicaoClimatempo, siglaUf,
 };

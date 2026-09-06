@@ -1,4 +1,14 @@
 {
+  "0.169.0": {
+    "titulo": "🗺️ Météo dans tout le Brésil ou un État, afficheur du panneau avec votre ville et 🗂️ carte complète avec les prochains jours",
+    "itens": [
+      "🗺️ La rotation de la Météo (« Passer d’une ville à l’autre ») a reçu le sélecteur « Parcourir » : les villes enregistrées, toutes les communes du Brésil (liste de l’IBGE, 5 570) ou celles d’un État — sans rien enregistrer une par une. La liste défile par ordre alphabétique, État par État ; dans ces modes la rotation reste activée et le minimum est de 15 s par ville. Le serveur ne récupère la météo que de la ville en cours et des suivantes (juste avant leur passage), pas de milliers à la fois — les quotas des sources gratuites sont respectés.",
+      "📍 L’afficheur à côté de l’horloge, dans le panneau, montre VOTRE ville (une des villes enregistrées — la première, ou celle choisie dans « Afficheur du panneau : votre ville »), pas celle qui passe à l’écran. Pour suivre la rotation, activez « suivre l’écran » (désactivé par défaut).",
+      "🗂️ Carte complète : un nouveau bouton dans le 🌤️ du panneau place au centre de l’écran, temporairement, la météo actuelle en détail (ressenti, humidité, vent, pression, UV, nuages, visibilité, point de rosée, lever et coucher du soleil), les prochaines heures et les prochains jours (3 à 7, au choix). Dans le panneau, elle apparaît comme une fenêtre complète — la même chose que voit le public — avec sélecteur de ville et recherche ; le ✖ la retire des deux endroits sans toucher la petite carte du coin. La prévision vient du même ordre de sources : Open-Meteo, MET Norway, OpenWeatherMap, WeatherAPI, AccuWeather et Climatempo (Weather Underground n’a pas de prévision).",
+      "🎛️ Contrôle externe : clima/completo, clima/completoFechar et clima/completoAlternar ; /status donne la liste de la rotation, la ville de l’afficheur et la carte complète.",
+      "ℹ️ Les quartiers d’une commune n’existent pas dans les sources météo : la prévision arrive sur une grille d’environ 10 km, donc tous les quartiers d’une ville ont la même météo — d’où l’absence de sélecteur de quartiers."
+    ]
+  },
   "0.168.3": {
     "titulo": "🌤️ La Météo se met à jour même hors écran — l’afficheur du panneau reste à jour",
     "itens": [

@@ -160,7 +160,7 @@ function tcons(texto, ...args) {
 const qrcodeFactory = require('qrcode-generator');
 const currency = require('./currency');
 // 🌤️ v0.167: o tempo agora, de uma ou mais fontes, para o overlay
-const { Clima: ClimaServico, sanitizeClima, sanitizeCidade: sanitizeCidadeClima, procurarCidade: procurarCidadeClima, buscarJsonPadrao: buscarJsonClima, FONTES: CLIMA_FONTES, CAPITAIS_BR: CLIMA_CAPITAIS } = require('./clima');
+const { Clima: ClimaServico, sanitizeClima, sanitizeCidade: sanitizeCidadeClima, procurarCidade: procurarCidadeClima, buscarJsonPadrao: buscarJsonClima, FONTES: CLIMA_FONTES, CAPITAIS_BR: CLIMA_CAPITAIS, indiceRodizio: climaIndiceRodizio } = require('./clima');
 // 🧲 v0.154: a lista de ferramentas/abas/colunas do painel é a MESMA que as
 // páginas usam — o sanitizador só aceita o que existe, e o que existe mora
 // num lugar só (nunca mais um botão novo sumindo da ordem salva)
@@ -438,6 +438,13 @@ const DEFAULT_SETTINGS = {
     rodizioSegundos: 15,               // 5 … 600
     atualizarMin: 15,                  // 10 … 60 — de quanto em quanto tempo perguntar às fontes
     estilo: 'cartao',                  // cartao | compacto | grande
+    // 🗺️ v0.169: o que o rodízio percorre — as cidades soltas (acima), todos
+    // os municípios do Brasil ou os de um estado (public/municipios-br.json)
+    lista: { modo: 'cidades', uf: '' },
+    // o mostrador do painel (ao lado do relógio): a cidade de quem apresenta
+    // (uma das soltas; vazio = a primeira) — ou acompanhar o que está na tela
+    painel: { seguirTela: false, cidadeId: '' },
+    completoDias: 7,                   // 🗂️ o cartão completo: quantos dias de previsão (3 … 7)
   },
   // 🎵 A cara da Mesa de trilhas (vale nas configurações E no painel):
   // quantos botões por página e a fonte global do texto dos botões
@@ -1040,7 +1047,9 @@ const state = {
   },
   // 🌤️ v0.167: o Clima na tela + o rodízio (índice e desde quando — cada tela
   // calcula sozinha em que cidade está, sem o servidor mandar mensagem a cada troca)
-  clima: { visible: false, indice: 0, desde: Date.now() }, // «desde» nunca é 0: as telas contam o rodízio a partir dele
+  // 🗂️ v0.169: e o cartão completo (temporário, no meio da tela): a cidade
+  // dele e desde quando está lá
+  clima: { visible: false, indice: 0, desde: Date.now(), completo: { visible: false, cidade: null, desde: 0 } }, // «desde» nunca é 0: as telas contam o rodízio a partir dele
   clipboard: loadClipboard(), // 📋 v0.90: HISTÓRICO da área de transferência (lista de entradas)
   connections: loadConnections(), // memoria das conexoes: plataforma -> { channel, active }
   readIds: loadRead(),      // ids de comentarios que ja foram para a tela ("lidos")
@@ -1828,16 +1837,33 @@ function saveClimaChaves() {
 const climaBuscarJson = process.env.OBS_TESTE_CLIMA_BASE
   ? (url, opcoes) => { const u = new URL(url); return buscarJsonClima(String(process.env.OBS_TESTE_CLIMA_BASE).replace(/\/+$/, '') + '/' + u.host + u.pathname + u.search, opcoes); }
   : undefined;
+// 🗺️ v0.169: os municípios do IBGE (o mesmo arquivo que as telas baixam)
+function loadMunicipiosBr() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'municipios-br.json'), 'utf8'));
+    return Array.isArray(raw.municipios) ? raw.municipios : [];
+  } catch (err) { console.error('  ⚠️ Não consegui ler municipios-br.json:', err && err.message); return []; }
+}
 const climaServico = new ClimaServico({
   buscarJson: climaBuscarJson,
   chaves: () => climaChaves,
   aoMudar: () => broadcastClima(),
+  municipios: loadMunicipiosBr(),
+  posicaoRodizio: () => ({ indice: state.clima.indice, desde: state.clima.desde }),
 });
 function climaPublico() {
-  return { visible: state.clima.visible, indice: state.clima.indice, desde: state.clima.desde, agora: Date.now(), ...climaServico.retratoGeral() };
+  const comp = state.clima.completo || { visible: false, cidade: null, desde: 0 };
+  const cidade = comp.cidade ? { id: comp.cidade.id, nome: comp.cidade.nome, uf: comp.cidade.uf, pais: comp.cidade.pais } : null;
+  return {
+    visible: state.clima.visible, indice: state.clima.indice, desde: state.clima.desde, agora: Date.now(),
+    ...climaServico.retratoGeral(),
+    // 🗂️ v0.169: o cartão completo — a cidade, o tempo agora dela (retratos[id]) e a previsão
+    completo: { visible: !!comp.visible, cidade, desde: comp.desde || 0, ...(cidade ? climaServico.previsaoPublica(cidade.id) : { previsao: null, erro: null, em: 0 }) },
+  };
 }
 function broadcastClima() { broadcast({ type: 'clima', clima: climaPublico() }); }
 let climaUltimaForcada = 0; // o último «atualizar agora» (🔄, controle externo)
+let climaCompletoTrocouEm = 0; // 🗂️ v0.169: a última troca de cidade do cartão completo
 // O resumo das fontes para o card de 🔌 Conexões: só o computador local vê
 // se há chave (e nem ele vê a chave)
 function climaChavesResumo(ws) {
@@ -1859,9 +1885,10 @@ function broadcastClimaChaves() {
 // 🌤️ v0.168.3: a busca fica ligada sempre que houver cidade cadastrada —
 // na tela ou não — porque o mostrador do painel (ao lado do relógio) mostra o
 // tempo o tempo todo para quem apresenta. O intervalo (10–60 min) segue valendo.
+// 🗺️ v0.169: «cidade cadastrada» inclui a lista do rodízio (Brasil / estado)
 function sincronizarClima() {
   climaServico.configurar(state.settings.clima);
-  if (state.settings.clima.cidades.length) climaServico.ligar();
+  if (state.settings.clima.cidades.length || climaServico.listaEfetiva().length) climaServico.ligar();
   else climaServico.desligar();
 }
 
@@ -3746,7 +3773,10 @@ const OP_CATEGORY = {
   winstreakSub: 'tools', winstreakToggle: 'tools',
   winstreakRecord: 'tools', winstreakSet: 'tools',
   avisoSet: 'tools', avisoToggle: 'tools', relogioSet: 'tools', relogioToggle: 'tools',
-  climaToggle: 'tools', climaProxima: 'tools', climaAtualizar: 'tools', climaProcurar: 'settings', // 🌤️ v0.167
+  climaToggle: 'tools', climaProxima: 'tools', climaAtualizar: 'tools', // 🌤️ v0.167
+  // 🗂️ v0.169: o cartão completo; a busca de cidade (geocodificação pública,
+  // não grava nada) passa a 'tools' — a janela do cartão no painel usa ela
+  climaCompleto: 'tools', climaProcurar: 'tools',
   avisoNew: 'tools', avisoRemove: 'tools', avisoMove: 'tools', avisoLabel: 'tools', // 📢 v0.128
   exemploOverlay: 'tools', // 🧪 v0.99: exemplo de qualquer overlay, do editor
   cronometro: 'tools', timer: 'tools',
@@ -10902,7 +10932,8 @@ function tratarMensagem(ws, raw) {
       // 💠 E o do Pix (re)arranca ou para a consulta ao banco na hora
       if (incoming.labs && 'pix' in incoming.labs) arrancarPix();
       // 🌤️ v0.167: cidades/fontes/intervalo mudaram → a busca acompanha
-      if (incoming.clima) { if (incoming.clima.cidades) { state.clima.indice = 0; state.clima.desde = Date.now(); } sincronizarClima(); broadcastClima(); }
+      // 🗺️ v0.169: trocar a lista do rodízio (cidades / Brasil / estado) também recomeça a contagem
+      if (incoming.clima) { if (incoming.clima.cidades || incoming.clima.lista) { state.clima.indice = 0; state.clima.desde = Date.now(); } sincronizarClima(); broadcastClima(); }
       // Mexer nas fichas do sorteio muda o total em jogo: o painel acompanha
       broadcast({
         type: 'participants',
@@ -11816,7 +11847,7 @@ function tratarMensagem(ws, raw) {
       const antes = state.clima.visible;
       // sem cidade não há o que mostrar: fica fora da tela (senão a primeira
       // cidade cadastrada depois apareceria na live sem ninguém pedir)
-      if (!state.settings.clima.cidades.length) { state.clima.visible = false; sincronizarClima(); broadcastClima(); break; }
+      if (!climaServico.listaEfetiva().length) { state.clima.visible = false; sincronizarClima(); broadcastClima(); break; } // 🗺️ v0.169: a lista do rodízio conta
       state.clima.visible = typeof msg.visible === 'boolean' ? msg.visible : !state.clima.visible;
       if (state.clima.visible && !antes) { state.clima.desde = Date.now(); scheduleWidgetHide('clima', '', () => { state.clima.visible = false; sincronizarClima(); broadcastClima(); }); }
       sincronizarClima();
@@ -11825,14 +11856,55 @@ function tratarMensagem(ws, raw) {
     }
     case 'climaProxima': {
       // pula para a próxima cidade (ou volta: passo -1); o rodízio recomeça a contar daqui
-      const n = state.settings.clima.cidades.length;
+      const n = climaServico.listaEfetiva().length; // 🗺️ v0.169: cidades soltas, o Brasil ou um estado
       if (!n) break;
       const passo = msg.passo === -1 ? -1 : 1;
-      const per = state.settings.clima.rodizioSegundos * 1000;
       // a mesma conta das telas (overlay e painel), para o ▶ partir da cidade que está aparecendo
-      const decorrido = state.settings.clima.rodizio ? Math.max(0, Math.floor((Date.now() - (state.clima.desde || 0)) / per)) : 0;
-      state.clima.indice = ((state.clima.indice + decorrido + passo) % n + n) % n;
+      const atual = climaIndiceRodizio(state.clima, state.settings.clima, n);
+      state.clima.indice = ((atual + passo) % n + n) % n;
       state.clima.desde = Date.now();
+      // lista grande: a janela de busca andou junto — busca já, sem esperar o relógio
+      if (climaServico.ativo && n > 27) climaServico.agendar(true);
+      broadcastClima();
+      break;
+    }
+    case 'climaCompleto': {
+      // 🗂️ v0.169: o cartão completo (o tempo agora + os próximos dias) no
+      // meio da tela — temporário, como o pódio do sorteio. Abre com a cidade
+      // pedida (id de qualquer lista, ou uma cidade da busca), senão com a do
+      // mostrador do painel, senão com a que está passando na tela. O ✖ do
+      // painel (visible: false) tira dos dois lugares sem mexer no cartão pequeno.
+      const comp = state.clima.completo;
+      const antes = comp.visible;
+      let cidade = null;
+      // cidade da busca: o id é SEMPRE derivado das coordenadas (um id vindo de
+      // fora poderia vestir a cidade do mostrador com o tempo de outro lugar)
+      if (msg.cidade && typeof msg.cidade === 'object') cidade = sanitizeCidadeClima({ ...msg.cidade, id: undefined });
+      else if (typeof msg.cidade === 'string' && msg.cidade) cidade = climaServico.cidadePorId(msg.cidade);
+      const quer = typeof msg.visible === 'boolean' ? msg.visible : (cidade ? true : !comp.visible);
+      // trocar de cidade dispara buscas nas fontes (tempo agora + previsão): no
+      // máximo uma troca a cada 3 s — o mesmo cuidado do 🔄 «atualizar agora»
+      if (quer && cidade && (!comp.cidade || comp.cidade.id !== cidade.id)) {
+        if (Date.now() - climaCompletoTrocouEm < 3000) { broadcastClima(); break; }
+        climaCompletoTrocouEm = Date.now();
+      }
+      if (!quer) {
+        comp.visible = false;
+        climaServico.acompanharCompleto(null);
+        broadcastClima();
+        break;
+      }
+      if (!cidade) {
+        // sem cidade pedida: a última do cartão (a pessoa escolheu na janela),
+        // senão a do mostrador, senão a que está passando na tela
+        const lista = climaServico.listaEfetiva();
+        cidade = (comp.cidade && climaServico.cidadePorId(comp.cidade.id)) || comp.cidade || climaServico.cidadePainel() || (lista.length ? lista[climaServico.indiceAtual()] : null);
+      }
+      if (!cidade) { comp.visible = false; broadcastClima(); break; }
+      if (!antes || !comp.cidade || comp.cidade.id !== cidade.id) comp.desde = Date.now();
+      comp.cidade = cidade;
+      comp.visible = true;
+      climaServico.acompanharCompleto(cidade); // a previsão é buscada já (ou vem do cache)
       broadcastClima();
       break;
     }
@@ -12067,7 +12139,8 @@ function tratarMensagem(ws, raw) {
       state.relogio.relogio.visible = false;
       state.relogio.cronometro.visible = false;
       state.relogio.timer.visible = false;
-      if (state.clima.visible) { state.clima.visible = false; sincronizarClima(); broadcastClima(); } // 🌤️ v0.167
+      // 🌤️ v0.167 (e o 🗂️ cartão completo, v0.169)
+      if (state.clima.visible || state.clima.completo.visible) { state.clima.visible = false; state.clima.completo.visible = false; climaServico.acompanharCompleto(null); sincronizarClima(); broadcastClima(); }
       if (state.trilhaTela) setTrilhaTela(null); // 🖼️🎞️ v0.86
       // 🎞️ v0.129: a mídia direta sai da tela (o item fica carregado no painel)
       if (state.midiaDireta.visible) { state.midiaDireta.visible = false; state.midiaDireta.player = midiaDiretaPlayerInicial(state.midiaDireta.player); broadcastMidiaDireta(); }
@@ -12283,6 +12356,10 @@ const CONTROLE_ACOES = [
   { id: 'clima/alternar', grupo: 'clima', nome: 'Clima: mostrar/esconder', desc: 'Alterna o clima na tela', msg: () => ({ type: 'climaToggle' }) },
   { id: 'clima/proxima', grupo: 'clima', nome: 'Clima: próxima cidade', desc: 'Pula para a próxima cidade da lista', msg: () => ({ type: 'climaProxima' }) },
   { id: 'clima/atualizar', grupo: 'clima', nome: 'Clima: atualizar agora', desc: 'Pergunta às fontes de novo, sem esperar o intervalo', msg: () => ({ type: 'climaAtualizar' }) },
+  // 🗂️ v0.169: o cartão completo
+  { id: 'clima/completo', grupo: 'clima', nome: 'Clima: cartão completo', desc: 'Põe o cartão completo (tempo agora + próximos dias) no meio da tela', msg: () => ({ type: 'climaCompleto', visible: true }) },
+  { id: 'clima/completoFechar', grupo: 'clima', nome: 'Clima: fechar o cartão completo', desc: 'Tira o cartão completo da tela (o cartão pequeno fica)', msg: () => ({ type: 'climaCompleto', visible: false }) },
+  { id: 'clima/completoAlternar', grupo: 'clima', nome: 'Clima: cartão completo mostrar/esconder', desc: 'Alterna o cartão completo na tela', msg: () => ({ type: 'climaCompleto' }) },
   { id: 'cronometro/iniciar', grupo: 'relogio', nome: 'Cronômetro: iniciar', desc: 'Começa (ou continua) a contar', msg: () => ({ type: 'cronometro', acao: 'iniciar' }) },
   { id: 'cronometro/pausar', grupo: 'relogio', nome: 'Cronômetro: pausar', desc: 'Pausa a contagem', msg: () => ({ type: 'cronometro', acao: 'pausar' }) },
   { id: 'cronometro/zerar', grupo: 'relogio', nome: 'Cronômetro: zerar', desc: 'Volta o cronômetro para zero', msg: () => ({ type: 'cronometro', acao: 'zerar' }) },
@@ -12431,7 +12508,12 @@ function controleEstado() {
     aviso: { visivel: !!state.avisos[0].visible, texto: state.avisos[0].texto },
     avisos: state.avisos.map((a) => ({ id: a.id, nome: a.label, visivel: !!a.visible, texto: a.texto })), // 📢 v0.128
     relogio: relogioPublico(),
-    clima: (() => { const c = climaPublico(); return { visivel: c.visible, cidades: c.cidades.map((x) => ({ nome: x.nome, uf: x.uf, temp: x.retrato ? x.retrato.temp : null, condicao: x.retrato ? x.retrato.condicao : null })) }; })(), // 🌤️ v0.167
+    clima: (() => {
+      const c = climaPublico();
+      const resumo = (x) => (x ? { nome: x.nome, uf: x.uf, temp: x.retrato ? x.retrato.temp : null, condicao: x.retrato ? x.retrato.condicao : null } : null);
+      // 🗺️ v0.169: a lista (cidades soltas / Brasil / estado), a cidade do mostrador e o cartão completo
+      return { visivel: c.visible, lista: c.lista, cidades: c.cidades.map(resumo), painel: resumo(c.painel), completo: { visivel: c.completo.visible, cidade: c.completo.cidade ? { nome: c.completo.cidade.nome, uf: c.completo.cidade.uf } : null } };
+    })(), // 🌤️ v0.167
     winstreaks: state.winstreaks.map((w) => ({ id: w.id, nome: w.label, vitorias: w.wins, recorde: w.record, visivel: !!w.visible })),
     qrs: state.qrs.map((q) => ({ id: q.id, nome: q.name, visivel: !!q.visible })),
     fila: feedQueue.length + feedReleasing.length,

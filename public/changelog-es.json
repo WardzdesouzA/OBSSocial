@@ -1,4 +1,14 @@
 {
+  "0.169.0": {
+    "titulo": "🗺️ Clima por todo Brasil o por un estado, indicador del panel con tu ciudad y 🗂️ tarjeta completa con los próximos días",
+    "itens": [
+      "🗺️ La rotación del Clima («Pasar por las ciudades, una a la vez») ganó el selector «Pasar por»: las ciudades registradas, todos los municipios de Brasil (la lista del IBGE, 5.570) o los municipios de un estado, sin registrar nada uno por uno. La lista va en orden alfabético, estado por estado; en esos modos la rotación queda activada y el mínimo es 15 s por ciudad. El servidor busca el tiempo solo de la ciudad actual y las siguientes (poco antes de entrar), no de miles a la vez: las cuotas de las fuentes gratuitas se siguen respetando.",
+      "📍 El indicador junto al reloj, en el panel, muestra TU ciudad (una de las registradas: la primera, o la elegida en «Indicador del panel: tu ciudad»), no la que está pasando en pantalla. Quien prefiera seguir la rotación activa «seguir la pantalla» (desactivado de fábrica).",
+      "🗂️ Tarjeta completa: un botón nuevo en el 🌤️ del panel pone en el centro de la pantalla, temporalmente, el tiempo ahora con todo (sensación, humedad, viento, presión, UV, nubes, visibilidad, rocío, amanecer y atardecer), las próximas horas y los próximos días (3 a 7, a elegir). En el panel aparece como una ventana completa —lo mismo que ve el público— con selector de ciudad y búsqueda; la ✖ la quita de los dos lugares sin tocar la tarjeta pequeña de la esquina. El pronóstico viene del mismo orden de fuentes: Open-Meteo, MET Norway, OpenWeatherMap, WeatherAPI, AccuWeather y Climatempo (Weather Underground no da pronóstico).",
+      "🎛️ Control externo: clima/completo, clima/completoFechar y clima/completoAlternar; /status trae la lista de la rotación, la ciudad del indicador y la tarjeta completa.",
+      "ℹ️ Los barrios de un municipio no existen en las fuentes de clima: el pronóstico viene en una cuadrícula de unos 10 km, así que todos los barrios de una ciudad reciben el mismo tiempo; por eso no hay selector de barrios."
+    ]
+  },
   "0.168.3": {
     "titulo": "🌤️ El Clima se actualiza aunque esté fuera de pantalla — el visor del panel siempre al día",
     "itens": [
