@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.166.0",
+    "titulo": "🍪 Extrator com os cookies do seu login (Instagram e cia) — e, quando falha, o painel conta o porquê",
+    "itens": [
+      "🧭 O 🎬 extrator falhava em silêncio: o Instagram (e outros) só entregam o vídeo para quem está logado, e o link ficava como quadro do site sem explicação. Agora o painel diz o motivo na hora — «só entrega logado», privado, apagado/link errado, site que o extrator não conhece, só em pedaços (HLS/DASH), demorou, extrator ocupado, extrator não baixado — ou o erro exato, quando é outra coisa.",
+      "🍪 Em Configurações → 🔌 Conexões → 🎬 Extrator, dois jeitos de ele entrar logado: escolher o navegador em que você está logado (o extrator lê os cookies dele; no Windows, Chrome e Edge criptografam os cookies e isso costuma falhar — o Firefox funciona) ou enviar um cookies.txt exportado por uma extensão como «Get cookies.txt LOCALLY». O arquivo manda mais que o navegador, fica só neste computador (data/ytdlp), só vai para o próprio site, e o painel só vê a contagem de sites — nunca o conteúdo. Apague com um clique.",
+      "⚖️ Cookies de conta são uma chave da sua conta: use uma conta que você não se importe de expor a um programa de terceiros. Só o computador do streamer envia, escolhe ou apaga cookies."
+    ]
+  },
+  {
     "version": "0.165.0",
     "titulo": "📡 Mídia direta: o vídeo achado pelo extrator (ou pelas metatags) passa a vir pelo OBS Social — fim da prévia preta",
     "itens": [

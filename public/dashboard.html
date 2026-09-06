@@ -2264,7 +2264,7 @@ const hub = connectHub((event) => {
       break;
     // 🎬 v0.134: a procura pelo arquivo do vídeo pode demorar — o painel conta
     case 'midiaDiretaSonda':
-      mdSonda(event.estado);
+      mdSonda(event.estado, event.motivo, event.detalhe);
       break;
     case 'relogio':
       updateRelogio(event.relogio, event.fim);
@@ -5853,7 +5853,20 @@ function mdStatus(texto) {
 // 🎬 v0.134: o servidor avisa em que pé está a procura pelo arquivo do vídeo.
 // «achou» some sozinho; «nada» não vira recado — o quadro do site já apareceu.
 let mdSondaTimer = null;
-function mdSonda(estado) {
+// 🧭 v0.166: quando nem o extrator acha, ele conta o porquê — e o recado
+// fica até trocar de mídia (o quadro do site continua na tela)
+const MD_MOTIVOS = {
+  login: '🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.',
+  privado: '🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.',
+  naoExiste: '🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).',
+  naoSuportado: 'ℹ️ O extrator não conhece esse site — fica o quadro do site.',
+  semFormato: 'ℹ️ O extrator achou o vídeo, mas só em pedaços (HLS/DASH), que o player não toca direto — fica o quadro do site.',
+  demorou: '⏳ O site demorou demais para o extrator — tente carregar de novo.',
+  ocupado: '⏳ O extrator já está cuidando de dois links — tente de novo em instantes.',
+  semPrograma: '⬇️ O extrator ainda não foi baixado (Configurações → 🔌 Conexões).',
+  erro: '⚠️ O extrator não conseguiu:',
+};
+function mdSonda(estado, motivo, detalhe) {
   clearTimeout(mdSondaTimer);
   if (estado === 'procurando') mdStatus('🔎 Procurando o arquivo do vídeo…');
   else if (estado === 'extraindo') mdStatus('🎬 Perguntando ao extrator…');
@@ -5864,6 +5877,8 @@ function mdSonda(estado) {
   } else if (estado === 'semQuadro') {
     // 🚫 v0.135: o site recusou ser embutido — o recado fica até trocar de mídia
     mdStatus('🚫 Este site não deixa a página dele aparecer dentro de um quadro.');
+  } else if (estado === 'nada' && motivo && MD_MOTIVOS[motivo]) {
+    mdStatus(OBS_I18N.t(MD_MOTIVOS[motivo]) + (motivo === 'erro' && detalhe ? ' ' + String(detalhe).slice(0, 200) : ''));
   } else mdStatus('');
 }
 

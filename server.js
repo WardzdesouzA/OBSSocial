@@ -414,6 +414,13 @@ const DEFAULT_SETTINGS = {
     idioma: 'auto',  // 'auto' detecta; ou um código tipo 'pt', 'en'...
     comando: '',     // avançado: caminho de um whisper-cli seu (vazio = automático)
   },
+  // 🍪 v0.166: o extrator da 🎞️ Mídia direta pode usar os cookies de um
+  // navegador em que a pessoa está logada (Instagram, TikTok e cia só
+  // entregam o vídeo logado). '' = nenhum. O arquivo cookies.txt, quando
+  // enviado, mora em data/ytdlp e manda mais que isto.
+  ytdlp: {
+    cookiesNavegador: '', // '' | firefox | chrome | edge | brave | chromium | opera | vivaldi | safari | whale
+  },
   // 🎵 A cara da Mesa de trilhas (vale nas configurações E no painel):
   // quantos botões por página e a fonte global do texto dos botões
   trilhasGrade: 15,          // 4 | 6 | 8 | 12 | 15 (como as telas do Stream Deck)
@@ -843,6 +850,7 @@ function mergeSettings(base) {
     trilhasTexto: { ...DEFAULT_SETTINGS.trilhasTexto, ...(src.trilhasTexto || {}) },
     deck: sanitizeDeck({ ...DEFAULT_SETTINGS.deck, ...(src.deck || {}) }), // 📱 v0.163
     transcricao: { ...DEFAULT_SETTINGS.transcricao, ...(src.transcricao || {}) },
+    ytdlp: sanitizeYtDlp({ ...DEFAULT_SETTINGS.ytdlp, ...(src.ytdlp || {}) }), // 🍪 v0.166
     chats: { ...DEFAULT_SETTINGS.chats, ...(src.chats || {}) }, // 👥 v0.141
     midiaTela: { ...DEFAULT_SETTINGS.midiaTela, ...(src.midiaTela || {}) },
     sombra: { ...DEFAULT_SETTINGS.sombra, ...(src.sombra || {}) }, // ✨ v0.86
@@ -3013,6 +3021,30 @@ const server = http.createServer((req, res) => {
   // ↩️ v0.90: restaurar um backup da Mesa — aceita o .json simples, o .zip
   // total e (compatibilidade de sempre) qualquer backup do Stream Deck.
   // Mesmas regras do /sd-importar: só o computador local, só o próprio painel.
+  // 🍪 v0.166: o cookies.txt do extrator — só o computador do streamer, só
+  // texto, no máximo 2 MB; fica em data/ytdlp e nunca sai de lá
+  if (req.method === 'POST' && urlPath === '/ytdlp-cookies') {
+    const responde = (codigo, corpo) => { res.writeHead(codigo, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(corpo)); };
+    if (role !== 'local') { responde(403, { ok: false, erro: 'os cookies só podem ser enviados no computador do streamer' }); req.resume(); return; }
+    if (!originAllowed(req.headers.origin, req.headers.host)) { responde(403, { ok: false, erro: 'origem não permitida' }); req.resume(); return; }
+    const partes = [];
+    let total = 0;
+    let estourou = false;
+    req.on('data', (p) => {
+      total += p.length;
+      if (total > 2 * 1024 * 1024) { estourou = true; req.destroy(); return; }
+      partes.push(p);
+    });
+    req.on('error', () => { if (!res.headersSent) responde(400, { ok: false, erro: 'falha ao receber o arquivo' }); });
+    req.on('close', () => { if (estourou && !res.headersSent) responde(413, { ok: false, erro: 'arquivo grande demais para ser um cookies.txt' }); });
+    req.on('end', () => {
+      if (estourou) return;
+      const r = extratorYtDlp.guardarCookies(Buffer.concat(partes).toString('utf8'));
+      responde(r.ok ? 200 : 400, r);
+    });
+    return;
+  }
+
   if (req.method === 'POST' && urlPath === '/mesa-restaurar') {
     if (role !== 'local') {
       res.writeHead(403, { 'Content-Type': 'application/json' });
@@ -7174,6 +7206,12 @@ const midiaDiretaRemotas = new Map();
 // 🧪 v0.134: o extrator opcional (yt-dlp). Fica DESLIGADO até alguém ligar no
 // 🧪 Labs e baixar o programa em 🔌 Conexões — nada vem embutido aqui.
 const { Extrator: ExtratorYtDlp } = require('./ytdlp');
+// (função içada: o mergeSettings do arranque roda antes desta linha, por
+// isso a lista de navegadores é pedida na hora, não guardada numa const)
+function sanitizeYtDlp(y) {
+  const nav = String((y && y.cookiesNavegador) || '').toLowerCase();
+  return { cookiesNavegador: require('./ytdlp').NAVEGADORES_COOKIES.includes(nav) ? nav : '' };
+}
 const extratorYtDlp = new ExtratorYtDlp({
   dir: path.join(DATA_DIR, 'ytdlp'),
   ehPublico: hostPublicoDaSonda,
@@ -7218,9 +7256,14 @@ async function conferirMidiaDaUrl(idDoItem, endereco, tipoAtual, provedorAtual) 
   try { achado = await sondarVideoDireto(endereco); } catch {}
   // 🧪 v0.134: a página não publica o arquivo (Instagram, TikTok e cia)? Quem
   // ligou o extrator no Labs e baixou o yt-dlp tem uma segunda chance
+  // 🧭 v0.166: e, quando nem ele acha, o painel fica sabendo POR QUÊ
+  let falha = null;
   if (!achado && state.settings.labs?.ytdlp === true) {
     avisarSondaMidiaDireta(idDoItem, 'extraindo');
-    try { achado = await extratorYtDlp.extrair(endereco); } catch {}
+    try {
+      achado = await extratorYtDlp.extrair(endereco, { cookiesNavegador: (state.settings.ytdlp || {}).cookiesNavegador || '' });
+    } catch {}
+    if (!achado) falha = extratorYtDlp.porque(endereco);
   }
   if (achado) {
     const titulo = String(achado.titulo || '').trim();
@@ -7253,14 +7296,15 @@ async function conferirMidiaDaUrl(idDoItem, endereco, tipoAtual, provedorAtual) 
   } else if (semQuadro) {
     trocarMidiaDireta(idDoItem, { semQuadro: true });
   }
-  avisarSondaMidiaDireta(idDoItem, semQuadro ? 'semQuadro' : 'nada');
+  avisarSondaMidiaDireta(idDoItem, semQuadro ? 'semQuadro' : 'nada', falha);
 }
 
 // O painel conta para quem está olhando que a procura pelo arquivo está
 // rolando — o yt-dlp pode demorar alguns segundos e silêncio parece travamento
-function avisarSondaMidiaDireta(idDoItem, estado) {
+// 🧭 v0.166: no «nada», vai junto o motivo do extrator ({ motivo, detalhe })
+function avisarSondaMidiaDireta(idDoItem, estado, falha) {
   if (state.midiaDireta.item && state.midiaDireta.item.id === idDoItem) {
-    broadcast({ type: 'midiaDiretaSonda', id: idDoItem, estado });
+    broadcast({ type: 'midiaDiretaSonda', id: idDoItem, estado, ...(falha ? { motivo: falha.motivo, detalhe: falha.detalhe || '' } : {}) });
   }
 }
 
@@ -10252,6 +10296,9 @@ function tratarMensagem(ws, raw) {
           ...(incoming.transcricao || {}),
           ...(ws.role !== 'local' ? { comando: (state.settings.transcricao || {}).comando || '' } : {}),
         },
+        // 🍪 v0.166: o navegador dos cookies faz o yt-dlp ler o perfil do
+        // navegador desta máquina — só o computador local escolhe
+        ytdlp: sanitizeYtDlp({ ...state.settings.ytdlp, ...(ws.role === 'local' ? (incoming.ytdlp || {}) : {}) }),
         // 👥 v0.141: de onde as mensagens do WhatsApp/Telegram podem vir
         chats: { ...state.settings.chats, ...(incoming.chats || {}) },
         midiaTela: { ...state.settings.midiaTela, ...(incoming.midiaTela || {}) },
@@ -11177,6 +11224,7 @@ function tratarMensagem(ws, raw) {
       if (msg.acao === 'baixar') extratorYtDlp.baixar();
       else if (msg.acao === 'cancelar') extratorYtDlp.cancelar();
       else if (msg.acao === 'apagar') extratorYtDlp.apagar();
+      else if (msg.acao === 'apagarCookies') extratorYtDlp.apagarCookies(); // 🍪 v0.166
       break;
     }
     case 'transcrever': {

@@ -1,4 +1,12 @@
 {
+  "0.166.0": {
+    "titulo": "🍪 Oturumunuzun çerezleriyle çıkarıcı (Instagram ve diğerleri) — başarısız olunca panel nedenini söylüyor",
+    "itens": [
+      "🧭 🎬 Çıkarıcı sessizce başarısız oluyordu: Instagram (ve diğerleri) videoyu yalnızca oturum açmış kullanıcılara veriyor ve bağlantı açıklama olmadan sitenin çerçevesi olarak kalıyordu. Artık panel nedeni anında söylüyor — «yalnızca oturum açmışa veriyor», özel, silinmiş/yanlış bağlantı, çıkarıcının tanımadığı site, yalnızca parçalar (HLS/DASH), çok uzun sürdü, çıkarıcı meşgul, çıkarıcı indirilmemiş — ya da başka bir şeyse tam hata.",
+      "🍪 Ayarlar → 🔌 Bağlantılar → 🎬 Çıkarıcı’da oturum açmış girmesinin iki yolu: oturum açtığınız tarayıcıyı seçmek (çıkarıcı onun çerezlerini okur; Windows’ta Chrome ve Edge çerezleri şifreler ve bu genellikle başarısız olur — Firefox çalışır) ya da «Get cookies.txt LOCALLY» gibi bir eklentiyle dışa aktarılmış bir cookies.txt göndermek. Dosya tarayıcıdan önce gelir, yalnızca bu bilgisayarda (data/ytdlp) kalır, yalnızca sitenin kendisine gider ve panel yalnızca site sayısını görür — içeriği asla. Tek tıkla silin.",
+      "⚖️ Hesap çerezleri hesabınızın anahtarıdır: üçüncü taraf bir programa açmaktan çekinmeyeceğiniz bir hesap kullanın. Çerezleri yalnızca yayıncının bilgisayarı gönderir, seçer veya siler."
+    ]
+  },
   "0.165.0": {
     "titulo": "📡 Doğrudan medya: çıkarıcının (ya da meta etiketlerinin) bulduğu video artık OBS Social üzerinden geliyor — siyah önizleme bitti",
     "itens": [

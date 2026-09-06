@@ -1,4 +1,12 @@
 {
+  "0.166.0": {
+    "titulo": "🍪 Extraktor mit den Cookies deines Logins (Instagram & Co.) — und wenn er scheitert, sagt das Panel warum",
+    "itens": [
+      "🧭 Der 🎬 Extraktor scheiterte still: Instagram (und andere) liefern das Video nur an angemeldete Nutzer, und der Link blieb ohne Erklärung als Rahmen der Seite. Jetzt nennt das Panel sofort den Grund — „liefert nur angemeldet“, privat, gelöscht/falscher Link, dem Extraktor unbekannte Seite, nur Stücke (HLS/DASH), zu lange gedauert, Extraktor beschäftigt, Extraktor nicht heruntergeladen — oder den genauen Fehler, wenn es etwas anderes ist.",
+      "🍪 Unter Einstellungen → 🔌 Verbindungen → 🎬 Extraktor zwei Wege, angemeldet hineinzugehen: den Browser wählen, in dem du angemeldet bist (der Extraktor liest seine Cookies; unter Windows verschlüsseln Chrome und Edge die Cookies, und das schlägt meist fehl — Firefox funktioniert), oder eine cookies.txt senden, die eine Erweiterung wie „Get cookies.txt LOCALLY“ exportiert hat. Die Datei hat Vorrang vor dem Browser, bleibt nur auf diesem Computer (data/ytdlp), geht nur an die Seite selbst, und das Panel sieht nur die Zahl der Seiten — nie den Inhalt. Mit einem Klick löschen.",
+      "⚖️ Konto-Cookies sind ein Schlüssel zu deinem Konto: nimm ein Konto, das du einem Drittprogramm anvertrauen magst. Nur der Computer des Streamers sendet, wählt oder löscht Cookies."
+    ]
+  },
   "0.165.0": {
     "titulo": "📡 Direktmedien: das vom Extraktor (oder den Metatags) gefundene Video kommt jetzt über OBS Social — Schluss mit der schwarzen Vorschau",
     "itens": [
