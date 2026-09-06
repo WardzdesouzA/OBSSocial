@@ -1900,6 +1900,125 @@ function trilhaEmojiEstado(t) {
   return null;
 }
 
+// 🎭 v0.156 · 📱 v0.163: o estado de uma tecla do OBS/vMix a partir do resumo
+// que o servidor manda ({ type: 'obs' } / { type: 'vmix' }). Vale no painel
+// e no mini Mesa do celular — a MESMA conta nos dois. Sem conexão a
+// resposta é null (desconhecido): a tecla não acende e mostra a cara de
+// sempre, não a de «desligado».
+function vmixTeclaLigadaDe(t, o) {
+  o = o || {};
+  if (!o.conectado || !t.vmixAcao) return null;
+  const a = t.vmixAlvo || {};
+  const ent = (ref) => (o.entradas || []).find((e) => String(e.numero) === String(ref) || e.chave === ref || e.titulo === ref) || null;
+  switch (t.vmixAcao) {
+    case 'transmitir': return o.transmitindo === true;
+    case 'gravar': return o.gravando === true;
+    case 'externa': return o.externa === true;
+    case 'multiCorder': return o.multiCorder === true;
+    case 'telaCheia': return o.telaCheia === true;
+    case 'playlist': return o.playlist === true;
+    case 'escurecer': return o.escurecido === true;
+    case 'entrada': {
+      const e = ent(a.entrada);
+      if (!e) return false;
+      return a.modo === 'preview' ? e.numero === o.preview : e.numero === o.programa;
+    }
+    case 'overlay': {
+      const ov = (o.overlays || []).find((x) => x.canal === Number(a.canal || 1));
+      if (!ov || !ov.entrada) return false;
+      const e = ent(a.entrada);
+      return e ? ov.entrada === e.numero : true;
+    }
+    case 'audioMudo': { const e = ent(a.entrada); return !!e && e.mudo === true; }
+    case 'audioSolo': { const e = ent(a.entrada); return !!e && e.solo === true; }
+    case 'masterMudo': return !!(o.master && o.master.mudo);
+    case 'midia': { const e = ent(a.entrada); return !!e && /running|playing/i.test(e.estado || ''); }
+    default: return false;
+  }
+}
+function obsTeclaLigadaDe(t, o) {
+  o = o || {};
+  if (!o.conectado || !t.obsAcao) return null;
+  const a = t.obsAlvo || {};
+  switch (t.obsAcao) {
+    case 'transmitir': return o.transmitindo === true;
+    case 'gravar': return o.gravando === true;
+    case 'gravarPausa': return o.gravandoPausado === true;
+    case 'camVirtual': return o.camVirtual === true;
+    case 'replay': return o.replay === true;
+    case 'estudio': return o.estudio === true;
+    // A tecla que escolhe o PREVIEW acende pela cena do preview, não pela
+    // que está no ar
+    case 'cena': {
+      if (!a.nome) return false;
+      const noPreview = a.modo === 'preview' || (a.modo !== 'programa' && o.estudio === true);
+      return noPreview ? a.nome === o.cenaPreview : a.nome === o.cenaPrograma;
+    }
+    case 'colecao': return !!a.nome && a.nome === o.colecaoAtual;
+    case 'perfil': return !!a.nome && a.nome === o.perfilAtual;
+    case 'transicao': return !!a.nome && a.nome === o.transicaoAtual;
+    case 'fonte': {
+      const cena = a.cena || o.cenaPrograma;
+      const i = a.id
+        ? (o.itens || []).find((x) => x.cena === cena && x.id === a.id)
+        : (o.itens || []).find((x) => x.cena === cena && x.nome === a.fonte);
+      return !!i && i.ligado === true;
+    }
+    case 'filtro': {
+      const f = (o.filtros || []).find((x) => x.fonte === a.fonte && x.nome === a.filtro);
+      return !!f && f.ligado === true;
+    }
+    // Mudo aceso = está mudo mesmo (é o que a tecla 🔇 mostra)
+    case 'audioMudo': {
+      const f = (o.fontesAudio || []).find((x) => x.nome === a.fonte);
+      return !!f && f.mudo === true;
+    }
+    case 'midia': {
+      const m = (o.midias || []).find((x) => x.nome === a.fonte);
+      return !!m && m.estado === 'playing';
+    }
+    default: return false;
+  }
+}
+// O estado em TRÊS cores (o contorno da tecla e a cara dela):
+//   'verde'    = ligado — no ar, gravando, fonte visível, som ATIVO
+//   'vermelho' = no PREVIEW (modo estúdio / preview do vMix) ou áudio MUDO
+//   false      = apagado · null = desconhecido (programa desconectado)
+function obsTeclaEstadoDe(t, o) {
+  o = o || {};
+  if (!o.conectado || !t.obsAcao) return null;
+  const a = t.obsAlvo || {};
+  switch (t.obsAcao) {
+    case 'cena': {
+      if (!a.nome) return false;
+      if (a.nome === o.cenaPrograma) return 'verde';
+      return o.estudio === true && a.nome === o.cenaPreview ? 'vermelho' : false;
+    }
+    case 'audioMudo': {
+      const f = (o.fontesAudio || []).find((x) => x.nome === a.fonte);
+      return f ? (f.mudo === true ? 'vermelho' : 'verde') : false;
+    }
+    default: return obsTeclaLigadaDe(t, o) ? 'verde' : false;
+  }
+}
+function vmixTeclaEstadoDe(t, o) {
+  o = o || {};
+  if (!o.conectado || !t.vmixAcao) return null;
+  const a = t.vmixAlvo || {};
+  const ent = (ref) => (o.entradas || []).find((e) => String(e.numero) === String(ref) || e.chave === ref || e.titulo === ref) || null;
+  switch (t.vmixAcao) {
+    case 'entrada': {
+      const e = ent(a.entrada);
+      if (!e) return false;
+      return e.numero === o.programa ? 'verde' : e.numero === o.preview ? 'vermelho' : false;
+    }
+    // entrada sem áudio (mudo não é booleano) fica apagada — não «som ativo»
+    case 'audioMudo': { const e = ent(a.entrada); return e && typeof e.mudo === 'boolean' ? (e.mudo ? 'vermelho' : 'verde') : false; }
+    case 'masterMudo': return o.master && typeof o.master.mudo === 'boolean' ? (o.master.mudo ? 'vermelho' : 'verde') : false;
+    default: return vmixTeclaLigadaDe(t, o) ? 'verde' : false;
+  }
+}
+
 function montarBotaoTrilha(t, opts = {}) {
   const b = document.createElement('button');
   b.type = 'button';
@@ -2001,7 +2120,9 @@ function montarBotaoTrilha(t, opts = {}) {
     background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(0,0,0,0.25));
     color: inherit; cursor: pointer; overflow: hidden; padding: 0;
   }
-  .trilha-tecla:hover { border-color: var(--accent, #7c4dff); box-shadow: 0 0 0 2px var(--accent, #7c4dff) inset; }
+  /* 📱 v0.163: o realce de passar o mouse só onde existe mouse — no toque ele
+     grudava na tecla tocada e tapava o contorno de estado (tocando/verde/vermelho) */
+  @media (hover: hover) { .trilha-tecla:hover { border-color: var(--accent, #7c4dff); box-shadow: 0 0 0 2px var(--accent, #7c4dff) inset; } }
   .trilha-tecla.tocando { border-color: var(--accent, #7c4dff); box-shadow: 0 0 0 2px var(--accent, #7c4dff); animation: trilhaTeclaPulsa 1.6s ease-in-out infinite; }
   body.a11y-sem-animacao .trilha-tecla.tocando { animation: none; }
   @keyframes trilhaTeclaPulsa { 0%, 100% { opacity: 1; } 50% { opacity: 0.72; } }
@@ -2064,6 +2185,84 @@ function montarBotaoTrilha(t, opts = {}) {
   `;
   document.head && document.head.appendChild(css);
 })();
+
+// ---------------------------------------------------------------------------
+// 📱 v0.163: os temas do mini Mesa de Trilhas (/deck — a Mesa no celular ou
+// tablet). Cada tema traz as cores e a animação de fundo que combina com ele
+// ('nenhuma' nos parados). A lista vale nas configurações (o card 📱) e na
+// própria página do celular — mudar aqui muda nos dois.
+const DECK_TEMAS = [
+  { id: 'grafite', nome: '🪨 Grafite', anim: 'nenhuma', fundo: '#14161c', barra: '#1d2029', tecla: '#232733', texto: '#e8eaf0', suave: '#8b94a6', borda: '#343a4a', destaque: '#7c4dff' },
+  { id: 'neon', nome: '💜 Neon', anim: 'nenhuma', fundo: '#0b0614', barra: '#150c26', tecla: '#1c1030', texto: '#f3e9ff', suave: '#a58cc9', borda: '#4c2a7a', destaque: '#d946ef' },
+  { id: 'oceano', nome: '🌊 Oceano', anim: 'nenhuma', fundo: '#06192b', barra: '#0b2540', tecla: '#0f3050', texto: '#e2f3ff', suave: '#7fa6c3', borda: '#1f5a7a', destaque: '#22b8cf' },
+  { id: 'floresta', nome: '🌲 Floresta', anim: 'nenhuma', fundo: '#0b1a12', barra: '#11261b', tecla: '#163223', texto: '#e6f4ea', suave: '#86a894', borda: '#2a5a3c', destaque: '#34c759' },
+  { id: 'brasa', nome: '🔥 Brasa', anim: 'nenhuma', fundo: '#1c0d08', barra: '#2a1510', tecla: '#3a1c14', texto: '#ffece4', suave: '#c48a72', borda: '#6b3423', destaque: '#ff6b2b' },
+  { id: 'claro', nome: '☀️ Claro', anim: 'nenhuma', fundo: '#eef1f6', barra: '#ffffff', tecla: '#ffffff', texto: '#1a2330', suave: '#5c6b7f', borda: '#d5dbe5', destaque: '#7c3aed' },
+  // 🎬 os animados: o fundo se mexe (a animação pode ser trocada ou desligada)
+  { id: 'aurora', nome: '🌌 Aurora', anim: 'aurora', fundo: '#070b1a', barra: '#0e1530', tecla: '#131b3a', texto: '#eaf0ff', suave: '#8fa0d0', borda: '#2b3a70', destaque: '#4dd0e1' },
+  { id: 'estrelas', nome: '✨ Céu estrelado', anim: 'estrelas', fundo: '#05070f', barra: '#0c1020', tecla: '#12172a', texto: '#f0f2ff', suave: '#8890b0', borda: '#2c3350', destaque: '#ffd166' },
+  { id: 'natal', nome: '🎄 Natal', anim: 'neve', fundo: '#0f2a1a', barra: '#163a24', tecla: '#1d4a2e', texto: '#fff8f0', suave: '#9fc7ac', borda: '#2f6b43', destaque: '#e53935' },
+  { id: 'bolhas', nome: '🫧 Bolhas', anim: 'bolhas', fundo: '#062a3a', barra: '#0a3a50', tecla: '#0f4a66', texto: '#e8fbff', suave: '#86bfd0', borda: '#1f6f8f', destaque: '#38bdf8' },
+  { id: 'retro', nome: '🕹️ Retrô', anim: 'grade', fundo: '#12021f', barra: '#1c0530', tecla: '#2a0a4a', texto: '#ffe9ff', suave: '#c58fd6', borda: '#6a1f9a', destaque: '#ff2fb9' },
+  { id: 'festa', nome: '🎉 Festa', anim: 'confete', fundo: '#17111f', barra: '#221a2e', tecla: '#2c2140', texto: '#fff4e0', suave: '#b8a5c9', borda: '#4d3a66', destaque: '#ffb300' },
+];
+const DECK_ANIMACOES = [
+  { id: 'tema', nome: '✨ A do tema' },
+  { id: 'nenhuma', nome: '⏹ Nenhuma' },
+  { id: 'aurora', nome: '🌌 Aurora' },
+  { id: 'estrelas', nome: '✨ Estrelas' },
+  { id: 'neve', nome: '❄️ Neve' },
+  { id: 'bolhas', nome: '🫧 Bolhas' },
+  { id: 'grade', nome: '🕹️ Grade retrô' },
+  { id: 'confete', nome: '🎉 Confete' },
+];
+const deckTemaInfo = (id) => DECK_TEMAS.find((t) => t.id === id) || DECK_TEMAS[0];
+
+// Do bloco deck das configurações (mais, opcionalmente, o ajuste só deste
+// aparelho) para a cara efetiva: cores, animação, intensidade, cantos e fonte.
+// No modo 'obs' a cara é a cópia do tema pessoal do OBS Social gravada pelas
+// configurações (temaObs); no 'proprio', um tema desta lista com as cores
+// extras por cima. A animação 'tema' é a que o tema traz (nenhuma no 'obs').
+function deckResolverTema(conf, ajuste) {
+  const d = { ...(conf || {}), ...(ajuste || {}) };
+  const hex = (v) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : '');
+  const extra = (conf && conf.cores) || {};
+  let cores, animBase, cantos = 14, fonte = '', nome = '';
+  if (d.tema === 'proprio') {
+    const t = deckTemaInfo(d.temaProprio);
+    nome = t.nome;
+    cores = { fundo: t.fundo, barra: t.barra, tecla: t.tecla, texto: t.texto, suave: t.suave, borda: t.borda, destaque: t.destaque };
+    animBase = t.anim;
+  } else {
+    const o = (conf && conf.temaObs) || {};
+    nome = o.nome || '';
+    cores = {
+      fundo: hex(o.corFundo) || '#0d1117', barra: hex(o.corPainel) || '#161b22', tecla: hex(o.corPainel2) || '#1c2330',
+      texto: hex(o.corTexto) || '#e6edf3', suave: hex(o.corSuave) || '#8b98a8', borda: hex(o.corBorda) || '#2d3748',
+      destaque: hex(o.corDestaque) || '#7c3aed',
+    };
+    animBase = 'nenhuma';
+    const c = Number(o.cantos);
+    if (Number.isFinite(c)) cantos = Math.max(0, Math.min(28, c));
+    fonte = typeof o.fonte === 'string' ? o.fonte : '';
+  }
+  // as cores extras são do tema escolhido nas configurações: um aparelho que
+  // escolheu a própria cara («só neste aparelho») fica com o tema puro
+  if (d.tema === 'proprio' && !ajuste) {
+    if (hex(extra.fundo)) cores.fundo = extra.fundo;
+    if (hex(extra.tecla)) cores.tecla = extra.tecla;
+    if (hex(extra.texto)) cores.texto = extra.texto;
+    if (hex(extra.destaque)) cores.destaque = extra.destaque;
+  }
+  const animacao = d.animacao && d.animacao !== 'tema' ? d.animacao : animBase;
+  const n = Number(d.intensidade);
+  return {
+    modo: d.tema === 'proprio' ? 'proprio' : 'obs', nome, cores,
+    animacao: DECK_ANIMACOES.some((a) => a.id === animacao) && animacao !== 'tema' ? animacao : 'nenhuma',
+    intensidade: Number.isFinite(n) ? Math.max(10, Math.min(100, n)) : 60,
+    cantos, fonte,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // ♿ Acessibilidade da interface (painel + configurações)

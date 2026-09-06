@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.163.0",
+    "titulo": "📱 Mini Mesa de Trilhas: a Mesa no celular ou tablet, com temas animados",
+    "itens": [
+      "📱 Novo endereço /deck: a Mesa de Trilhas em tela cheia no celular ou tablet (mesma rede/Wi-Fi), com as mesmas teclas, pastas e botões de multi ação do painel, sincronizada na hora — o que tocar lá toca aqui, e a tecla acende nos dois. Em ⚙️ Configurações → 🎵 Mesa de Trilhas → 📱 Mini Mesa ficam o QR e o endereço; no iPhone/iPad, «Adicionar à Tela de Início» abre como aplicativo.",
+      "📐 Tudo cabe na tela: a tecla é medida pela tela, então as 15 teclas de uma página aparecem inteiras até no menor celular — em pé (3 × 5) ou deitado (5 × 3), sem rolagem. Com mais de uma página, é só deslizar o dedo (ou tocar nos pontinhos). Segurar o botão de multi ação abre a pasta; escorregar o dedo por cima dele para deslizar a página não dispara nada.",
+      "🎨 Temas do teclado: «igual ao OBS Social» (uma cópia do tema do seu navegador, que acompanha a troca de tema na aba 🎨) ou um dos 12 temas próprios do mini Mesa — seis parados e seis com fundo animado (🌌 Aurora, ✨ Céu estrelado, 🎄 Natal com neve, 🫧 Bolhas, 🕹️ Retrô, 🎉 Festa). A animação e a intensidade podem ser trocadas por cima de qualquer tema, cores extras entram por cima do tema próprio, e cada celular pode ter a própria cara (⚙️ → «Só neste aparelho»). O ♿ «reduzir animações» para tudo.",
+      "🔇 O celular nasce mudo — o som sai onde cada tecla manda (live e/ou painel). Em ⚙️ dá para ouvir as trilhas nele (monitorar com fone), manter a tela acesa e abrir em ⛶ tela cheia. A barra mostra o que está tocando (com o tempo) e o ⏹ para tudo.",
+      "🔐 As mesmas regras da rede: com senha, o celular entra com a senha; no modo restrito, precisa dos seletores 🧰 (e 🎬 para as teclas do OBS/vMix) — a tela avisa o que falta e onde ligar, e o card das configurações também."
+    ]
+  },
+  {
     "version": "0.162.0",
     "titulo": "🎬 Os widgets voltam a fazer a animação de saída e a Mesa não «come» mais o começo da trilha",
     "itens": [

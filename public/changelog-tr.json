@@ -1,4 +1,14 @@
 {
+  "0.163.0": {
+    "titulo": "📱 Mini Mesa de Trilhas: telefon veya tablette Mesa, hareketli temalarla",
+    "itens": [
+      "📱 Yeni adres /deck: Mesa de Trilhas, telefon veya tablette (aynı ağ/Wi-Fi) tam ekranda; paneldeki aynı tuşlar, klasörler ve çoklu eylem düğmeleriyle, anında eşzamanlı — orada çalan burada çalar ve tuş ikisinde de yanar. QR ve adres ⚙️ Ayarlar → 🎵 Mesa de Trilhas → 📱 Mini Mesa’da; iPhone/iPad’de “Ana Ekrana Ekle” onu uygulama olarak açar.",
+      "📐 Her şey ekrana sığar: tuş ekrana göre ölçülür, bu yüzden bir sayfanın 15 tuşu en küçük telefonda bile tam görünür — dikey (3 × 5) veya yatay (5 × 3), kaydırma yok. Birden fazla sayfada parmağı kaydırmak (ya da noktalara dokunmak) yeter. Çoklu eylem düğmesini basılı tutmak klasörü açar; sayfayı kaydırmak için üzerinden parmak geçirmek hiçbir şeyi tetiklemez.",
+      "🎨 Tuş takımı temaları: “OBS Social ile aynı” (tarayıcınızın temasının kopyası; 🎨 sekmesindeki tema değişimini izler) ya da mini Mesa’nın 12 özel temasından biri — altısı sabit, altısı hareketli arka planlı (🌌 Aurora, ✨ Yıldızlı gökyüzü, 🎄 Karlı Noel, 🫧 Baloncuklar, 🕹️ Retro, 🎉 Parti). Animasyon ve yoğunluk her temanın üstünde değiştirilebilir, ek renkler özel temanın üstüne gelir ve her telefonun kendi görünümü olabilir (⚙️ → “Yalnızca bu cihazda”). ♿ “Animasyonları azalt” her şeyi durdurur.",
+      "🔇 Telefon sessiz başlar — ses her tuşun söylediği yerden çıkar (yayın ve/veya panel). ⚙️’de parçaları onda dinlemek (kulaklıkla izlemek), ekranı açık tutmak ve ⛶ tam ekranda açmak mümkün. Çubuk ne çaldığını (süresiyle) gösterir ve ⏹ her şeyi durdurur.",
+      "🔐 Aynı ağ kuralları: şifre varsa telefon şifreyle girer; kısıtlı modda 🧰 seçicisi (OBS/vMix tuşları için 🎬 de) gerekir — ekran neyin eksik olduğunu ve nereden açılacağını söyler, ayar kartı da öyle."
+    ]
+  },
   "0.162.0": {
     "titulo": "🎬 Widget’lar çıkış animasyonunu yeniden oynatıyor ve Mesa artık parçanın başını “yemiyor”",
     "itens": [

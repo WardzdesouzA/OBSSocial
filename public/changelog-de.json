@@ -1,4 +1,14 @@
 {
+  "0.163.0": {
+    "titulo": "📱 Mini Mesa de Trilhas: die Mesa auf Handy oder Tablet, mit animierten Themen",
+    "itens": [
+      "📱 Neue Adresse /deck: die Mesa de Trilhas im Vollbild auf Handy oder Tablet (gleiches Netzwerk/WLAN), mit denselben Tasten, Ordnern und Multi-Aktions-Buttons wie im Panel, sofort synchron — was dort spielt, spielt hier, und die Taste leuchtet auf beiden. Unter ⚙️ Einstellungen → 🎵 Mesa de Trilhas → 📱 Mini Mesa stehen QR und Adresse; auf iPhone/iPad öffnet „Zum Home-Bildschirm“ sie als App.",
+      "📐 Alles passt auf den Bildschirm: die Taste wird am Bildschirm bemessen, also erscheinen die 15 Tasten einer Seite ganz, selbst auf dem kleinsten Handy — hochkant (3 × 5) oder quer (5 × 3), ohne Scrollen. Bei mehreren Seiten einfach wischen (oder die Punkte antippen). Einen Multi-Aktions-Button gedrückt halten öffnet den Ordner; mit dem Finger darüber zu wischen, um die Seite zu wechseln, löst nichts aus.",
+      "🎨 Themen des Tastenfelds: „wie OBS Social“ (eine Kopie des Themas deines Browsers, die dem Themenwechsel im Tab 🎨 folgt) oder eines der 12 eigenen Themen der Mini-Mesa — sechs ruhige und sechs mit animiertem Hintergrund (🌌 Aurora, ✨ Sternenhimmel, 🎄 Weihnachten mit Schnee, 🫧 Blasen, 🕹️ Retro, 🎉 Party). Animation und Intensität lassen sich über jedes Thema legen, Extrafarben über das eigene Thema, und jedes Handy kann sein eigenes Aussehen haben (⚙️ → „Nur auf diesem Gerät“). ♿ „Animationen reduzieren“ stoppt alles.",
+      "🔇 Das Handy startet stumm — der Ton kommt dort, wo jede Taste es vorgibt (Live und/oder Panel). Unter ⚙️ kann man die Spuren darauf hören (mit Kopfhörern mithören), den Bildschirm anlassen und im ⛶ Vollbild öffnen. Die Leiste zeigt, was spielt (mit Zeit), und ⏹ stoppt alles.",
+      "🔐 Dieselben Netzwerkregeln: mit Passwort meldet sich das Handy damit an; im eingeschränkten Modus braucht es die Schalter 🧰 (und 🎬 für die OBS/vMix-Tasten) — der Bildschirm sagt, was fehlt und wo es einzuschalten ist, und die Einstellungskarte ebenso."
+    ]
+  },
   "0.162.0": {
     "titulo": "🎬 Die Widgets spielen ihre Ausblend-Animation wieder, und die Mesa „frisst“ den Anfang der Spur nicht mehr",
     "itens": [
