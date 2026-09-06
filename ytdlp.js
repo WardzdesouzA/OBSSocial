@@ -41,6 +41,7 @@ class Extrator {
     this.ehPublico = typeof opcoes.ehPublico === 'function' ? opcoes.ehPublico : async () => true;
     this.download = null;      // { pct, req, cancelado }
     this.cache = new Map();    // url da página → { em, achado }
+    this.falhas = new Map();   // 🧭 v0.166: url da página → { motivo, detalhe } da última tentativa
     this.rodando = 0;
     this._sistema = undefined; // caminho do yt-dlp instalado na máquina (uma busca só)
     this._versao = null;
@@ -91,7 +92,60 @@ class Extrator {
       baixandoPct: this.download ? this.download.pct : null,
       trabalhando: this.rodando > 0,
       arquivo: nomeDoArquivo(),
+      // 🍪 v0.166: só o RESUMO — o conteúdo dos cookies nunca sai daqui
+      cookies: { arquivo: this._temArquivo(this.arquivoCookies()), sites: this.sitesDosCookies() },
     };
+  }
+
+  // ---------- 🍪 v0.166: cookies para os sites que só entregam logado ----------
+  // Um cookies.txt (formato Netscape, o que as extensões «Get cookies.txt»
+  // exportam) fica em data/ytdlp/cookies.txt, só neste computador, e vai
+  // com o yt-dlp (--cookies). Alternativa: o navegador em que a pessoa
+  // está logada (--cookies-from-browser). Nenhum dos dois é gravado em
+  // outro lugar nem mandado para o painel — o painel só vê a contagem.
+  arquivoCookies() { return path.join(this.dir, 'cookies.txt'); }
+
+  sitesDosCookies() {
+    let texto = '';
+    try { texto = fs.readFileSync(this.arquivoCookies(), 'utf8'); } catch { return 0; }
+    return contarSitesDosCookies(texto);
+  }
+
+  guardarCookies(texto) {
+    const conferido = conferirCookiesNetscape(texto);
+    if (!conferido.ok) return conferido;
+    try {
+      fs.mkdirSync(this.dir, { recursive: true });
+      fs.writeFileSync(this.arquivoCookies(), conferido.texto, { mode: 0o600 });
+      // (o mode do writeFileSync só vale na criação: um arquivo já existente
+      // fica com o que tinha — reforça)
+      if (process.platform !== 'win32') { try { fs.chmodSync(this.arquivoCookies(), 0o600); } catch { /* sem permissão */ } }
+    } catch (err) { return { ok: false, erro: 'não consegui gravar o arquivo: ' + (err && err.message) }; }
+    this.esquecer();
+    this._avisaEstado();
+    return { ok: true, sites: conferido.sites };
+  }
+
+  apagarCookies() {
+    this._limpar(this.arquivoCookies());
+    this.esquecer();
+    this._avisaEstado();
+  }
+
+  // cookies mudaram (ou o navegador escolhido): o que falhou pode passar agora
+  esquecer() { this.cache.clear(); this.falhas.clear(); }
+
+  // 🧭 v0.166: por que a última tentativa nessa página não deu — para o
+  // painel explicar em vez de ficar quieto
+  porque(pagina) {
+    let chave = String(pagina || '');
+    try { chave = new URL(pagina).toString(); } catch { /* fica como veio */ }
+    return this.falhas.get(chave) || null;
+  }
+
+  _anotarFalha(chave, motivo, detalhe) {
+    if (this.falhas.size >= MAX_CACHE) this.falhas.delete(this.falhas.keys().next().value);
+    this.falhas.set(chave, { motivo, detalhe: String(detalhe || '').slice(0, 300) });
   }
 
   _avisaEstado() { this.aoEvento({ type: 'ytdlpEstado', estado: this.estado() }); }
@@ -195,56 +249,88 @@ class Extrator {
     this.cache.set(url, { em: Date.now(), achado });
   }
 
-  // Devolve { url, tipo, titulo, proporcao, duracao } ou null.
-  async extrair(pagina) {
+  // Devolve { url, tipo, titulo, proporcao, duracao, cabecalhos } ou null
+  // (e, no null, porque(pagina) conta o motivo).
+  // opcoes.cookiesNavegador: 'firefox' | 'chrome' | 'edge' | … (vazio = nenhum)
+  async extrair(pagina, opcoes = {}) {
     const onde = this.onde();
-    if (!onde) return null;
     let u;
     try { u = new URL(pagina); } catch { return null; }
     if (!/^https?:$/.test(u.protocol)) return null;
+    const chave = u.toString();
+    if (!onde) { this._anotarFalha(chave, 'semPrograma'); return null; }
     // 🔒 o yt-dlp não vai bisbilhotar a rede de casa por causa de uma URL colada
     if (!(await this.ehPublico(u.hostname))) return null;
-    const chave = u.toString();
     const guardado = this._doCache(chave);
     if (guardado !== undefined) return guardado;
-    if (this.rodando >= 2) return null; // um site lento não segura a live inteira
+    if (this.rodando >= 2) { this._anotarFalha(chave, 'ocupado'); return null; } // um site lento não segura a live inteira
     this.rodando++;
     this._avisaEstado();
+    let copiaCookies = null;
     try {
-      const bruto = await this._rodar(onde.comando, [
+      const args = [
         '--ignore-config',    // um arquivo de configuração perdido não muda nada
         '--no-playlist',      // o link de um vídeo é um vídeo, não uma lista
         '--no-warnings', '--no-progress',
         '--socket-timeout', '15', '--retries', '1',
         '-J',                 // só conta o que achou; não baixa nada
-        '--', chave,
-      ]);
-      const achado = escolherFormato(bruto);
-      this._guardar(chave, achado);
+      ];
+      // 🍪 v0.166: o arquivo manda; sem arquivo, o navegador escolhido.
+      // O yt-dlp REGRAVA o arquivo de cookies ao sair — cada execução recebe
+      // uma cópia só dela (duas ao mesmo tempo não se atropelam e o arquivo
+      // enviado fica como veio)
+      const navegador = String(opcoes.cookiesNavegador || '').toLowerCase();
+      if (this._temArquivo(this.arquivoCookies())) {
+        copiaCookies = path.join(this.dir, `cookies.${process.pid}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}.txt`);
+        fs.copyFileSync(this.arquivoCookies(), copiaCookies);
+        if (process.platform !== 'win32') { try { fs.chmodSync(copiaCookies, 0o600); } catch { /* sem permissão */ } }
+        args.push('--cookies', copiaCookies);
+      } else if (NAVEGADORES_COOKIES.includes(navegador)) args.push('--cookies-from-browser', navegador);
+      args.push('--', chave);
+      const r = await this._rodar(onde.comando, args);
+      const achado = r.ok ? escolherFormato(r.saida) : null;
+      let motivo = null;
+      if (!achado) {
+        const f = r.demorou ? { motivo: 'demorou', detalhe: '' } : r.ok ? { motivo: 'semFormato', detalhe: '' } : classificarFalha(r.erro);
+        motivo = f.motivo;
+        this._anotarFalha(chave, f.motivo, f.detalhe);
+      } else this.falhas.delete(chave);
+      // falha passageira (demorou, erro esquisito) não fica no cache: o
+      // painel pede para tentar de novo, e a tentativa tem que rodar mesmo
+      if (achado || !['demorou', 'erro'].includes(motivo)) this._guardar(chave, achado);
       return achado;
-    } catch { return null; } finally {
+    } catch { this._anotarFalha(chave, 'erro'); return null; } finally {
+      if (copiaCookies) this._limpar(copiaCookies);
       this.rodando--;
       this._avisaEstado();
     }
   }
 
+  // Devolve { ok, saida, erro, demorou } — o erro é o que o yt-dlp escreveu
   _rodar(comando, args) {
     return new Promise((resolve) => {
       let saida = '';
+      let erro = '';
       let acabou = false;
+      let demorou = false;
       let proc;
-      const fim = (texto) => { if (!acabou) { acabou = true; clearTimeout(relogio); resolve(texto); } };
+      const fim = (codigo) => {
+        if (acabou) return;
+        acabou = true;
+        clearTimeout(relogio);
+        resolve({ ok: codigo === 0 && !demorou, saida: codigo === 0 ? saida : '', erro, demorou });
+      };
       try {
         proc = spawn(comando, args, { windowsHide: true });
-      } catch { resolve(''); return; }
-      const relogio = setTimeout(() => { try { proc.kill(); } catch { /* já saiu */ } fim(''); }, TEMPO_MAX_MS);
+      } catch { resolve({ ok: false, saida: '', erro: 'não consegui iniciar o programa', demorou: false }); return; }
+      const relogio = setTimeout(() => { demorou = true; try { proc.kill(); } catch { /* já saiu */ } fim(-1); }, TEMPO_MAX_MS);
       proc.stdout.on('data', (d) => {
         if (saida.length < LIMITE_SAIDA) saida += d;
         else { try { proc.kill(); } catch { /* já saiu */ } }
       });
-      proc.stderr.on('data', () => {});
-      proc.on('error', () => fim(''));
-      proc.on('close', (codigo) => fim(codigo === 0 ? saida : ''));
+      proc.stderr.on('data', (d) => { if (erro.length < 64 * 1024) erro += d; });
+      proc.on('error', (e) => { erro = erro || String(e && e.message || 'erro'); fim(-1); });
+      proc.on('close', (codigo) => fim(codigo));
     });
   }
 
@@ -325,4 +411,72 @@ function escolherFormato(bruto) {
   };
 }
 
-module.exports = { Extrator, escolherFormato, nomeDoArquivo, BASE_YTDLP };
+// 🧭 v0.166: o que o yt-dlp escreveu vira um motivo que o painel sabe
+// explicar. Só a ÚLTIMA linha de erro conta (as outras são rastro).
+//   login       → o site só entrega para quem está logado (cookies resolvem)
+//   privado     → conteúdo privado / restrito
+//   naoExiste   → apagado, link errado, indisponível
+//   naoSuportado→ o yt-dlp não conhece o site
+//   semFormato  → achou, mas nada que um <video> toque direto (só HLS/DASH)
+//   demorou     → o site não respondeu a tempo
+//   ocupado     → já tem duas procuras rodando
+//   semPrograma → o yt-dlp não está baixado
+//   erro        → outra coisa (o detalhe vai junto)
+function classificarFalha(stderr) {
+  const linhas = String(stderr || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const erros = linhas.filter((l) => /^ERROR:/i.test(l));
+  // 🔒 só uma linha «ERROR:» vira detalhe: um WARNING do yt-dlp pode ecoar
+  // uma linha inteira do cookies.txt (nome e valor do cookie)
+  const linha = erros[erros.length - 1] || '';
+  const detalhe = linha.replace(/^ERROR:\s*/i, '').replace(/\s*;?\s*please report this issue on.*$/i, '').slice(0, 300);
+  const t = linha.toLowerCase();
+  // (ordem importa: as mensagens inequívocas primeiro, para uma URL ecoada
+  // com «private» ou um id com «404» dentro não enganarem os testes soltos)
+  if (/unsupported url|no suitable extractor|is not a valid url/.test(t)) return { motivo: 'naoSuportado', detalhe };
+  if (/requested format is not available|no video formats found/.test(t)) return { motivo: 'semFormato', detalhe };
+  if (/login required|login_required|rate-limit reached|requires? (a )?login|sign in to confirm|not logged in|use --cookies|cookies-from-browser|logged.in|authentication/.test(t)) return { motivo: 'login', detalhe };
+  if (/private video|is private|video is private|restricted|only available to|age.restricted|members.only/.test(t)) return { motivo: 'privado', detalhe };
+  if (/http error 404|\b404\b|not found|does not exist|no longer available|unavailable|has been removed|deleted/.test(t)) return { motivo: 'naoExiste', detalhe };
+  if (/timed? ?out|timeout/.test(t)) return { motivo: 'demorou', detalhe };
+  return { motivo: 'erro', detalhe };
+}
+
+const NAVEGADORES_COOKIES = ['firefox', 'chrome', 'edge', 'brave', 'chromium', 'opera', 'vivaldi', 'safari'];
+
+// 🍪 O formato Netscape: linhas de 7 campos separados por TAB (domínio,
+// flag, caminho, seguro, validade, nome, valor); «#» é comentário. O
+// arquivo é aceito se a maioria das linhas úteis tiver essa cara.
+function conferirCookiesNetscape(texto) {
+  const s = String(texto || '').replace(/^﻿/, '');
+  if (s.length > 2 * 1024 * 1024) return { ok: false, erro: 'arquivo grande demais para ser um cookies.txt' };
+  if (/\0/.test(s)) return { ok: false, erro: 'isso não é um arquivo de texto' };
+  const linhas = s.split(/\r?\n/);
+  let uteis = 0, boas = 0;
+  for (const l of linhas) {
+    // (só o começo é aparado: um cookie de valor VAZIO termina em TAB, e o
+    // trim() de sempre comia o sétimo campo)
+    const t = l.replace(/\r$/, '').trimStart();
+    if (!t.trim() || (t.startsWith('#') && !/^#HttpOnly_/.test(t))) continue;
+    uteis++;
+    if (t.split('\t').length >= 7) boas++;
+  }
+  if (!uteis || boas < Math.ceil(uteis * 0.8)) return { ok: false, erro: 'não parece um cookies.txt no formato Netscape (o que as extensões «Get cookies.txt» exportam)' };
+  return { ok: true, texto: s.endsWith('\n') ? s : s + '\n', sites: contarSitesDosCookies(s) };
+}
+
+function contarSitesDosCookies(texto) {
+  const sites = new Set();
+  for (const l of String(texto || '').split(/\r?\n/)) {
+    const t = l.replace(/\r$/, '').trimStart();
+    if (!t.trim() || (t.startsWith('#') && !/^#HttpOnly_/.test(t))) continue;
+    const campos = t.split('\t');
+    if (campos.length < 7) continue;
+    const dominio = campos[0].replace(/^#HttpOnly_/, '').replace(/^\./, '').toLowerCase();
+    // agrupa por site (instagram.com, não www.instagram.com / i.instagram.com)
+    const partes = dominio.split('.');
+    if (partes.length >= 2) sites.add(partes.slice(-2).join('.'));
+  }
+  return sites.size;
+}
+
+module.exports = { Extrator, escolherFormato, nomeDoArquivo, BASE_YTDLP, classificarFalha, conferirCookiesNetscape, contarSitesDosCookies, NAVEGADORES_COOKIES };

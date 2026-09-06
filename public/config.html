@@ -1192,6 +1192,26 @@
       <div class="hint">A 🎞️ Mídia direta já procura o arquivo do vídeo nas metatags de qualquer página. Quando o site esconde (Instagram, TikTok e companhia), quem sabe achar é o <b>yt-dlp</b> — livre e gratuito, mas <b>não embutido</b> no OBS Social. Baixe aqui, uma vez, e o link daqueles sites também vira vídeo no nosso player. Nada é gravado no disco: só se descobre o endereço. Baixar e apagar só funciona no computador onde o OBS Social roda.</div>
       <div id="ydLinha" style="margin-top:6px"></div>
       <div id="ydAviso" class="hint" style="display:none;color:#e0a648"></div>
+      <!-- 🍪 v0.166: cookies para os sites que só entregam o vídeo logado -->
+      <div id="ydCookies" class="pop-row" style="align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+        <span style="min-width:150px;font-size:13px">🍪 Cookies</span>
+        <span id="ydCookiesEstado" style="font-size:12px;color:var(--muted)">— nenhum (sem login)</span>
+        <select id="ydNavSel" title="Navegador em que você está logado nos sites — o extrator lê os cookies dele">
+          <option value="">Sem navegador</option>
+          <option value="firefox">Firefox</option>
+          <option value="chrome">Chrome</option>
+          <option value="edge">Edge</option>
+          <option value="brave">Brave</option>
+          <option value="chromium">Chromium</option>
+          <option value="opera">Opera</option>
+          <option value="vivaldi">Vivaldi</option>
+          <option value="safari">Safari</option>
+        </select><!-- (a lista é a mesma do NAVEGADORES_COOKIES do ytdlp.js) -->
+        <button class="icon-btn" id="ydCookiesBtn" title="Enviar um arquivo cookies.txt (formato Netscape)">📄</button>
+        <button class="icon-btn" id="ydCookiesApagar" title="Apagar o arquivo de cookies" style="display:none">🗑️</button>
+        <input type="file" id="ydCookiesFile" accept=".txt,text/plain" style="display:none">
+      </div>
+      <div class="hint">🍪 Instagram, TikTok e outros só entregam o vídeo para quem está logado — sem isso o extrator volta de mãos vazias (o painel avisa). Duas saídas: apontar o navegador em que você está logado (o extrator lê os cookies dele; no Windows, Chrome e Edge criptografam os cookies e isso costuma falhar — o Firefox funciona) ou enviar um cookies.txt exportado por uma extensão como «Get cookies.txt LOCALLY». O arquivo manda mais que o navegador, fica só neste computador e só vai para o próprio site; apague quando quiser. Cookies de conta são uma chave da sua conta: use uma conta que você não se importe de expor a um programa de terceiros.</div>
       <div class="hint" style="margin-bottom:0">⚖️ <b>Antes de usar:</b> cada site tem os seus termos, e mostrar conteúdo de terceiros na sua live é responsabilidade de quem transmite. Alguns vídeos só tocam para quem está logado no site — nesses casos o extrator volta de mãos vazias e o link continua como quadro do site.</div>
     </div>
 
@@ -4326,6 +4346,7 @@ function fillSettingsForm() {
   const trCard = document.getElementById('cardTranscricao');
   if (trCard) trCard.classList.toggle('cardOculto', (settings.labs || {}).transcricao !== true);
   fillTranscricaoForm();
+  fillYtDlpForm(); // 🍪 v0.166
   // 🎬 v0.134: o card do extrator segue o Labs dele
   const ydCard = document.getElementById('cardYtDlp');
   if (ydCard) ydCard.classList.toggle('cardOculto', (settings.labs || {}).ytdlp !== true);
@@ -5491,7 +5512,48 @@ function renderYtDlp() {
     dica.textContent = '⏳ Procurando o vídeo de um link agora…';
     alvo.appendChild(dica);
   }
+  // 🍪 v0.166: o resumo dos cookies (o conteúdo nunca chega aqui)
+  const ce = document.getElementById('ydCookiesEstado');
+  const ca = document.getElementById('ydCookiesApagar');
+  if (ce) {
+    const ck = ydEstado.cookies || {};
+    const nav = ((settings || {}).ytdlp || {}).cookiesNavegador || '';
+    ce.textContent = ck.arquivo
+      ? '📄 cookies.txt · ' + (ck.sites || 0) + ' ' + OBS_I18N.t('site(s)')
+      : (nav ? '🌐 ' + OBS_I18N.t('do navegador') + ' ' + nav : '— ' + OBS_I18N.t('nenhum (sem login)'));
+    if (ca) ca.style.display = ck.arquivo ? '' : 'none';
+  }
 }
+function fillYtDlpForm() {
+  const sel = document.getElementById('ydNavSel');
+  const conf = (settings || {}).ytdlp || {};
+  if (sel && document.activeElement !== sel) sel.value = [...sel.options].some((o) => o.value === conf.cookiesNavegador) ? conf.cookiesNavegador : '';
+  renderYtDlp();
+}
+document.getElementById('ydNavSel').addEventListener('input', (e) => {
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { ytdlp: { cookiesNavegador: e.target.value } } });
+  setTimeout(() => { applyingSettings = false; }, 300);
+});
+document.getElementById('ydCookiesBtn').addEventListener('click', () => document.getElementById('ydCookiesFile').click());
+document.getElementById('ydCookiesFile').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const res = await fetch('/ytdlp-cookies', { method: 'POST', body: file });
+    const r = await res.json().catch(() => ({ ok: false, erro: OBS_I18N.t('O programa respondeu de um jeito que não entendi.') + ' (' + res.status + ')' }));
+    if (r.ok) obsAviso(OBS_I18N.t('🍪 Cookies guardados:') + ' ' + r.sites + ' ' + OBS_I18N.t('site(s)') + '. ' + OBS_I18N.t('Carregue o link de novo na Mídia direta.'), OBS_I18N.t('Extrator'), '🍪');
+    else obsAviso(OBS_I18N.t('Não deu:') + ' ' + (r.erro || ''), OBS_I18N.t('Extrator'), '🍪');
+  } catch {
+    obsAviso(OBS_I18N.t('Não deu:') + ' ' + OBS_I18N.t('falha ao enviar o arquivo — tente de novo.'), OBS_I18N.t('Extrator'), '🍪');
+  }
+});
+document.getElementById('ydCookiesApagar').addEventListener('click', async () => {
+  const ok = await obsConfirmar(OBS_I18N.t('Apagar o arquivo de cookies do extrator?'), { icone: '🍪', nivel: 'perigo', ok: OBS_I18N.t('Apagar') });
+  if (!ok) return;
+  hub.send({ type: 'ytdlpMotor', acao: 'apagarCookies' });
+});
 
 // ---------- 💠 Pix direto do banco (Labs) ----------
 let cfgPix = null;

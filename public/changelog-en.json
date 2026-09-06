@@ -1,4 +1,12 @@
 {
+  "0.166.0": {
+    "titulo": "🍪 Extractor with your login cookies (Instagram and co.) — and when it fails, the panel tells you why",
+    "itens": [
+      "🧭 The 🎬 extractor used to fail silently: Instagram (and others) only deliver the video to logged-in users, and the link stayed as the site’s frame with no explanation. Now the panel gives the reason right away — “only delivers to logged-in users”, private, deleted/wrong link, site the extractor does not know, pieces only (HLS/DASH), took too long, extractor busy, extractor not downloaded — or the exact error when it is something else.",
+      "🍪 In Settings → 🔌 Connections → 🎬 Extractor, two ways for it to go in logged in: pick the browser where you are logged in (the extractor reads its cookies; on Windows, Chrome and Edge encrypt cookies and this usually fails — Firefox works) or upload a cookies.txt exported by an extension such as “Get cookies.txt LOCALLY”. The file takes precedence over the browser, stays only on this computer (data/ytdlp), only goes to the site itself, and the panel only sees the number of sites — never the content. Delete it with one click.",
+      "⚖️ Account cookies are a key to your account: use an account you do not mind exposing to a third-party program. Only the streamer’s computer can upload, pick or delete cookies."
+    ]
+  },
   "0.165.0": {
     "titulo": "📡 Direct media: the video found by the extractor (or the metatags) now comes through OBS Social — no more black preview",
     "itens": [

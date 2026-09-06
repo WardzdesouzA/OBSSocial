@@ -1,4 +1,12 @@
 {
+  "0.166.0": {
+    "titulo": "🍪 Extracteur avec les cookies de votre connexion (Instagram et cie) — et, quand il échoue, le panneau dit pourquoi",
+    "itens": [
+      "🧭 L’🎬 extracteur échouait en silence : Instagram (et d’autres) ne livrent la vidéo qu’aux utilisateurs connectés, et le lien restait en cadre du site sans explication. Le panneau donne maintenant la raison aussitôt — « ne livre qu’aux connectés », privé, supprimé/mauvais lien, site inconnu de l’extracteur, morceaux seulement (HLS/DASH), trop long, extracteur occupé, extracteur non téléchargé — ou l’erreur exacte quand c’est autre chose.",
+      "🍪 Dans Réglages → 🔌 Connexions → 🎬 Extracteur, deux façons d’entrer connecté : choisir le navigateur où vous êtes connecté (l’extracteur lit ses cookies ; sous Windows, Chrome et Edge chiffrent les cookies et cela échoue souvent — Firefox fonctionne) ou envoyer un cookies.txt exporté par une extension comme « Get cookies.txt LOCALLY ». Le fichier prime sur le navigateur, reste uniquement sur cet ordinateur (data/ytdlp), ne va qu’au site lui-même, et le panneau ne voit que le nombre de sites — jamais le contenu. Supprimez-le en un clic.",
+      "⚖️ Les cookies de compte sont une clé de votre compte : utilisez un compte que vous acceptez d’exposer à un programme tiers. Seul l’ordinateur du streamer envoie, choisit ou supprime des cookies."
+    ]
+  },
   "0.165.0": {
     "titulo": "📡 Média direct : la vidéo trouvée par l’extracteur (ou les métabalises) passe désormais par OBS Social — fini l’aperçu noir",
     "itens": [
