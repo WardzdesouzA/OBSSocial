@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    "Opacidade dos cartões:": "カードの不透明度：",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "オーロラ、星、雪、泡、レトログリッド、紙吹雪——パネルと設定画面で。🎬 付きの既製テーマは専用のアニメーションを持っています。ここで切り替え・停止し、すべてを調整できます：強さ、速度、量、大きさ、輝き、軌跡、風、色、各エフェクトの細部。このページがプレビューです——変更はこの背景に反映されます。♿「アニメーションを減らす」が有効なら何も動きません。",
     "Velocidade:": "速度：",
     "Quantidade:": "量：",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.ja = {
     "↺ Padrão da animação": "↺ アニメーションを既定に",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "アニメーション設定を既定に戻します（選んだアニメーションは残ります）",
     "🪟 Onde a animação aparece": "🪟 アニメーションが表示される場所",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "初期状態ではアニメーションはすべての背後にあり、パネルは不透明（100%）です：隙間にしか見えません。パネルの不透明度を下げると画面のどこでもカードや列や枠を透過し、レイヤーを最前面に置くこともできます——マウス操作の邪魔は一切しません。",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "初期状態ではアニメーションはすべての背後にあり、パネルもカードも不透明（100%）です：隙間にしか見えません。パネル（列、バー、枠）とカード（カードとコメント）の不透明度を下げると画面のどこでも透過し、レイヤーを最前面に置くこともできます——マウス操作の邪魔は一切しません。",
     "Atrás de tudo": "すべての背後",
     "Por cima de tudo": "すべての前面",
     "Opacidade da animação:": "アニメーションの不透明度：",

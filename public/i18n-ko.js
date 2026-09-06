@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "Opacidade dos cartões:": "카드 불투명도:",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "오로라, 별, 눈, 거품, 레트로 격자, 색종이 — 패널과 설정에서. 🎬 표시된 기본 테마는 자체 애니메이션이 있습니다. 여기서 바꾸고, 끄고, 모든 것을 조정할 수 있습니다: 세기, 속도, 양, 크기, 광채, 잔상, 바람, 색상, 각 효과의 세부 사항. 이 페이지가 미리보기입니다 — 바꾸는 것이 배경에 나타납니다. ♿ “애니메이션 줄이기”가 켜져 있으면 아무것도 움직이지 않습니다.",
     "Velocidade:": "속도:",
     "Quantidade:": "양:",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.ko = {
     "↺ Padrão da animação": "↺ 애니메이션 기본값",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "애니메이션 설정을 기본값으로 되돌립니다(선택한 애니메이션은 유지)",
     "🪟 Onde a animação aparece": "🪟 애니메이션이 나타나는 위치",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "기본적으로 애니메이션은 모든 것의 뒤에 있고 패널은 불투명(100%)이라 틈에서만 보입니다. 패널 불투명도를 낮추면 화면 어디서나 카드, 열, 상자를 통과해 보이고, 레이어를 맨 위로 올릴 수도 있습니다 — 마우스를 방해하지 않습니다.",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "기본적으로 애니메이션은 모든 것의 뒤에 있고 패널과 카드는 불투명(100%)이라 틈에서만 보입니다. 패널(열, 막대, 상자)과 카드(카드와 댓글)의 불투명도를 낮추면 화면 어디서나 통과해 보이고, 레이어를 맨 위로 올릴 수도 있습니다 — 마우스를 방해하지 않습니다.",
     "Atrás de tudo": "모든 것의 뒤",
     "Por cima de tudo": "모든 것의 위",
     "Opacidade da animação:": "애니메이션 불투명도:",

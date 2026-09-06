@@ -1,4 +1,10 @@
 {
+  "0.168.1": {
+    "titulo": "🪟 Opacidad de las tarjetas — el mismo selector de los paneles, ahora también para las tarjetas y los comentarios",
+    "itens": [
+      "🪟 En 🎨 Temas → 🪟 Dónde aparece la animación, junto a la opacidad de los paneles (columnas, barras y cajas), entró la opacidad de las tarjetas (las tarjetas y los comentarios del panel). Cada una en su selector, estándar 100% (opaco): baja una, la otra o las dos para que la animación de fondo atraviese donde quieras."
+    ]
+  },
   "0.168.0": {
     "titulo": "🎬 Animaciones vívidas y totalmente personalizables — estrellas con el brillo del James Webb, y la animación en cualquier lugar de la pantalla",
     "itens": [

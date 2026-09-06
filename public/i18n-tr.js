@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "Opacidade dos cartões:": "Kart opaklığı:",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "Aurora, yıldızlar, kar, baloncuklar, retro ızgara veya konfeti — panelde ve ayarlarda. 🎬 işaretli hazır temalar kendi animasyonuyla gelir; burada değiştirebilir, kapatabilir ve her şeyi ayarlayabilirsiniz: güç, hız, miktar, boyut, parlaklık, iz, rüzgâr, renkler ve her efektin ayrıntıları. Bu sayfa önizlemedir — değiştirdikleriniz arka planında görünür. ♿ «animasyonları azalt» açıkken hiçbir şey hareket etmez.",
     "Velocidade:": "Hız:",
     "Quantidade:": "Miktar:",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.tr = {
     "↺ Padrão da animação": "↺ Animasyon varsayılanı",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "Animasyon ayarlarını varsayılana döndürür (seçilen animasyon kalır)",
     "🪟 Onde a animação aparece": "🪟 Animasyonun göründüğü yer",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "Fabrika ayarında animasyon her şeyin arkasındadır ve paneller opaktır (%100): yalnızca boşluklarda görünür. Panellerin opaklığını düşürün ki ekranın her yerinde kartların, sütunların ve kutuların içinden geçsin; ya da katmanı her şeyin üstüne koyun — fareyi asla engellemez.",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "Fabrika ayarında animasyon her şeyin arkasındadır; paneller ve kartlar opaktır (%100): yalnızca boşluklarda görünür. Panellerin (sütunlar, çubuklar ve kutular) ve kartların (kartlar ve yorumlar) opaklığını düşürün ki ekranın her yerinde görünsün; ya da katmanı her şeyin üstüne koyun — fareyi asla engellemez.",
     "Atrás de tudo": "Her şeyin arkasında",
     "Por cima de tudo": "Her şeyin üstünde",
     "Opacidade da animação:": "Animasyon opaklığı:",

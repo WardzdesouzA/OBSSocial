@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    "Opacidade dos cartões:": "Deckkraft der Karten:",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "Aurora, Sterne, Schnee, Blasen, Retro-Raster oder Konfetti — im Panel und in den Einstellungen. Fertige Themen mit 🎬 bringen ihre eigene mit; hier kannst du sie wechseln, ausschalten und alles feinjustieren: Stärke, Tempo, Menge, Größe, Leuchten, Spur, Wind, Farben und die Details jedes Effekts. Diese Seite ist die Vorschau — was du änderst, erscheint in ihrem Hintergrund. Mit ♿ „Animationen reduzieren“ bewegt sich nichts.",
     "Velocidade:": "Tempo:",
     "Quantidade:": "Menge:",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.de = {
     "↺ Padrão da animação": "↺ Animation auf Standard",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "Setzt die Animationseinstellungen zurück (die gewählte Animation bleibt)",
     "🪟 Onde a animação aparece": "🪟 Wo die Animation erscheint",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "Ab Werk liegt die Animation hinter allem und die Panels sind deckend (100 %): sie zeigt sich nur in den Lücken. Senke die Panel-Deckkraft, damit sie überall durch Karten, Spalten und Boxen scheint, oder lege die Ebene über alles — sie stört die Maus nie.",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "Ab Werk liegt die Animation hinter allem, und Panels wie Karten sind deckend (100 %): sie zeigt sich nur in den Lücken. Senke die Deckkraft der Panels (Spalten, Leisten und Boxen) und die der Karten (die Karten und die Kommentare), damit sie überall durchscheint, oder lege die Ebene über alles — sie stört die Maus nie.",
     "Atrás de tudo": "Hinter allem",
     "Por cima de tudo": "Über allem",
     "Opacidade da animação:": "Deckkraft der Animation:",

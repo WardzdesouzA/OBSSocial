@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "Opacidade dos cartões:": "卡片不透明度：",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "极光、星空、雪花、气泡、复古网格或彩纸——在面板和设置中都有。标有 🎬 的现成主题自带动画；在这里可以更换、关闭并微调一切：强度、速度、数量、大小、光晕、拖尾、风向、颜色以及每种效果的细节。本页面即预览——你的改动会显示在页面背景中。开启 ♿“减少动画”后一切静止。",
     "Velocidade:": "速度：",
     "Quantidade:": "数量：",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.zh = {
     "↺ Padrão da animação": "↺ 动画恢复默认",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "将动画设置恢复为默认（所选动画保留）",
     "🪟 Onde a animação aparece": "🪟 动画显示的位置",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "默认情况下动画位于所有内容之后，面板不透明（100%）：动画只在缝隙中可见。降低面板不透明度，动画就能在屏幕任何位置透过卡片、栏和框显示；也可以把图层放到最上层——它从不妨碍鼠标。",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "默认情况下动画位于所有内容之后，面板和卡片均不透明（100%）：动画只在缝隙中可见。降低面板（栏、工具条和框）以及卡片（卡片和评论）的不透明度，动画就能在屏幕任何位置透出；也可以把图层放到最上层——它从不妨碍鼠标。",
     "Atrás de tudo": "所有内容之后",
     "Por cima de tudo": "所有内容之上",
     "Opacidade da animação:": "动画不透明度：",

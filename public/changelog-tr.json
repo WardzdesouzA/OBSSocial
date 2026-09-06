@@ -1,4 +1,10 @@
 {
+  "0.168.1": {
+    "titulo": "🪟 Kart opaklığı — panellerdeki aynı kaydırıcı, artık kartlar ve yorumlar için de",
+    "itens": [
+      "🪟 🎨 Temalar → 🪟 Animasyonun göründüğü yer’de panel opaklığının (sütunlar, çubuklar ve kutular) yanına kart opaklığı (kartlar ve paneldeki yorumlar) geldi. Her biri kendi kaydırıcısında, varsayılan %100 (opak): birini, diğerini ya da ikisini düşürün ki arka plan animasyonu istediğiniz yerden geçsin."
+    ]
+  },
   "0.168.0": {
     "titulo": "🎬 Canlı ve tamamen kişiselleştirilebilir animasyonlar — James Webb parıltısında yıldızlar ve ekranın her yerinde animasyon",
     "itens": [

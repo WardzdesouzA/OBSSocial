@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    "Opacidade dos cartões:": "Opacité des cartes :",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "Aurore, étoiles, neige, bulles, grille rétro ou confettis — dans le panneau et dans les réglages. Les thèmes prêts marqués 🎬 ont déjà la leur ; ici vous pouvez la changer, la couper et tout affiner : force, vitesse, quantité, taille, éclat, traînée, vent, couleurs et les détails de chaque effet. Cette page est l’aperçu — ce que vous réglez apparaît dans son fond. Avec ♿ « réduire les animations », rien ne bouge.",
     "Velocidade:": "Vitesse :",
     "Quantidade:": "Quantité :",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.fr = {
     "↺ Padrão da animação": "↺ Animation par défaut",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "Remet les réglages de l’animation par défaut (l’animation choisie reste)",
     "🪟 Onde a animação aparece": "🪟 Où l’animation apparaît",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "Par défaut l’animation est derrière tout et les panneaux sont opaques (100 %) : elle n’apparaît que dans les vides. Baissez l’opacité des panneaux pour qu’elle traverse cartes, colonnes et boîtes n’importe où, ou placez la couche par-dessus tout — elle ne gêne jamais la souris.",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "Par défaut l’animation est derrière tout, et panneaux et cartes sont opaques (100 %) : elle n’apparaît que dans les vides. Baissez l’opacité des panneaux (colonnes, barres et boîtes) et celle des cartes (les cartes et les commentaires) pour qu’elle traverse n’importe où, ou placez la couche par-dessus tout — elle ne gêne jamais la souris.",
     "Atrás de tudo": "Derrière tout",
     "Por cima de tudo": "Par-dessus tout",
     "Opacidade da animação:": "Opacité de l’animation :",

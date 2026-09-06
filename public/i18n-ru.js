@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    "Opacidade dos cartões:": "Непрозрачность карточек:",
     "Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.": "Сияние, звёзды, снег, пузыри, ретро-сетка или конфетти — на панели и в настройках. Готовые темы с 🎬 приходят со своей; здесь её можно сменить, выключить и настроить всё: силу, скорость, количество, размер, свечение, след, ветер, цвета и детали каждого эффекта. Эта страница — предпросмотр: всё, что вы меняете, видно на её фоне. С ♿ «уменьшить анимацию» ничего не движется.",
     "Velocidade:": "Скорость:",
     "Quantidade:": "Количество:",
@@ -47,7 +48,7 @@ window.OBS_I18N_DICTS.ru = {
     "↺ Padrão da animação": "↺ Анимация по умолчанию",
     "Volta os ajustes da animação ao padrão (a animação escolhida fica)": "Возвращает настройки анимации к значениям по умолчанию (выбранная анимация остаётся)",
     "🪟 Onde a animação aparece": "🪟 Где видна анимация",
-    "De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "По умолчанию анимация позади всего, а панели непрозрачные (100 %): она видна только в промежутках. Уменьшите непрозрачность панелей, чтобы она просвечивала сквозь карточки, колонки и окна где угодно, или положите слой поверх всего — мыши она никогда не мешает.",
+    "De fábrica a animação fica atrás de tudo, e painéis e cartões são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis (colunas, barras e caixas) e a dos cartões (os cards e os comentários) para ela atravessar qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.": "По умолчанию анимация позади всего, а панели и карточки непрозрачные (100 %): она видна только в промежутках. Уменьшите непрозрачность панелей (колонки, полосы и окна) и карточек (карточки и комментарии), чтобы она просвечивала где угодно, или положите слой поверх всего — мыши она никогда не мешает.",
     "Atrás de tudo": "Позади всего",
     "Por cima de tudo": "Поверх всего",
     "Opacidade da animação:": "Непрозрачность анимации:",

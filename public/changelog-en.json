@@ -1,4 +1,10 @@
 {
+  "0.168.1": {
+    "titulo": "🪟 Card opacity — the same slider as the panels, now for the cards and comments too",
+    "itens": [
+      "🪟 In 🎨 Themes → 🪟 Where the animation shows, next to the panel opacity (columns, bars and boxes), there is now the card opacity (the cards and the panel’s comments). Each on its own slider, default 100% (opaque): lower one, the other or both so the background animation shines through wherever you want."
+    ]
+  },
   "0.168.0": {
     "titulo": "🎬 Vivid, fully customisable animations — stars with the James Webb glow, and the animation anywhere on screen",
     "itens": [
