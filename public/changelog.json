@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.169.1",
+    "titulo": "☀️ O Sol do Clima se mexe de verdade",
+    "itens": [
+      "☀️ No ícone de sol (e no parcialmente nublado), só os raios giravam: a bola do Sol tinha um pulso de 6% que não se via, e o centro de giro dos raios era calculado fora do lugar. Agora o núcleo pulsa de verdade, um halo respira em volta dele e os raios giram em torno do centro certo — na tela, no mostrador do painel, na prévia, nas configurações e no cartão completo (o ícone é o mesmo em todos)."
+    ]
+  },
+  {
     "version": "0.169.0",
     "titulo": "🗺️ Clima pelo Brasil inteiro ou por um estado, mostrador do painel com a sua cidade e 🗂️ cartão completo com os próximos dias",
     "itens": [

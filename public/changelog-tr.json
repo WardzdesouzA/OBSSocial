@@ -1,4 +1,10 @@
 {
+  "0.169.1": {
+    "titulo": "☀️ Hava’daki Güneş artık gerçekten hareket ediyor",
+    "itens": [
+      "☀️ Güneş simgesinde (ve parçalı bulutluda) yalnızca ışınlar dönüyordu: Güneş topunun görünmeyen %6’lık bir nabzı vardı ve ışınların dönme merkezi yanlış hesaplanıyordu. Artık çekirdek gerçekten atıyor, etrafında bir hale nefes alıyor ve ışınlar doğru merkez etrafında dönüyor — ekranda, panel göstergesinde, önizlemede, ayarlarda ve tam kartta (simge her yerde aynı)."
+    ]
+  },
   "0.169.0": {
     "titulo": "🗺️ Tüm Brezilya veya bir eyalet boyunca hava, sizin şehrinizle panel göstergesi ve sonraki günlerle 🗂️ tam kart",
     "itens": [

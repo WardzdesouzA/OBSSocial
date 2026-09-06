@@ -1,4 +1,10 @@
 {
+  "0.169.1": {
+    "titulo": "☀️ Le Soleil de la Météo bouge vraiment",
+    "itens": [
+      "☀️ Dans l’icône de soleil (et le partiellement nuageux), seuls les rayons tournaient : le disque du Soleil avait une pulsation de 6 % invisible, et le centre de rotation des rayons était calculé à côté. Désormais le noyau pulse vraiment, un halo respire autour et les rayons tournent autour du bon centre — à l’écran, sur l’afficheur du panneau, dans l’aperçu, les réglages et la carte complète (c’est la même icône partout)."
+    ]
+  },
   "0.169.0": {
     "titulo": "🗺️ Météo dans tout le Brésil ou un État, afficheur du panneau avec votre ville et 🗂️ carte complète avec les prochains jours",
     "itens": [
