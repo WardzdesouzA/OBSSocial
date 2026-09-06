@@ -1,4 +1,10 @@
 {
+  "0.169.1": {
+    "titulo": "☀️ Die Wetter-Sonne bewegt sich jetzt wirklich",
+    "itens": [
+      "☀️ Im Sonnensymbol (und bei teilweise bewölkt) drehten sich nur die Strahlen: die Sonnenscheibe hatte ein unsichtbares 6%-Pulsieren, und der Drehpunkt der Strahlen lag daneben. Jetzt pulsiert der Kern richtig, ein Halo atmet um ihn herum und die Strahlen drehen sich um die richtige Mitte – auf dem Bildschirm, in der Panel-Anzeige, der Vorschau, den Einstellungen und der Vollkarte (überall dasselbe Symbol)."
+    ]
+  },
   "0.169.0": {
     "titulo": "🗺️ Wetter durch ganz Brasilien oder einen Bundesstaat, Panel-Anzeige mit deiner Stadt und 🗂️ Vollkarte mit den nächsten Tagen",
     "itens": [

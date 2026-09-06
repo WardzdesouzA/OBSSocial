@@ -1,4 +1,10 @@
 {
+  "0.169.1": {
+    "titulo": "☀️ El Sol del Clima se mueve de verdad",
+    "itens": [
+      "☀️ En el icono de sol (y en el parcialmente nublado), solo giraban los rayos: la bola del Sol tenía un pulso del 6% que no se veía, y el centro de giro de los rayos se calculaba fuera de lugar. Ahora el núcleo pulsa de verdad, un halo respira a su alrededor y los rayos giran en torno al centro correcto — en pantalla, en el indicador del panel, en la vista previa, en las configuraciones y en la tarjeta completa (el icono es el mismo en todos)."
+    ]
+  },
   "0.169.0": {
     "titulo": "🗺️ Clima por todo Brasil o por un estado, indicador del panel con tu ciudad y 🗂️ tarjeta completa con los próximos días",
     "itens": [

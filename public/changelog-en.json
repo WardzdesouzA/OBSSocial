@@ -1,4 +1,10 @@
 {
+  "0.169.1": {
+    "titulo": "☀️ The Weather sun really moves now",
+    "itens": [
+      "☀️ In the sun icon (and partly cloudy), only the rays rotated: the sun disc had a 6% pulse you could not see, and the rays’ rotation centre was computed off-centre. Now the core really pulses, a halo breathes around it and the rays rotate around the right centre — on screen, in the panel display, the preview, settings and the full card (the icon is the same everywhere)."
+    ]
+  },
   "0.169.0": {
     "titulo": "🗺️ Weather across all of Brazil or one state, panel display with your city and 🗂️ full card with the next days",
     "itens": [
