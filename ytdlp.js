@@ -266,6 +266,7 @@ class Extrator {
     if (this.rodando >= 2) { this._anotarFalha(chave, 'ocupado'); return null; } // um site lento não segura a live inteira
     this.rodando++;
     this._avisaEstado();
+    let copiaCookies = null;
     try {
       const args = [
         '--ignore-config',    // um arquivo de configuração perdido não muda nada
@@ -274,20 +275,32 @@ class Extrator {
         '--socket-timeout', '15', '--retries', '1',
         '-J',                 // só conta o que achou; não baixa nada
       ];
-      // 🍪 v0.166: o arquivo manda; sem arquivo, o navegador escolhido
+      // 🍪 v0.166: o arquivo manda; sem arquivo, o navegador escolhido.
+      // O yt-dlp REGRAVA o arquivo de cookies ao sair — cada execução recebe
+      // uma cópia só dela (duas ao mesmo tempo não se atropelam e o arquivo
+      // enviado fica como veio)
       const navegador = String(opcoes.cookiesNavegador || '').toLowerCase();
-      if (this._temArquivo(this.arquivoCookies())) args.push('--cookies', this.arquivoCookies());
-      else if (NAVEGADORES_COOKIES.includes(navegador)) args.push('--cookies-from-browser', navegador);
+      if (this._temArquivo(this.arquivoCookies())) {
+        copiaCookies = path.join(this.dir, `cookies.${process.pid}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}.txt`);
+        fs.copyFileSync(this.arquivoCookies(), copiaCookies);
+        if (process.platform !== 'win32') { try { fs.chmodSync(copiaCookies, 0o600); } catch { /* sem permissão */ } }
+        args.push('--cookies', copiaCookies);
+      } else if (NAVEGADORES_COOKIES.includes(navegador)) args.push('--cookies-from-browser', navegador);
       args.push('--', chave);
       const r = await this._rodar(onde.comando, args);
       const achado = r.ok ? escolherFormato(r.saida) : null;
+      let motivo = null;
       if (!achado) {
         const f = r.demorou ? { motivo: 'demorou', detalhe: '' } : r.ok ? { motivo: 'semFormato', detalhe: '' } : classificarFalha(r.erro);
+        motivo = f.motivo;
         this._anotarFalha(chave, f.motivo, f.detalhe);
       } else this.falhas.delete(chave);
-      this._guardar(chave, achado);
+      // falha passageira (demorou, erro esquisito) não fica no cache: o
+      // painel pede para tentar de novo, e a tentativa tem que rodar mesmo
+      if (achado || !['demorou', 'erro'].includes(motivo)) this._guardar(chave, achado);
       return achado;
     } catch { this._anotarFalha(chave, 'erro'); return null; } finally {
+      if (copiaCookies) this._limpar(copiaCookies);
       this.rodando--;
       this._avisaEstado();
     }
@@ -412,19 +425,23 @@ function escolherFormato(bruto) {
 function classificarFalha(stderr) {
   const linhas = String(stderr || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const erros = linhas.filter((l) => /^ERROR:/i.test(l));
-  const linha = erros[erros.length - 1] || linhas[linhas.length - 1] || '';
+  // 🔒 só uma linha «ERROR:» vira detalhe: um WARNING do yt-dlp pode ecoar
+  // uma linha inteira do cookies.txt (nome e valor do cookie)
+  const linha = erros[erros.length - 1] || '';
   const detalhe = linha.replace(/^ERROR:\s*/i, '').replace(/\s*;?\s*please report this issue on.*$/i, '').slice(0, 300);
   const t = linha.toLowerCase();
-  if (/login required|login_required|rate-limit reached|requires? (a )?login|sign in to confirm|not logged in|use --cookies|cookies-from-browser|logged.in|authentication/.test(t)) return { motivo: 'login', detalhe };
-  if (/private|restricted|only available to|age.restricted|members.only/.test(t)) return { motivo: 'privado', detalhe };
+  // (ordem importa: as mensagens inequívocas primeiro, para uma URL ecoada
+  // com «private» ou um id com «404» dentro não enganarem os testes soltos)
   if (/unsupported url|no suitable extractor|is not a valid url/.test(t)) return { motivo: 'naoSuportado', detalhe };
-  if (/404|not found|does not exist|no longer available|unavailable|has been removed|deleted|no video/.test(t)) return { motivo: 'naoExiste', detalhe };
   if (/requested format is not available|no video formats found/.test(t)) return { motivo: 'semFormato', detalhe };
+  if (/login required|login_required|rate-limit reached|requires? (a )?login|sign in to confirm|not logged in|use --cookies|cookies-from-browser|logged.in|authentication/.test(t)) return { motivo: 'login', detalhe };
+  if (/private video|is private|video is private|restricted|only available to|age.restricted|members.only/.test(t)) return { motivo: 'privado', detalhe };
+  if (/http error 404|\b404\b|not found|does not exist|no longer available|unavailable|has been removed|deleted/.test(t)) return { motivo: 'naoExiste', detalhe };
   if (/timed? ?out|timeout/.test(t)) return { motivo: 'demorou', detalhe };
   return { motivo: 'erro', detalhe };
 }
 
-const NAVEGADORES_COOKIES = ['firefox', 'chrome', 'edge', 'brave', 'chromium', 'opera', 'vivaldi', 'safari', 'whale'];
+const NAVEGADORES_COOKIES = ['firefox', 'chrome', 'edge', 'brave', 'chromium', 'opera', 'vivaldi', 'safari'];
 
 // 🍪 O formato Netscape: linhas de 7 campos separados por TAB (domínio,
 // flag, caminho, seguro, validade, nome, valor); «#» é comentário. O
@@ -436,8 +453,10 @@ function conferirCookiesNetscape(texto) {
   const linhas = s.split(/\r?\n/);
   let uteis = 0, boas = 0;
   for (const l of linhas) {
-    const t = l.trim();
-    if (!t || (t.startsWith('#') && !/^#HttpOnly_/.test(t))) continue;
+    // (só o começo é aparado: um cookie de valor VAZIO termina em TAB, e o
+    // trim() de sempre comia o sétimo campo)
+    const t = l.replace(/\r$/, '').trimStart();
+    if (!t.trim() || (t.startsWith('#') && !/^#HttpOnly_/.test(t))) continue;
     uteis++;
     if (t.split('\t').length >= 7) boas++;
   }
@@ -448,8 +467,8 @@ function conferirCookiesNetscape(texto) {
 function contarSitesDosCookies(texto) {
   const sites = new Set();
   for (const l of String(texto || '').split(/\r?\n/)) {
-    const t = l.trim();
-    if (!t || (t.startsWith('#') && !/^#HttpOnly_/.test(t))) continue;
+    const t = l.replace(/\r$/, '').trimStart();
+    if (!t.trim() || (t.startsWith('#') && !/^#HttpOnly_/.test(t))) continue;
     const campos = t.split('\t');
     if (campos.length < 7) continue;
     const dominio = campos[0].replace(/^#HttpOnly_/, '').replace(/^\./, '').toLowerCase();

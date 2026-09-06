@@ -7314,10 +7314,18 @@ async function conferirMidiaDaUrl(idDoItem, endereco, tipoAtual, provedorAtual) 
 // rolando — o yt-dlp pode demorar alguns segundos e silêncio parece travamento
 // 🧭 v0.166: no «nada», vai junto o motivo do extrator ({ motivo, detalhe })
 function avisarSondaMidiaDireta(idDoItem, estado, falha) {
-  if (state.midiaDireta.item && state.midiaDireta.item.id === idDoItem) {
-    // o texto cru do yt-dlp só vai quando o motivo é «erro» (o painel só o
-    // mostra nesse caso, e a sonda é transmitida para todo mundo)
-    broadcast({ type: 'midiaDiretaSonda', id: idDoItem, estado, ...(falha ? { motivo: falha.motivo, detalhe: falha.motivo === 'erro' ? (falha.detalhe || '') : '' } : {}) });
+  if (!state.midiaDireta.item || state.midiaDireta.item.id !== idDoItem) return;
+  const base = { type: 'midiaDiretaSonda', id: idDoItem, estado, ...(falha ? { motivo: falha.motivo } : {}) };
+  // o texto cru do yt-dlp só vai quando o motivo é «erro» (o painel só o
+  // mostra nesse caso) e NUNCA para quem só assiste: a linha pode trazer um
+  // caminho da máquina («could not find firefox cookies database in C:\…»)
+  const detalhe = falha && falha.motivo === 'erro' ? String(falha.detalhe || '') : '';
+  if (!detalhe) { broadcast(base); return; }
+  const comDetalhe = JSON.stringify({ ...base, detalhe });
+  const semDetalhe = JSON.stringify({ ...base, detalhe: '' });
+  for (const client of wss.clients) {
+    if (client.readyState !== 1) continue;
+    try { client.send(client.role === 'viewer' ? semDetalhe : comDetalhe); } catch { /* já caiu */ }
   }
 }
 

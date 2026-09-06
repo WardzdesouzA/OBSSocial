@@ -6176,11 +6176,17 @@ setInterval(() => {
 }, 500);
 
 // Chegou um estado novo do servidor
+let mdUltimoItemId = null;
 function updateMidiaDireta(estado) {
   midiaDiretaState = estado || null;
   const p = mdPlayer();
   if (p.estado === 'tocando' && p.em !== mdUltimoEm) { mdUltimoEm = p.em; mdFimMandado = false; }
   if (!mdItem()) { mdInfoEnviada = null; mdFimMandado = false; }
+  // 🧭 v0.166: mídia nova (ou nenhuma) = o recado da sonda anterior sai — um
+  // link do YouTube ou um arquivo do computador não passa pela sonda, e o
+  // «só entrega logado» da mídia anterior ficava pendurado embaixo
+  const idAgora = mdItem() ? mdItem().id : null;
+  if (idAgora !== mdUltimoItemId) { mdUltimoItemId = idAgora; clearTimeout(mdSondaTimer); mdStatus(''); }
   renderMidiaDireta();
 }
 
