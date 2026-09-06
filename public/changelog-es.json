@@ -1,4 +1,10 @@
 {
+  "0.168.2": {
+    "titulo": "🪟 Las columnas del panel también quedan translúcidas",
+    "itens": [
+      "🪟 Las columnas del panel (Unificado, YouTube, Twitch…) y la pestaña activa pintaban el fondo de la página sobre la animación y seguían opacas aunque la opacidad de los paneles estuviera baja — ahora siguen el mismo selector. Con paneles y tarjetas bajos, la animación atraviesa el panel entero."
+    ]
+  },
   "0.168.1": {
     "titulo": "🪟 Opacidad de las tarjetas — el mismo selector de los paneles, ahora también para las tarjetas y los comentarios",
     "itens": [

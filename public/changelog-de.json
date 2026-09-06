@@ -1,4 +1,10 @@
 {
+  "0.168.2": {
+    "titulo": "🪟 Auch die Panel-Spalten werden durchscheinend",
+    "itens": [
+      "🪟 Die Panel-Spalten (Vereint, YouTube, Twitch…) und der aktive Tab malten den Seitenhintergrund über die Animation und blieben deckend, selbst bei gesenkter Panel-Deckkraft — jetzt folgen sie demselben Regler. Mit gesenkten Panels und Karten scheint die Animation durchs ganze Panel."
+    ]
+  },
   "0.168.1": {
     "titulo": "🪟 Deckkraft der Karten — derselbe Regler wie bei den Panels, jetzt auch für Karten und Kommentare",
     "itens": [
