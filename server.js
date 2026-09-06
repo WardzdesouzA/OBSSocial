@@ -3083,6 +3083,17 @@ const server = http.createServer((req, res) => {
   // vindo da URL); o caminho mora no servidor (ver aplicarLocal)
   if (urlPath.startsWith('/midia-direta/') || urlPath.startsWith('/trilha-local/')) {
     const partes = urlPath.split('/');
+    // 📡 v0.165: o arquivo achado na internet, retransmitido daqui
+    if (partes[2] === 'remota') {
+      const entrada = midiaDiretaRemotas.get(String(partes[3] || ''));
+      if (!entrada) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Essa mídia não está mais no ar.');
+        return;
+      }
+      servirMidiaRemota(req, res, entrada).catch(() => { try { res.destroy(); } catch { /* já fechou */ } });
+      return;
+    }
     let arquivo;
     if (urlPath.startsWith('/trilha-local/')) {
       const t = state.trilhas.find((x) => x.id === String(partes[2] || '') && x.local);
@@ -7153,8 +7164,12 @@ function classificarUrlMidiaDireta(bruta, dica) {
 }
 // 🎬 v0.133: a sonda que descobre o ARQUIVO do vídeo de uma página (mora em
 // midiadireta.js para poder ser testada sozinha)
-const { sondarVideoDireto, buscarDaSonda, tipoPelaUrl, hostPublicoDaSonda, recusaSerQuadro } = require('./midiadireta')
+const { sondarVideoDireto, buscarDaSonda, tipoPelaUrl, hostPublicoDaSonda, recusaSerQuadro, servirRemoto: servirMidiaRemota } = require('./midiadireta')
   .criarSonda({ classifyAddress, tipoMidiaDiretaPorNome });
+// 📡 v0.165: o arquivo achado na internet é retransmitido por aqui
+// (/midia-direta/remota/<id>) — id do item → { url, cabecalhos, tipo }. Um
+// por vez, como o arquivo do computador: mídia nova, o anterior sai do ar.
+const midiaDiretaRemotas = new Map();
 
 // 🧪 v0.134: o extrator opcional (yt-dlp). Fica DESLIGADO até alguém ligar no
 // 🧪 Labs e baixar o programa em 🔌 Conexões — nada vem embutido aqui.
@@ -7209,11 +7224,20 @@ async function conferirMidiaDaUrl(idDoItem, endereco, tipoAtual, provedorAtual) 
   }
   if (achado) {
     const titulo = String(achado.titulo || '').trim();
-    trocarMidiaDireta(idDoItem, {
-      tipo: achado.tipo, url: achado.url, embed: null,
+    // a pessoa já trocou de mídia enquanto a procura rodava? nada a fazer —
+    // e principalmente NÃO mexer no registro da mídia que está no ar agora
+    if (!state.midiaDireta.item || state.midiaDireta.item.id !== idDoItem) return;
+    // 📡 v0.165: painel e tela carregam de /midia-direta/remota/<id> — o
+    // servidor busca na fonte e repassa (ver servirRemoto). O endereço real
+    // fica em urlFonte, só para quem quiser conferir.
+    midiaDiretaRemotas.clear();
+    midiaDiretaRemotas.set(idDoItem, { url: achado.url, cabecalhos: achado.cabecalhos || null, tipo: achado.tipo });
+    const trocou = trocarMidiaDireta(idDoItem, {
+      tipo: achado.tipo, url: `/midia-direta/remota/${idDoItem}`, urlFonte: achado.url, embed: null,
       duracao: Number(achado.duracao) > 0 ? Number(achado.duracao) : null,
       nome: (achado.tipo === 'audio' ? '🎧 ' : '🎬 ') + (titulo || host || 'vídeo'),
     });
+    if (!trocou) midiaDiretaRemotas.delete(idDoItem);
     avisarSondaMidiaDireta(idDoItem, 'achou');
     return;
   }
@@ -7253,6 +7277,7 @@ function registrarArquivoMidiaDireta(caminhoBruto) {
   if (!tipo) return { erro: 'Esse arquivo não é uma imagem, um vídeo ou um áudio que o navegador abra.' };
   const id = newInstanceId('md');
   midiaDiretaArquivos.clear(); // um arquivo por vez — o anterior deixa de ser servido
+  midiaDiretaRemotas.clear();
   midiaDiretaArquivos.set(id, caminho);
   const nome = path.basename(caminho);
   return { item: { id, fonte: 'arquivo', tipo, url: `/midia-direta/${id}/${encodeURIComponent(nome)}`, nome: nome.slice(0, 120), duracao: null, embed: null } };
@@ -10856,6 +10881,7 @@ function tratarMensagem(ws, raw) {
       if (r.erro) { try { ws.send(JSON.stringify({ type: 'midiaDiretaErro', texto: r.erro })); } catch {} break; }
       const md = state.midiaDireta;
       midiaDiretaArquivos.clear(); // o arquivo local anterior (se havia) sai do ar
+      midiaDiretaRemotas.clear();
       md.item = { id: newInstanceId('md'), ...r.item };
       md.player = midiaDiretaPlayerInicial(md.player); // mídia nova = player zerado e pausado
       // 🏷️ v0.136: o crédito nasce sugerido pelo endereço; o «mostrar» fica
@@ -10918,6 +10944,7 @@ function tratarMensagem(ws, raw) {
     }
     case 'midiaDiretaFechar':
       midiaDiretaArquivos.clear();
+      midiaDiretaRemotas.clear();
       state.midiaDireta.item = null;
       state.midiaDireta.visible = false;
       state.midiaDireta.player = midiaDiretaPlayerInicial(state.midiaDireta.player);

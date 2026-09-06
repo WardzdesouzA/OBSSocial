@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    "⚠️ O navegador não conseguiu carregar esta mídia — a fonte pode ter recusado ou o endereço venceu. Tente carregar o link de novo.": "⚠️ The browser could not load this media — the source may have refused, or the address expired. Try loading the link again.",
     "Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas": "Following the OBS Social theme: the animation and intensity are the ones from the 🎨 Themes tab",
     "🎬 animado": "🎬 animated",
     "Animação": "Animation",

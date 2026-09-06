@@ -1,4 +1,12 @@
 {
+  "0.165.0": {
+    "titulo": "📡 Direct media: the video found by the extractor (or the metatags) now comes through OBS Social — no more black preview",
+    "itens": [
+      "📡 When the probe or the 🎬 extractor finds the video file, the panel and the screen no longer fetch it straight from the site’s server: OBS Social fetches and relays it (local address /midia-direta/remota/…). Reason seen on a real Edge: the same tracking blocker that hid the X widget was blocking video.twimg.com, and the preview stayed black with the seek bar moving. Coming from localhost, no blocker, origin check or CORS has anything to block. Nothing is written to disk; seeking (Range) keeps working, and the headers yt-dlp asked for (User-Agent, Referer…) go along.",
+      "⚠️ The panel preview now warns when the browser cannot load the media (source refused, address expired…) instead of showing a black box.",
+      "🔗 Hovering the media name shows the real file address (not the relay one)."
+    ]
+  },
   "0.164.1": {
     "titulo": "🐦 Direct media: the extractor now finds X videos (and those from other sites that do not report codecs)",
     "itens": [

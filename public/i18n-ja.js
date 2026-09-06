@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    "⚠️ O navegador não conseguiu carregar esta mídia — a fonte pode ter recusado ou o endereço venceu. Tente carregar o link de novo.": "⚠️ ブラウザーがこのメディアを読み込めませんでした。ソースが拒否したか、アドレスの期限が切れた可能性があります。リンクをもう一度読み込んでください。",
     "Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas": "OBS Social のテーマに追従：アニメーションと強さは 🎨 テーマタブのものです",
     "🎬 animado": "🎬 アニメーション",
     "Animação": "アニメーション",

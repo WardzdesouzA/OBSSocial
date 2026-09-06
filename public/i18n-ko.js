@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "⚠️ O navegador não conseguiu carregar esta mídia — a fonte pode ter recusado ou o endereço venceu. Tente carregar o link de novo.": "⚠️ 브라우저가 이 미디어를 불러오지 못했습니다. 소스가 거부했거나 주소가 만료됐을 수 있습니다. 링크를 다시 불러와 보세요.",
     "Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas": "OBS Social 테마를 따름: 애니메이션과 강도는 🎨 테마 탭의 값입니다",
     "🎬 animado": "🎬 애니메이션",
     "Animação": "애니메이션",

@@ -264,7 +264,7 @@ function escolherFormato(bruto) {
   if (Array.isArray(info.entries) && info.entries.length) info = info.entries[0] || {};
   const formatos = Array.isArray(info.formats) ? info.formats.slice() : [];
   if (info.url && !formatos.length) {
-    formatos.push({ url: info.url, ext: info.ext, vcodec: info.vcodec, acodec: info.acodec, protocol: info.protocol, width: info.width, height: info.height });
+    formatos.push({ url: info.url, ext: info.ext, vcodec: info.vcodec, acodec: info.acodec, protocol: info.protocol, width: info.width, height: info.height, http_headers: info.http_headers });
   }
   const direto = (f) => {
     const p = String(f.protocol || 'https');
@@ -309,12 +309,19 @@ function escolherFormato(bruto) {
   const tipo = temVideo(escolhido) ? 'video' : 'audio';
   const l = Number(escolhido.width) || 0;
   const a = Number(escolhido.height) || 0;
+  // 📡 v0.165: os cabeçalhos que o yt-dlp diz que a fonte espera (User-Agent,
+  // Referer, às vezes Cookie) — quem retransmite o arquivo manda os mesmos
+  const cabecalhos = {};
+  for (const [k, v] of Object.entries(escolhido.http_headers || {})) {
+    if (typeof v === 'string' && v && Object.keys(cabecalhos).length < 20) cabecalhos[String(k).slice(0, 80)] = v.slice(0, 4000);
+  }
   return {
     url: String(escolhido.url),
     tipo,
     titulo: String(info.title || '').slice(0, 120),
     proporcao: l > 0 && a > 0 ? l / a : null,
     duracao: Number(info.duration) > 0 ? Number(info.duration) : null,
+    cabecalhos: Object.keys(cabecalhos).length ? cabecalhos : null,
   };
 }
 

@@ -21,24 +21,77 @@ const dns = require('dns');
 const net = require('net');
 const path = require('path');
 
-function criarSonda({ classifyAddress, tipoMidiaDiretaPorNome }) {
+function criarSonda({ classifyAddress, tipoMidiaDiretaPorNome, remotoMs }) {
   const MD_SONDA_BYTES = 512 * 1024;  // o cabeçalho da página basta
   const MD_SONDA_MS = 8000;
   const MD_SONDA_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
+  // 🔒 v0.165: as formas disfarçadas do mesmo endereço de casa — 0.0.0.0,
+  // «::», o ::1 por extenso, IPv4 mapeado em IPv6 (::ffff:7f00:1), a faixa
+  // CGNAT (100.64/10), multicast — viram a forma canônica ANTES de perguntar
+  // ao classifyAddress, que só conhece as formas de sempre.
+  function ipCanonico(bruto) {
+    const h = String(bruto || '').replace(/^\[|\]$/g, '').toLowerCase();
+    if (net.isIPv4(h)) return h;
+    if (!net.isIPv6(h)) return null;
+    let s = h.split('%')[0]; // a zona (%eth0) não conta
+    const misto = /^(.*:)(\d+\.\d+\.\d+\.\d+)$/.exec(s);
+    if (misto) { // ::ffff:1.2.3.4 → ::ffff:0102:0304
+      const p = misto[2].split('.').map(Number);
+      s = misto[1] + (((p[0] << 8) | p[1]).toString(16)) + ':' + (((p[2] << 8) | p[3]).toString(16));
+    }
+    const [esq, dir = ''] = s.split('::');
+    const a = esq ? esq.split(':') : [];
+    const b = dir ? dir.split(':') : [];
+    const grupos = s.includes('::') ? [...a, ...Array(Math.max(0, 8 - a.length - b.length)).fill('0'), ...b] : a;
+    if (grupos.length !== 8) return null;
+    let n = 0n;
+    for (const g of grupos) n = (n << 16n) | BigInt(parseInt(g || '0', 16) || 0);
+    if (n === 0n) return '0.0.0.0';
+    if (n === 1n) return '127.0.0.1';
+    const alto = n >> 32n;
+    if (alto === 0xffffn || alto === 0n) { // IPv4 mapeado (::ffff:a.b.c.d) ou «compatível» (::a.b.c.d)
+      const baixo = Number(n & 0xffffffffn);
+      return [baixo >>> 24, (baixo >>> 16) & 255, (baixo >>> 8) & 255, baixo & 255].join('.');
+    }
+    return grupos.map((g) => (parseInt(g || '0', 16) || 0).toString(16)).join(':'); // expandido, sem zeros à esquerda
+  }
+  function ehPublico(bruto) {
+    const ip = ipCanonico(bruto);
+    if (!ip) return false;
+    if (net.isIPv4(ip)) {
+      const p = ip.split('.').map(Number);
+      if (p[0] === 0 || p[0] >= 224) return false;                 // 0.0.0.0/8, multicast, reservado, broadcast
+      if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return false; // CGNAT (100.64/10): rede da operadora, não a internet
+    }
+    return classifyAddress(ip) === 'remote';
+  }
+
   // 🔒 Só endereços da internet: o servidor não vai buscar nada em 127.0.0.1,
   // na rede local nem no 169.254.169.254 dos provedores de nuvem — senão uma
-  // URL colada no painel viraria uma sonda de dentro da máquina para fora
-  function hostPublicoDaSonda(hostname) {
+  // URL colada no painel viraria uma sonda de dentro da máquina para fora.
+  // Devolve a lista de endereços CONFERIDOS (ou null): a conexão vai usar
+  // exatamente esses, sem uma segunda consulta de DNS que pudesse responder
+  // outra coisa (o «rebinding»).
+  function enderecosPublicos(hostname) {
     return new Promise((resolve) => {
       const h = String(hostname || '').replace(/^\[|\]$/g, '');
-      if (!h) return resolve(false);
-      if (net.isIP(h)) return resolve(classifyAddress(h) === 'remote');
+      if (!h) return resolve(null);
+      if (net.isIP(h)) return resolve(ehPublico(h) ? [{ address: h, family: net.isIPv6(h) ? 6 : 4 }] : null);
       dns.lookup(h, { all: true }, (err, enderecos) => {
-        if (err || !Array.isArray(enderecos) || !enderecos.length) return resolve(false);
-        resolve(enderecos.every((e) => classifyAddress(e.address) === 'remote'));
+        if (err || !Array.isArray(enderecos) || !enderecos.length) return resolve(null);
+        resolve(enderecos.every((e) => ehPublico(e.address)) ? enderecos.map((e) => ({ address: e.address, family: e.family })) : null);
       });
     });
+  }
+  async function hostPublicoDaSonda(hostname) { return !!(await enderecosPublicos(hostname)); }
+  // o «lookup» que o http.request vai usar: a lista já conferida, e só ela
+  function pinar(conferidos) {
+    return (host, opcoes, cb) => {
+      if (typeof opcoes === 'function') { cb = opcoes; opcoes = {}; }
+      if (opcoes && opcoes.all) return cb(null, conferidos.map((e) => ({ address: e.address, family: e.family })));
+      cb(null, conferidos[0].address, conferidos[0].family);
+    };
   }
 
   // Uma busca curta e vigiada: só http(s), só host público, no máximo 3 saltos
@@ -47,12 +100,14 @@ function criarSonda({ classifyAddress, tipoMidiaDiretaPorNome }) {
     let u;
     try { u = new URL(alvo); } catch { return null; }
     if (!/^https?:$/.test(u.protocol)) return null;
-    if (!(await hostPublicoDaSonda(u.hostname))) return null;
+    const conferidos = await enderecosPublicos(u.hostname);
+    if (!conferidos) return null;
     return new Promise((resolve) => {
       const lib = u.protocol === 'https:' ? https : http;
       const req = lib.request(u, {
         method: metodo,
         timeout: MD_SONDA_MS,
+        lookup: pinar(conferidos),
         headers: {
           // vários sites só devolvem as metatags para um navegador de verdade
           'User-Agent': MD_SONDA_UA,
@@ -170,7 +225,106 @@ function criarSonda({ classifyAddress, tipoMidiaDiretaPorNome }) {
     return null;
   }
 
-  return { hostPublicoDaSonda, buscarDaSonda, candidatosDeVideo, tipoPelaUrl, sondarVideoDireto, recusaSerQuadro };
+  // 📡 v0.165: o arquivo achado (pela sonda ou pelo extrator) passa a ser
+  // RETRANSMITIDO pelo OBS Social, em vez de o navegador ir buscar no CDN do
+  // site. Motivo real, visto num Edge: o mesmo bloqueador de rastreamento
+  // que escondia o widget do X barrava o video.twimg.com, e a prévia do
+  // painel ficava preta com a régua andando. Vindo de localhost, nem
+  // bloqueador, nem checagem de origem, nem CORS têm o que barrar — e os
+  // cabeçalhos que o yt-dlp pediu (User-Agent, Referer…) vão junto.
+  //
+  // Abre a conexão com a fonte e devolve a RESPOSTA (um fluxo), seguindo até
+  // 3 redirecionamentos — cada salto conferido de novo: só host público.
+  const MD_REMOTO_MS = Number(remotoMs) > 0 ? Number(remotoMs) : 15000;
+  const CAB_QUE_NAO_VAO = new Set(['host', 'range', 'connection', 'content-length', 'accept-encoding', 'transfer-encoding', 'te', 'upgrade', 'proxy-connection', 'keep-alive']);
+  const CAB_SO_DO_MESMO_HOST = /^(cookie|authorization|proxy-authorization)$/i;
+  function abrirRemoto(alvo, { metodo = 'GET', cabecalhos = {}, saltos = 0 } = {}) {
+    return new Promise(async (resolve) => {
+      let u;
+      try { u = new URL(alvo); } catch { return resolve(null); }
+      if (!/^https?:$/.test(u.protocol)) return resolve(null);
+      const conferidos = await enderecosPublicos(u.hostname);
+      if (!conferidos) return resolve(null);
+      const lib = u.protocol === 'https:' ? https : http;
+      let req;
+      let respondeu = false;
+      try {
+        req = lib.request(u, { method: metodo, timeout: MD_REMOTO_MS, lookup: pinar(conferidos), headers: cabecalhos }, (res) => {
+          // o limite de tempo vale até a fonte RESPONDER: depois, o fluxo
+          // pode ficar parado à vontade (o player pausa a leitura quando o
+          // buffer enche — 15 s parado num vídeo longo é o normal)
+          respondeu = true;
+          try { req.setTimeout(0); if (res.socket) res.socket.setTimeout(0); } catch { /* sem socket */ }
+          const status = res.statusCode || 0;
+          const destino = res.headers.location;
+          if (status >= 300 && status < 400 && destino && saltos < 3) {
+            res.resume();
+            let prox;
+            try { prox = new URL(destino, u); } catch { return resolve(null); }
+            // 🔒 credenciais (Cookie, Authorization) não seguem para OUTRO host
+            let cab = cabecalhos;
+            if (prox.hostname !== u.hostname) {
+              cab = {};
+              for (const [k, v] of Object.entries(cabecalhos)) if (!CAB_SO_DO_MESMO_HOST.test(k)) cab[k] = v;
+            }
+            return abrirRemoto(prox.toString(), { metodo, cabecalhos: cab, saltos: saltos + 1 }).then(resolve, () => resolve(null));
+          }
+          resolve(res);
+        });
+      } catch { return resolve(null); }
+      req.on('timeout', () => { if (!respondeu) req.destroy(); });
+      req.on('error', () => resolve(null));
+      req.end();
+    });
+  }
+
+  // Serve /midia-direta/remota/<id>: a faixa (Range) que o player pediu vai
+  // para a fonte, e a resposta dela (200/206/416, tipo, tamanho, faixa) volta
+  // como veio — o seek do player continua funcionando. Sem cache, sem
+  // gravar nada em disco: o vídeo continua vindo da fonte, só que por aqui.
+  async function servirRemoto(req, res, entrada) {
+    const metodo = req.method === 'HEAD' ? 'HEAD' : 'GET';
+    const cab = { 'User-Agent': MD_SONDA_UA, Accept: '*/*', 'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8' };
+    for (const [k, v] of Object.entries((entrada && entrada.cabecalhos) || {})) {
+      if (typeof v === 'string' && v && !CAB_QUE_NAO_VAO.has(k.toLowerCase())) cab[k] = v;
+    }
+    if (req.headers.range) cab.Range = String(req.headers.range);
+    // o player pode desistir ENQUANTO a fonte ainda nem respondeu (um seek
+    // atrás do outro): a busca na fonte é derrubada assim que ela abrir
+    let fonte = null;
+    let desistiu = false;
+    res.on('close', () => { desistiu = true; if (fonte) { try { fonte.destroy(); } catch { /* já morreu */ } } });
+    fonte = await abrirRemoto(entrada.url, { metodo, cabecalhos: cab });
+    if (desistiu || res.destroyed) { if (fonte) { try { fonte.resume(); fonte.destroy(); } catch { /* já morreu */ } } return; }
+    const recusa = (texto) => {
+      if (fonte) { try { fonte.resume(); fonte.destroy(); } catch { /* já morreu */ } }
+      if (res.headersSent) { try { res.destroy(); } catch { /* já fechou */ } return; }
+      res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(texto);
+    };
+    if (!fonte) return recusa('A fonte da mídia não respondeu.');
+    const status = fonte.statusCode || 0;
+    if (status !== 200 && status !== 206 && status !== 416) return recusa('A fonte da mídia recusou o pedido (HTTP ' + status + ').');
+    const tipoFonte = String(fonte.headers['content-type'] || '');
+    const tipo = /^(video|audio|image)\//i.test(tipoFonte) ? tipoFonte
+      : (entrada.tipo === 'audio' ? 'audio/mpeg' : entrada.tipo === 'imagem' ? 'image/jpeg' : 'video/mp4');
+    const saida = {
+      'Content-Type': tipo,
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'",
+    };
+    for (const nome of ['content-length', 'content-range', 'accept-ranges', 'last-modified', 'etag']) {
+      if (fonte.headers[nome]) saida[nome] = fonte.headers[nome];
+    }
+    if (status === 206 && !saida['accept-ranges']) saida['accept-ranges'] = 'bytes';
+    res.writeHead(status, saida);
+    if (metodo === 'HEAD' || status === 416) { fonte.resume(); fonte.destroy(); res.end(); return; }
+    fonte.on('error', () => { try { res.destroy(); } catch { /* já fechou */ } });
+    fonte.pipe(res);
+  }
+
+  return { hostPublicoDaSonda, enderecosPublicos, ipCanonico, buscarDaSonda, candidatosDeVideo, tipoPelaUrl, sondarVideoDireto, recusaSerQuadro, abrirRemoto, servirRemoto };
 }
 
 module.exports = { criarSonda };

@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.165.0",
+    "titulo": "📡 Mídia direta: o vídeo achado pelo extrator (ou pelas metatags) passa a vir pelo OBS Social — fim da prévia preta",
+    "itens": [
+      "📡 Quando a sonda ou o 🎬 extrator acham o arquivo do vídeo, o painel e a tela deixam de ir buscá-lo direto no servidor do site: o OBS Social busca e repassa (endereço local /midia-direta/remota/…). Motivo visto num Edge de verdade: o mesmo bloqueador de rastreamento que escondia o widget do X barrava o video.twimg.com, e a prévia ficava preta com a régua andando. Vindo de localhost, nem bloqueador, nem checagem de origem, nem CORS têm o que barrar. Nada é gravado em disco; o seek (Range) continua funcionando, e os cabeçalhos que o yt-dlp pediu (User-Agent, Referer…) vão junto.",
+      "⚠️ A prévia do painel agora avisa quando o navegador não consegue carregar a mídia (fonte recusou, endereço venceu…), em vez de ficar uma caixa preta.",
+      "🔗 Passar o mouse no nome da mídia mostra o endereço real do arquivo (não o da retransmissão)."
+    ]
+  },
+  {
     "version": "0.164.1",
     "titulo": "🐦 Mídia direta: o extrator passa a achar o vídeo do X (e de outros sites que não informam os codecs)",
     "itens": [

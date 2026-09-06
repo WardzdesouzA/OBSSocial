@@ -1,4 +1,12 @@
 {
+  "0.165.0": {
+    "titulo": "📡 Medios directos: el video hallado por el extractor (o por las metaetiquetas) ahora llega a través de OBS Social — se acabó la vista previa negra",
+    "itens": [
+      "📡 Cuando la sonda o el 🎬 extractor encuentran el archivo del video, el panel y la pantalla dejan de buscarlo directamente en el servidor del sitio: OBS Social lo busca y lo retransmite (dirección local /midia-direta/remota/…). Motivo visto en un Edge real: el mismo bloqueador de rastreo que ocultaba el widget de X bloqueaba video.twimg.com, y la vista previa quedaba negra con la barra avanzando. Viniendo de localhost, ni bloqueador, ni verificación de origen, ni CORS tienen qué bloquear. No se graba nada en disco; el seek (Range) sigue funcionando, y los encabezados que pidió yt-dlp (User-Agent, Referer…) van juntos.",
+      "⚠️ La vista previa del panel ahora avisa cuando el navegador no puede cargar el medio (la fuente rechazó, la dirección venció…), en vez de quedar una caja negra.",
+      "🔗 Pasar el mouse por el nombre del medio muestra la dirección real del archivo (no la de la retransmisión)."
+    ]
+  },
   "0.164.1": {
     "titulo": "🐦 Medios directos: el extractor ahora encuentra el video de X (y de otros sitios que no informan los códecs)",
     "itens": [
