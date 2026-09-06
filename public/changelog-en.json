@@ -1,4 +1,13 @@
 {
+  "0.167.0": {
+    "titulo": "🌤️ Weather on screen — current conditions with animated icons, several cities in rotation and the source you choose",
+    "itens": [
+      "🌤️ New Weather button and overlay: temperature, feels-like, humidity, wind and the sky condition with an animated icon (spinning sun, moon and stars, drifting clouds, rain, heavy rain, thunderstorm with lightning, snow, hail, fog). Three styles (card, compact, large), °C or °F, and you pick what is shown — including whether the city name appears. Position, size, colours, font, in/out animations, sounds and loose pieces like every other widget, in 🖱️ Arrange the screen; the panel’s 🌤️ button shows/hides it, with ◀ ▶ to switch city and 🔄 to refresh right away.",
+      "🗺️ In 🎨 Appearance → 🌤️ Weather: search a city by name (anywhere in the world — outside Brazil, “Lisbon, PT”), or add Brazil’s 27 capitals in one click (up to 12 cities). With rotation on, the screen cycles through the cities every X seconds (5 to 600), all screens switching together.",
+      "🔌 In 🔌 Connections → 🌤️ Weather sources: one or more sources, in the order you want — the first to answer wins, and if it fails the next takes over. Open-Meteo and MET Norway work without sign-up (Open-Meteo is the default); OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo and Weather Underground (personal stations) join with each one’s free key, stored encrypted on your computer only. Data refreshes every 10 to 60 minutes (your choice), only while the Weather is on screen — to respect the free sources’ limits.",
+      "🕹️ External control (Stream Deck and the like): clima/mostrar, esconder, alternar, próxima cidade and atualizar. Source keys travel with the connections backup and go away with “clear connections”."
+    ]
+  },
   "0.166.0": {
     "titulo": "🍪 Extractor with your login cookies (Instagram and co.) — and when it fails, the panel tells you why",
     "itens": [

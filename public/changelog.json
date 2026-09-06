@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.167.0",
+    "titulo": "🌤️ Clima na tela — o tempo agora, com ícones animados, várias cidades em rodízio e a fonte que você escolher",
+    "itens": [
+      "🌤️ Novo botão e overlay Clima: temperatura, sensação térmica, umidade, vento e a condição do céu com ícone animado (sol girando, lua e estrelas, nuvens flutuando, chuva, chuva forte, trovoada com relâmpago, neve, granizo, névoa). Três estilos (cartão, compacto, grande), °C ou °F, e dá para escolher o que aparece — inclusive se o nome da cidade aparece ou não. Posição, tamanho, cores, fonte, animações de entrada/saída, sons e peças soltas iguais aos outros widgets, no 🖱️ Organizar a tela; o botão 🌤️ do painel põe e tira da tela, com ◀ ▶ para trocar de cidade e 🔄 para atualizar na hora.",
+      "🗺️ Em 🎨 Aparência → 🌤️ Clima: procure a cidade pelo nome (qualquer lugar do mundo — para fora do Brasil, «Lisboa, PT»), ou adicione as 27 capitais do Brasil com um clique (até 12 cidades). Com o rodízio ligado a tela passa pelas cidades a cada X segundos (5 a 600), todas as telas trocando juntas.",
+      "🔌 Em 🔌 Conexões → 🌤️ Fontes de clima: uma ou mais fontes, na ordem que você quiser — a primeira que responder vale, e se falhar a próxima assume. Open-Meteo e MET Norway funcionam sem cadastro (a de fábrica é a Open-Meteo); OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo e Weather Underground (estações pessoais) entram com a chave gratuita de cada uma, guardada criptografada só no seu computador. As informações são atualizadas a cada 10 a 60 minutos (você escolhe), só enquanto o Clima está na tela — para respeitar os limites das fontes gratuitas.",
+      "🕹️ Controle externo (Stream Deck e afins): clima/mostrar, esconder, alternar, próxima cidade e atualizar. As chaves das fontes vão junto no backup das conexões e saem com o «apagar conexões»."
+    ]
+  },
+  {
     "version": "0.166.0",
     "titulo": "🍪 Extrator com os cookies do seu login (Instagram e cia) — e, quando falha, o painel conta o porquê",
     "itens": [

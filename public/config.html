@@ -1187,6 +1187,14 @@
       <div class="hint" style="margin-bottom:0">💡 A voz do Telegram (opus) e os vídeos passam antes pelo conversor <b>ffmpeg</b> — a linha dele acima mostra se já está pronto. MP3 e WAV o motor lê sozinho.</div>
     </div>
 
+    <!-- 🌤️ v0.167: de onde vem o tempo -->
+    <div class="card" id="cardClimaFontes">
+      <h3>🌤️ Fontes de clima</h3>
+      <div class="hint">O overlay 🌤️ Clima pergunta às fontes marcadas, nesta ordem: a primeira que responder vale; se falhar, a próxima. Open-Meteo e MET Norway funcionam sem cadastro. As outras pedem uma chave de API gratuita no site de cada uma — a chave fica só neste computador, criptografada, e nunca aparece de novo aqui (só «guardada»). Weather Underground: só estações pessoais (PWS) — informe CHAVE@IDDAESTACAO. Climatempo: o token gratuito do Advisor.</div>
+      <div id="clFontes"></div>
+      <div class="hint" style="margin-bottom:0">⚖️ Cada fonte tem os seus termos e limites de uso; as gratuitas pedem calma (o programa só consulta enquanto o Clima está na tela, a cada 10–60 min).</div>
+    </div>
+
     <div class="card cardOculto" id="cardYtDlp">
       <h3>🎬 Extrator da mídia direta (Labs)</h3>
       <div class="hint">A 🎞️ Mídia direta já procura o arquivo do vídeo nas metatags de qualquer página. Quando o site esconde (Instagram, TikTok e companhia), quem sabe achar é o <b>yt-dlp</b> — livre e gratuito, mas <b>não embutido</b> no OBS Social. Baixe aqui, uma vez, e o link daqueles sites também vira vídeo no nosso player. Nada é gravado no disco: só se descobre o endereço. Baixar e apagar só funciona no computador onde o OBS Social roda.</div>
@@ -2054,6 +2062,34 @@
       </div>
     </div>
 
+    <!-- 🌤️ v0.167: Clima -->
+    <div class="card" id="cardClima">
+      <h3>🌤️ Clima</h3>
+      <div class="hint">O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 12); com o rodízio ligado, a tela passa por elas de tantos em tantos segundos. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, só enquanto o Clima está na tela. Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.</div>
+      <div class="row">
+        <input type="text" id="clBusca" placeholder="Procurar cidade (ex.: Curitiba)" maxlength="80" style="flex:1">
+        <button id="clBuscarBtn" class="icon-btn" title="Procurar a cidade">🔎</button>
+        <button id="clCapitaisBtn" class="icon-btn" title="Adicionar as capitais do Brasil (completa até 12 cidades)">🇧🇷</button>
+      </div>
+      <div id="clResultados" class="hint" style="display:none"></div>
+      <div id="clLista" class="hint" style="margin-bottom:8px">Nenhuma cidade ainda.</div>
+      <div class="settings-grid">
+        <div><label>Rodízio de cidades</label><label class="check"><input type="checkbox" id="clRodizio" class="sw"><span>Passar pelas cidades, uma de cada vez</span></label></div>
+        <div><label>Trocar de cidade a cada (segundos)</label><input type="number" id="clRodizioSeg" min="5" max="600" step="1"></div>
+        <div><label>Atualizar as informações a cada (minutos)</label><input type="number" id="clAtualizarMin" min="10" max="60" step="1"></div>
+        <div><label>Unidade</label><select id="clUnidade"><option value="C">°C</option><option value="F">°F</option></select></div>
+        <div><label>Estilo do cartão</label><select id="clEstilo"><option value="cartao">Cartão (ícone, temperatura, cidade, detalhes)</option><option value="compacto">Compacto (ícone, temperatura, cidade)</option><option value="grande">Grande (ícone e temperatura em destaque)</option></select></div>
+      </div>
+      <div class="row" style="flex-wrap:wrap;gap:6px 14px;margin-top:6px">
+        <label class="check"><input type="checkbox" id="clMostrarCidade" class="sw"><span>📍 Nome da cidade</span></label>
+        <label class="check"><input type="checkbox" id="clMostrarDescricao" class="sw"><span>📝 Descrição (nublado, chuva…)</span></label>
+        <label class="check"><input type="checkbox" id="clMostrarSensacao" class="sw"><span>🌡️ Sensação térmica</span></label>
+        <label class="check"><input type="checkbox" id="clMostrarUmidade" class="sw"><span>💧 Umidade</span></label>
+        <label class="check"><input type="checkbox" id="clMostrarVento" class="sw"><span>💨 Vento</span></label>
+        <label class="check"><input type="checkbox" id="clMostrarFonte" class="sw"><span>🔗 Nome da fonte</span></label>
+      </div>
+    </div>
+
     <div class="card" id="cardAudiosOv">
       <h3>🔊 Áudios dos overlays</h3>
       <div class="hint">Todos os sons dos overlays moram aqui. Cada overlay pode tocar um som na entrada, na saída, durante o tempo de tela (enquanto está visível) e, nos que têm um acontecimento próprio, nele também: o 🏁 timer/cronômetro zerando ou o 🎲 dado do sorteio rolando — cada som com volume, deslocamento, repetição e onde toca. Envie os áudios em 🎨 Temas → 🖼️ Suas artes — sem limite de tamanho nem de duração. Deslocamento negativo adianta o áudio (pula o começo do arquivo); positivo atrasa o início. Na live, o som sai pela fonte do overlay no OBS: confira se ela está com o áudio ativado (Controlar áudio via OBS, na fonte Navegador).</div>
@@ -2073,6 +2109,7 @@
           <option value="winstreak">🏆 Winstreak</option>
           <option value="aviso">📢 Avisos na tela</option>
           <option value="relogio">🕐 Relógio / cronômetro / timer</option>
+          <option value="clima">🌤️ Clima</option>
         </select>
       </div>
       <div id="aov-linhas"></div>
@@ -3022,6 +3059,7 @@
       <details class="faq-item"><summary>Dá para usar o Stream Deck (ou outro aparelho de botões) com o OBS Social?</summary><div class="faq-resposta">Dá — é o 🕹️ Controle externo, em 🧪 Labs (experimental). Cada ação do OBS Social ganha um endereço (URL) com um token; o aparelho abre o endereço e a ação acontece. Funciona com qualquer coisa que saiba abrir um endereço: Stream Deck (com um plugin de requisição HTTP da loja da Elgato, ou a ação «Site»), Bitfocus Companion (conexão Generic: HTTP), Touch Portal, Loupedeck, Razer Stream Controller, Macro Deck, Streamer.bot, o app Atalhos do iPhone, HTTP Shortcuts no Android, Node-RED... A página 🕹️ Controle Externo lista todos os endereços prontos para copiar, com um ▶ para testar cada um antes de gravar no aparelho.</div></details>
       <details class="faq-item"><summary>O que o controle externo consegue fazer?</summary><div class="faq-resposta">Tudo o que o painel faz pela rede com senha: limpar a tela, destacar o último comentário (de qualquer rede ou de uma só) ou um salvo, tirar o destaque, soltar a fila, player da mídia, sortear/esconder/zerar o sorteio, likômetro, audiência, winstreak (+1, −1, zerar, mostrar), QR code, escrever e mostrar avisos, relógio, cronômetro e timer (iniciar, pausar, zerar, duração, mostrar), ligar/desligar/reiniciar cada conexão, disparar qualquer tecla da Mesa de trilhas (pelo id ou pelo nome), qualquer ação do OBS Studio e do vMix (as mesmas das teclas), comentário de teste, área de transferência — e, para quem programa, a operação livre («op») manda qualquer operação do painel. Fora só o que é do computador local: senha, atualizações, reiniciar, apagar dados, backups e credenciais.</div></details>
       <details class="faq-item"><summary>O que é a 🎵 Mesa de trilhas?</summary><div class="faq-resposta">Uma mesa de som experimental (🧪 Labs): cada trilha vira um botão no painel — e no celular na mesma rede. Uma toca por vez, apertar outra troca com fade, BGM pode repetir (🔁) e o ⏹ para tudo. O som pode sair na live (pelo overlay no OBS), só no painel, ou nos dois. Dá até para importar os botões de som do seu Stream Deck, com um backup de perfis.</div></details>
+      <details class="faq-item"><summary>Como funciona o 🌤️ Clima na tela?</summary><div class="faq-resposta">É um widget com o tempo agora e um ícone animado (sol, lua, nuvens, chuva, trovoada, neve…). Em 🎨 Aparência → 🌤️ Clima você procura a sua cidade (ou adiciona as capitais do Brasil de uma vez), liga o <b>rodízio</b> para a tela passar por várias cidades a cada tantos segundos, escolhe se o nome da cidade aparece e de quanto em quanto tempo as informações são atualizadas (10 a 60 minutos). As informações vêm das fontes marcadas em 🔌 Conexões → 🌤️ Fontes de clima: Open-Meteo e MET Norway funcionam sem cadastro; OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo e Weather Underground pedem uma chave gratuita, que fica só no seu computador. O botão 🌤️ do painel põe e tira da tela; posição, tamanho e cores no 🖱️ Organizar a tela.</div></details>
       <details class="faq-item"><summary>O que são os 🎭 Perfis de overlay?</summary><div class="faq-resposta">Moldes completos do comentário em destaque — cores, letra, arte, posição e as peças — salvos com um nome, no card 🎭 da aba Aparência. Monte o visual, salve como perfil e troque o overlay inteiro em um clique. Com a <b>troca automática</b> ligada, cada comentário destacado veste o molde certo sozinho: um perfil para os comentários comuns e um por <b>faixa de valor</b> para Super Chats e 💝 doações — em qualquer moeda, convertida para reais pela cotação do dia. O 🧪 de cada faixa põe no ar um Super Chat de teste com aquele valor, para conferir antes da live.</div></details>
       <details class="faq-item"><summary>Achei um problema ou tenho uma ideia. Para onde mando?</summary><div class="faq-resposta">Aba 📣 Feedback: escolha o assunto, escreva e envie — o botão abre o seu programa de e-mail já preenchido, e cada mensagem é lida.</div></details>
     </div>
@@ -3225,6 +3263,10 @@ const hub = connectHub((event) => {
       // antigo ainda manda só `aviso` — vira lista de um
       avisosState = event.avisos || (event.aviso ? [event.aviso] : []);
       rebuildWidgetSelect();
+      // 🌤️ v0.167: o Clima (retrato) e as fontes (só «tem chave»)
+      climaEstadoCfg = event.clima || null;
+      cfgClimaChaves = event.climaChaves || null;
+      fillClimaConf();
       // Memória das conexões: preenche os campos com o que foi usado da última vez
       for (const [platform, conn] of Object.entries(event.connections || {})) {
         const input = document.querySelector(`.card[data-platform="${platform}"] .channel-input`);
@@ -3366,6 +3408,19 @@ const hub = connectHub((event) => {
           + (event.faltando && event.faltando.length ? ` ${OBS_I18N.t('Ainda faltam:')} ${event.faltando.slice(0, 5).join(', ')}${event.faltando.length > 5 ? '…' : ''}` : '')
           + (!event.casadas && !event.religadas && !(event.faltando || []).length ? ' ' + OBS_I18N.t('Nenhuma tecla precisava de som.') : '')
         : 'Não deu: ' + (event.erro || 'pasta não encontrada'), 'Procurar os sons', '🔎');
+      break;
+    // 🌤️ v0.167: Clima
+    case 'clima':
+      climaEstadoCfg = event.clima || null;
+      fillClimaLista();
+      fillClimaFontes();
+      break;
+    case 'climaChaves':
+      cfgClimaChaves = event.climaChaves || null;
+      fillClimaFontes();
+      break;
+    case 'climaCidades':
+      mostrarResultadosCidade(event.resultados || [], event.erro);
       break;
     case 'pix':
       cfgPix = event.pix || null;
@@ -4691,7 +4746,208 @@ function fillSorteioConf() {
   try { palavrasSorteioCfg.pintar(); } catch {}
 }
 
+// ---------- 🌤️ v0.167: Clima ----------
+let climaEstadoCfg = null;   // o retrato geral (cidades + o tempo de cada uma)
+let cfgClimaChaves = null;   // { fontes: { id: { nome, precisaChave, temChave, erro } }, capitais }
+function climaConf() { return (settings || {}).clima || {}; }
+function mandarClima(mudancas) {
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { clima: mudancas } });
+  setTimeout(() => { applyingSettings = false; }, 300);
+}
+function fillClimaConf() {
+  const c = climaConf();
+  const ativo = document.activeElement;
+  const setar = (id, valor, prop = 'value') => { const el = document.getElementById(id); if (el && ativo !== el) el[prop] = valor; };
+  setar('clRodizio', c.rodizio === true, 'checked');
+  setar('clRodizioSeg', c.rodizioSegundos ?? 15);
+  setar('clAtualizarMin', c.atualizarMin ?? 15);
+  setar('clUnidade', c.unidade === 'F' ? 'F' : 'C');
+  setar('clEstilo', ['cartao', 'compacto', 'grande'].includes(c.estilo) ? c.estilo : 'cartao');
+  for (const [id, chave] of [['clMostrarCidade', 'mostrarCidade'], ['clMostrarDescricao', 'mostrarDescricao'], ['clMostrarSensacao', 'mostrarSensacao'], ['clMostrarUmidade', 'mostrarUmidade'], ['clMostrarVento', 'mostrarVento']]) setar(id, c[chave] !== false, 'checked');
+  setar('clMostrarFonte', c.mostrarFonte === true, 'checked');
+  fillClimaLista();
+  fillClimaFontes();
+}
+// a lista de cidades, com o tempo de cada uma quando já veio
+function fillClimaLista() {
+  const alvo = document.getElementById('clLista');
+  if (!alvo) return;
+  const cidades = Array.isArray(climaConf().cidades) ? climaConf().cidades : [];
+  alvo.innerHTML = '';
+  if (!cidades.length) { alvo.className = 'hint'; alvo.textContent = OBS_I18N.t('Nenhuma cidade ainda — procure acima ou adicione as capitais.'); return; }
+  alvo.className = '';
+  climaGarantirCss();
+  const retratos = new Map(((climaEstadoCfg && climaEstadoCfg.cidades) || []).map((x) => [x.id, x]));
+  cidades.forEach((cid, i) => {
+    const linha = document.createElement('div');
+    linha.className = 'pop-row';
+    linha.style.cssText = 'align-items:center;gap:8px;margin-bottom:4px';
+    const r = retratos.get(cid.id);
+    const ic = document.createElement('span');
+    ic.style.cssText = 'font-size:26px;line-height:1;width:30px;flex:none';
+    ic.innerHTML = r && r.retrato ? climaIconeSvg(r.retrato.condicao, r.retrato.dia) : '<span style="opacity:0.5">🌡️</span>';
+    linha.appendChild(ic);
+    const nome = document.createElement('span');
+    nome.dataset.noI18n = '1';
+    nome.style.cssText = 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    const tempo = r && r.retrato ? ' — ' + climaTemp(r.retrato.temp, climaConf().unidade) + (r.retrato.descricao ? ', ' + r.retrato.descricao : '') : (r && r.erro ? ' — ⚠️ ' + r.erro : '');
+    nome.textContent = cid.nome + (cid.uf ? ' · ' + cid.uf : '') + (cid.pais && cid.pais !== 'BR' ? ' (' + cid.pais + ')' : '') + tempo;
+    nome.title = cid.lat + ', ' + cid.lon;
+    linha.appendChild(nome);
+    const mover = (delta, glifo, titulo) => {
+      const b = trBotao(glifo, titulo, () => {
+        const lista = cidades.slice();
+        const j = i + delta;
+        if (j < 0 || j >= lista.length) return;
+        [lista[i], lista[j]] = [lista[j], lista[i]];
+        mandarClima({ cidades: lista });
+      });
+      b.disabled = i + delta < 0 || i + delta >= cidades.length;
+      return b;
+    };
+    linha.appendChild(mover(-1, '▲', OBS_I18N.t('Subir')));
+    linha.appendChild(mover(1, '▼', OBS_I18N.t('Descer')));
+    const tirar = trBotao('🗑️', OBS_I18N.t('Tirar esta cidade'), () => mandarClima({ cidades: cidades.filter((x) => x.id !== cid.id) }));
+    tirar.classList.add('danger');
+    linha.appendChild(tirar);
+    alvo.appendChild(linha);
+  });
+}
+function adicionarCidadesClima(novas) {
+  const atuais = Array.isArray(climaConf().cidades) ? climaConf().cidades.slice() : [];
+  for (const c of novas) {
+    if (atuais.length >= 12) break;
+    if (atuais.some((x) => Math.abs(x.lat - c.lat) < 0.01 && Math.abs(x.lon - c.lon) < 0.01)) continue;
+    atuais.push({ nome: c.nome, uf: c.uf || '', pais: c.pais || 'BR', lat: c.lat, lon: c.lon });
+  }
+  mandarClima({ cidades: atuais });
+}
+function mostrarResultadosCidade(resultados, erro) {
+  const box = document.getElementById('clResultados');
+  if (!box) return;
+  box.innerHTML = '';
+  box.style.display = '';
+  if (erro) { box.textContent = '⚠️ ' + erro; return; }
+  if (!resultados.length) { box.textContent = OBS_I18N.t('Nenhuma cidade com esse nome. Tente sem acento ou com o nome completo.'); return; }
+  const titulo = document.createElement('div');
+  titulo.textContent = OBS_I18N.t('Achei estas — clique para adicionar:');
+  box.appendChild(titulo);
+  for (const r of resultados.slice(0, 8)) {
+    const b = document.createElement('button');
+    b.className = 'icon-btn';
+    b.style.cssText = 'margin:4px 6px 0 0;padding:4px 10px;width:auto;font-size:13px';
+    b.dataset.noI18n = '1';
+    b.textContent = '➕ ' + r.nome + (r.uf ? ' · ' + r.uf : '') + (r.pais && r.pais !== 'BR' ? ' (' + r.pais + ')' : '');
+    b.onclick = () => { adicionarCidadesClima([r]); box.style.display = 'none'; document.getElementById('clBusca').value = ''; };
+    box.appendChild(b);
+  }
+}
+function procurarCidadeClima() {
+  const nome = document.getElementById('clBusca').value.trim();
+  if (!nome) return;
+  const box = document.getElementById('clResultados');
+  box.style.display = '';
+  box.textContent = OBS_I18N.t('Procurando…');
+  // fora do Brasil? termine com a sigla do país: «Lisboa, PT»
+  const m = /^(.*),\s*([A-Za-z]{2})$/.exec(nome);
+  hub.send({ type: 'climaProcurar', nome: m ? m[1].trim() : nome, pais: m ? m[2].toUpperCase() : 'BR' });
+}
+document.getElementById('clBuscarBtn').addEventListener('click', procurarCidadeClima);
+document.getElementById('clBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); procurarCidadeClima(); } });
+document.getElementById('clCapitaisBtn').addEventListener('click', () => {
+  const capitais = (cfgClimaChaves && cfgClimaChaves.capitais) || [];
+  if (!capitais.length) return;
+  adicionarCidadesClima(capitais);
+});
+document.getElementById('clRodizio').addEventListener('input', (e) => mandarClima({ rodizio: e.target.checked }));
+// os limites valem já na caixa (o servidor confere de novo): 5–600 s e 10–60 min
+document.getElementById('clRodizioSeg').addEventListener('change', (e) => { const v = Math.min(600, Math.max(5, Math.round(Number(e.target.value) || 15))); e.target.value = v; mandarClima({ rodizioSegundos: v }); });
+document.getElementById('clAtualizarMin').addEventListener('change', (e) => { const v = Math.min(60, Math.max(10, Math.round(Number(e.target.value) || 15))); e.target.value = v; mandarClima({ atualizarMin: v }); });
+document.getElementById('clUnidade').addEventListener('input', (e) => mandarClima({ unidade: e.target.value }));
+document.getElementById('clEstilo').addEventListener('input', (e) => mandarClima({ estilo: e.target.value }));
+for (const [id, chave] of [['clMostrarCidade', 'mostrarCidade'], ['clMostrarDescricao', 'mostrarDescricao'], ['clMostrarSensacao', 'mostrarSensacao'], ['clMostrarUmidade', 'mostrarUmidade'], ['clMostrarVento', 'mostrarVento'], ['clMostrarFonte', 'mostrarFonte']]) {
+  document.getElementById(id).addEventListener('input', (e) => mandarClima({ [chave]: e.target.checked }));
+}
+// 🔌 Conexões: as fontes, em ordem, com a chave de cada uma
+function fillClimaFontes() {
+  const alvo = document.getElementById('clFontes');
+  if (!alvo || !cfgClimaChaves || !cfgClimaChaves.fontes) return;
+  if (alvo.contains(document.activeElement)) return; // digitando uma chave: não refaz
+  const ligadas = Array.isArray(climaConf().fontes) ? climaConf().fontes : [];
+  const todas = [...ligadas.filter((f) => cfgClimaChaves.fontes[f]), ...Object.keys(cfgClimaChaves.fontes).filter((f) => !ligadas.includes(f))];
+  alvo.innerHTML = '';
+  todas.forEach((id) => {
+    const f = cfgClimaChaves.fontes[id];
+    const ligada = ligadas.includes(id);
+    const pos = ligadas.indexOf(id);
+    const linha = document.createElement('div');
+    linha.className = 'pop-row';
+    linha.style.cssText = 'align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.className = 'sw'; chk.checked = ligada;
+    chk.title = OBS_I18N.t('Usar esta fonte');
+    chk.onchange = () => {
+      const nova = ligadas.filter((x) => x !== id);
+      if (chk.checked) nova.push(id);
+      mandarClima({ fontes: nova });
+    };
+    linha.appendChild(chk);
+    const rotulo = document.createElement('span');
+    rotulo.dataset.noI18n = '1';
+    rotulo.style.cssText = 'min-width:190px;font-size:13px';
+    rotulo.textContent = (ligada ? (pos + 1) + 'º · ' : '') + f.nome;
+    linha.appendChild(rotulo);
+    const estado = document.createElement('span');
+    estado.style.cssText = 'font-size:12px;color:var(--muted);flex:1;min-width:120px';
+    if (f.precisaChave && !f.temChave) estado.textContent = '⚪ ' + OBS_I18N.t('sem chave');
+    else if (f.erro && f.erro.texto) estado.textContent = '🔴 ' + f.erro.texto;
+    else if (f.precisaChave) estado.textContent = '🔑 ' + OBS_I18N.t('chave guardada');
+    else estado.textContent = '🟢 ' + OBS_I18N.t('sem cadastro');
+    linha.appendChild(estado);
+    if (ligada) {
+      const sobe = trBotao('▲', OBS_I18N.t('Perguntar antes'), () => { const n = ligadas.slice(); if (pos > 0) { [n[pos - 1], n[pos]] = [n[pos], n[pos - 1]]; mandarClima({ fontes: n }); } });
+      sobe.disabled = pos === 0;
+      const desce = trBotao('▼', OBS_I18N.t('Perguntar depois'), () => { const n = ligadas.slice(); if (pos < n.length - 1) { [n[pos + 1], n[pos]] = [n[pos], n[pos + 1]]; mandarClima({ fontes: n }); } });
+      desce.disabled = pos === ligadas.length - 1;
+      linha.appendChild(sobe); linha.appendChild(desce);
+    }
+    if (f.precisaChave) {
+      const campo = document.createElement('input');
+      campo.type = 'password'; campo.autocomplete = 'off';
+      campo.style.cssText = 'flex:1;min-width:160px';
+      campo.placeholder = f.temChave ? OBS_I18N.t('•••• (guardada — em branco = manter)') : (id === 'wunderground' ? 'CHAVE@IDDAESTACAO' : OBS_I18N.t('chave da API'));
+      const salvar = trBotao('💾', OBS_I18N.t('Guardar a chave'), () => {
+        const v = campo.value.trim();
+        if (!v) return;
+        hub.send({ type: 'climaConfig', chaves: { [id]: v } });
+        campo.value = '';
+        estado.textContent = '🔑 ' + OBS_I18N.t('chave guardada');
+      });
+      campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); salvar.click(); } });
+      linha.appendChild(campo); linha.appendChild(salvar);
+      if (f.temChave) {
+        const apagar = trBotao('🗑️', OBS_I18N.t('Apagar a chave'), async () => {
+          const ok = await obsConfirmar(OBS_I18N.t('Apagar a chave desta fonte?'), { icone: '🌤️', nivel: 'perigo', ok: OBS_I18N.t('Apagar') });
+          if (ok) hub.send({ type: 'climaConfig', chaves: { [id]: 'APAGAR' } });
+        });
+        apagar.classList.add('danger');
+        linha.appendChild(apagar);
+      }
+    }
+    if (f.site) {
+      const a = document.createElement('a');
+      a.href = f.site; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = '↗'; a.title = OBS_I18N.t('Abrir o site da fonte (chave, termos)');
+      a.style.cssText = 'font-size:14px;text-decoration:none';
+      linha.appendChild(a);
+    }
+    alvo.appendChild(linha);
+  });
+}
+
 function fillRelogioConf() {
+  fillClimaConf(); // 🌤️ v0.167
   const r = settings?.relogio || {};
   const sel = document.getElementById('rl-fuso');
   if (sel && document.activeElement !== sel) sel.value = r.fuso || 'auto';
@@ -5027,7 +5283,7 @@ function pacoteOverlaysDoTema(tema) {
     },
     widgets: {},
   };
-  for (const kind of ['raffle', 'likemeter', 'winstreak', 'audience', 'relogio', 'aviso']) {
+  for (const kind of ['raffle', 'likemeter', 'winstreak', 'audience', 'relogio', 'aviso', 'clima']) {
     const dk = dw[kind] || {};
     pacote.widgets[kind] = {
       bgColor: painel || dk.bgColor,
@@ -8263,6 +8519,7 @@ const WIDGET_BASE_OPTIONS = [
   ['audience', '👥 Audiência ao vivo'],
   ['aviso', '📢 Avisos (principal)'], // 📢 v0.128: os adicionais entram como aviso@id
   ['relogio', '🕐 Relógio / cronômetro / timer'],
+  ['clima', '🌤️ Clima'], // 🌤️ v0.167
 ];
 
 function rebuildWidgetSelect() {
@@ -8334,7 +8591,7 @@ function fillWidgetForm() {
   document.getElementById('w-mode-wrap').style.display = kindForWraps === 'audience' ? '' : 'none';
   document.getElementById('w-numbersSide-wrap').style.display = kindForWraps === 'audience' ? '' : 'none';
   document.getElementById('w-showIcon-wrap').style.display = kindForWraps === 'audience' ? '' : 'none';
-  document.getElementById('w-pecas-wrap').style.display = ['qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'relogio'].includes(kindForWraps) ? '' : 'none';
+  document.getElementById('w-pecas-wrap').style.display = ['qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'relogio', 'clima'].includes(kindForWraps) ? '' : 'none';
   document.getElementById('w-qr-wrap').style.display = kindForWraps === 'qr' ? '' : 'none'; // 📱 v0.139
   document.getElementById('w-avisoFmt-wrap').style.display = kindForWraps === 'aviso' ? '' : 'none';
   document.getElementById('w-relogioFmt-wrap').style.display = kindForWraps === 'relogio' ? '' : 'none';
@@ -9355,6 +9612,7 @@ const LAYOUT_ITEMS = [
   { key: 'audience', label: '👥 Audiência', w: 12, h: 14, color: '#2e7d32' },
   { key: 'aviso', label: '📢 Aviso', w: 34, h: 10, color: '#f9a825' },
   { key: 'relogio', label: '🕐 Relógio', w: 14, h: 9, color: '#00838f' },
+  { key: 'clima', label: '🌤️ Clima', w: 19, h: 11, color: '#ef6c00' }, // 🌤️ v0.167
   // 📺 O chat fixo é a página /chat (outra fonte no OBS), mas a posição e o
   // tamanho da coluna são nossos — então ele entra no mapa como os demais
   { key: 'chat', label: '📺 Chat fixo', w: 20, h: 96, color: '#3949ab' },
@@ -9536,7 +9794,7 @@ function updateLayoutToolbar() {
 const CAMADAS_NOMES = {
   media: '🖼️ Moldura de tela inteira', featured: '💬 Destaque', qr: '📱 QR Code',
   raffle: '🎁 Sorteio', likemeter: '📊 Likômetro', winstreak: '🏆 Winstreak',
-  audience: '👥 Audiência', aviso: '📢 Aviso', relogio: '🕐 Relógio',
+  audience: '👥 Audiência', aviso: '📢 Aviso', relogio: '🕐 Relógio', clima: '🌤️ Clima',
 };
 const CAMADAS_TODAS = Object.keys(CAMADAS_NOMES);
 function ordemCamadas() {
@@ -10935,6 +11193,7 @@ const PECAS_WIDGETS_NOMES = {
   audience: { total: '👥 Total', redes: '📶 Por rede' },
   relogio: { hora: '🕐 Hora', legenda: '📅 Legenda' },
   raffle: { titulo: '✍️ Título', podio: '🏅 Pódio' },
+  clima: { icone: '🌤️ Ícone', temp: '🌡️ Temperatura', cidade: '📍 Cidade', detalhes: '📋 Detalhes' }, // 🌤️ v0.167
 };
 let pecaAlvo = null;        // 'featured' ou o tipo do widget
 let pecaSelecionada = null; // a chave da peça dentro do alvo
@@ -11253,6 +11512,7 @@ const PECAS_SEL_PREVIA = {
   audience: { total: '.aud-total', redes: '.aud-rows' },
   relogio: { hora: '.rl-hora', legenda: '.rl-data, .rl-rotulo' },
   raffle: { titulo: '.raffle-title', podio: '.podium, .raffle-spinner' },
+  clima: { icone: '.cl-icone', temp: '.cl-temp, .cl-descricao', cidade: '.cl-cidade', detalhes: '.cl-detalhes, .cl-fonte' }, // 🌤️ v0.167
 };
 function medidaDaPecaNaPrevia(alvo, chave) {
   try {

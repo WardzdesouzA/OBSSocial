@@ -408,6 +408,34 @@
   @keyframes rlPisca { 0%, 100% { opacity: 1; } 50% { opacity: 0.32; } }
   @keyframes rlFinal { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
+  /* 🌤️ v0.167: Clima */
+  .widget[data-widget="clima"] {
+    flex-direction: column; align-items: stretch; gap: 2px;
+    padding: calc(10px * var(--w-pad, 1)) calc(18px * var(--w-pad, 1));
+    color: var(--w-text, #fff); font-family: var(--cl-font, inherit); min-width: 6em;
+  }
+  .widget[data-widget="clima"] .cl-linha { display: flex; align-items: center; gap: calc(var(--cl-size, 40px) * 0.3); }
+  .widget[data-widget="clima"] .cl-icone { font-size: calc(var(--cl-size, 40px) * 1.7); line-height: 1; flex: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35)); }
+  .widget[data-widget="clima"] .cl-temp { font-size: var(--cl-size, 40px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+  .widget[data-widget="clima"].cl-negrito .cl-temp { font-weight: 800; }
+  .widget[data-widget="clima"] .cl-descricao { font-size: calc(var(--cl-size, 40px) * 0.34); opacity: 0.9; line-height: 1.2; }
+  .widget[data-widget="clima"] .cl-cidade { color: var(--w-accent, #ffb703); font-size: calc(var(--cl-size, 40px) * 0.4); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; line-height: 1.2; }
+  .widget[data-widget="clima"] .cl-detalhes { font-size: calc(var(--cl-size, 40px) * 0.3); opacity: 0.85; display: flex; flex-wrap: wrap; gap: 0.2em 0.8em; line-height: 1.3; }
+  .widget[data-widget="clima"] .cl-fonte { font-size: calc(var(--cl-size, 40px) * 0.22); opacity: 0.55; letter-spacing: 0.5px; }
+  .widget[data-widget="clima"] .cl-velho { opacity: 0.6; }
+  .widget[data-widget="clima"].cl-compacto .cl-icone { font-size: calc(var(--cl-size, 40px) * 1.15); }
+  .widget[data-widget="clima"].cl-compacto .cl-cidade { text-transform: none; letter-spacing: 0; }
+  .widget[data-widget="clima"].cl-grande { align-items: center; text-align: center; }
+  .widget[data-widget="clima"].cl-grande .cl-linha { flex-direction: column; gap: 0; }
+  .widget[data-widget="clima"].cl-grande .cl-icone { font-size: calc(var(--cl-size, 40px) * 2.6); }
+  .widget[data-widget="clima"].cl-grande .cl-temp { font-size: calc(var(--cl-size, 40px) * 1.5); }
+  .widget[data-widget="clima"].cl-grande .cl-detalhes { justify-content: center; }
+  /* a troca de cidade no rodízio: sai para um lado, entra pelo outro */
+  .widget[data-widget="clima"] .cl-miolo { display: flex; flex-direction: column; gap: 2px; }
+  .widget[data-widget="clima"] .cl-miolo.cl-entra { animation: climaEntra 0.55s ease-out; }
+  @keyframes climaEntra { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+  body.a11y-sem-animacao .widget[data-widget="clima"] .cl-miolo.cl-entra { animation: none; }
+
   /* 🔇 Convite para liberar o som quando o overlay é aberto num navegador
      comum (celular, tablet, outro PC). Dentro do OBS ele nunca aparece. */
   #somBloqueadoOv {
@@ -817,6 +845,7 @@
 <div id="audienceWidget" class="widget" data-widget="audience"></div>
 <div id="avisoWidget" class="widget" data-widget="aviso"></div>
 <div id="relogioWidget" class="widget" data-widget="relogio"></div>
+<div id="climaWidget" class="widget" data-widget="clima"></div>
 <div id="somBloqueadoOv" title="Toque uma vez para o navegador liberar o som">🔇 Toque aqui para liberar o som dos alertas</div>
 
 <div id="raffleWidget" class="widget" data-widget="raffle"><div id="raffleBox" style="display:flex;flex-direction:column;align-items:center;gap:20px"></div></div>
@@ -1080,7 +1109,7 @@ function confFor(el) {
 // 🪟 Camadas: a ordem de empilhamento é escolhida no 🖱️ Organizar a tela
 // (aba Camadas). O padrão reproduz o comportamento de sempre: a moldura do
 // usuário embaixo, o destaque em cima dela e os widgets por cima de tudo.
-const CAMADAS_PADRAO = ['media', 'featured', 'qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'aviso', 'relogio'];
+const CAMADAS_PADRAO = ['media', 'featured', 'qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'aviso', 'relogio', 'clima'];
 function ordemDasCamadas() {
   const bruta = Array.isArray(settings?.layers?.ordem) ? settings.layers.ordem : [];
   const ordem = bruta.filter((c) => CAMADAS_PADRAO.includes(c));
@@ -1108,6 +1137,7 @@ const PECAS_WIDGETS_SEL = {
   audience: { total: '.aud-total', redes: '.aud-rows' },
   relogio: { hora: '.rl-hora', legenda: '.rl-data, .rl-rotulo' },
   raffle: { titulo: '.raffle-title', podio: '.podium, .raffle-spinner' },
+  clima: { icone: '.cl-icone', temp: '.cl-temp, .cl-descricao', cidade: '.cl-cidade', detalhes: '.cl-detalhes, .cl-fonte' }, // 🌤️ v0.167
 };
 // 🎯 v0.104: como cada peça de widget centraliza o conteúdo quando ganha uma
 // caixa — 'flex' = vira uma caixa centrada (textos, ícone, números);
@@ -1119,6 +1149,7 @@ const PECAS_WIDGETS_CENTRO = {
   'qr.titulo': 'flex', 'likemeter.rotulo': 'flex', 'winstreak.icone': 'flex', 'winstreak.rotulo': 'flex',
   'winstreak.numeros': 'flex', 'relogio.hora': 'flex', 'relogio.legenda': 'flex', 'raffle.titulo': 'flex',
   'audience.total': 'flex', 'audience.redes': 'coluna', 'raffle.podio': 'linha',
+  'clima.icone': 'flex', 'clima.temp': 'flex', 'clima.cidade': 'flex', 'clima.detalhes': 'flex', // 🌤️ v0.167
 };
 const pecasWidgetsCss = document.createElement('style');
 document.head.appendChild(pecasWidgetsCss);
@@ -1752,6 +1783,8 @@ const EXEMPLO_PREVIA = {
     respostas: [null, null, null], expirados: [false, false, false],
   },
   audience: { visible: true, platforms: { youtube: { count: 1240 }, twitch: { count: 380 }, kick: { count: 95 } } },
+  // 🌤️ v0.167: um dia de sol em São Paulo, para a prévia do editor
+  clima: { visible: true, indice: 0, desde: 0, agora: 0, cidades: [{ id: 'exemplo', nome: 'São Paulo', uf: 'SP', pais: 'BR', em: 1, erro: null, retrato: { temp: 24, sensacao: 26, umidade: 58, vento: 12, condicao: 'parcial', descricao: 'Parcialmente nublado', dia: true, fonte: 'open-meteo', atualizadoEm: '' } }] },
 };
 function destaqueParaMostrar() {
   if (destaqueReal) return destaqueReal;
@@ -3146,6 +3179,111 @@ function pintarRelogioOverlay() {
   relogioEl.classList.toggle('rl-final10', naRetaOv());
 }
 
+// ---------- 🌤️ v0.167: Clima ----------
+const climaEl = document.getElementById('climaWidget');
+let climaAtual = null;      // o último retrato geral do servidor
+let climaDeltaOv = 0;       // relógio do servidor − o daqui
+let climaIndiceMostrado = -1;
+let climaIdMostrado = '';
+// Em que cidade o rodízio está agora: contado a partir do «desde» do servidor,
+// para todas as telas trocarem juntas sem o servidor mandar mensagem
+function climaIndiceAgora() {
+  const c = climaAtual;
+  const conf = settings?.clima || {};
+  const n = c && Array.isArray(c.cidades) ? c.cidades.length : 0;
+  if (!n) return 0;
+  if (!conf.rodizio || n < 2) return ((Number(c.indice) || 0) % n + n) % n;
+  const per = Math.max(5, Number(conf.rodizioSegundos) || 15) * 1000;
+  const decorrido = Math.max(0, Math.floor((Date.now() + climaDeltaOv - (Number(c.desde) || 0)) / per));
+  return (((Number(c.indice) || 0) + decorrido) % n + n) % n;
+}
+function showClima(clima) {
+  if (clima) {
+    climaAtual = clima;
+    if (Number(clima.agora)) climaDeltaOv = clima.agora - Date.now();
+  }
+  const visivel = !!(climaAtual && climaAtual.visible && climaAtual.cidades && climaAtual.cidades.length);
+  if (!visivel) {
+    if (!PREVIA) { hideWidgetEl(climaEl, 'clima'); climaIndiceMostrado = -1; climaIdMostrado = ''; return; }
+    // 📺 na prévia do editor, o Clima desligado mostra o exemplo
+    if (!climaAtual || !climaAtual.cidades || !climaAtual.cidades.length) climaAtual = EXEMPLO_PREVIA.clima;
+    else climaAtual = { ...climaAtual, visible: true };
+  }
+  pintarClimaOverlay(true);
+  showWidgetEl(climaEl, 'clima');
+}
+function pintarClimaOverlay(forcar) {
+  if (!climaAtual || !climaAtual.cidades || !climaAtual.cidades.length) return;
+  const conf = settings?.widgets?.clima || {};
+  const cc = settings?.clima || {};
+  const i = climaIndiceAgora();
+  const cidade = climaAtual.cidades[i] || climaAtual.cidades[0];
+  const trocou = i !== climaIndiceMostrado || cidade.id !== climaIdMostrado;
+  if (!forcar && !trocou) return;
+  climaGarantirCss();
+  const r = cidade.retrato || {};
+  const velho = !!cidade.erro && !!cidade.retrato; // a fonte falhou desta vez: fica o último retrato, apagado
+  climaEl.innerHTML = '';
+  const miolo = document.createElement('div');
+  miolo.className = 'cl-miolo' + (trocou && climaIndiceMostrado >= 0 ? ' cl-entra' : '') + (velho ? ' cl-velho' : '');
+  const linha = document.createElement('div');
+  linha.className = 'cl-linha';
+  const icone = document.createElement('div');
+  icone.className = 'cl-icone';
+  icone.innerHTML = climaIconeSvg(r.condicao, r.dia);
+  linha.appendChild(icone);
+  const bloco = document.createElement('div');
+  const temp = document.createElement('div');
+  temp.className = 'cl-temp';
+  temp.textContent = cidade.retrato ? climaTemp(r.temp, cc.unidade) : '--°';
+  bloco.appendChild(temp);
+  if (cc.mostrarDescricao !== false && cc.estilo !== 'compacto') {
+    const desc = document.createElement('div');
+    desc.className = 'cl-descricao';
+    desc.textContent = cidade.retrato ? (r.descricao || CLIMA_DESCRICAO[r.condicao] || '') : (cidade.erro ? 'sem dados' : 'buscando…');
+    bloco.appendChild(desc);
+  }
+  linha.appendChild(bloco);
+  miolo.appendChild(linha);
+  if (cc.mostrarCidade !== false) {
+    const nome = document.createElement('div');
+    nome.className = 'cl-cidade';
+    nome.textContent = cidade.nome + (cidade.uf && cidade.pais === 'BR' ? ' · ' + cidade.uf : cidade.pais && cidade.pais !== 'BR' ? ' · ' + cidade.pais : '');
+    miolo.appendChild(nome);
+  }
+  if (cc.estilo !== 'compacto' && cidade.retrato) {
+    const det = document.createElement('div');
+    det.className = 'cl-detalhes';
+    const partes = [];
+    if (cc.mostrarSensacao !== false && r.sensacao !== null && r.sensacao !== undefined) partes.push('🌡️ ' + climaTemp(r.sensacao, cc.unidade));
+    if (cc.mostrarUmidade !== false && r.umidade !== null && r.umidade !== undefined) partes.push('💧 ' + r.umidade + '%');
+    if (cc.mostrarVento !== false && r.vento !== null && r.vento !== undefined) partes.push('💨 ' + Math.round(r.vento) + ' km/h');
+    for (const p of partes) { const s = document.createElement('span'); s.textContent = p; det.appendChild(s); }
+    if (partes.length) miolo.appendChild(det);
+  }
+  if (cc.mostrarFonte === true && r.fonte) {
+    const f = document.createElement('div');
+    f.className = 'cl-fonte';
+    const nomes = (climaAtual.fontes && climaAtual.fontes[r.fonte] && climaAtual.fontes[r.fonte].nome) || r.fonte;
+    f.textContent = 'fonte: ' + nomes;
+    miolo.appendChild(f);
+  }
+  climaEl.appendChild(miolo);
+  climaEl.style.setProperty('--cl-size', (Number(conf.fontSize) || 40) + 'px');
+  climaEl.style.setProperty('--cl-font', conf.fontFamily ? `'${String(conf.fontFamily).replace(/['"\\]/g, '')}', 'Segoe UI', sans-serif` : 'inherit');
+  climaEl.classList.toggle('cl-negrito', conf.bold !== false);
+  climaEl.classList.toggle('cl-compacto', cc.estilo === 'compacto');
+  climaEl.classList.toggle('cl-grande', cc.estilo === 'grande');
+  climaIndiceMostrado = i;
+  climaIdMostrado = cidade.id;
+}
+// o rodízio: confere a cada meio segundo se é hora de trocar de cidade
+setInterval(() => {
+  if (!climaAtual || !climaAtual.cidades || climaAtual.cidades.length < 2) return;
+  if (!(climaAtual.visible || PREVIA)) return;
+  pintarClimaOverlay(false);
+}, 500);
+
 // ⏳ Reta final: os últimos segundos antes de o timer acabar.
 // Quantos segundos e se vale para o número ou para o Aviso saem das
 // configurações — cada um tem o seu tempo.
@@ -3584,6 +3722,7 @@ const VISORES_OV = {
   winstreak: () => elOvVisivel('winstreak'),
   aviso: () => elOvVisivel('avisoWidget'),
   relogio: () => elOvVisivel('relogioWidget'),
+  clima: () => elOvVisivel('climaWidget'), // 🌤️ v0.167
 };
 const presencaOvAtual = new Map();
 setInterval(() => {
@@ -3637,6 +3776,7 @@ const hubOv = connectHub((event) => {
       showAudience(event.audience);
       showAvisos(event.avisos || [event.aviso]); // 📢 v0.128: lista (ou o formato antigo)
       showRelogio(event.relogio);
+      showClima(event.clima || null); // 🌤️ v0.167
       prepararSomNaLive();
       trilhasOv = Array.isArray(event.trilhas) ? event.trilhas : [];
       // Quem abre no meio de uma trilha entra tocando junto (sincronizado)
@@ -3656,6 +3796,7 @@ const hubOv = connectHub((event) => {
       showAudience(null); // re-renderiza com o modo novo
       showAvisos(null);    // idem para os avisos (fonte, cores, tamanho)
       showRelogio(null);
+      showClima(null);     // 🌤️ v0.167: estilo, unidade e o que mostrar
       showQrs(null);       // 📱 v0.139: o código é repintado com o estilo novo
       prepararSomNaLive();
       // 🎵 Desligar o Labs das trilhas cala a live na hora
@@ -3756,6 +3897,9 @@ const hubOv = connectHub((event) => {
     case 'relogio':
       showRelogio(event.relogio);
       if (event.fim) tocarSomNaLive();
+      break;
+    case 'clima': // 🌤️ v0.167
+      showClima(event.clima);
       break;
     case 'audience':
       showAudience(event.audience);

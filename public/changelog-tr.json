@@ -1,4 +1,13 @@
 {
+  "0.167.0": {
+    "titulo": "🌤️ Ekranda hava durumu — şu anki hava hareketli simgelerle, dönüşümlü birden çok şehir ve seçtiğiniz kaynak",
+    "itens": [
+      "🌤️ Yeni Hava durumu düğmesi ve katmanı: sıcaklık, hissedilen, nem, rüzgâr ve gökyüzünün durumu hareketli simgeyle (dönen güneş, ay ve yıldızlar, süzülen bulutlar, yağmur, sağanak, şimşekli fırtına, kar, dolu, sis). Üç stil (kart, sıkışık, büyük), °C ya da °F ve ne görüneceğini siz seçersiniz — şehir adının görünüp görünmeyeceği dahil. Konum, boyut, renkler, yazı tipi, giriş/çıkış animasyonları, sesler ve serbest parçalar diğer bileşenlerdeki gibi 🖱️ Ekranı düzenle’de; paneldeki 🌤️ düğmesi ekrana koyar/kaldırır, ◀ ▶ şehir değiştirir, 🔄 hemen günceller.",
+      "🗺️ 🎨 Görünüm → 🌤️ Hava durumu’nda: şehri adıyla arayın (dünyanın her yeri — Brezilya dışı için «Lisboa, PT») ya da Brezilya’nın 27 başkentini tek tıkla ekleyin (en fazla 12 şehir). Dönüşüm açıkken ekran her X saniyede (5–600) şehir değiştirir, tüm ekranlar birlikte.",
+      "🔌 🔌 Bağlantılar → 🌤️ Hava durumu kaynakları’nda: istediğiniz sırayla bir veya daha çok kaynak — ilk yanıt veren geçerlidir, başarısız olursa sıradaki devralır. Open-Meteo ve MET Norway kayıt gerektirmez (varsayılan Open-Meteo); OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo ve Weather Underground (kişisel istasyonlar) her birinin ücretsiz anahtarıyla katılır; anahtar yalnızca bilgisayarınızda şifreli saklanır. Bilgiler 10–60 dakikada bir (siz seçersiniz), yalnızca Hava durumu ekrandayken güncellenir — ücretsiz kaynakların sınırlarına saygı için.",
+      "🕹️ Dış kontrol (Stream Deck ve benzerleri): clima/mostrar, esconder, alternar, próxima cidade ve atualizar. Kaynak anahtarları bağlantı yedeğiyle gider ve «bağlantıları sil» ile silinir."
+    ]
+  },
   "0.166.0": {
     "titulo": "🍪 Oturumunuzun çerezleriyle çıkarıcı (Instagram ve diğerleri) — başarısız olunca panel nedenini söylüyor",
     "itens": [

@@ -1,4 +1,13 @@
 {
+  "0.167.0": {
+    "titulo": "🌤️ Météo à l’écran — le temps qu’il fait, avec des icônes animées, plusieurs villes en rotation et la source de votre choix",
+    "itens": [
+      "🌤️ Nouveau bouton et overlay Météo : température, ressenti, humidité, vent et l’état du ciel avec une icône animée (soleil qui tourne, lune et étoiles, nuages qui flottent, pluie, forte pluie, orage avec éclair, neige, grêle, brouillard). Trois styles (carte, compact, grand), °C ou °F, et vous choisissez ce qui s’affiche — y compris si le nom de la ville apparaît. Position, taille, couleurs, police, animations d’entrée/sortie, sons et pièces libres comme les autres widgets, dans 🖱️ Organiser l’écran ; le bouton 🌤️ du panneau l’affiche/le retire, avec ◀ ▶ pour changer de ville et 🔄 pour actualiser tout de suite.",
+      "🗺️ Dans 🎨 Apparence → 🌤️ Météo : cherchez la ville par son nom (partout dans le monde — hors du Brésil, « Lisboa, PT »), ou ajoutez les 27 capitales du Brésil en un clic (jusqu’à 12 villes). Avec la rotation, l’écran passe d’une ville à l’autre toutes les X secondes (5 à 600), tous les écrans changeant ensemble.",
+      "🔌 Dans 🔌 Connexions → 🌤️ Sources météo : une ou plusieurs sources, dans l’ordre voulu — la première qui répond compte, et en cas d’échec la suivante prend le relais. Open-Meteo et MET Norway fonctionnent sans inscription (Open-Meteo par défaut) ; OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo et Weather Underground (stations personnelles) s’ajoutent avec la clé gratuite de chacune, stockée chiffrée uniquement sur votre ordinateur. Les données se rafraîchissent toutes les 10 à 60 minutes (à votre choix), seulement quand la Météo est à l’écran — pour respecter les limites des sources gratuites.",
+      "🕹️ Contrôle externe (Stream Deck et consorts) : clima/mostrar, esconder, alternar, próxima cidade et atualizar. Les clés des sources voyagent avec la sauvegarde des connexions et partent avec « effacer les connexions »."
+    ]
+  },
   "0.166.0": {
     "titulo": "🍪 Extracteur avec les cookies de votre connexion (Instagram et cie) — et, quand il échoue, le panneau dit pourquoi",
     "itens": [
