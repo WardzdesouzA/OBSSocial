@@ -2830,6 +2830,39 @@
             <div class="hint" style="margin:0 0 4px">🔗 Tecla apontada para um arquivo do computador (pela lupa 🔎) entra no backup só como apontamento — o arquivo fica na sua pasta e não vai junto.</div>
             <div class="hint" style="margin-bottom:0">O simples guarda só as teclas; o total inclui os arquivos da biblioteca da Mesa (e o que as teclas usam da geral). Restaurar um backup da Mesa substitui as teclas atuais; um backup do Stream Deck continua entrando por adição, como sempre. Só no computador do streamer.</div>
           </div>
+          <!-- 📱 v0.163: o mini Mesa de Trilhas no celular/tablet -->
+          <div class="field" style="margin-top:12px" id="deckCard">
+            <label>📱 Mini Mesa no celular ou tablet</label>
+            <div class="hint">Abra este endereço no celular ou tablet (na mesma rede/Wi-Fi) e a Mesa aparece em tela cheia, com as mesmas teclas e pastas, sincronizada com o painel: o que tocar lá toca aqui. Aponte a câmera para o QR ou digite o endereço.</div>
+            <div class="row" style="align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div id="deckQrBox" style="display:none;background:#fff;padding:6px;border-radius:8px;line-height:0"><canvas id="deckQrCanvas"></canvas></div>
+              <div style="flex:1;min-width:220px">
+                <div class="row" style="align-items:center;gap:6px;margin:0 0 6px">
+                  <select id="deckEnderecoSel" style="width:auto;max-width:100%" title="Qual placa de rede (cabo, Wi-Fi...) — o celular precisa estar na mesma"></select>
+                  <button class="icon-btn" id="deckAbrirBtn" title="Abrir o mini Mesa neste navegador (para ver como fica)">↗</button>
+                  <button class="icon-btn" id="deckCopiarBtn" title="Copiar o endereço">📋</button>
+                </div>
+                <div id="deckUrl" class="hint" style="font-family:monospace;word-break:break-all;margin:0 0 6px"></div>
+                <div class="hint" style="margin:0">📲 <b>iPhone/iPad:</b> no Safari, Compartilhar → «Adicionar à Tela de Início» abre como aplicativo, em tela cheia. <b>Android:</b> menu do navegador → «Adicionar à tela inicial»; dentro do mini Mesa, ⚙️ → ⛶ Tela cheia. O celular nasce mudo — o som sai onde cada tecla manda (⚙️ → 🔊 para monitorar com fone).</div>
+                <div class="hint" id="deckAcessoHint" style="margin:6px 0 0;display:none"></div>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px;align-items:center;flex-wrap:wrap;gap:8px">
+              <label style="font-size:12px;color:var(--muted)">🎨 Tema do teclado <select id="deckTemaSel" style="width:auto"><option value="obs">🎨 Igual ao OBS Social (o tema deste navegador)</option><option value="proprio">📱 Próprio do mini Mesa</option></select></label>
+              <label style="font-size:12px;color:var(--muted)" id="deckTemaProprioLbl">Tema <select id="deckTemaProprioSel" style="width:auto"></select></label>
+              <label style="font-size:12px;color:var(--muted)">🎬 Animação de fundo <select id="deckAnimSel" style="width:auto"></select></label>
+              <label style="font-size:12px;color:var(--muted)">Intensidade <input type="range" id="deckIntensidadeInp" min="10" max="100" step="5" style="width:90px;vertical-align:middle"></label>
+            </div>
+            <div class="row" id="deckCoresRow" style="margin-top:6px;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)">
+              <span>🎨 Cores por cima do tema próprio (opcional):</span>
+              <label>fundo <input type="color" id="deckCorFundo"></label>
+              <label>tecla <input type="color" id="deckCorTecla"></label>
+              <label>texto <input type="color" id="deckCorTexto"></label>
+              <label>destaque <input type="color" id="deckCorDestaque"></label>
+              <button class="icon-btn" id="deckCoresLimpar" title="Voltar às cores do tema">↺</button>
+            </div>
+            <div class="hint" style="margin:6px 0 0">No modo «Igual ao OBS Social», o mini Mesa veste uma cópia do tema deste navegador — trocar o tema na aba 🎨 Temas atualiza a cópia na hora. Os temas próprios trazem fundos animados (aurora, estrelas, neve...), que valem também por cima do tema do OBS Social. Cada celular ainda pode escolher a própria cara em ⚙️ → «Só neste aparelho».</div>
+          </div>
         </div>
       </div>
 
@@ -3171,6 +3204,11 @@ const hub = connectHub((event) => {
       }
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
       fillSettingsForm();
+      // 📱 v0.163: os endereços/QR do mini Mesa, e a cópia do tema deste
+      // navegador quando o celular ainda não tem nenhuma (modo «igual ao OBS Social»)
+      cfgPapel = (event.security || {}).role || null;
+      pedirDeckInfo();
+      if (settings && settings.deck && settings.deck.tema !== 'proprio' && !Object.keys(settings.deck.temaObs || {}).length && Object.keys(fotoDoTemaParaDeck()).length) atualizarTemaObsDoDeck();
       updateLogsInfo(event.logs);
       if (event.version) {
         document.getElementById('versionTag').textContent = `v${event.version} Beta™`;
@@ -3353,6 +3391,9 @@ const hub = connectHub((event) => {
       fillVmixLab();
       if (janelaEditorVmix) { try { janelaEditorVmix(); } catch {} }
       break;
+    case 'deckInfo': // 📱 v0.163
+      mostrarDeckInfo(event);
+      break;
     case 'controle':
       // 🕹️ v0.126: token, liga/desliga e a contagem de ações recebidas
       cfgControle = event.controle || null;
@@ -3514,6 +3555,7 @@ function fillSecurity(sec) {
   if (!sec || typeof sec.passwordSet === 'undefined') return;
   secState.passwordSet = !!sec.passwordSet;
   secState.last = sec;
+  if (typeof fillDeckCard === 'function') fillDeckCard(); // 📱 v0.163: o aviso de acesso do card do mini Mesa acompanha
   const restrito = sec.networkAccess !== 'full';
   document.getElementById('netRestrictChk').checked = restrito;
   // Liberdade total: os seletores e a senha somem (não valem nada nesse modo)
@@ -4885,6 +4927,9 @@ function mandarTema(mudancas) {
   const novo = { ...temaAtual(), ...mudancas };
   temaLocalGravar(novo);
   if (typeof aplicarTema === 'function') aplicarTema(novo);
+  // 📱 v0.163: o mini Mesa no modo «igual ao OBS Social» veste uma cópia
+  // deste tema — a cópia acompanha a troca
+  if (settings && settings.deck && settings.deck.tema !== 'proprio') atualizarTemaObsDoDeck();
 }
 
 function renderTemasGaleria() {
@@ -7797,7 +7842,146 @@ function fillTrilhasControles() {
   if (seg && document.activeElement !== seg) seg.value = String(settings.trilhasSegurar ?? 0.6);
   fillObsPainel();
   fillVmixPainel(); // 🎛️ v0.122
+  fillDeckCard(); // 📱 v0.163
 }
+
+// ---------- 📱 v0.163: o mini Mesa no celular/tablet ----------
+let deckInfoUltimo = null;
+let cfgPapel = null; // o papel desta tela (local | full | viewer) — só o computador local grava a cópia do tema
+function pintarDeckQr(matriz) {
+  const caixa = document.getElementById('deckQrBox');
+  const tela = document.getElementById('deckQrCanvas');
+  if (!caixa || !tela) return;
+  if (!Array.isArray(matriz) || !matriz.length) { caixa.style.display = 'none'; return; }
+  const escala = 4;
+  tela.width = matriz.length * escala;
+  tela.height = matriz.length * escala;
+  const ctx = tela.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, tela.width, tela.height);
+  ctx.fillStyle = '#000';
+  for (let l = 0; l < matriz.length; l++) {
+    for (let c = 0; c < matriz[l].length; c++) if (matriz[l][c] === '1') ctx.fillRect(c * escala, l * escala, escala, escala);
+  }
+  caixa.style.display = '';
+}
+function pedirDeckInfo(endereco) {
+  hub.send({ type: 'deckInfo', ...(endereco ? { endereco } : {}) });
+}
+function mostrarDeckInfo(info) {
+  deckInfoUltimo = info || null;
+  const sel = document.getElementById('deckEnderecoSel');
+  const url = document.getElementById('deckUrl');
+  if (!sel || !url) return;
+  const enderecos = (info && Array.isArray(info.enderecos)) ? info.enderecos : [];
+  sel.textContent = '';
+  for (const ip of enderecos) {
+    const o = document.createElement('option');
+    o.value = ip;
+    o.textContent = ip;
+    sel.appendChild(o);
+  }
+  if (!enderecos.length) {
+    const o = document.createElement('option');
+    o.value = '';
+    o.textContent = OBS_I18N.t('(sem rede — conecte o computador ao Wi-Fi ou ao cabo)');
+    sel.appendChild(o);
+  }
+  if (info && info.escolhido) sel.value = info.escolhido;
+  url.textContent = (info && info.url) || '';
+  pintarDeckQr(info && info.qr);
+}
+document.getElementById('deckEnderecoSel').addEventListener('change', (e) => { if (e.target.value) pedirDeckInfo(e.target.value); });
+document.getElementById('deckAbrirBtn').onclick = () => window.open('/deck', '_blank');
+document.getElementById('deckCopiarBtn').onclick = async () => {
+  const u = (deckInfoUltimo && deckInfoUltimo.url) || (location.origin + '/deck');
+  try { await navigator.clipboard.writeText(u); } catch { /* sem clipboard: o endereço está na tela */ }
+};
+// A cópia do tema deste navegador que o celular veste no modo «igual ao OBS
+// Social» (ele não enxerga o localStorage daqui)
+function fotoDoTemaParaDeck() {
+  const t = temaAtual();
+  const foto = {};
+  for (const k of TEMA_CAMPOS_COR) if (/^#[0-9a-f]{6}$/i.test(t[k] || '')) foto[k] = t[k];
+  if (typeof t.fonte === 'string' && t.fonte) foto.fonte = t.fonte;
+  if (Number.isFinite(Number(t.cantos))) foto.cantos = Number(t.cantos);
+  if (typeof t.nome === 'string' && t.nome) foto.nome = t.nome;
+  return foto;
+}
+function mandarDeck(patch) {
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { deck: patch } });
+  setTimeout(() => { applyingSettings = false; }, 300);
+  if (settings) settings.deck = { ...(settings.deck || {}), ...patch, cores: { ...((settings.deck || {}).cores || {}), ...(patch.cores || {}) } };
+}
+let temaObsTimer = null;
+function atualizarTemaObsDoDeck() {
+  if (!settings || !settings.deck || cfgPapel !== 'local') return; // o servidor também só aceita do computador local
+  // os sliders da aba 🎨 disparam a cada pixel: uma mensagem só, quando parar
+  if (temaObsTimer) clearTimeout(temaObsTimer);
+  temaObsTimer = setTimeout(() => {
+    temaObsTimer = null;
+    if (!settings || !settings.deck) return;
+    const foto = fotoDoTemaParaDeck();
+    const atual = settings.deck.temaObs || {};
+    const ka = Object.keys(foto).sort(), kb = Object.keys(atual).sort();
+    const igual = ka.length === kb.length && ka.every((k, i) => k === kb[i] && foto[k] === atual[k]);
+    if (!igual) mandarDeck({ temaObs: foto });
+  }, 250);
+}
+function fillDeckCard() {
+  if (!settings || !settings.deck || typeof DECK_TEMAS === 'undefined') return;
+  const d = settings.deck;
+  const temaSel = document.getElementById('deckTemaSel');
+  const proprioSel = document.getElementById('deckTemaProprioSel');
+  const animSel = document.getElementById('deckAnimSel');
+  const inten = document.getElementById('deckIntensidadeInp');
+  if (!temaSel || !proprioSel || !animSel || !inten) return;
+  if (!proprioSel.options.length) {
+    for (const t of DECK_TEMAS) { const o = document.createElement('option'); o.value = t.id; o.textContent = t.nome + (t.anim !== 'nenhuma' ? ' 🎬' : ''); proprioSel.appendChild(o); }
+    for (const a of DECK_ANIMACOES) { const o = document.createElement('option'); o.value = a.id; o.textContent = a.nome; animSel.appendChild(o); }
+  }
+  const ativo = document.activeElement;
+  if (ativo !== temaSel) temaSel.value = d.tema === 'proprio' ? 'proprio' : 'obs';
+  if (ativo !== proprioSel) proprioSel.value = DECK_TEMAS.some((t) => t.id === d.temaProprio) ? d.temaProprio : 'grafite';
+  if (ativo !== animSel) animSel.value = DECK_ANIMACOES.some((a) => a.id === d.animacao) ? d.animacao : 'tema';
+  if (ativo !== inten) inten.value = String(d.intensidade ?? 60);
+  const proprio = d.tema === 'proprio';
+  document.getElementById('deckTemaProprioLbl').style.display = proprio ? '' : 'none';
+  document.getElementById('deckCoresRow').style.display = proprio ? '' : 'none';
+  const base = deckTemaInfo(d.temaProprio);
+  const c = d.cores || {};
+  for (const [id, chave, padrao] of [['deckCorFundo', 'fundo', base.fundo], ['deckCorTecla', 'tecla', base.tecla], ['deckCorTexto', 'texto', base.texto], ['deckCorDestaque', 'destaque', base.destaque]]) {
+    const el = document.getElementById(id);
+    if (el && ativo !== el) el.value = /^#[0-9a-f]{6}$/i.test(c[chave] || '') ? c[chave] : padrao;
+  }
+  // o aviso de acesso: no modo restrito sem 🧰, o celular vê e não toca
+  const sec = secState.last; // null até o resumo de segurança chegar (fillSecurity chama de novo)
+  const hint = document.getElementById('deckAcessoHint');
+  if (hint && !sec) { hint.style.display = 'none'; }
+  else if (hint) {
+    const restrito = !sec.passwordSet && sec.networkAccess !== 'full';
+    const perms = sec.permissions || {};
+    let texto = '';
+    if (restrito && perms.tools !== true) texto = '⚠️ A rede está no modo restrito sem 🧰 Ferramentas: o celular vai ver as teclas, mas não vai tocar nada. Em 🔐 Segurança, ligue 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.';
+    else if (restrito && perms.obs !== true && (cfgTrilhas || []).some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) texto = 'ℹ️ As teclas do OBS/vMix ficam travadas pela rede enquanto o seletor 🎬 estiver desligado em 🔐 Segurança.';
+    hint.textContent = texto ? OBS_I18N.t(texto) : '';
+    hint.style.display = texto ? '' : 'none';
+  }
+}
+document.getElementById('deckTemaSel').addEventListener('change', (e) => {
+  const v = e.target.value === 'proprio' ? 'proprio' : 'obs';
+  mandarDeck({ tema: v, ...(v === 'obs' ? { temaObs: fotoDoTemaParaDeck() } : {}) });
+  fillDeckCard();
+});
+// escolher um tema = a cara dele inteira, animação inclusa (o seletor 🎬 troca depois)
+document.getElementById('deckTemaProprioSel').addEventListener('change', (e) => { mandarDeck({ temaProprio: e.target.value, animacao: 'tema' }); fillDeckCard(); });
+document.getElementById('deckAnimSel').addEventListener('change', (e) => mandarDeck({ animacao: e.target.value }));
+document.getElementById('deckIntensidadeInp').addEventListener('change', (e) => mandarDeck({ intensidade: Number(e.target.value) }));
+for (const [id, chave] of [['deckCorFundo', 'fundo'], ['deckCorTecla', 'tecla'], ['deckCorTexto', 'texto'], ['deckCorDestaque', 'destaque']]) {
+  document.getElementById(id).addEventListener('change', (e) => mandarDeck({ cores: { [chave]: e.target.value } }));
+}
+document.getElementById('deckCoresLimpar').onclick = () => { mandarDeck({ cores: { fundo: '', tecla: '', texto: '', destaque: '' } }); fillDeckCard(); };
 document.getElementById('trilhasSegurarInp').addEventListener('change', (e) => {
   recordChange('labs');
   hub.send({ type: 'settings', settings: { trilhasSegurar: Math.max(0, Math.min(5, Number(e.target.value) || 0)) } });

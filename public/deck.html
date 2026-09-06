@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mesa">
+<meta name="theme-color" content="#14161c" id="deckMetaCor">
+<link rel="manifest" href="/deck.webmanifest">
+<link rel="apple-touch-icon" href="/icones/deck-180.png">
+<link rel="icon" href="/icones/deck-192.png">
+<title>OBS Social — Mesa de Trilhas</title>
+<style>
+/* 📱 v0.163: o mini Mesa de Trilhas — a Mesa do painel no celular ou tablet,
+   em tela cheia, com as MESMAS teclas (render.js desenha as duas). Tudo cabe
+   na tela sem rolagem: a tecla é medida pela tela (a menor tela de celular,
+   em pé ou deitada, mostra as 15 teclas); páginas passam deslizando. */
+:root {
+  --bg: #14161c; --panel: #1d2029; --panel2: #232733; --text: #e8eaf0; --muted: #8b94a6;
+  --border: #343a4a; --accent: #7c4dff; --deck-tecla: #232733;
+  --tecla: 80px; --cols: 5; --gap: 6px; --deck-cantos: 12px;
+}
+html, body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--text);
+  font-family: var(--deck-fonte, 'Segoe UI', system-ui, sans-serif);
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none; -webkit-text-size-adjust: 100%;
+}
+[hidden] { display: none !important; }
+body {
+  display: flex; flex-direction: column; box-sizing: border-box;
+  height: 100%; height: 100dvh; /* 100% = a tela visível onde dvh não existe */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+#deckFundo { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.deck-aviso {
+  position: relative; z-index: 3; margin: 6px 6px 0; padding: 7px 10px; border-radius: 10px;
+  background: var(--panel); border: 1px solid var(--border); font-size: 12px; line-height: 1.35;
+}
+.deck-aviso.travado { border-color: #e53935; }
+main { flex: 1; min-height: 0; position: relative; z-index: 1; }
+.deck-trilho {
+  height: 100%; display: flex; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.deck-trilho::-webkit-scrollbar { display: none; }
+.deck-pagina {
+  flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+}
+.deck-vazio { color: var(--muted); font-size: 13px; text-align: center; padding: 0 24px; line-height: 1.45; }
+#deckBarra {
+  position: relative; z-index: 2; display: flex; align-items: center; gap: 6px;
+  padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); min-height: 40px; box-sizing: border-box;
+  background: var(--panel); border-top: 1px solid var(--border);
+}
+.deck-btn {
+  min-width: 40px; height: 34px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--panel2); color: var(--text); font-size: 17px; line-height: 1; padding: 0 8px; cursor: pointer;
+  flex: 0 0 auto;
+}
+.deck-btn:active { transform: scale(0.94); }
+.deck-btn.perigo { border-color: rgba(229, 57, 53, 0.7); }
+.deck-btn.ligado { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+#deckTitulo {
+  flex: 1; min-width: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--muted); display: flex; align-items: center; gap: 8px;
+}
+#deckTitulo .tocando { flex: 1; min-width: 0; color: var(--text); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#deckTitulo .tocando b { color: var(--accent); font-weight: 400; margin-left: 4px; font-variant-numeric: tabular-nums; }
+#deckPasta { flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#deckPasta:empty { display: none; }
+#deckPontos { display: flex; gap: 5px; align-items: center; flex: 0 1 auto; min-width: 0; overflow: hidden; font-size: 12px; font-weight: 700; color: var(--muted); }
+.deck-ponto { width: 8px; height: 8px; border-radius: 50%; background: var(--border); border: 0; padding: 0; cursor: pointer; }
+.deck-ponto.ativo { background: var(--accent); }
+.deck-folha { position: fixed; inset: 0; z-index: 10; background: rgba(0, 0, 0, 0.55); display: flex; align-items: flex-end; justify-content: center; }
+.deck-folha[hidden] { display: none; }
+.deck-caixa {
+  background: var(--panel); color: var(--text); width: min(560px, 100%); max-height: 90%; overflow: auto;
+  border-radius: 16px 16px 0 0; padding: 12px 14px calc(14px + env(safe-area-inset-bottom)); box-sizing: border-box;
+  border: 1px solid var(--border); font-size: 13px; line-height: 1.4;
+}
+.deck-caixa h3 { margin: 0 0 8px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.deck-caixa h3 .fechar { margin-left: auto; }
+.deck-caixa h4 { margin: 12px 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.deck-caixa label.linha { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
+.deck-caixa label.linha input[type="checkbox"] { width: 18px; height: 18px; }
+.deck-caixa select, .deck-caixa input[type="range"] { width: 100%; box-sizing: border-box; }
+.deck-caixa select { padding: 7px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); font-size: 13px; }
+.deck-modos { display: flex; gap: 6px; }
+.deck-modos button { flex: 1; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); font-size: 12px; cursor: pointer; }
+.deck-modos button.ativo { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.deck-temas { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.deck-tema { border: 2px solid var(--border); border-radius: 10px; padding: 5px; font-size: 11px; text-align: center; cursor: pointer; background: var(--panel2); color: var(--text); }
+.deck-tema.ativo { border-color: var(--accent); }
+.deck-tema-amostra { height: 24px; border-radius: 6px; margin-bottom: 4px; display: flex; gap: 3px; padding: 3px; box-sizing: border-box; }
+.deck-tema-amostra i { flex: 1; border-radius: 3px; }
+.deck-hint { font-size: 11px; color: var(--muted); line-height: 1.35; margin: 4px 0 0; }
+.deck-rodape { margin-top: 12px; font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+#deckAcordado { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; left: -10px; top: -10px; }
+/* ♿ sem animação: nada se mexe (o fundo animado nem desenha) */
+body.a11y-sem-animacao *, body.a11y-sem-animacao *::before, body.a11y-sem-animacao *::after { animation: none !important; transition: none !important; }
+body.a11y-contraste { --muted: var(--text); --border: #98a4b5; }
+/* tablet: a barra cresce junto com a tela */
+@media (min-width: 700px) and (min-height: 500px) {
+  .deck-btn { height: 42px; min-width: 50px; font-size: 21px; }
+  #deckTitulo { font-size: 15px; }
+  .deck-ponto { width: 11px; height: 11px; }
+  .deck-aviso { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<canvas id="deckFundo"></canvas>
+<div class="deck-aviso" id="deckAviso" hidden></div>
+<main>
+  <div class="deck-trilho" id="deckTrilho"></div>
+</main>
+<footer id="deckBarra">
+  <button class="deck-btn" id="deckVoltar" title="Voltar (sair da pasta)" hidden>⬅</button>
+  <div id="deckTitulo"><span id="deckPasta"></span><span class="tocando" id="deckTocando"></span></div>
+  <div id="deckPontos"></div>
+  <button class="deck-btn perigo" id="deckParar" title="⏹ Parar tudo (com fade)">⏹</button>
+  <button class="deck-btn" id="deckConfig" title="Opções do mini Mesa">⚙️</button>
+</footer>
+
+<div class="deck-folha" id="deckFolha" hidden>
+  <div class="deck-caixa" id="deckCaixa">
+    <h3>📱 Mini Mesa de Trilhas <button class="deck-btn fechar" id="deckFechar" title="Fechar">✕</button></h3>
+    <h4>🎨 Tema do teclado</h4>
+    <div class="deck-modos">
+      <button id="deckModoObs" type="button">🎨 Igual ao OBS Social</button>
+      <button id="deckModoProprio" type="button">📱 Próprio do mini Mesa</button>
+    </div>
+    <div id="deckTemasWrap" style="margin-top:8px">
+      <div class="deck-temas" id="deckTemas"></div>
+    </div>
+    <div class="deck-hint" id="deckTemaObsHint">As cores são a cópia do tema pessoal do OBS Social gravada nas configurações (⚙️ Configurações → 🎵 Mesa de Trilhas → 📱 Mini Mesa).</div>
+    <h4>🎬 Animação de fundo</h4>
+    <select id="deckAnimSel"></select>
+    <label class="linha" style="display:block;padding-top:8px">Intensidade <input type="range" id="deckIntensidade" min="10" max="100" step="5"></label>
+    <label class="linha"><input type="checkbox" id="deckSoAqui"> Só neste aparelho (não muda a cara nos outros)</label>
+    <div class="deck-hint" id="deckSoAquiHint" hidden>🔒 Pela rede no modo restrito, as escolhas de tema ficam só neste aparelho.</div>
+    <h4>📲 Este aparelho</h4>
+    <label class="linha"><input type="checkbox" id="deckSomChk"> 🔊 Ouvir as trilhas neste aparelho (monitorar)</label>
+    <div class="deck-hint">Desligado, o celular fica mudo: o som sai só onde cada tecla manda (na live e/ou no painel). Ligado, toca aqui também — bom com fone.</div>
+    <label class="linha"><input type="checkbox" id="deckAcordadoChk"> 🔆 Manter a tela acesa enquanto a Mesa estiver aberta</label>
+    <label class="linha" id="deckCheiaLinha"><input type="checkbox" id="deckCheiaChk"> ⛶ Tela cheia (esconde a barra do navegador)</label>
+    <div class="deck-hint" id="deckInstalarHint"></div>
+    <div class="deck-rodape"><span id="deckVersao"></span><span id="deckEndereco"></span><span id="deckPapel"></span></div>
+  </div>
+</div>
+<!-- 🔆 o vídeo mudo que mantém a tela acesa onde a API de Wake Lock não existe
+     (HTTP na rede local). Clipes do NoSleep.js (Rich Tibbett, licença MIT). -->
+<video id="deckAcordado" muted playsinline loop title="No Sleep">
+  <source src="data:video/webm;base64,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" type="video/webm">
+  <source src="data:video/mp4;base64,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" type="video/mp4">
+</video>
+<script src="/i18n.js"></script>
+<script src="/render.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const T = (s) => (window.OBS_I18N ? OBS_I18N.t(s) : s);
+const ler = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const gravar = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch {} };
+
+// Os ajustes das teclas que só valem aqui (entram DEPOIS do CSS do render.js,
+// para ganhar dele): tamanho pela tela, deslizar em vez de arrastar, cores do tema
+{
+  const css = document.createElement('style');
+  css.textContent = `
+  .trilhas-teclado { grid-template-columns: repeat(var(--cols), var(--tecla)); grid-auto-rows: var(--tecla); gap: var(--gap); }
+  .trilha-tecla { width: var(--tecla); height: var(--tecla); box-sizing: border-box; touch-action: pan-x; background-color: var(--deck-tecla); border-radius: var(--deck-cantos); }
+  .trilha-tecla:active { transform: scale(0.95); }
+  .trilha-tecla.pendente { opacity: 0.4; }
+  .trilha-slot-vazio.inerte { opacity: 0.14; }
+  .trilha-emoji { font-size: calc(var(--tecla) * 0.42); }
+  .trilha-estado { font-size: calc(var(--tecla) * 0.2); }
+  .trilha-qtd { font-size: max(9px, calc(var(--tecla) * 0.13)); }
+  .trilha-rotulo { text-shadow: var(--deck-sombra-texto, 0 1px 3px rgba(0, 0, 0, 0.9)); }
+  `;
+  document.head.appendChild(css);
+}
+
+// ---------- estado ----------
+let settings = null;
+let trilhasLista = [];
+let trilhaTocandoId = null;
+let tocandoDesde = null;
+let pastaTocandoId = null;
+let trilhaTela = null;
+let obsInfo = null;
+let vmixInfo = null;
+let dentro = null;      // id da 📁 aberta (null = raiz)
+let pagina = 0;
+let conectado = false;
+let papel = null;
+let pode = { mesa: true, obs: true };
+let versao = '';
+let lanUrl = '';
+const teclaEstadoAnterior = new Map();
+const local = {
+  som: ler('obsDeckSom') === '1',
+  acordado: ler('obsDeckAcordado') !== '0',
+  ajuste: (() => { try { const a = JSON.parse(ler('obsDeckAjuste') || 'null'); return a && typeof a === 'object' ? a : null; } catch { return null; } })(),
+};
+
+// ---------- tamanho: tudo cabe na tela ----------
+// A grade tem C colunas × R linhas na Mesa do painel. Aqui a tecla é o maior
+// quadrado que cabe — testando a grade como está E virada (R × C): em pé, o
+// celular ganha com 3 colunas × 5 linhas; deitado, com 5 × 3. A ordem de
+// leitura (esquerda → direita, cima → baixo) é a mesma nas duas.
+function medir() {
+  const porPag = trilhasGradeDe(settings || {});
+  const C = TRILHAS_COLUNAS[porPag] || 5;
+  const R = Math.ceil(porPag / C);
+  const main = document.querySelector('main');
+  const largura = main.clientWidth;
+  const altura = main.clientHeight;
+  const folga = 8;
+  const gap = largura < 400 || altura < 400 ? 5 : 8;
+  const cabe = (cols, rows) => Math.floor(Math.min((largura - folga * 2 - gap * (cols - 1)) / cols, (altura - folga * 2 - gap * (rows - 1)) / rows));
+  const normal = cabe(C, R);
+  const virada = cabe(R, C);
+  const [cols, tecla] = virada > normal ? [R, virada] : [C, normal];
+  const raiz = document.documentElement.style;
+  raiz.setProperty('--tecla', Math.max(28, tecla) + 'px');
+  raiz.setProperty('--cols', String(cols));
+  raiz.setProperty('--gap', gap + 'px');
+  // o texto das teclas acompanha o tamanho da tecla (a fonte global da Mesa
+  // é pensada para teclas de ~90 px)
+  const tx = (settings && settings.trilhasTexto) || {};
+  const escala = Math.max(0.8, Math.min(2.4, tecla / 96));
+  raiz.setProperty('--trilha-txt-tam', Math.round((Number(tx.tam) || 11) * escala) + 'px');
+  raiz.setProperty('--trilha-txt-peso', tx.negrito === false ? '400' : '700');
+  raiz.setProperty('--trilha-txt-cor', /^#[0-9a-f]{6}$/i.test(tx.cor || '') ? tx.cor : 'inherit');
+  // recoloca a página atual no lugar (a largura pode ter mudado)
+  const trilho = $('deckTrilho');
+  trilho.scrollLeft = pagina * trilho.clientWidth;
+}
+
+// ---------- a grade ----------
+function celulasDaVisao() {
+  normalizarPosTrilhas(trilhasLista);
+  if (dentro && !trilhasLista.some((t) => t.id === dentro && trilhaEhPasta(t))) dentro = null;
+  const m = new Map();
+  for (const t of trilhasDaVisao(trilhasLista, dentro)) m.set(Number(t.pos) || 0, t);
+  return m;
+}
+let arrastando = false;
+let renderPendente = false;
+function renderDeck() {
+  if (arrastando) { renderPendente = true; return; }
+  renderPendente = false;
+  const trilho = $('deckTrilho');
+  const porPag = trilhasGradeDe(settings || {});
+  const celulas = celulasDaVisao();
+  const paginas = paginasDaVisao(trilhasLista, dentro, porPag);
+  if (pagina >= paginas) pagina = paginas - 1;
+  if (pagina < 0) pagina = 0;
+  // 🎭 o estado de cada tecla do OBS/vMix, e se acabou de trocar (pulinho)
+  const estadosAgora = new Map();
+  const conhecido = (e) => e === 'verde' || e === 'vermelho' || e === false;
+  for (const t of trilhasLista) {
+    if (t.tipo !== 'obs' && t.tipo !== 'vmix') continue;
+    const estado = t.tipo === 'obs' ? obsTeclaEstadoDe(t, obsInfo) : vmixTeclaEstadoDe(t, vmixInfo);
+    const antes = teclaEstadoAnterior.get(t.id);
+    estadosAgora.set(t.id, { estado, trocou: conhecido(estado) && conhecido(antes) && antes !== estado });
+  }
+  teclaEstadoAnterior.clear();
+  for (const [id, e] of estadosAgora) teclaEstadoAnterior.set(id, e.estado);
+
+  trilho.textContent = '';
+  const temAlgo = trilhasLista.some((t) => t.url || t.obsAcao || t.vmixAcao || trilhaEhPasta(t));
+  for (let p = 0; p < paginas; p++) {
+    const pag = document.createElement('div');
+    pag.className = 'deck-pagina';
+    pag.dataset.pagina = String(p);
+    if (!temAlgo && p === 0) {
+      const vazio = document.createElement('div');
+      vazio.className = 'deck-vazio';
+      vazio.textContent = T('A Mesa ainda não tem teclas. Monte a Mesa no computador (⚙️ Configurações → 🎵 Mesa de Trilhas) — elas aparecem aqui na hora.');
+      pag.appendChild(vazio);
+      trilho.appendChild(pag);
+      continue;
+    }
+    const grade = document.createElement('div');
+    grade.className = 'trilhas-teclado';
+    const inicio = p * porPag;
+    for (let cel = inicio; cel < inicio + porPag; cel++) {
+      const t = celulas.get(cel);
+      if (!t) {
+        const vazio = document.createElement('div');
+        vazio.className = 'trilha-tecla trilha-slot-vazio inerte';
+        grade.appendChild(vazio);
+        continue;
+      }
+      const ehPasta = trilhaEhPasta(t);
+      const comEstado = () => estadosAgora.get(t.id) || { estado: null, trocou: false };
+      const b = montarBotaoTrilha(t, ehPasta
+        ? { tocando: t.id === pastaTocandoId, filhos: trilhasLista.filter((x) => x.pastaId === t.id).length }
+        : t.tipo === 'obs' || t.tipo === 'vmix' ? comEstado()
+          : (t.tipo === 'imagem' || t.tipo === 'video') ? { ligado: !!(trilhaTela && trilhaTela.id === t.id) }
+            : { tocando: t.id === trilhaTocandoId });
+      ligarTecla(b, t);
+      grade.appendChild(b);
+    }
+    pag.appendChild(grade);
+    trilho.appendChild(pag);
+  }
+  trilho.scrollLeft = pagina * trilho.clientWidth;
+  renderPontos(paginas);
+  renderBarra();
+}
+
+// O que cada toque faz — o mesmo do painel; a diferença é o «segurar» das
+// pastas de multi ação, que aqui NÃO dispara a fila quando o dedo escorrega
+// para deslizar a página (pointercancel = desistiu, não «soltou»)
+function ligarTecla(b, t) {
+  const bloqueada = () => {
+    // sem conexão, o toque não entra na fila do hub (senão, ao reconectar,
+    // todos os toques guardados disparam de uma vez)
+    if (!conectado || !hub.aberto()) { mostrarAviso(); return true; }
+    if (!pode.mesa) { mostrarAviso(); return true; }
+    if ((t.tipo === 'obs' || t.tipo === 'vmix') && !pode.obs) { mostrarAviso(); return true; }
+    return false;
+  };
+  if (t.tipo === 'pastaSimples') {
+    b.onclick = () => abrirPasta(t.id);
+  } else if (trilhaEhPasta(t)) {
+    b.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== undefined && ev.button !== 0) return;
+      const segurar = Math.max(0, Number((settings || {}).trilhasSegurar ?? 0.6));
+      const x0 = ev.clientX, y0 = ev.clientY;
+      const dedo = ev.pointerId; // um segundo dedo não conta como «soltou»
+      let timer = null;
+      let mexeu = false;
+      const limpar = () => {
+        window.removeEventListener('pointerup', soltou);
+        window.removeEventListener('pointercancel', desistiu);
+        window.removeEventListener('pointermove', moveu);
+        if (timer) { clearTimeout(timer); timer = null; }
+      };
+      const abrir = () => { timer = null; limpar(); abrirPasta(t.id); };
+      const moveu = (e) => {
+        if (e.pointerId !== dedo) return;
+        if (Math.hypot(e.clientX - x0, e.clientY - y0) > 12) { mexeu = true; if (timer) { clearTimeout(timer); timer = null; } }
+      };
+      const desistiu = (e) => { if (e.pointerId === dedo) limpar(); };
+      const soltou = (e) => {
+        if (e.pointerId !== dedo) return;
+        const aindaSegurando = !!timer;
+        limpar();
+        // soltou antes do tempo (e sem escorregar): toca a fila
+        if (aindaSegurando && !mexeu && !bloqueada()) hub.send({ type: 'pastaTocar', id: t.id });
+      };
+      if (segurar === 0) { abrir(); return; }
+      timer = setTimeout(abrir, segurar * 1000);
+      window.addEventListener('pointerup', soltou);
+      window.addEventListener('pointercancel', desistiu);
+      window.addEventListener('pointermove', moveu);
+    });
+  } else if (t.tipo === 'obs') {
+    b.onclick = () => { if (t.obsAcao && !bloqueada()) hub.send({ type: 'obsAcao', acao: t.obsAcao, alvo: t.obsAlvo || {} }); };
+  } else if (t.tipo === 'vmix') {
+    b.onclick = () => { if (t.vmixAcao && !bloqueada()) hub.send({ type: 'vmixAcao', acao: t.vmixAcao, alvo: t.vmixAlvo || {} }); };
+  } else if (t.tipo === 'imagem' || t.tipo === 'video') {
+    b.onclick = () => { if (t.url && !bloqueada()) hub.send({ type: 'trilhaTela', id: t.id }); };
+  } else {
+    b.onclick = () => {
+      if (!t.url || bloqueada()) return;
+      const solo = t.modo === 'solo' || t.modo === 'loop' || !t.modo;
+      hub.send({ type: solo && t.id === trilhaTocandoId ? 'trilhaParar' : 'trilhaTocar', id: t.id });
+    };
+  }
+}
+function abrirPasta(id) {
+  dentro = id;
+  pagina = 0;
+  renderDeck();
+}
+$('deckVoltar').onclick = () => {
+  const pasta = trilhasLista.find((t) => t.id === dentro);
+  dentro = (pasta && pasta.pastaId) || null; // sobe UM nível
+  pagina = 0;
+  renderDeck();
+};
+$('deckParar').onclick = () => hub.send({ type: 'trilhaParar' });
+
+// ---------- páginas: deslizar ----------
+function renderPontos(paginas) {
+  const el = $('deckPontos');
+  el.textContent = '';
+  if (paginas <= 1) return;
+  if (paginas > 8) {
+    // muitas páginas: um contador em vez de uma fileira de pontinhos que
+    // empurraria o ⏹ e o ⚙️ para fora da barra
+    const c = document.createElement('span');
+    c.className = 'deck-contador';
+    c.textContent = (pagina + 1) + '/' + paginas;
+    el.appendChild(c);
+    return;
+  }
+  for (let i = 0; i < paginas; i++) {
+    const p = document.createElement('button');
+    p.type = 'button';
+    p.className = 'deck-ponto' + (i === pagina ? ' ativo' : '');
+    p.title = T('Página') + ' ' + (i + 1);
+    p.onclick = () => irParaPagina(i);
+    el.appendChild(p);
+  }
+}
+function irParaPagina(i) {
+  const trilho = $('deckTrilho');
+  const total = trilho.children.length;
+  pagina = Math.max(0, Math.min(total - 1, i));
+  try { trilho.scrollTo({ left: pagina * trilho.clientWidth, behavior: 'smooth' }); } catch { trilho.scrollLeft = pagina * trilho.clientWidth; }
+  marcarPonto();
+}
+function marcarPonto() {
+  const el = $('deckPontos');
+  const contador = el.querySelector('.deck-contador');
+  if (contador) { contador.textContent = (pagina + 1) + '/' + $('deckTrilho').children.length; return; }
+  const pontos = el.children;
+  for (let i = 0; i < pontos.length; i++) pontos[i].classList.toggle('ativo', i === pagina);
+}
+{
+  const trilho = $('deckTrilho');
+  let quieto = null;
+  let ultimoScroll = 0;
+  const liberar = () => { arrastando = false; if (renderPendente) renderDeck(); };
+  trilho.addEventListener('scroll', () => {
+    const w = trilho.clientWidth || 1;
+    const p = Math.round(trilho.scrollLeft / w);
+    if (p !== pagina && p >= 0 && p < trilho.children.length) { pagina = p; marcarPonto(); }
+    ultimoScroll = Date.now();
+    if (quieto) clearTimeout(quieto);
+    quieto = setTimeout(() => { quieto = null; liberar(); }, 160);
+  }, { passive: true });
+  // enquanto o dedo está na tela (e a rolagem ainda assenta), a grade não é
+  // redesenhada — um toque simples libera na hora, no soltar
+  trilho.addEventListener('pointerdown', () => { arrastando = true; }, { passive: true });
+  const solta = () => { if (Date.now() - ultimoScroll > 120) liberar(); };
+  window.addEventListener('pointerup', solta, { passive: true });
+  // pointercancel = o navegador tomou o gesto para rolar (vem ANTES do
+  // primeiro scroll): não libera agora — o próprio scroll libera quando
+  // assentar, com um prazo de segurança caso nenhum scroll venha
+  window.addEventListener('pointercancel', () => {
+    if (quieto) clearTimeout(quieto);
+    quieto = setTimeout(() => { quieto = null; liberar(); }, 400);
+  }, { passive: true });
+  // teclado (tablet com teclado, ou testes no computador)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') irParaPagina(pagina + 1);
+    else if (e.key === 'ArrowLeft') irParaPagina(pagina - 1);
+    else if (e.key === 'Escape' && !$('deckFolha').hidden) fecharFolha();
+  });
+}
+
+// ---------- a barra ----------
+function renderBarra() {
+  const pasta = dentro ? trilhasLista.find((t) => t.id === dentro) : null;
+  $('deckVoltar').hidden = !dentro;
+  $('deckPasta').textContent = pasta ? '📁 ' + (pasta.nome || T('(sem nome)')) : '';
+  renderTocando();
+}
+function tempoDe(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(s / 60);
+  return (m >= 60 ? Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') : String(m)) + ':' + String(s % 60).padStart(2, '0');
+}
+function renderTocando() {
+  const el = $('deckTocando');
+  const t = trilhasLista.find((x) => x.id === trilhaTocandoId);
+  if (!t) { el.textContent = ''; return; }
+  el.textContent = '';
+  el.append('▶ ' + (t.nome || t.origem || ''));
+  if (tocandoDesde) {
+    const b = document.createElement('b');
+    b.textContent = tempoDe(Date.now() - tocandoDesde);
+    el.appendChild(b);
+  }
+}
+setInterval(() => { if (trilhaTocandoId) renderTocando(); }, 1000);
+
+// ---------- avisos ----------
+function textoDoAviso() {
+  if (!conectado) return { texto: '🔌 Sem conexão com o OBS Social — tentando de novo…', travado: false };
+  if (!settings || !(settings.labs || {}).trilhas) return { texto: '🎵 A Mesa de Trilhas está desligada no OBS Social. No computador: ⚙️ Configurações → 🧪 Labs → 🎵 Mesa de Trilhas.', travado: true };
+  if (!pode.mesa) return { texto: '🔒 Modo restrito da rede: este aparelho só olha. No computador: ⚙️ Configurações → 🔐 Segurança → libere 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.', travado: true };
+  if (!pode.obs && trilhasLista.some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) return { texto: '🎬 As teclas do OBS/vMix estão travadas para a rede: no computador, ⚙️ Configurações → 🔐 Segurança → seletor 🎬.', travado: false };
+  return null;
+}
+let avisoTimer = null;
+function mostrarAviso() {
+  const a = textoDoAviso();
+  const el = $('deckAviso');
+  if (!a) { el.hidden = true; return; }
+  el.textContent = T(a.texto);
+  el.classList.toggle('travado', a.travado);
+  el.hidden = false;
+  if (avisoTimer) clearTimeout(avisoTimer);
+  medir();
+}
+function atualizarAviso() {
+  const a = textoDoAviso();
+  const el = $('deckAviso');
+  const antes = el.hidden;
+  if (!a) el.hidden = true;
+  else { el.textContent = T(a.texto); el.classList.toggle('travado', a.travado); el.hidden = false; }
+  if (antes !== el.hidden) medir();
+}
+
+// ---------- cara: tema + animação ----------
+const animador = (() => {
+  const canvas = $('deckFundo');
+  const ctx = canvas.getContext('2d');
+  let efeito = 'nenhuma';
+  let forca = 0.6;
+  let cores = { destaque: '#7c4dff', texto: '#ffffff', fundo: '#14161c' };
+  let itens = [];
+  let rodando = false;
+  let ultimo = 0;
+  let W = 0, H = 0, escala = 1;
+  const reduzido = () => document.body.classList.contains('a11y-sem-animacao')
+    || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const hexRgb = (h) => { const m = /^#([0-9a-f]{6})$/i.exec(h || ''); const n = m ? parseInt(m[1], 16) : 0x7c4dff; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const rgba = (h, a) => { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${a})`; };
+  function medirCanvas() {
+    escala = Math.min(1.5, window.devicePixelRatio || 1);
+    // os efeitos pesados desenham em meia resolução: barato na bateria
+    if (efeito === 'aurora') escala = Math.min(escala, 0.5);
+    W = Math.max(1, Math.round(innerWidth * escala));
+    H = Math.max(1, Math.round(innerHeight * escala));
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = innerWidth + 'px'; canvas.style.height = innerHeight + 'px';
+  }
+  function semear() {
+    itens = [];
+    const n = Math.round(20 + forca * 90);
+    const rnd = Math.random;
+    if (efeito === 'estrelas') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 0.6 + rnd() * 1.6, f: rnd() * 6.28, v: 0.4 + rnd() * 1.4 });
+    if (efeito === 'neve') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 1 + rnd() * 2.6, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
+    if (efeito === 'bolhas') for (let i = 0; i < n * 0.5; i++) itens.push({ x: rnd(), y: rnd(), r: 3 + rnd() * 14, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
+    if (efeito === 'confete') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), w: 4 + rnd() * 6, h: 2 + rnd() * 4, v: 0.04 + rnd() * 0.08, a: rnd() * 6.28, va: (rnd() - 0.5) * 4, c: i % 5 });
+    if (efeito === 'aurora') for (let i = 0; i < 4; i++) itens.push({ f: rnd() * 6.28, f2: rnd() * 6.28, r: 0.35 + rnd() * 0.3 });
+  }
+  const PALETA_CONFETE = ['#ff5c5c', '#ffb300', '#4da3ff', '#43a047', '#ec407a'];
+  function desenhar(t, dt) {
+    ctx.clearRect(0, 0, W, H);
+    const seg = t / 1000;
+    if (efeito === 'aurora') {
+      ctx.globalCompositeOperation = 'lighter';
+      itens.forEach((a, i) => {
+        const cx = (0.5 + 0.45 * Math.sin(seg * 0.13 + a.f)) * W;
+        const cy = (0.45 + 0.4 * Math.cos(seg * 0.1 + a.f2)) * H;
+        const r = a.r * Math.max(W, H);
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        const cor = i % 2 ? cores.destaque : cores.texto;
+        g.addColorStop(0, rgba(cor, 0.16 * forca + 0.05));
+        g.addColorStop(1, rgba(cor, 0));
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      });
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (efeito === 'estrelas') {
+      for (const s of itens) {
+        const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(seg * s.v + s.f));
+        ctx.fillStyle = rgba(s.f < 1 ? cores.destaque : cores.texto, a * (0.35 + forca * 0.6));
+        ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r * escala, 0, 6.28); ctx.fill();
+      }
+    } else if (efeito === 'neve') {
+      ctx.fillStyle = rgba(cores.texto, 0.5 + forca * 0.4);
+      for (const f of itens) {
+        f.y += f.v * dt * (0.5 + forca) * 0.06; f.s += dt * 0.001;
+        if (f.y > 1.05) { f.y = -0.05; f.x = Math.random(); }
+        const x = (f.x + Math.sin(f.s) * 0.02) * W;
+        ctx.beginPath(); ctx.arc(x, f.y * H, f.r * escala, 0, 6.28); ctx.fill();
+      }
+    } else if (efeito === 'bolhas') {
+      ctx.lineWidth = 1.2 * escala;
+      for (const b of itens) {
+        b.y -= b.v * dt * (0.5 + forca) * 0.05; b.s += dt * 0.0015;
+        if (b.y < -0.08) { b.y = 1.08; b.x = Math.random(); }
+        const x = (b.x + Math.sin(b.s) * 0.015) * W;
+        ctx.strokeStyle = rgba(cores.destaque, 0.3 + forca * 0.5);
+        ctx.fillStyle = rgba(cores.destaque, 0.05 + forca * 0.1);
+        ctx.beginPath(); ctx.arc(x, b.y * H, b.r * escala, 0, 6.28); ctx.fill(); ctx.stroke();
+      }
+    } else if (efeito === 'grade') {
+      // a grade em perspectiva correndo para a pessoa (sintetizador anos 80)
+      const horizonte = H * 0.42;
+      const g = ctx.createLinearGradient(0, horizonte, 0, H);
+      g.addColorStop(0, rgba(cores.destaque, 0.02)); g.addColorStop(1, rgba(cores.destaque, 0.12 * forca + 0.04));
+      ctx.fillStyle = g; ctx.fillRect(0, horizonte, W, H - horizonte);
+      ctx.strokeStyle = rgba(cores.destaque, 0.25 + forca * 0.5); ctx.lineWidth = 1 * escala;
+      const passo = (seg * (0.3 + forca * 0.8)) % 1;
+      for (let i = 0; i < 12; i++) {
+        const f = ((i + passo) / 12);
+        const y = horizonte + (H - horizonte) * f * f;
+        ctx.globalAlpha = 0.2 + f * 0.8;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      for (let i = -8; i <= 8; i++) {
+        ctx.beginPath(); ctx.moveTo(W / 2 + i * W * 0.04, horizonte); ctx.lineTo(W / 2 + i * W * 0.28, H); ctx.stroke();
+      }
+      ctx.strokeStyle = rgba(cores.texto, 0.25);
+      ctx.beginPath(); ctx.moveTo(0, horizonte); ctx.lineTo(W, horizonte); ctx.stroke();
+    } else if (efeito === 'confete') {
+      for (const c of itens) {
+        c.y += c.v * dt * (0.4 + forca) * 0.05; c.a += c.va * dt * 0.001;
+        if (c.y > 1.06) { c.y = -0.06; c.x = Math.random(); }
+        ctx.save();
+        ctx.translate((c.x + Math.sin(c.a) * 0.01) * W, c.y * H);
+        ctx.rotate(c.a);
+        ctx.fillStyle = rgba(PALETA_CONFETE[c.c], 0.55 + forca * 0.4);
+        ctx.fillRect(-c.w * escala / 2, -c.h * escala / 2, c.w * escala, c.h * escala);
+        ctx.restore();
+      }
+    }
+  }
+  function laco(t) {
+    if (!rodando) return;
+    requestAnimationFrame(laco);
+    // ~30 quadros por segundo bastam (e poupam a bateria)
+    if (t - ultimo < 32) return;
+    const dt = Math.min(100, t - ultimo || 16);
+    ultimo = t;
+    desenhar(t, dt);
+  }
+  function ligar() {
+    if (rodando) return;
+    if (efeito === 'nenhuma' || reduzido() || document.hidden) return;
+    rodando = true;
+    ultimo = 0;
+    requestAnimationFrame(laco);
+  }
+  function desligar() { rodando = false; ctx.clearRect(0, 0, W, H); }
+  function aplicar(novoEfeito, intensidade, novasCores) {
+    // o servidor manda «settings» por qualquer ajuste do painel: só um efeito
+    // NOVO re-sorteia as partículas — intensidade e cores mudam no que já
+    // está na tela (a prévia do slider escala em vez de piscar)
+    const mudou = (novoEfeito || 'nenhuma') !== efeito;
+    efeito = novoEfeito || 'nenhuma';
+    forca = Math.max(0.1, Math.min(1, (Number(intensidade) || 60) / 100));
+    cores = { ...cores, ...(novasCores || {}) };
+    if (mudou || !itens.length) { medirCanvas(); semear(); }
+    if (efeito === 'nenhuma' || reduzido()) { desligar(); return; }
+    if (mudou) desligar();
+    ligar();
+  }
+  window.addEventListener('resize', () => { if (efeito !== 'nenhuma') { medirCanvas(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) desligar(); else ligar(); });
+  return { aplicar, ligar, desligar, get efeito() { return efeito; }, get rodando() { return rodando; } };
+})();
+
+function caraEfetiva() {
+  return deckResolverTema((settings && settings.deck) || {}, local.ajuste);
+}
+function aplicarCara() {
+  const r = caraEfetiva();
+  const raiz = document.documentElement.style;
+  raiz.setProperty('--bg', r.cores.fundo);
+  raiz.setProperty('--panel', r.cores.barra);
+  raiz.setProperty('--panel2', r.cores.tecla);
+  raiz.setProperty('--deck-tecla', r.cores.tecla);
+  raiz.setProperty('--text', r.cores.texto);
+  raiz.setProperty('--muted', r.cores.suave);
+  raiz.setProperty('--border', r.cores.borda);
+  raiz.setProperty('--accent', r.cores.destaque);
+  raiz.setProperty('--deck-cantos', Math.max(0, Math.min(20, Math.round(r.cantos * 0.85))) + 'px');
+  raiz.setProperty('--deck-fonte', r.fonte ? `'${String(r.fonte).replace(/['"\\]/g, '')}', 'Segoe UI', system-ui, sans-serif` : '');
+  // os widgets nativos e a barra do sistema acompanham o claro/escuro do fundo
+  const m = /^#([0-9a-f]{6})$/i.exec(r.cores.fundo);
+  const n = m ? parseInt(m[1], 16) : 0;
+  const escuro = !m || 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) < 140;
+  raiz.colorScheme = escuro ? 'dark' : 'light';
+  // num tema claro, a sombra escura do nome da tecla vira um halo claro
+  raiz.setProperty('--deck-sombra-texto', escuro ? '0 1px 3px rgba(0, 0, 0, 0.9)' : '0 1px 2px rgba(255, 255, 255, 0.85)');
+  $('deckMetaCor').setAttribute('content', r.cores.barra);
+  animador.aplicar(r.animacao, r.intensidade, { destaque: r.cores.destaque, texto: r.cores.texto, fundo: r.cores.fundo });
+  if (!$('deckFolha').hidden) preencherFolha();
+}
+
+// ---------- a folha ⚙️ ----------
+function soAqui() { return papel === 'viewer' || $('deckSoAqui').checked; }
+function mudarCara(mudancas) {
+  if (soAqui()) {
+    local.ajuste = { ...(local.ajuste || {}), ...mudancas };
+    gravar('obsDeckAjuste', JSON.stringify(local.ajuste));
+    aplicarCara();
+  } else {
+    hub.send({ type: 'settings', settings: { deck: mudancas } });
+  }
+}
+function preencherFolha() {
+  const conf = (settings && settings.deck) || {};
+  const efetivo = { ...conf, ...(local.ajuste || {}) };
+  const r = caraEfetiva();
+  $('deckModoObs').classList.toggle('ativo', r.modo === 'obs');
+  $('deckModoProprio').classList.toggle('ativo', r.modo === 'proprio');
+  $('deckTemasWrap').hidden = r.modo !== 'proprio';
+  $('deckTemaObsHint').hidden = r.modo !== 'obs';
+  const lista = $('deckTemas');
+  lista.textContent = '';
+  for (const t of DECK_TEMAS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'deck-tema' + (r.modo === 'proprio' && efetivo.temaProprio === t.id ? ' ativo' : '');
+    const am = document.createElement('div');
+    am.className = 'deck-tema-amostra';
+    am.style.background = t.fundo;
+    for (const c of [t.tecla, t.destaque, t.texto]) { const i = document.createElement('i'); i.style.background = c; am.appendChild(i); }
+    b.appendChild(am);
+    b.append(t.nome);
+    // escolher um tema = a cara dele inteira, animação inclusa (troque depois, se quiser)
+    b.onclick = () => mudarCara({ tema: 'proprio', temaProprio: t.id, animacao: 'tema' });
+    lista.appendChild(b);
+  }
+  const sel = $('deckAnimSel');
+  sel.textContent = '';
+  for (const a of DECK_ANIMACOES) {
+    const o = document.createElement('option');
+    o.value = a.id;
+    o.textContent = a.nome;
+    sel.appendChild(o);
+  }
+  sel.value = DECK_ANIMACOES.some((a) => a.id === efetivo.animacao) ? efetivo.animacao : 'tema';
+  $('deckIntensidade').value = String(r.intensidade);
+  $('deckSoAqui').checked = papel === 'viewer' || !!local.ajuste;
+  $('deckSoAqui').disabled = papel === 'viewer';
+  $('deckSoAquiHint').hidden = papel !== 'viewer';
+  $('deckSomChk').checked = local.som;
+  $('deckAcordadoChk').checked = local.acordado;
+  const podeCheia = !!document.documentElement.requestFullscreen && !(window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches);
+  $('deckCheiaLinha').hidden = !podeCheia;
+  $('deckCheiaChk').checked = !!document.fullscreenElement;
+  const instalado = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches);
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  $('deckInstalarHint').textContent = instalado ? T('✅ Instalado como aplicativo neste aparelho.')
+    : ios ? T('📲 Para abrir em tela cheia como um aplicativo: no Safari, toque em Compartilhar → «Adicionar à Tela de Início».')
+      : T('📲 Para ter um atalho: no menu do navegador, «Adicionar à tela inicial». (A instalação como aplicativo pede HTTPS; sem ele, use ⛶ Tela cheia.)');
+  $('deckVersao').textContent = versao ? 'OBS Social v' + versao : '';
+  $('deckEndereco').textContent = location.host;
+  $('deckPapel').textContent = papel === 'local' ? T('💻 este computador') : papel === 'full' ? T('🔓 rede: acesso total') : papel === 'viewer' ? T('🔒 rede: modo restrito') : '';
+}
+function abrirFolha() { preencherFolha(); $('deckFolha').hidden = false; }
+function fecharFolha() { $('deckFolha').hidden = true; }
+$('deckConfig').onclick = abrirFolha;
+$('deckFechar').onclick = fecharFolha;
+$('deckFolha').addEventListener('click', (e) => { if (e.target === $('deckFolha')) fecharFolha(); });
+$('deckModoObs').onclick = () => mudarCara({ tema: 'obs' });
+$('deckModoProprio').onclick = () => mudarCara({ tema: 'proprio' });
+$('deckAnimSel').onchange = (e) => mudarCara({ animacao: e.target.value });
+$('deckIntensidade').onchange = (e) => mudarCara({ intensidade: Number(e.target.value) });
+$('deckIntensidade').oninput = (e) => {
+  // prévia ao vivo enquanto arrasta (sem gravar a cada pixel)
+  const r = caraEfetiva();
+  animador.aplicar(r.animacao, Number(e.target.value), { destaque: r.cores.destaque, texto: r.cores.texto, fundo: r.cores.fundo });
+};
+$('deckSoAqui').onchange = (e) => {
+  if (e.target.checked) {
+    // começa a cópia local do que está valendo agora
+    const conf = (settings && settings.deck) || {};
+    local.ajuste = { tema: conf.tema, temaProprio: conf.temaProprio, animacao: conf.animacao, intensidade: conf.intensidade };
+    gravar('obsDeckAjuste', JSON.stringify(local.ajuste));
+  } else {
+    local.ajuste = null;
+    gravar('obsDeckAjuste', null);
+  }
+  aplicarCara();
+};
+$('deckSomChk').onchange = (e) => {
+  local.som = e.target.checked;
+  gravar('obsDeckSom', local.som ? '1' : '0');
+  if (!local.som) TRILHA_PLAYER.parar();
+  else if (trilhaTocandoId) { const t = trilhasLista.find((x) => x.id === trilhaTocandoId); if (t && t.url) TRILHA_PLAYER.tocar(t, tocandoDesde); }
+};
+$('deckAcordadoChk').onchange = (e) => {
+  local.acordado = e.target.checked;
+  gravar('obsDeckAcordado', local.acordado ? '1' : '0');
+  manterAcordado();
+};
+$('deckCheiaChk').onchange = (e) => {
+  try {
+    if (e.target.checked) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => { e.target.checked = false; });
+    else if (document.fullscreenElement) document.exitFullscreen();
+  } catch { e.target.checked = false; }
+};
+document.addEventListener('fullscreenchange', () => { $('deckCheiaChk').checked = !!document.fullscreenElement; setTimeout(medir, 50); });
+
+// ---------- 🔆 tela acesa ----------
+let wakeLock = null;
+let gestoVisto = false;
+async function manterAcordado() {
+  const video = $('deckAcordado');
+  if (!local.acordado) {
+    try { if (wakeLock) { await wakeLock.release(); } } catch {}
+    wakeLock = null;
+    try { video.pause(); } catch {}
+    return;
+  }
+  if (navigator.wakeLock && window.isSecureContext) {
+    try { if (!wakeLock) wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); return; } catch { wakeLock = null; }
+  }
+  // sem Wake Lock (HTTP na rede): o vídeo mudo em loop segura a tela — só
+  // depois do primeiro toque (o navegador não deixa tocar antes)
+  if (gestoVisto) { try { const p = video.play(); if (p && p.catch) p.catch(() => {}); } catch {} }
+}
+for (const ev of ['pointerdown', 'touchstart', 'keydown']) {
+  document.addEventListener(ev, () => { if (!gestoVisto) { gestoVisto = true; manterAcordado(); } }, { passive: true, capture: true, once: true });
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) manterAcordado(); });
+
+// ---------- som local (monitorar) ----------
+function tocarAqui(id, desde) {
+  const t = trilhasLista.find((x) => x.id === id);
+  const solo = !t || t.modo === 'solo' || t.modo === 'loop' || !t.modo;
+  if (solo) { trilhaTocandoId = id; tocandoDesde = desde || Date.now(); }
+  if (local.som && t && t.url) TRILHA_PLAYER.tocar(t, desde);
+  else if (solo && TRILHA_PLAYER.tocando()) TRILHA_PLAYER.parar();
+  renderDeck();
+}
+
+// ---------- conexão ----------
+const hub = connectHub((event) => {
+  switch (event.type) {
+    case 'init':
+      conectado = true;
+      settings = event.settings || {};
+      papel = (event.security || {}).role || null;
+      pode = event.deckPode || { mesa: true, obs: true };
+      versao = event.version || '';
+      lanUrl = event.lanUrl || '';
+      trilhasLista = Array.isArray(event.trilhas) ? event.trilhas : [];
+      trilhaTocandoId = event.trilhaTocando ? event.trilhaTocando.id : null;
+      tocandoDesde = event.trilhaTocando ? event.trilhaTocando.desde : null;
+      pastaTocandoId = event.pastaTocando || null;
+      trilhaTela = event.trilhaTela || null;
+      obsInfo = event.obs || null;
+      vmixInfo = event.vmix || null;
+      aplicarSettings();
+      renderDeck();
+      medir();
+      atualizarAviso();
+      {
+        // reconectou: o que toca AQUI tem de bater com o que o servidor diz —
+        // um ⏹ perdido enquanto a conexão caiu não pode deixar o fone tocando
+        const aqui = TRILHA_PLAYER.tocando();
+        if (!event.trilhaTocando || !local.som) { if (aqui || !local.som) TRILHA_PLAYER.parar(); }
+        else {
+          const t = trilhasLista.find((x) => x.id === event.trilhaTocando.id);
+          if (t && t.url && !(aqui && aqui.id === t.id)) TRILHA_PLAYER.tocar(t, event.trilhaTocando.desde);
+        }
+      }
+      break;
+    case 'settings':
+      settings = event.settings || settings;
+      aplicarSettings();
+      renderDeck();
+      medir();
+      atualizarAviso();
+      break;
+    case 'trilhas':
+      trilhasLista = Array.isArray(event.trilhas) ? event.trilhas : [];
+      renderDeck();
+      atualizarAviso();
+      break;
+    case 'trilhaPlay':
+      tocarAqui(event.id, event.desde);
+      break;
+    case 'trilhaStop':
+      trilhaTocandoId = null;
+      tocandoDesde = null;
+      TRILHA_PLAYER.parar();
+      renderDeck();
+      break;
+    case 'trilhaTela':
+      trilhaTela = event.tela || null;
+      renderDeck();
+      break;
+    case 'pastaPlay':
+      pastaTocandoId = event.id || null;
+      renderDeck();
+      break;
+    case 'pastaStop':
+      pastaTocandoId = null;
+      renderDeck();
+      break;
+    case 'obs':
+      obsInfo = event.obs || null;
+      renderDeck();
+      break;
+    case 'vmix':
+      vmixInfo = event.vmix || null;
+      renderDeck();
+      break;
+    case 'deckPode': // os seletores 🧰/🎬 da rede mudaram no computador
+      pode = { mesa: event.mesa === true, obs: event.obs === true };
+      atualizarAviso();
+      break;
+    default:
+      break;
+  }
+});
+function aplicarSettings() {
+  if (window.OBS_I18N) OBS_I18N.seguir(settings.idioma);
+  if (typeof aplicarAcessibilidade === 'function') aplicarAcessibilidade(settings.acessibilidade);
+  aplicarCara();
+}
+// a conexão caiu (ou nem abriu)? O hub reconecta sozinho; aqui só o aviso —
+// inclusive na primeira carga, se o servidor estiver reiniciando
+setInterval(() => {
+  const aberto = hub.aberto();
+  if (conectado && !aberto) { conectado = false; atualizarAviso(); }
+  else if (!conectado && !aberto && $('deckAviso').hidden) atualizarAviso();
+}, 2000);
+
+TRILHA_PLAYER.quandoBloquear((preso) => {
+  // o navegador segurou o som até o primeiro toque: a barra avisa
+  $('deckTocando').title = preso ? T('Toque na tela para liberar o som') : '';
+});
+
+// ---------- tamanho ----------
+window.addEventListener('resize', medir);
+if (window.visualViewport) visualViewport.addEventListener('resize', medir);
+window.addEventListener('orientationchange', () => setTimeout(medir, 120));
+if (window.ResizeObserver) new ResizeObserver(() => medir()).observe(document.querySelector('main'));
+medir();
+manterAcordado();
+</script>
+</body>
+</html>

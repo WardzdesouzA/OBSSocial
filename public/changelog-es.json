@@ -1,4 +1,14 @@
 {
+  "0.163.0": {
+    "titulo": "📱 Mini Mesa de Trilhas: la Mesa en el celular o la tablet, con temas animados",
+    "itens": [
+      "📱 Nueva dirección /deck: la Mesa de Trilhas en pantalla completa en el celular o la tablet (misma red/Wi-Fi), con las mismas teclas, carpetas y botones de multi acción del panel, sincronizada al instante — lo que suena allá suena aquí, y la tecla se enciende en los dos. En ⚙️ Configuración → 🎵 Mesa de Trilhas → 📱 Mini Mesa están el QR y la dirección; en iPhone/iPad, «Añadir a pantalla de inicio» lo abre como aplicación.",
+      "📐 Todo cabe en la pantalla: la tecla se mide por la pantalla, así que las 15 teclas de una página aparecen enteras hasta en el celular más pequeño — de pie (3 × 5) o acostado (5 × 3), sin desplazamiento. Con más de una página, basta deslizar el dedo (o tocar los puntitos). Mantener presionado el botón de multi acción abre la carpeta; deslizar el dedo por encima para pasar la página no dispara nada.",
+      "🎨 Temas del teclado: «igual que OBS Social» (una copia del tema de tu navegador, que sigue el cambio de tema en la pestaña 🎨) o uno de los 12 temas propios del mini Mesa — seis quietos y seis con fondo animado (🌌 Aurora, ✨ Cielo estrellado, 🎄 Navidad con nieve, 🫧 Burbujas, 🕹️ Retro, 🎉 Fiesta). La animación y la intensidad se cambian por encima de cualquier tema, los colores extra van por encima del tema propio, y cada celular puede tener su propia cara (⚙️ → «Solo en este aparato»). El ♿ «reducir animaciones» detiene todo.",
+      "🔇 El celular nace mudo — el sonido sale donde manda cada tecla (live y/o panel). En ⚙️ se pueden oír las pistas en él (monitorear con auriculares), mantener la pantalla encendida y abrir en ⛶ pantalla completa. La barra muestra lo que está sonando (con el tiempo) y el ⏹ detiene todo.",
+      "🔐 Las mismas reglas de la red: con contraseña, el celular entra con la contraseña; en modo restringido necesita los selectores 🧰 (y 🎬 para las teclas de OBS/vMix) — la pantalla avisa qué falta y dónde activarlo, y la tarjeta de configuración también."
+    ]
+  },
   "0.162.0": {
     "titulo": "🎬 Los widgets vuelven a hacer la animación de salida y la Mesa ya no «se come» el comienzo de la pista",
     "itens": [

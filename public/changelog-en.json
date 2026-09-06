@@ -1,4 +1,14 @@
 {
+  "0.163.0": {
+    "titulo": "📱 Mini Mesa de Trilhas: the Mesa on your phone or tablet, with animated themes",
+    "itens": [
+      "📱 New address /deck: the Mesa de Trilhas full screen on a phone or tablet (same network/Wi-Fi), with the same keys, folders and multi-action buttons as the panel, synced instantly — what plays there plays here, and the key lights up on both. ⚙️ Settings → 🎵 Mesa de Trilhas → 📱 Mini Mesa holds the QR and the address; on iPhone/iPad, “Add to Home Screen” opens it as an app.",
+      "📐 Everything fits the screen: the key is sized by the screen, so the 15 keys of a page show whole even on the smallest phone — portrait (3 × 5) or landscape (5 × 3), no scrolling. With more than one page, just swipe (or tap the dots). Holding a multi-action button opens the folder; sliding a finger over it to swipe the page fires nothing.",
+      "🎨 Keypad themes: “same as OBS Social” (a copy of your browser theme, which follows theme changes in the 🎨 tab) or one of the mini Mesa’s 12 own themes — six still and six with an animated background (🌌 Aurora, ✨ Starry sky, 🎄 Christmas with snow, 🫧 Bubbles, 🕹️ Retro, 🎉 Party). Animation and intensity can be changed on top of any theme, extra colours go on top of the own theme, and each phone can have its own look (⚙️ → “Only on this device”). ♿ “Reduce animations” stops everything.",
+      "🔇 The phone starts silent — sound plays where each key says (live and/or panel). In ⚙️ you can hear the tracks on it (monitor with headphones), keep the screen on and open in ⛶ full screen. The bar shows what is playing (with the time) and ⏹ stops everything.",
+      "🔐 The same network rules: with a password, the phone signs in with it; in restricted mode it needs the 🧰 switch (and 🎬 for the OBS/vMix keys) — the screen says what is missing and where to turn it on, and so does the settings card."
+    ]
+  },
   "0.162.0": {
     "titulo": "🎬 Widgets play their exit animation again, and the Mesa no longer “eats” the start of the track",
     "itens": [

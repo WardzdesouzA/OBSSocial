@@ -1,4 +1,14 @@
 {
+  "0.163.0": {
+    "titulo": "📱 Mini Mesa de Trilhas : la Mesa sur le téléphone ou la tablette, avec des thèmes animés",
+    "itens": [
+      "📱 Nouvelle adresse /deck : la Mesa de Trilhas en plein écran sur le téléphone ou la tablette (même réseau/Wi-Fi), avec les mêmes touches, dossiers et boutons multi-actions que le panneau, synchronisée à l’instant — ce qui joue là-bas joue ici, et la touche s’allume des deux côtés. ⚙️ Réglages → 🎵 Mesa de Trilhas → 📱 Mini Mesa contient le QR et l’adresse ; sur iPhone/iPad, « Sur l’écran d’accueil » l’ouvre comme une application.",
+      "📐 Tout tient à l’écran : la touche est mesurée d’après l’écran, donc les 15 touches d’une page s’affichent entières même sur le plus petit téléphone — en portrait (3 × 5) ou en paysage (5 × 3), sans défilement. Avec plusieurs pages, il suffit de glisser le doigt (ou de toucher les points). Maintenir un bouton multi-actions ouvre le dossier ; glisser le doigt dessus pour changer de page ne déclenche rien.",
+      "🎨 Thèmes du clavier : « comme OBS Social » (une copie du thème de votre navigateur, qui suit le changement de thème dans l’onglet 🎨) ou l’un des 12 thèmes propres au mini Mesa — six fixes et six à fond animé (🌌 Aurore, ✨ Ciel étoilé, 🎄 Noël avec neige, 🫧 Bulles, 🕹️ Rétro, 🎉 Fête). L’animation et l’intensité se changent par-dessus n’importe quel thème, des couleurs supplémentaires s’appliquent par-dessus le thème propre, et chaque téléphone peut avoir son propre look (⚙️ → « Seulement sur cet appareil »). Le ♿ « réduire les animations » arrête tout.",
+      "🔇 Le téléphone démarre muet — le son sort là où chaque touche l’indique (live et/ou panneau). Dans ⚙️ on peut y écouter les pistes (monitorer avec des écouteurs), garder l’écran allumé et ouvrir en ⛶ plein écran. La barre montre ce qui joue (avec le temps) et ⏹ arrête tout.",
+      "🔐 Les mêmes règles réseau : avec un mot de passe, le téléphone entre avec le mot de passe ; en mode restreint, il faut les sélecteurs 🧰 (et 🎬 pour les touches OBS/vMix) — l’écran indique ce qui manque et où l’activer, et la carte des réglages aussi."
+    ]
+  },
   "0.162.0": {
     "titulo": "🎬 Les widgets refont leur animation de sortie, et la Mesa ne « mange » plus le début de la piste",
     "itens": [

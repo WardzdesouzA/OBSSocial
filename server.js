@@ -458,6 +458,18 @@ const DEFAULT_SETTINGS = {
   // 📁 Segurar a tecla de uma pasta por este tempo (segundos, 0 a 5) abre a
   // pasta; soltar antes toca tudo de dentro em fila. 0 = abre no toque.
   trilhasSegurar: 0.6,
+  // 📱 v0.163: o mini Mesa de Trilhas (/deck) — a Mesa no celular/tablet.
+  // A cara dele: o tema do OBS Social (uma cópia do tema pessoal do navegador
+  // do streamer, gravada pelas configurações — o celular não enxerga o
+  // localStorage do computador) ou um tema só dele, com animação de fundo.
+  deck: {
+    tema: 'obs',            // 'obs' = igual ao OBS Social | 'proprio' = tema próprio do mini Mesa
+    temaProprio: 'grafite', // id do tema próprio (lista DECK_TEMAS em render.js)
+    temaObs: {},            // a cópia do tema pessoal (cores/cantos/fonte) — vale no modo 'obs'
+    animacao: 'tema',       // 'tema' = a que o tema traz | 'nenhuma' | aurora | estrelas | neve | bolhas | grade | confete
+    intensidade: 60,        // força da animação (10 a 100 %)
+    cores: { fundo: '', tecla: '', texto: '', destaque: '' }, // por cima do tema próprio (vazio = a do tema)
+  },
   // ♿ Acessibilidade da interface (painel + configurações). Cada recurso é um
   // liga/desliga próprio; os overlays do OBS (conteúdo para o público) ficam
   // como o streamer desenhou.
@@ -743,6 +755,32 @@ let migrarArteDosPerfis = false; // 🖼️ v0.102: os moldes passam pela mesma 
 const AUDIO_OV_CHAVES = new Set(['featured', 'midia', 'qr', 'raffle', 'likemeter', 'audience', 'winstreak', 'aviso', 'relogio']);
 const AUDIO_OV_MOMENTOS = ['entrada', 'saida', 'tempo', 'fim'];
 
+// 📱 v0.163: o bloco do mini Mesa só aceita o que conhece — nomes de tema e
+// de animação da lista, cores em #hex, intensidade entre 10 e 100 e a cópia
+// do tema do OBS Social com os mesmos campos do tema de verdade.
+const DECK_TEMAS_IDS = ['grafite', 'neon', 'oceano', 'floresta', 'brasa', 'claro', 'aurora', 'estrelas', 'natal', 'bolhas', 'retro', 'festa'];
+const DECK_ANIMACOES_IDS = ['tema', 'nenhuma', 'aurora', 'estrelas', 'neve', 'bolhas', 'grade', 'confete'];
+function sanitizeDeck(bruto) {
+  const d = bruto && typeof bruto === 'object' ? bruto : {};
+  const hex = (v) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : '');
+  const c = d.cores && typeof d.cores === 'object' ? d.cores : {};
+  const obs = d.temaObs && typeof d.temaObs === 'object' ? d.temaObs : {};
+  const temaObs = {};
+  for (const k of ['corFundo', 'corPainel', 'corPainel2', 'corTexto', 'corSuave', 'corBorda', 'corDestaque']) if (hex(obs[k])) temaObs[k] = obs[k];
+  if (typeof obs.fonte === 'string' && obs.fonte) temaObs.fonte = obs.fonte.replace(/['"\\<>]/g, '').slice(0, 60);
+  const cantos = Number(obs.cantos);
+  if (Number.isFinite(cantos)) temaObs.cantos = Math.max(0, Math.min(28, Math.round(cantos)));
+  if (typeof obs.nome === 'string' && obs.nome) temaObs.nome = obs.nome.slice(0, 60);
+  return {
+    tema: d.tema === 'proprio' ? 'proprio' : 'obs',
+    temaProprio: DECK_TEMAS_IDS.includes(d.temaProprio) ? d.temaProprio : 'grafite',
+    temaObs,
+    animacao: DECK_ANIMACOES_IDS.includes(d.animacao) ? d.animacao : 'tema',
+    intensidade: Math.max(10, Math.min(100, Math.round(Number(d.intensidade)) || 60)),
+    cores: { fundo: hex(c.fundo), tecla: hex(c.tecla), texto: hex(c.texto), destaque: hex(c.destaque) },
+  };
+}
+
 function mergeSettings(base) {
   const src = base || {};
   const widgets = {};
@@ -795,6 +833,7 @@ function mergeSettings(base) {
     perfilAuto: { ...DEFAULT_SETTINGS.perfilAuto, ...(src.perfilAuto || {}) },
     acessibilidade: { ...DEFAULT_SETTINGS.acessibilidade, ...(src.acessibilidade || {}) },
     trilhasTexto: { ...DEFAULT_SETTINGS.trilhasTexto, ...(src.trilhasTexto || {}) },
+    deck: sanitizeDeck({ ...DEFAULT_SETTINGS.deck, ...(src.deck || {}) }), // 📱 v0.163
     transcricao: { ...DEFAULT_SETTINGS.transcricao, ...(src.transcricao || {}) },
     chats: { ...DEFAULT_SETTINGS.chats, ...(src.chats || {}) }, // 👥 v0.141
     midiaTela: { ...DEFAULT_SETTINGS.midiaTela, ...(src.midiaTela || {}) },
@@ -1893,6 +1932,7 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json', // 📱 v0.163: o mini Mesa instalável
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
@@ -3195,6 +3235,7 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/overlay') urlPath = '/overlay.html';
   if (urlPath === '/chat') urlPath = '/chat.html';
   if (urlPath === '/config') urlPath = '/config.html';
+  if (urlPath === '/deck') urlPath = '/deck.html'; // 📱 v0.163: o mini Mesa de Trilhas
 
   const filePath = path.join(PUBLIC_DIR, path.normalize(urlPath));
   if (filePath !== PUBLIC_DIR && !filePath.startsWith(PUBLIC_DIR + path.sep)) {
@@ -3527,6 +3568,7 @@ const OP_CATEGORY = {
   trilhasSet: 'tools', trilhaTocar: 'tools', trilhaParar: 'tools', pastaTocar: 'tools',
   trilhaTela: 'tools', trilhaTelaFim: 'tools', // 🖼️🎞️ v0.86: teclas de mídia
   trilhaTelaAjuste: 'tools', // 🚀 v0.87: velocidade/distorção/nitidez
+  deckInfo: 'tools', // 📱 v0.163: os endereços (e o QR) do mini Mesa
   // 🎞️ v0.129: mídia direta é tela (como o destaque e o player da mídia)
   midiaDiretaUrl: 'screen', midiaDiretaArquivo: 'screen', midiaDiretaPastas: 'screen',
   midiaDiretaToggle: 'screen', midiaDiretaFechar: 'screen', midiaDiretaTela: 'screen',
@@ -3732,7 +3774,11 @@ function derrubarConexoesRebaixadas() {
 function broadcastSecurity() {
   const message = JSON.stringify({ type: 'security', security: securitySummary() });
   for (const client of wss.clients) {
-    if (client.readyState === 1 && client.role !== 'viewer') client.send(message);
+    if (client.readyState !== 1) continue;
+    if (client.role !== 'viewer') client.send(message);
+    // 📱 v0.163: quem só assiste não recebe o resumo, mas o mini Mesa precisa
+    // saber na hora se os seletores 🧰/🎬 abriram ou fecharam para ele
+    else client.send(JSON.stringify({ type: 'deckPode', mesa: security.permissions.tools === true, obs: security.permissions.obs === true }));
   }
 }
 
@@ -9720,6 +9766,9 @@ wss.on('connection', (ws, req) => {
   ws.send(JSON.stringify({
     type: 'init',
     security: { ...(ws.role === 'viewer' ? {} : securitySummary()), role: ws.role },
+    // 📱 v0.163: o mini Mesa avisa na hora se este aparelho pode tocar as
+    // teclas (modo restrito da rede: seletores 🧰 e 🎬) — em vez de teclas mudas
+    deckPode: { mesa: ws.role !== 'viewer' || security.permissions.tools === true, obs: podeObs(ws) },
     ...(ws.role === 'local' ? {
       clients: clientsSummary(),
       backup: resumoBackup(),
@@ -10111,6 +10160,10 @@ function tratarMensagem(ws, raw) {
       }
       limitarTextos(incoming);
       if (ws.role !== 'local' && incoming.backup && typeof incoming.backup === 'object') delete incoming.backup.pasta;
+      // 📱 v0.163: a cópia do tema que o mini Mesa veste é a do STREAMER — só
+      // o computador local grava (um co-apresentador na rede não troca a cara
+      // do celular pelo tema do navegador dele)
+      if (ws.role !== 'local' && incoming.deck && typeof incoming.deck === 'object') delete incoming.deck.temaObs;
       if ('logRetentionDays' in incoming) {
         incoming.logRetentionDays = Math.max(0, Math.min(365, Number(incoming.logRetentionDays) || 0));
       }
@@ -10152,6 +10205,13 @@ function tratarMensagem(ws, raw) {
         labs: { ...state.settings.labs, ...(incoming.labs || {}) },
         acessibilidade: { ...state.settings.acessibilidade, ...(incoming.acessibilidade || {}) },
         trilhasTexto: { ...state.settings.trilhasTexto, ...(incoming.trilhasTexto || {}) },
+        // 📱 v0.163: o mini Mesa — as cores extras se fundem uma a uma; a cópia
+        // do tema do OBS Social chega inteira (é uma foto do tema, não um ajuste)
+        deck: sanitizeDeck({
+          ...state.settings.deck,
+          ...(incoming.deck || {}),
+          cores: { ...(state.settings.deck || {}).cores, ...((incoming.deck || {}).cores || {}) },
+        }),
         // 🎙️ o comando do transcritor roda um programa da máquina: só o
         // computador local pode trocá-lo
         transcricao: {
@@ -10725,6 +10785,24 @@ function tratarMensagem(ws, raw) {
     case 'trilhaParar':
       pararTrilha();
       break;
+    case 'deckInfo': {
+      // 📱 v0.163: os endereços em que o celular/tablet acha o mini Mesa
+      // (um por placa de rede: cabo, Wi-Fi, VPN...) e o QR do escolhido. Só
+      // quem pediu recebe — é uma resposta, não um estado. E só quem tem
+      // controle: a lista de placas da máquina não é para o modo restrito.
+      if (ws.role === 'viewer') break;
+      const enderecos = [];
+      for (const lista of Object.values(os.networkInterfaces())) {
+        for (const ni of lista || []) if (ni.family === 'IPv4' && !ni.internal && !enderecos.includes(ni.address)) enderecos.push(ni.address);
+      }
+      const pedido = String(msg.endereco || '');
+      const escolhido = enderecos.includes(pedido) ? pedido : (enderecos[0] || null);
+      const url = escolhido ? `http://${escolhido}:${PORT}/deck` : null;
+      let qr = null;
+      if (url) { try { qr = makeQrMatrix(url); } catch { qr = null; } }
+      try { ws.send(JSON.stringify({ type: 'deckInfo', enderecos, escolhido, url, qr })); } catch { /* fechando */ }
+      break;
+    }
     case 'trilhaTela': {
       // 🖼️🎞️ v0.86: clicar numa tecla de imagem/vídeo mostra a mídia no
       // painel E no overlay; clicar de novo (ou msg.off) tira da tela
