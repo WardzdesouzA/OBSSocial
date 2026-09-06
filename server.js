@@ -637,6 +637,14 @@ const DEFAULT_SETTINGS = {
     tamIcone: 100,      // % do tamanho dos ícones (70 a 160)
     cantos: 14,         // arredondamento dos cantos (0 a 28 px)
     densidade: 100,     // espaçamento interno (80 a 130 %)
+    // 🎬 v0.164/v0.168: o fundo animado e TODAS as opções dele (a lista com os
+    // limites mora em public/render.js — TEMA_ANIM_PADROES; o tema é pessoal,
+    // gravado no navegador, e este bloco é só o padrão de quem nunca escolheu)
+    animacao: 'nenhuma', animIntensidade: 60, animVelocidade: 100, animQuantidade: 100, animTamanho: 100,
+    animBrilho: 60, animRastro: 0, animVento: 0, animOpacidade: 100, animCamada: 'atras', painelOpacidade: 100,
+    animCores: 'tema', animCor1: '#ffffff', animCor2: '#7c3aed', animCor3: '#ffb300',
+    animPontas: 6, animCintilacao: 70, animCadentes: 30, animNebulosa: 40, animFaixas: 4,
+    animFlocos: 'cristais', animReflexo: true, animHorizonte: 42, animSol: true, animFormas: 'mistas',
   },
   // Widgets do overlay (cada um totalmente personalizavel)
   widgets: {
@@ -813,6 +821,19 @@ function sanitizeDeck(bruto) {
   if (DECK_ANIMACOES_IDS.includes(obs.animacao) && obs.animacao !== 'tema' && obs.animacao !== 'nenhuma') temaObs.animacao = obs.animacao;
   const ni = Number(obs.animIntensidade);
   if (Number.isFinite(ni)) temaObs.animIntensidade = Math.max(10, Math.min(100, Math.round(ni)));
+  // 🎬 v0.168: as opções da animação viajam na cópia (os mesmos limites de
+  // public/render.js — TEMA_ANIM_PADROES); o que não vier fica no padrão lá
+  for (const [k, min, max] of [['animVelocidade', 10, 300], ['animQuantidade', 10, 300], ['animTamanho', 30, 300], ['animBrilho', 0, 100], ['animRastro', 0, 100], ['animVento', -100, 100], ['animOpacidade', 0, 100], ['animCintilacao', 0, 100], ['animCadentes', 0, 100], ['animNebulosa', 0, 100], ['animFaixas', 1, 8], ['animHorizonte', 20, 70]]) {
+    const n = Number(obs[k]);
+    if (obs[k] !== undefined && obs[k] !== null && obs[k] !== '' && Number.isFinite(n)) temaObs[k] = Math.max(min, Math.min(max, Math.round(n)));
+  }
+  if ([0, 4, 6, 8].includes(Number(obs.animPontas))) temaObs.animPontas = Number(obs.animPontas);
+  if (obs.animCores === 'personalizadas') temaObs.animCores = 'personalizadas';
+  for (const k of ['animCor1', 'animCor2', 'animCor3']) if (hex(obs[k])) temaObs[k] = obs[k].toLowerCase();
+  if (obs.animFlocos === 'pontos') temaObs.animFlocos = 'pontos';
+  if (obs.animReflexo === false) temaObs.animReflexo = false;
+  if (obs.animSol === false) temaObs.animSol = false;
+  if (['retangulos', 'circulos', 'estrelas', 'fitas'].includes(obs.animFormas)) temaObs.animFormas = obs.animFormas;
   const proprio = DECK_TEMAS_ANTIGOS[d.temaProprio] || d.temaProprio;
   return {
     tema: d.tema === 'proprio' ? 'proprio' : 'obs',

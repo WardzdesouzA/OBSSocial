@@ -1286,6 +1286,21 @@ function aplicarTema(tema) {
   raiz.style.setProperty('--tema-cantos', num(t.cantos, 0, 28, 14) + 'px');
   raiz.style.setProperty('--tema-densidade', num(t.densidade, 80, 130, 100) / 100);
   raiz.style.setProperty('--tema-fonte', t.fonte ? `'${String(t.fonte).replace(/['"\\]/g, '')}', 'Segoe UI', system-ui, sans-serif` : '');
+  // 🪟 v0.168: opacidade dos painéis — abaixo de 100 % os cards, colunas e
+  // caixas ficam translúcidos e a animação de fundo aparece em qualquer lugar
+  // (o padrão é 100 %: opaco, como sempre foi)
+  {
+    const pct = num(t.painelOpacidade, 20, 100, 100);
+    for (const [chave, cssVar] of [['corPainel', '--panel'], ['corPainel2', '--panel2']]) {
+      if (pct >= 100) continue; // a cor sólida já foi posta (ou tirada) acima
+      const base = typeof t[chave] === 'string' && /^#[0-9a-f]{6}$/i.test(t[chave]) ? t[chave] : (getComputedStyle(raiz).getPropertyValue(cssVar).trim() || '');
+      const m = /^#([0-9a-f]{6})$/i.exec(base);
+      if (!m) continue;
+      const n = parseInt(m[1], 16);
+      raiz.style.setProperty(cssVar, `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${pct / 100})`);
+    }
+    raiz.style.setProperty('--tema-painel-opacidade', String(pct / 100));
+  }
 
   // Imagem de fundo do programa (só das mídias enviadas)
   let camada = document.getElementById('obs-tema-fundo');
@@ -1336,8 +1351,12 @@ function aplicarAnimacaoDoTema(t) {
   if (!aplicarAnimacaoDoTema.motor) aplicarAnimacaoDoTema.motor = criarAnimadorFundo(canvas);
   const cs = getComputedStyle(document.documentElement);
   const cor = (v, padrao) => { const x = cs.getPropertyValue(v).trim(); return /^#[0-9a-f]{6}$/i.test(x) ? x : padrao; };
-  const n = Number(t.animIntensidade);
-  aplicarAnimacaoDoTema.motor.aplicar(anim, Number.isFinite(n) ? n : 60, { destaque: cor('--accent', '#7c3aed'), texto: cor('--text', '#e6edf3'), fundo: cor('--bg', '#0d1117') });
+  const op = temaAnimOpcoes(t);
+  // 🪟 v0.168: a camada — atrás de tudo (o de sempre) ou por cima de tudo
+  // (sem pegar o mouse); a opacidade da camada é do motor (canvas.style.opacity)
+  canvas.style.zIndex = op.camada === 'frente' ? '2147483000' : '-1';
+  canvas.dataset.camada = op.camada;
+  aplicarAnimacaoDoTema.motor.aplicar(anim, op.intensidade, { destaque: cor('--accent', '#7c3aed'), texto: cor('--text', '#e6edf3'), fundo: cor('--bg', '#0d1117') }, op);
 }
 
 function garantirCssTema() {
@@ -2317,6 +2336,95 @@ function montarBotaoTrilha(t, opts = {}) {
 })();
 
 // ---------------------------------------------------------------------------
+// 🎬 v0.168: as opções da animação de fundo — TUDO ajustável na aba 🎨 Temas.
+// Os padrões valem para quem nunca mexeu (e são o que «↺ Padrão» devolve).
+const TEMA_ANIM_PADROES = {
+  animIntensidade: 60,      // 10–100: a força geral (o seletor de sempre)
+  animVelocidade: 100,      // 10–300 %
+  animQuantidade: 100,      // 10–300 % de partículas/estrelas/faixas
+  animTamanho: 100,         // 30–300 %
+  animBrilho: 60,           // 0–100: halo/glow (nas estrelas, o brilho James Webb)
+  animRastro: 0,            // 0–100: rastro de movimento (o quadro anterior fica sumindo)
+  animVento: 0,             // -100–100: deriva horizontal (neve, confete, bolhas, cadentes)
+  animOpacidade: 100,       // 0–100: opacidade da camada animada
+  animCamada: 'atras',      // atras (fundo) | frente (por cima de tudo, sem pegar o mouse)
+  painelOpacidade: 100,     // 20–100: opacidade dos painéis/cards — abaixo de 100 a animação atravessa
+  animCores: 'tema',        // tema | personalizadas
+  animCor1: '#ffffff', animCor2: '#7c3aed', animCor3: '#ffb300',
+  // ✨ estrelas
+  animPontas: 6,            // 0 | 4 | 6 (James Webb) | 8 pontas de difração
+  animCintilacao: 70,       // 0–100
+  animCadentes: 30,         // 0–100: estrelas cadentes
+  animNebulosa: 40,         // 0–100: nuvens coloridas ao fundo
+  // 🌌 aurora
+  animFaixas: 4,            // 1–8 cortinas
+  // ❄️ neve
+  animFlocos: 'cristais',   // pontos | cristais
+  // 🫧 bolhas
+  animReflexo: true,        // reflexo de luz e borda iridescente
+  // 🕹️ grade
+  animHorizonte: 42,        // 20–70 % da altura
+  animSol: true,            // o sol listrado no horizonte
+  // 🎉 confete
+  animFormas: 'mistas',     // mistas | retangulos | circulos | estrelas | fitas
+};
+const TEMA_ANIM_CHAVES = Object.keys(TEMA_ANIM_PADROES);
+// Lê um tema e devolve as opções já dentro dos limites (o motor confia nisto)
+function temaAnimOpcoes(t) {
+  const o = t && typeof t === 'object' ? t : {};
+  const num = (v, min, max, d) => { const n = Number(v); return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : d; };
+  const hex = (v, d) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : d);
+  const P = TEMA_ANIM_PADROES;
+  return {
+    intensidade: num(o.animIntensidade, 10, 100, P.animIntensidade),
+    velocidade: num(o.animVelocidade, 10, 300, P.animVelocidade),
+    quantidade: num(o.animQuantidade, 10, 300, P.animQuantidade),
+    tamanho: num(o.animTamanho, 30, 300, P.animTamanho),
+    brilho: num(o.animBrilho, 0, 100, P.animBrilho),
+    rastro: num(o.animRastro, 0, 100, P.animRastro),
+    vento: num(o.animVento, -100, 100, P.animVento),
+    opacidade: num(o.animOpacidade, 0, 100, P.animOpacidade),
+    camada: o.animCamada === 'frente' ? 'frente' : 'atras',
+    painelOpacidade: num(o.painelOpacidade, 20, 100, P.painelOpacidade),
+    cores: o.animCores === 'personalizadas' ? 'personalizadas' : 'tema',
+    cor1: hex(o.animCor1, P.animCor1), cor2: hex(o.animCor2, P.animCor2), cor3: hex(o.animCor3, P.animCor3),
+    pontas: [0, 4, 6, 8].includes(Number(o.animPontas)) ? Number(o.animPontas) : P.animPontas,
+    cintilacao: num(o.animCintilacao, 0, 100, P.animCintilacao),
+    cadentes: num(o.animCadentes, 0, 100, P.animCadentes),
+    nebulosa: num(o.animNebulosa, 0, 100, P.animNebulosa),
+    faixas: Math.round(num(o.animFaixas, 1, 8, P.animFaixas)),
+    flocos: o.animFlocos === 'pontos' ? 'pontos' : 'cristais',
+    reflexo: o.animReflexo !== false && o.animReflexo !== 'false' && o.animReflexo !== 0,
+    horizonte: num(o.animHorizonte, 20, 70, P.animHorizonte),
+    sol: o.animSol !== false && o.animSol !== 'false' && o.animSol !== 0,
+    formas: ['mistas', 'retangulos', 'circulos', 'estrelas', 'fitas'].includes(o.animFormas) ? o.animFormas : P.animFormas,
+  };
+}
+// hex → [r,g,b] e hsl de volta a hex — para a aurora inventar as cores irmãs
+// da cor de destaque (e para as bolhas iridescentes)
+function corHexRgb(h) { const m = /^#([0-9a-f]{6})$/i.exec(h || ''); const n = m ? parseInt(m[1], 16) : 0x7c4dff; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function corGirar(hex, graus, satMais = 0, luzMais = 0) {
+  let [r, g, b] = corHexRgb(hex).map((v) => v / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  h = (h + graus / 360 + 1) % 1;
+  s = Math.max(0, Math.min(1, s + satMais));
+  const l2 = Math.max(0, Math.min(1, l + luzMais));
+  const k = (n) => (n + h * 12) % 12;
+  const a = s * Math.min(l2, 1 - l2);
+  const f = (n) => l2 - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  const to = (v) => Math.round(v * 255).toString(16).padStart(2, '0');
+  return '#' + to(f(0)) + to(f(8)) + to(f(4));
+}
+
+// ---------------------------------------------------------------------------
 // 🎨 v0.164: os temas prontos do OBS Social — UMA lista para o painel, as
 // configurações e o mini Mesa do celular (/deck). Cada tema traz as cores
 // (campo vazio = a cor de fábrica do modo claro/escuro), cantos/fonte e a
@@ -2358,22 +2466,22 @@ const TEMAS_PRONTOS = [
   // 🎬 os animados: o fundo se mexe (a animação pode ser trocada ou desligada)
   { id: 'aurora', nome: '🌌 Aurora', tema: {
     corFundo: '#070b1a', corPainel: '#0e1530', corPainel2: '#131b3a', corTexto: '#eaf0ff',
-    corSuave: '#8fa0d0', corBorda: '#2b3a70', corDestaque: '#4dd0e1', cantos: 16, animacao: 'aurora' } },
+    corSuave: '#8fa0d0', corBorda: '#2b3a70', corDestaque: '#4dd0e1', cantos: 16, animacao: 'aurora', animIntensidade: 70, animFaixas: 5, animBrilho: 70 } },
   { id: 'estrelas', nome: '✨ Céu estrelado', tema: {
     corFundo: '#05070f', corPainel: '#0c1020', corPainel2: '#12172a', corTexto: '#f0f2ff',
-    corSuave: '#8890b0', corBorda: '#2c3350', corDestaque: '#ffd166', cantos: 14, animacao: 'estrelas' } },
+    corSuave: '#8890b0', corBorda: '#2c3350', corDestaque: '#ffd166', cantos: 14, animacao: 'estrelas', animIntensidade: 75, animBrilho: 80, animPontas: 6, animCintilacao: 80, animCadentes: 40, animNebulosa: 50 } },
   { id: 'natal', nome: '🎄 Natal', tema: {
     corFundo: '#0f2a1a', corPainel: '#163a24', corPainel2: '#1d4a2e', corTexto: '#fff8f0',
-    corSuave: '#9fc7ac', corBorda: '#2f6b43', corDestaque: '#e53935', cantos: 14, animacao: 'neve' } },
+    corSuave: '#9fc7ac', corBorda: '#2f6b43', corDestaque: '#e53935', cantos: 14, animacao: 'neve', animIntensidade: 65, animFlocos: 'cristais', animTamanho: 120, animBrilho: 50 } },
   { id: 'bolhas', nome: '🫧 Bolhas', tema: {
     corFundo: '#062a3a', corPainel: '#0a3a50', corPainel2: '#0f4a66', corTexto: '#e8fbff',
-    corSuave: '#86bfd0', corBorda: '#1f6f8f', corDestaque: '#38bdf8', cantos: 20, animacao: 'bolhas' } },
+    corSuave: '#86bfd0', corBorda: '#1f6f8f', corDestaque: '#38bdf8', cantos: 20, animacao: 'bolhas', animIntensidade: 65, animReflexo: true, animBrilho: 60 } },
   { id: 'retro', nome: '🕹️ Anos 80', tema: {
     corFundo: '#12021f', corPainel: '#1c0530', corPainel2: '#2a0a4a', corTexto: '#ffe9ff',
-    corSuave: '#c58fd6', corBorda: '#6a1f9a', corDestaque: '#ff2fb9', cantos: 10, animacao: 'grade' } },
+    corSuave: '#c58fd6', corBorda: '#6a1f9a', corDestaque: '#ff2fb9', cantos: 10, animacao: 'grade', animIntensidade: 70, animSol: true, animBrilho: 75, animHorizonte: 45 } },
   { id: 'festa', nome: '🎉 Festa', tema: {
     corFundo: '#17111f', corPainel: '#221a2e', corPainel2: '#2c2140', corTexto: '#fff4e0',
-    corSuave: '#b8a5c9', corBorda: '#4d3a66', corDestaque: '#ffb300', cantos: 16, animacao: 'confete' } },
+    corSuave: '#b8a5c9', corBorda: '#4d3a66', corDestaque: '#ffb300', cantos: 16, animacao: 'confete', animIntensidade: 70, animFormas: 'mistas', animBrilho: 60 } },
 ];
 // As animações de fundo (a mesma lista no card 🎨 Temas e no mini Mesa)
 const TEMA_ANIMACOES = [
@@ -2397,6 +2505,7 @@ const DECK_TEMAS = TEMAS_PRONTOS.map((p) => {
     fundo: t.corFundo || '#0d1117', barra: t.corPainel || '#161b22', tecla: t.corPainel2 || '#1c2330',
     texto: t.corTexto || '#e6edf3', suave: t.corSuave || '#8b98a8', borda: t.corBorda || '#2d3748',
     destaque: t.corDestaque || '#7c3aed', cantos: Number.isFinite(Number(t.cantos)) ? Number(t.cantos) : 14, fonte: t.fonte || '',
+    opcoes: Object.fromEntries(Object.entries(t).filter(([k]) => TEMA_ANIM_CHAVES.includes(k))), // 🎬 v0.168
   };
 });
 // os nomes que o mini Mesa usava antes da lista única (v0.163)
@@ -2412,10 +2521,11 @@ function deckResolverTema(conf, ajuste) {
   const d = { ...(conf || {}), ...(ajuste || {}) };
   const hex = (v) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : '');
   const extra = (conf && conf.cores) || {};
-  let cores, animBase, cantos = 14, fonte = '', nome = '', intensidadeBase = null;
+  let cores, animBase, cantos = 14, fonte = '', nome = '', intensidadeBase = null, opcoesBase = {};
   if (d.tema === 'proprio') {
     const t = deckTemaInfo(d.temaProprio);
     nome = t.nome;
+    opcoesBase = t.opcoes || {}; // 🎬 v0.168: o tema pronto traz a afinação da animação dele
     cores = { fundo: t.fundo, barra: t.barra, tecla: t.tecla, texto: t.texto, suave: t.suave, borda: t.borda, destaque: t.destaque };
     animBase = t.anim;
     cantos = t.cantos;
@@ -2431,6 +2541,7 @@ function deckResolverTema(conf, ajuste) {
     animBase = temaAnimacaoOk(o.animacao) ? o.animacao : 'nenhuma';
     const ni = Number(o.animIntensidade);
     if (Number.isFinite(ni)) intensidadeBase = Math.max(10, Math.min(100, ni));
+    opcoesBase = o; // 🎬 v0.168: velocidade, brilho, pontas… vêm na cópia
     const c = Number(o.cantos);
     if (Number.isFinite(c)) cantos = Math.max(0, Math.min(28, c));
     fonte = typeof o.fonte === 'string' ? o.fonte : '';
@@ -2452,28 +2563,62 @@ function deckResolverTema(conf, ajuste) {
     // no modo «igual ao OBS Social» seguindo o tema, a intensidade também é a dele
     intensidade: segueTema && intensidadeBase !== null ? intensidadeBase : (Number.isFinite(n) ? Math.max(10, Math.min(100, n)) : 60),
     cantos, fonte,
+    // 🎬 v0.168: as opções da animação (a intensidade efetiva entra nelas)
+    opcoes: temaAnimOpcoes({ ...opcoesBase, animIntensidade: segueTema && intensidadeBase !== null ? intensidadeBase : (Number.isFinite(n) ? n : 60) }),
   };
 }
 
 // ---------------------------------------------------------------------------
-// 🎬 v0.164: o fundo animado (aurora, estrelas, neve, bolhas, grade, confete)
-// desenhado num <canvas> — o mesmo motor no painel, nas configurações e no
-// mini Mesa. ~30 quadros por segundo, meia resolução na aurora, para com a
-// aba escondida e com ♿ «reduzir animações» / prefers-reduced-motion.
+// 🎬 v0.164/v0.168: o fundo animado (aurora, estrelas, neve, bolhas, grade,
+// confete) desenhado num <canvas> — o mesmo motor no painel, nas configurações
+// e no mini Mesa. ~30 quadros por segundo, meia resolução nos efeitos pesados,
+// para com a aba escondida e com ♿ «reduzir animações» / prefers-reduced-motion.
+// v0.168: tudo tem opção (velocidade, quantidade, tamanho, brilho, rastro,
+// vento, cores…), as estrelas ganharam o brilho com pontas de difração do
+// James Webb, cintilação, cadentes e nebulosa, e cada efeito ficou mais vivo.
 function criarAnimadorFundo(canvas) {
   const ctx = canvas.getContext('2d');
   let efeito = 'nenhuma';
   let forca = 0.6;
+  let op = temaAnimOpcoes({});
   let cores = { destaque: '#7c4dff', texto: '#ffffff', fundo: '#14161c', particula: '#ffffff' };
   let claro = false; // fundo claro: partículas na cor de destaque, aurora escurecendo
   let itens = [];
+  let extras = { poeira: [], nebulosa: [], cadentes: [], estouros: [] };
   let rodando = false;
   let ultimo = 0;
   let W = 0, H = 0, escala = 1;
   const reduzido = () => document.body.classList.contains('a11y-sem-animacao')
     || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const hexRgb = (h) => { const m = /^#([0-9a-f]{6})$/i.exec(h || ''); const n = m ? parseInt(m[1], 16) : 0x7c4dff; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
-  const rgba = (h, a) => { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${a})`; };
+  const hexRgb = corHexRgb;
+  const rgba = (h, a) => { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, a))})`; };
+  const rnd = Math.random;
+  // as cores da vez: do tema (destaque + irmãs) ou as três personalizadas
+  function paleta() {
+    if (op.cores === 'personalizadas') return [op.cor1, op.cor2, op.cor3];
+    return [cores.particula, cores.destaque, corGirar(cores.destaque, 40, 0.1, 0.1)];
+  }
+  // ✨ as cores das estrelas: brancas, azuladas, douradas e alaranjadas (como
+  // nas fotos do James Webb), com a cor de destaque do tema entre elas
+  function paletaEstrelas() {
+    if (op.cores === 'personalizadas') return [op.cor1, op.cor1, op.cor2, op.cor3, op.cor1];
+    return ['#ffffff', '#bcd2ff', '#fff3c4', '#ffc98a', claro ? cores.destaque : corGirar(cores.destaque, 0, 0, 0.2)];
+  }
+  // 💡 halos: um sprite por cor (gradiente radial), desenhado escalado — muito
+  // mais barato que shadowBlur a cada quadro
+  const sprites = new Map();
+  function halo(cor) {
+    let s = sprites.get(cor);
+    if (s) return s;
+    s = document.createElement('canvas'); s.width = s.height = 64;
+    const c = s.getContext('2d');
+    const g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, rgba('#ffffff', 1)); g.addColorStop(0.18, rgba(cor, 0.9)); g.addColorStop(0.45, rgba(cor, 0.25)); g.addColorStop(1, rgba(cor, 0));
+    c.fillStyle = g; c.fillRect(0, 0, 64, 64);
+    sprites.set(cor, s);
+    return s;
+  }
+  const desenharHalo = (x, y, r, cor, a) => { if (r < 0.5 || a <= 0) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(halo(cor), x - r, y - r, r * 2, r * 2); ctx.globalAlpha = 1; };
   function medirCanvas() {
     escala = Math.min(1.5, window.devicePixelRatio || 1);
     // os efeitos pesados desenham em meia resolução: barato na bateria
@@ -2485,88 +2630,283 @@ function criarAnimadorFundo(canvas) {
     // (body.style.zoom), em que um tamanho em px cobriria só parte da tela
     canvas.style.width = '100%'; canvas.style.height = '100%';
   }
+  const tam = () => op.tamanho / 100;
+  const vel = () => op.velocidade / 100;
   function semear() {
     itens = [];
-    const n = Math.round(20 + forca * 90);
-    const rnd = Math.random;
-    if (efeito === 'estrelas') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 0.6 + rnd() * 1.6, f: rnd() * 6.28, v: 0.4 + rnd() * 1.4 });
-    if (efeito === 'neve') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 1 + rnd() * 2.6, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
-    if (efeito === 'bolhas') for (let i = 0; i < n * 0.5; i++) itens.push({ x: rnd(), y: rnd(), r: 3 + rnd() * 14, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
-    if (efeito === 'confete') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), w: 4 + rnd() * 6, h: 2 + rnd() * 4, v: 0.04 + rnd() * 0.08, a: rnd() * 6.28, va: (rnd() - 0.5) * 4, c: i % 5 });
-    if (efeito === 'aurora') for (let i = 0; i < 4; i++) itens.push({ f: rnd() * 6.28, f2: rnd() * 6.28, r: 0.35 + rnd() * 0.3 });
+    extras = { poeira: [], nebulosa: [], cadentes: [], estouros: [] };
+    const n = Math.round((20 + forca * 90) * (op.quantidade / 100));
+    if (efeito === 'estrelas') {
+      for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 0.7 + Math.pow(rnd(), 2.2) * 2.6, f: rnd() * 6.28, v: 0.5 + rnd() * 1.6, c: Math.floor(rnd() * 5), fl: 0, dx: (rnd() - 0.5) });
+      for (let i = 0; i < n * 3; i++) extras.poeira.push({ x: rnd(), y: rnd(), r: 0.3 + rnd() * 0.6, f: rnd() * 6.28, v: 0.3 + rnd() * 0.8 });
+      for (let i = 0; i < 3; i++) extras.nebulosa.push({ x: rnd(), y: rnd(), r: 0.25 + rnd() * 0.3, f: rnd() * 6.28, f2: rnd() * 6.28, c: i });
+    }
+    if (efeito === 'neve') for (let i = 0; i < n; i++) { const p = rnd(); itens.push({ x: rnd(), y: rnd(), r: 1 + p * 3.2, v: 0.02 + p * 0.05, s: rnd() * 6.28, rot: rnd() * 6.28, vr: (rnd() - 0.5) * 2, p }); }
+    if (efeito === 'bolhas') for (let i = 0; i < n * 0.5; i++) itens.push({ x: rnd(), y: rnd(), r: 3 + rnd() * 16, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28, w: rnd() * 6.28, c: i % 3 });
+    if (efeito === 'confete') {
+      const formas = op.formas === 'mistas' ? ['ret', 'circ', 'estrela', 'fita'] : [{ retangulos: 'ret', circulos: 'circ', estrelas: 'estrela', fitas: 'fita' }[op.formas]];
+      for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), w: 4 + rnd() * 7, h: 2 + rnd() * 5, v: 0.04 + rnd() * 0.08, a: rnd() * 6.28, va: (rnd() - 0.5) * 5, b: rnd() * 6.28, vb: 2 + rnd() * 4, c: i % 5, forma: formas[i % formas.length], brilha: rnd() < 0.25 });
+    }
+    if (efeito === 'aurora') {
+      for (let i = 0; i < op.faixas; i++) itens.push({ f: rnd() * 6.28, f2: rnd() * 6.28, f3: rnd() * 6.28, k: 1.5 + rnd() * 2.5, k2: 3 + rnd() * 4, y: 0.08 + (i / Math.max(1, op.faixas)) * 0.45 + rnd() * 0.08, alt: 0.28 + rnd() * 0.25, c: i % 3 });
+      for (let i = 0; i < 60; i++) extras.poeira.push({ x: rnd(), y: rnd() * 0.7, r: 0.3 + rnd() * 0.7, f: rnd() * 6.28, v: 0.3 + rnd() * 0.8 });
+    }
+    if (efeito === 'grade') for (let i = 0; i < 70; i++) extras.poeira.push({ x: rnd(), y: rnd(), r: 0.3 + rnd() * 0.8, f: rnd() * 6.28, v: 0.3 + rnd() * 0.8 });
   }
   const PALETA_CONFETE = ['#ff5c5c', '#ffb300', '#4da3ff', '#43a047', '#ec407a'];
+  function poeira(seg, cor, base, limiteY) {
+    // as estrelinhas de fundo (bem pequenas, piscando devagar)
+    for (const p of extras.poeira) {
+      if (limiteY !== undefined && p.y > limiteY) continue;
+      const a = base * (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(seg * p.v * (0.5 + op.cintilacao / 100) + p.f)));
+      ctx.fillStyle = rgba(cor, a);
+      ctx.beginPath(); ctx.arc(p.x * W, p.y * H, p.r * escala * tam(), 0, 6.28); ctx.fill();
+    }
+  }
+  // ✨ uma estrela do James Webb: núcleo, halo e as pontas de difração (6
+  // grandes em hexágono + 2 curtas na horizontal — a assinatura do telescópio)
+  function estrelaWebb(x, y, r, cor, a, brilhoExtra) {
+    const b = op.brilho / 100;
+    desenharHalo(x, y, r * (4 + b * 9) * (1 + brilhoExtra), cor, a * (0.35 + b * 0.5));
+    ctx.fillStyle = rgba('#ffffff', Math.min(1, a));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.28); ctx.fill();
+    if (!op.pontas || r < 1.1 * escala) return;
+    const L = r * (6 + b * 16) * (1 + brilhoExtra * 1.6);
+    const desenharPonta = (ang, comp, largura) => {
+      const g = ctx.createLinearGradient(x, y, x + Math.cos(ang) * comp, y + Math.sin(ang) * comp);
+      g.addColorStop(0, rgba('#ffffff', a * 0.9)); g.addColorStop(0.25, rgba(cor, a * 0.55)); g.addColorStop(1, rgba(cor, 0));
+      ctx.strokeStyle = g; ctx.lineWidth = largura;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(ang) * comp, y + Math.sin(ang) * comp); ctx.stroke();
+    };
+    const n = op.pontas;
+    const base = n === 6 ? -Math.PI / 2 : n === 4 ? 0 : -Math.PI / 8;
+    for (let i = 0; i < n; i++) desenharPonta(base + (i * 2 * Math.PI) / n, L, Math.max(0.6, r * 0.35));
+    if (n === 6) { desenharPonta(0, L * 0.45, Math.max(0.5, r * 0.25)); desenharPonta(Math.PI, L * 0.45, Math.max(0.5, r * 0.25)); }
+  }
   function desenhar(t, dt) {
-    ctx.clearRect(0, 0, W, H);
     const seg = t / 1000;
+    const v = vel();
+    // rastro: em vez de limpar, apaga só um pouco do quadro anterior
+    if (op.rastro > 0 && efeito !== 'aurora' && efeito !== 'grade') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = `rgba(0,0,0,${1 - (op.rastro / 100) * 0.92})`;
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+    } else ctx.clearRect(0, 0, W, H);
+    const P = paleta();
+    const vento = (op.vento / 100) * 0.00012 * v;
     if (efeito === 'aurora') {
+      // 🌌 cortinas de luz ondulando (cada faixa numa cor irmã), com
+      // estrelinhas atrás e um brilho respirando
       ctx.globalCompositeOperation = claro ? 'multiply' : 'lighter';
+      poeira(seg, cores.particula, 0.7 * forca, 0.75);
+      const passo = Math.max(2, Math.round(4 * escala));
+      const coresAurora = op.cores === 'personalizadas' ? P : [corGirar(cores.destaque, -40, 0.15, 0.05), cores.destaque, corGirar(cores.destaque, 60, 0.1, 0.1)];
       itens.forEach((a, i) => {
-        const cx = (0.5 + 0.45 * Math.sin(seg * 0.13 + a.f)) * W;
-        const cy = (0.45 + 0.4 * Math.cos(seg * 0.1 + a.f2)) * H;
-        const r = a.r * Math.max(W, H);
-        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-        const cor = i % 2 ? cores.destaque : cores.particula;
-        g.addColorStop(0, rgba(cor, 0.16 * forca + 0.05));
-        g.addColorStop(1, rgba(cor, 0));
-        ctx.fillStyle = g;
-        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        const cor = coresAurora[a.c % coresAurora.length];
+        const alt = a.alt * H * tam() * (0.85 + 0.15 * Math.sin(seg * 0.4 * v + a.f3));
+        const alfa = (0.14 + 0.32 * forca) * (0.6 + op.brilho / 100 * 0.6);
+        for (let x = 0; x <= W; x += passo) {
+          const u = x / W;
+          const onda = Math.sin(u * a.k * 6.28 + seg * 0.35 * v + a.f) * 0.5 + Math.sin(u * a.k2 * 6.28 - seg * 0.6 * v + a.f2) * 0.25;
+          const y0 = (a.y + onda * 0.08) * H;
+          const brilhoCol = 0.55 + 0.45 * Math.sin(u * 9 + seg * 1.3 * v + a.f2 + i);
+          const g = ctx.createLinearGradient(0, y0, 0, y0 + alt);
+          g.addColorStop(0, rgba(cor, 0)); g.addColorStop(0.18, rgba(cor, alfa * brilhoCol)); g.addColorStop(0.5, rgba(cor, alfa * 0.6 * brilhoCol)); g.addColorStop(1, rgba(cor, 0));
+          ctx.fillStyle = g;
+          ctx.fillRect(x, y0, passo, alt);
+        }
       });
       ctx.globalCompositeOperation = 'source-over';
     } else if (efeito === 'estrelas') {
-      for (const s of itens) {
-        const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(seg * s.v + s.f));
-        ctx.fillStyle = rgba(s.f < 1 ? cores.destaque : cores.particula, a * (0.35 + forca * 0.6));
-        ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r * escala, 0, 6.28); ctx.fill();
+      ctx.globalCompositeOperation = claro ? 'source-over' : 'lighter';
+      const PE = paletaEstrelas();
+      // nebulosa: nuvens coloridas bem suaves, à deriva
+      if (op.nebulosa > 0) {
+        for (const nb of extras.nebulosa) {
+          const cx = (nb.x + 0.06 * Math.sin(seg * 0.05 * v + nb.f)) * W, cy = (nb.y + 0.05 * Math.cos(seg * 0.04 * v + nb.f2)) * H;
+          const r = nb.r * Math.max(W, H) * tam();
+          const cor = op.cores === 'personalizadas' ? P[nb.c % 3] : [cores.destaque, corGirar(cores.destaque, 120, 0.1, 0), corGirar(cores.destaque, -100, 0.1, 0)][nb.c];
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          g.addColorStop(0, rgba(cor, (op.nebulosa / 100) * (claro ? 0.12 : 0.22) * forca)); g.addColorStop(1, rgba(cor, 0));
+          ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        }
       }
+      poeira(seg, claro ? cores.destaque : '#ffffff', (0.25 + forca * 0.5), undefined);
+      const cint = op.cintilacao / 100;
+      for (const s of itens) {
+        // deriva lenta (paralaxe: as maiores andam mais) e a cintilação
+        s.x += s.dx * 0.000004 * dt * v * s.r + vento * 0.2 * dt;
+        if (s.x > 1.02) s.x -= 1.04; if (s.x < -0.02) s.x += 1.04;
+        if (s.fl > 0) s.fl = Math.max(0, s.fl - dt * 0.0012 * v); else if (rnd() < 0.00025 * dt * v * (0.3 + cint)) s.fl = 1;
+        const tw = 0.55 + 0.45 * Math.sin(seg * s.v * (0.4 + cint * 2.6) + s.f);
+        const a = tw * (0.45 + forca * 0.55);
+        estrelaWebb(s.x * W, s.y * H, s.r * escala * tam(), PE[s.c % PE.length], claro ? a * 0.9 : a, s.fl * (0.5 + cint));
+      }
+      // ☄️ estrelas cadentes
+      if (op.cadentes > 0 && rnd() < (op.cadentes / 100) * 0.0008 * dt * v) {
+        const dir = op.vento < -30 ? -1 : 1;
+        extras.cadentes.push({ x: dir > 0 ? rnd() * 0.7 : 0.3 + rnd() * 0.7, y: rnd() * 0.4, vx: dir * (0.00055 + rnd() * 0.0004), vy: 0.00035 + rnd() * 0.0003, vida: 0, c: Math.floor(rnd() * PE.length) });
+      }
+      extras.cadentes = extras.cadentes.filter((m) => m.vida < 1);
+      for (const m of extras.cadentes) {
+        m.x += m.vx * dt * v; m.y += m.vy * dt * v; m.vida += dt * 0.0011 * v;
+        const a = Math.sin(m.vida * Math.PI) * (0.5 + forca * 0.5);
+        const comp = 90 * escala * tam() * (0.8 + op.brilho / 100);
+        const x = m.x * W, y = m.y * H, nx = m.vx / Math.hypot(m.vx, m.vy), ny = m.vy / Math.hypot(m.vx, m.vy);
+        const g = ctx.createLinearGradient(x, y, x - nx * comp, y - ny * comp);
+        g.addColorStop(0, rgba('#ffffff', a)); g.addColorStop(0.3, rgba(PE[m.c], a * 0.6)); g.addColorStop(1, rgba(PE[m.c], 0));
+        ctx.strokeStyle = g; ctx.lineWidth = Math.max(1, 1.6 * escala * tam());
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - nx * comp, y - ny * comp); ctx.stroke();
+        desenharHalo(x, y, 7 * escala * tam(), PE[m.c], a);
+      }
+      ctx.globalCompositeOperation = 'source-over';
     } else if (efeito === 'neve') {
-      ctx.fillStyle = rgba(cores.particula, 0.5 + forca * 0.4);
+      // ❄️ três profundidades (os flocos grandes caem mais rápido e giram),
+      // cristais de seis braços, vento e um halo suave
+      const cor = op.cores === 'personalizadas' ? op.cor1 : cores.particula;
       for (const f of itens) {
-        f.y += f.v * dt * (0.5 + forca) * 0.06; f.s += dt * 0.001;
-        if (f.y > 1.05) { f.y = -0.05; f.x = Math.random(); }
-        const x = (f.x + Math.sin(f.s) * 0.02) * W;
-        ctx.beginPath(); ctx.arc(x, f.y * H, f.r * escala, 0, 6.28); ctx.fill();
+        f.y += f.v * dt * (0.5 + forca) * 0.06 * v; f.s += dt * 0.001 * v; f.rot += f.vr * dt * 0.0006 * v;
+        f.x += vento * dt * (0.5 + f.p);
+        if (f.y > 1.05) { f.y = -0.05; f.x = rnd(); }
+        if (f.x > 1.03) f.x -= 1.06; if (f.x < -0.03) f.x += 1.06;
+        const x = (f.x + Math.sin(f.s) * 0.02) * W, y = f.y * H;
+        const r = f.r * escala * tam();
+        const a = (0.45 + forca * 0.45) * (0.5 + f.p * 0.5);
+        if (op.brilho > 0) desenharHalo(x, y, r * (1.5 + op.brilho / 100 * 2.5), cor, a * 0.35 * (op.brilho / 100 + 0.2));
+        if (op.flocos === 'cristais' && f.p > 0.45) {
+          ctx.strokeStyle = rgba(cor, a); ctx.lineWidth = Math.max(0.8, r * 0.28);
+          ctx.save(); ctx.translate(x, y); ctx.rotate(f.rot);
+          for (let k = 0; k < 6; k++) {
+            ctx.rotate(Math.PI / 3);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 1.6); ctx.moveTo(0, -r * 0.9); ctx.lineTo(r * 0.45, -r * 1.25); ctx.moveTo(0, -r * 0.9); ctx.lineTo(-r * 0.45, -r * 1.25); ctx.stroke();
+          }
+          ctx.restore();
+        } else {
+          ctx.fillStyle = rgba(cor, a);
+          ctx.beginPath(); ctx.arc(x, y, r * 0.8, 0, 6.28); ctx.fill();
+        }
       }
     } else if (efeito === 'bolhas') {
-      ctx.lineWidth = 1.2 * escala;
+      // 🫧 bolhas com borda iridescente, reflexo de luz, balanço e estouro
+      const [c1, c2, c3] = P;
+      ctx.lineWidth = 1.3 * escala;
       for (const b of itens) {
-        b.y -= b.v * dt * (0.5 + forca) * 0.05; b.s += dt * 0.0015;
-        if (b.y < -0.08) { b.y = 1.08; b.x = Math.random(); }
-        const x = (b.x + Math.sin(b.s) * 0.015) * W;
-        ctx.strokeStyle = rgba(cores.destaque, 0.3 + forca * 0.5);
-        ctx.fillStyle = rgba(cores.destaque, 0.05 + forca * 0.1);
-        ctx.beginPath(); ctx.arc(x, b.y * H, b.r * escala, 0, 6.28); ctx.fill(); ctx.stroke();
+        b.y -= b.v * dt * (0.5 + forca) * 0.05 * v; b.s += dt * 0.0015 * v; b.w += dt * 0.004 * v;
+        b.x += vento * dt;
+        if (b.x > 1.05) b.x -= 1.1; if (b.x < -0.05) b.x += 1.1;
+        if (b.y < -0.08 || (b.y < 0.25 && rnd() < 0.0004 * dt * v)) {
+          if (b.y >= -0.08) extras.estouros.push({ x: b.x, y: b.y, r: b.r, vida: 0, c: b.c });
+          b.y = 1.08; b.x = rnd();
+        }
+        const x = (b.x + Math.sin(b.s) * 0.015) * W, y = b.y * H;
+        const r = b.r * escala * tam();
+        const sx = 1 + 0.06 * Math.sin(b.w), sy = 1 - 0.06 * Math.sin(b.w);
+        ctx.save(); ctx.translate(x, y); ctx.scale(sx, sy);
+        const cor = [c2, c1, c3][b.c % 3];
+        const g = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+        g.addColorStop(0, rgba(cor, 0.02 + forca * 0.05)); g.addColorStop(0.85, rgba(cor, 0.06 + forca * 0.12)); g.addColorStop(1, rgba(cor, 0.3 + forca * 0.4));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.28); ctx.fill();
+        if (op.reflexo) {
+          const anel = ctx.createLinearGradient(-r, -r, r, r);
+          anel.addColorStop(0, rgba(c1, 0.55 + forca * 0.35)); anel.addColorStop(0.5, rgba(cor, 0.35 + forca * 0.4)); anel.addColorStop(1, rgba(c3, 0.55 + forca * 0.35));
+          ctx.strokeStyle = anel; ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.28); ctx.stroke();
+          ctx.fillStyle = rgba('#ffffff', 0.35 + forca * 0.45);
+          ctx.beginPath(); ctx.ellipse(-r * 0.38, -r * 0.42, r * 0.22, r * 0.12, -0.7, 0, 6.28); ctx.fill();
+          if (op.brilho > 0) desenharHalo(0, 0, r * (1.2 + op.brilho / 100), cor, 0.12 * (op.brilho / 100) * forca);
+        } else {
+          ctx.strokeStyle = rgba(cor, 0.3 + forca * 0.5); ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.28); ctx.stroke();
+        }
+        ctx.restore();
+      }
+      extras.estouros = extras.estouros.filter((e) => e.vida < 1);
+      for (const e of extras.estouros) {
+        e.vida += dt * 0.004 * v;
+        const r = e.r * escala * tam() * (1 + e.vida * 0.8);
+        ctx.strokeStyle = rgba([c2, c1, c3][e.c % 3], (1 - e.vida) * 0.7); ctx.lineWidth = 1.5 * escala;
+        ctx.beginPath(); ctx.arc(e.x * W, e.y * H, r, 0, 6.28); ctx.stroke();
+        for (let k = 0; k < 6; k++) { const ang = (k / 6) * 6.28; ctx.beginPath(); ctx.arc(e.x * W + Math.cos(ang) * r * 1.2, e.y * H + Math.sin(ang) * r * 1.2, Math.max(0, 1.2 * escala * (1 - e.vida)), 0, 6.28); ctx.fillStyle = rgba(c1, 1 - e.vida); ctx.fill(); }
       }
     } else if (efeito === 'grade') {
-      // a grade em perspectiva correndo para a pessoa (sintetizador anos 80)
-      const horizonte = H * 0.42;
-      const g = ctx.createLinearGradient(0, horizonte, 0, H);
-      g.addColorStop(0, rgba(cores.destaque, 0.02)); g.addColorStop(1, rgba(cores.destaque, 0.12 * forca + 0.04));
-      ctx.fillStyle = g; ctx.fillRect(0, horizonte, W, H - horizonte);
-      ctx.strokeStyle = rgba(cores.destaque, 0.25 + forca * 0.5); ctx.lineWidth = 1 * escala;
-      const passo = (seg * (0.3 + forca * 0.8)) % 1;
-      for (let i = 0; i < 12; i++) {
-        const f = ((i + passo) / 12);
+      // 🕹️ sintetizador anos 80: sol listrado no horizonte, grade neon
+      // correndo para a pessoa, estrelas em cima e o brilho do horizonte
+      const horizonte = H * (op.horizonte / 100);
+      const [c1, c2, c3] = op.cores === 'personalizadas' ? P : [cores.destaque, corGirar(cores.destaque, 45, 0.15, 0.1), corGirar(cores.destaque, -50, 0.1, 0.05)];
+      poeira(seg, cores.particula, 0.5 + forca * 0.4, op.horizonte / 100 - 0.02);
+      if (op.sol) {
+        const R = H * 0.22 * tam();
+        const cx = W / 2, cy = horizonte;
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, 0, W, horizonte); ctx.clip();
+        desenharHalo(cx, cy, R * (1.6 + op.brilho / 100), c2, 0.35 * forca + 0.1);
+        const g = ctx.createLinearGradient(0, cy - R, 0, cy);
+        g.addColorStop(0, rgba(c3, 0.95)); g.addColorStop(1, rgba(c2, 0.95));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, Math.PI, 0); ctx.fill();
+        // as listras do sol sobem devagar
+        ctx.globalCompositeOperation = 'destination-out';
+        const desloc = (seg * 0.08 * v) % 1;
+        for (let i = 0; i < 7; i++) {
+          const f = ((i + desloc) / 7);
+          const yy = cy - R * (1 - f * f);
+          const alt = R * 0.035 * (0.4 + f);
+          ctx.fillRect(cx - R, yy, R * 2, alt);
+        }
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.restore();
+      }
+      const brilhoH = ctx.createLinearGradient(0, horizonte - H * 0.08, 0, horizonte + H * 0.12);
+      brilhoH.addColorStop(0, rgba(c1, 0)); brilhoH.addColorStop(0.4, rgba(c1, 0.18 * forca + 0.05)); brilhoH.addColorStop(1, rgba(c1, 0));
+      ctx.fillStyle = brilhoH; ctx.fillRect(0, horizonte - H * 0.08, W, H * 0.2);
+      const chao = ctx.createLinearGradient(0, horizonte, 0, H);
+      chao.addColorStop(0, rgba(c1, 0.03)); chao.addColorStop(1, rgba(c1, 0.14 * forca + 0.04));
+      ctx.fillStyle = chao; ctx.fillRect(0, horizonte, W, H - horizonte);
+      ctx.globalCompositeOperation = claro ? 'source-over' : 'lighter';
+      const passo = (seg * (0.3 + forca * 0.8) * v) % 1;
+      const linha = (x1, y1, x2, y2, a) => {
+        if (op.brilho > 0) { ctx.strokeStyle = rgba(c1, a * 0.35 * (op.brilho / 100)); ctx.lineWidth = 5 * escala; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+        ctx.strokeStyle = rgba(c1, a); ctx.lineWidth = 1.2 * escala; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      };
+      const nLinhas = Math.round(12 * Math.max(0.5, op.quantidade / 100));
+      for (let i = 0; i < nLinhas; i++) {
+        const f = ((i + passo) / nLinhas);
         const y = horizonte + (H - horizonte) * f * f;
-        ctx.globalAlpha = 0.2 + f * 0.8;
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        linha(0, y, W, y, (0.2 + f * 0.8) * (0.3 + forca * 0.6));
       }
-      ctx.globalAlpha = 1;
-      for (let i = -8; i <= 8; i++) {
-        ctx.beginPath(); ctx.moveTo(W / 2 + i * W * 0.04, horizonte); ctx.lineTo(W / 2 + i * W * 0.28, H); ctx.stroke();
-      }
-      ctx.strokeStyle = rgba(cores.particula, 0.25);
+      const nCol = Math.round(8 * Math.max(0.5, op.quantidade / 100));
+      for (let i = -nCol; i <= nCol; i++) linha(W / 2 + i * W * 0.04, horizonte, W / 2 + i * W * (0.28 * (8 / nCol)), H, 0.25 + forca * 0.5);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = rgba(cores.particula, 0.3); ctx.lineWidth = 1 * escala;
       ctx.beginPath(); ctx.moveTo(0, horizonte); ctx.lineTo(W, horizonte); ctx.stroke();
     } else if (efeito === 'confete') {
+      // 🎉 formas variadas girando em dois eixos, fitas ondulando, brilhinhos
+      const paletaC = op.cores === 'personalizadas' ? [op.cor1, op.cor2, op.cor3, corGirar(op.cor2, 40), corGirar(op.cor3, -40)] : PALETA_CONFETE;
       for (const c of itens) {
-        c.y += c.v * dt * (0.4 + forca) * 0.05; c.a += c.va * dt * 0.001;
-        if (c.y > 1.06) { c.y = -0.06; c.x = Math.random(); }
+        c.y += c.v * dt * (0.4 + forca) * 0.05 * v; c.a += c.va * dt * 0.001 * v; c.b += c.vb * dt * 0.001 * v;
+        c.x += vento * dt + Math.sin(c.b) * 0.00004 * dt;
+        if (c.y > 1.06) { c.y = -0.06; c.x = rnd(); }
+        if (c.x > 1.03) c.x -= 1.06; if (c.x < -0.03) c.x += 1.06;
+        const cor = paletaC[c.c % paletaC.length];
+        const x = (c.x + Math.sin(c.a) * 0.01) * W, y = c.y * H;
+        const w = c.w * escala * tam(), h = c.h * escala * tam();
+        const a = 0.6 + forca * 0.4;
         ctx.save();
-        ctx.translate((c.x + Math.sin(c.a) * 0.01) * W, c.y * H);
+        ctx.translate(x, y);
         ctx.rotate(c.a);
-        ctx.fillStyle = rgba(PALETA_CONFETE[c.c], 0.55 + forca * 0.4);
-        ctx.fillRect(-c.w * escala / 2, -c.h * escala / 2, c.w * escala, c.h * escala);
+        ctx.scale(Math.max(0.15, Math.abs(Math.cos(c.b))), 1); // o giro no outro eixo
+        ctx.fillStyle = rgba(cor, a);
+        if (c.forma === 'circ') { ctx.beginPath(); ctx.arc(0, 0, w / 2, 0, 6.28); ctx.fill(); }
+        else if (c.forma === 'estrela') {
+          ctx.beginPath();
+          for (let k = 0; k < 10; k++) { const rr = k % 2 ? w * 0.28 : w * 0.6; const ang = (k / 10) * 6.28 - Math.PI / 2; ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr); }
+          ctx.closePath(); ctx.fill();
+        } else if (c.forma === 'fita') {
+          ctx.strokeStyle = rgba(cor, a); ctx.lineWidth = Math.max(1, h * 0.6);
+          ctx.beginPath();
+          for (let k = -3; k <= 3; k++) ctx.lineTo(k * w * 0.5, Math.sin(k * 1.3 + c.b) * h * 0.9);
+          ctx.stroke();
+        } else ctx.fillRect(-w / 2, -h / 2, w, h);
         ctx.restore();
+        if (c.brilha && op.brilho > 0) { ctx.globalCompositeOperation = 'lighter'; desenharHalo(x, y, w * (0.8 + op.brilho / 100), cor, 0.25 * (op.brilho / 100) * (0.5 + 0.5 * Math.sin(c.b * 2))); ctx.globalCompositeOperation = 'source-over'; }
       }
     }
   }
@@ -2592,13 +2932,17 @@ function criarAnimadorFundo(canvas) {
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
     ctx.clearRect(0, 0, W, H);
   }
-  function aplicar(novoEfeito, intensidade, novasCores) {
+  function aplicar(novoEfeito, intensidade, novasCores, opcoes) {
     // o servidor manda «settings» por qualquer ajuste do painel: só um efeito
-    // NOVO re-sorteia as partículas — intensidade e cores mudam no que já
-    // está na tela (a prévia do slider escala em vez de piscar)
+    // NOVO (ou uma quantidade/forma nova) re-sorteia as partículas — o resto
+    // muda no que já está na tela (a prévia do slider escala em vez de piscar)
     const mudou = (novoEfeito || 'nenhuma') !== efeito;
     efeito = novoEfeito || 'nenhuma';
     forca = Math.max(0.1, Math.min(1, (Number(intensidade) || 60) / 100));
+    const novaOp = opcoes && opcoes.velocidade !== undefined ? opcoes : temaAnimOpcoes({ ...(opcoes || {}), animIntensidade: intensidade });
+    novaOp.intensidade = Math.round(forca * 100);
+    const resemear = novaOp.quantidade !== op.quantidade || novaOp.formas !== op.formas || novaOp.faixas !== op.faixas;
+    op = novaOp;
     cores = { ...cores, ...(novasCores || {}) };
     // 🎨 v0.164: num tema CLARO (Papel, Claro suave) a neve e as estrelas na
     // cor do texto viravam sujeira preta — nesses, as partículas usam a cor
@@ -2608,7 +2952,8 @@ function criarAnimadorFundo(canvas) {
       claro = 0.299 * r + 0.587 * g + 0.114 * b >= 140;
       cores.particula = claro ? cores.destaque : cores.texto;
     }
-    if (mudou || !itens.length) { medirCanvas(); semear(); }
+    if (mudou || resemear || !itens.length) { medirCanvas(); semear(); }
+    canvas.style.opacity = String(op.opacidade / 100);
     if (efeito === 'nenhuma' || reduzido()) { desligar(); return; }
     if (mudou) desligar();
     ligar();
@@ -2617,7 +2962,7 @@ function criarAnimadorFundo(canvas) {
   document.addEventListener('visibilitychange', () => { if (document.hidden) desligar(); else ligar(); });
   // ♿ o «reduzir movimento» do sistema mudou com a página aberta: obedece na hora
   try { const mq = matchMedia('(prefers-reduced-motion: reduce)'); if (mq && mq.addEventListener) mq.addEventListener('change', () => { if (reduzido()) desligar(); else ligar(); }); } catch { /* sem matchMedia */ }
-  return { aplicar, ligar, desligar, get efeito() { return efeito; }, get rodando() { return rodando; } };
+  return { aplicar, ligar, desligar, get efeito() { return efeito; }, get rodando() { return rodando; }, get opcoes() { return op; }, get itens() { return itens.length; } };
 }
 
 // ---------------------------------------------------------------------------

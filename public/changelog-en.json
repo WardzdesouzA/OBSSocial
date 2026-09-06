@@ -1,4 +1,13 @@
 {
+  "0.168.0": {
+    "titulo": "🎬 Vivid, fully customisable animations — stars with the James Webb glow, and the animation anywhere on screen",
+    "itens": [
+      "✨ New stars: core, halo and the diffraction spikes from the James Webb telescope photos (6 large in a hexagon + 2 short — or 4, 8, none), white, bluish, golden and orange stars each twinkling at its own pace, occasional flares, star dust behind, shooting stars and a drifting coloured nebula. All under control: spikes, twinkle, shooting stars and nebula.",
+      "🌌 Every effect got livelier: aurora is now rippling curtains of light in sister colours with little stars behind; snow has six-armed crystals spinning at three depths, plus wind; bubbles gained an iridescent rim, a light reflection, wobble and pops; the retro grid gained the striped sun on the horizon, neon glow and stars; confetti has shapes (rectangles, circles, stars, ribbons) spinning on two axes and sparkles.",
+      "🎛️ Control over everything, in 🎨 Themes → 🎬 Background animation: intensity (the usual slider), speed, amount, size, glow, trail, wind and colours — from the theme or three of your own. Each effect has its own details, and “↺ Animation defaults” undoes the tweaks. The page itself is the preview, and the animated ready-made themes come tuned.",
+      "🪟 Where the animation shows: by default it sits behind everything and the panels are opaque (100%). Lower the “panel opacity” so it shines through cards, columns and boxes anywhere on screen, adjust the animation’s own opacity or put the layer on top of everything — it never gets in the way of the mouse. The phone mini Deck receives the same options in the theme copy."
+    ]
+  },
   "0.167.2": {
     "titulo": "🗂️ Collapse/expand standardised: now in 🔌 Connections and 🗄️ Logs & data too",
     "itens": [
