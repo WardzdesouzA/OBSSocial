@@ -489,6 +489,7 @@
   .tema-card:hover { border-color: var(--accent); }
   .tema-card.ativo { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
   .tema-card .tema-nome { font-weight: 800; font-size: 13px; margin-bottom: 8px; }
+  .tema-card .tema-selo { font-size: 10px; color: var(--accent); font-weight: 700; margin: -6px 0 6px; }
   .tema-card .tema-amostra { display: flex; gap: 4px; }
   .tema-card .tema-amostra i { width: 100%; height: 18px; border-radius: 5px; display: block; }
   /* 🎨 v0.120: cada linha carrega rótulo + cor + HEX + ↺ (≈ 300 px); a célula
@@ -2247,6 +2248,20 @@
           </label>
           <label>Desfoque: <b id="t-fundoDesfoqueVal">0 px</b>
             <input type="range" id="t-fundoDesfoque" min="0" max="20" step="1">
+          </label>
+        </div>
+      </div>
+
+      <!-- 🎬 v0.164: o fundo animado do tema (o mesmo do mini Mesa do celular) -->
+      <div class="field">
+        <label>🎬 Animação de fundo</label>
+        <div class="hint" style="margin:0 0 6px">Aurora, estrelas, neve, bolhas, grade retrô ou confete atrás de tudo — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar ou desligar. Com ♿ «reduzir animações» ligado, nada se mexe.</div>
+        <div class="temas-fundo-ops">
+          <label>Animação
+            <select id="t-animacao"></select>
+          </label>
+          <label>Intensidade: <b id="t-animIntensidadeVal">60%</b>
+            <input type="range" id="t-animIntensidade" min="10" max="100" step="5">
           </label>
         </div>
       </div>
@@ -4878,43 +4893,12 @@ for (const b of document.querySelectorAll('[data-aov-ir]')) b.addEventListener('
 // ---------- 🎨 Temas ----------
 // Temas prontos: cada um personaliza o programa inteiro de uma vez.
 // (o campo vazio = cor padrão do modo claro/escuro)
-const TEMAS_PRONTOS = [
-  // 🌙 O Padrão não guarda cores (ele LIMPA as suas, e o programa volta às
-  // de fábrica) — «amostra» existe só para o cartão mostrar quais são elas,
-  // as mesmas do :root do painel e das configurações
-  { id: 'padrao', nome: '🌙 Padrão', tema: {}, amostra: {
-    corFundo: '#0d1117', corPainel: '#161b22', corDestaque: '#7c3aed', corTexto: '#e6edf3' } },
-  { id: 'roxo', nome: '🟣 Roxo profundo', tema: {
-    corFundo: '#140b1f', corPainel: '#1e1030', corPainel2: '#2a1743', corTexto: '#f0e7ff',
-    corSuave: '#a992c9', corBorda: '#3d2359', corDestaque: '#a855f7', cantos: 18 } },
-  { id: 'oceano', nome: '🌊 Oceano', tema: {
-    corFundo: '#08131f', corPainel: '#0e2033', corPainel2: '#132c45', corTexto: '#e3f2fd',
-    corSuave: '#8bb0cc', corBorda: '#1d3d5c', corDestaque: '#22a6f0', cantos: 16 } },
-  { id: 'floresta', nome: '🌲 Floresta', tema: {
-    corFundo: '#0b1712', corPainel: '#12241c', corPainel2: '#1a3327', corTexto: '#e6f5ec',
-    corSuave: '#95bda6', corBorda: '#234634', corDestaque: '#2ecc71', cantos: 14 } },
-  { id: 'fogo', nome: '🔥 Brasa', tema: {
-    corFundo: '#1a0d08', corPainel: '#2a150d', corPainel2: '#3a1d12', corTexto: '#ffeee4',
-    corSuave: '#d0a48e', corBorda: '#4d2718', corDestaque: '#ff6b35', cantos: 12 } },
-  { id: 'rosa', nome: '🌸 Rosa neon', tema: {
-    corFundo: '#160a14', corPainel: '#241021', corPainel2: '#33172e', corTexto: '#ffe9f7',
-    corSuave: '#c795b7', corBorda: '#482240', corDestaque: '#ff2d95', cantos: 20 } },
-  { id: 'claro', nome: '☀️ Claro suave', tema: {
-    corFundo: '#f4f6fb', corPainel: '#ffffff', corPainel2: '#eef1f7', corTexto: '#1a2330',
-    corSuave: '#5c6b7f', corBorda: '#dde3ec', corDestaque: '#4f46e5', cantos: 16 } },
-  { id: 'papel', nome: '📜 Papel', tema: {
-    corFundo: '#f5efe2', corPainel: '#fffaf0', corPainel2: '#efe6d5', corTexto: '#2f2a22',
-    corSuave: '#7a6f5d', corBorda: '#ddd0b8', corDestaque: '#b8860b', fonte: 'Georgia', cantos: 8 } },
-  { id: 'contraste', nome: '⚡ Alto contraste', tema: {
-    corFundo: '#000000', corPainel: '#0d0d0d', corPainel2: '#1a1a1a', corTexto: '#ffffff',
-    corSuave: '#cccccc', corBorda: '#555555', corDestaque: '#ffe600', tamTexto: 110, cantos: 4 } },
-  { id: 'retro', nome: '👾 Retrô', tema: {
-    corFundo: '#0b0f0b', corPainel: '#111a11', corPainel2: '#16241a', corTexto: '#9dff9d',
-    corSuave: '#5fa05f', corBorda: '#1f3a24', corDestaque: '#39ff14', fonte: 'Courier New', cantos: 2 } },
-];
+// 🎨 v0.164: a lista dos temas prontos (TEMAS_PRONTOS) mora no render.js —
+// é a mesma do mini Mesa do celular, animados inclusos
 
 const TEMA_CAMPOS_COR = ['corDestaque', 'corFundo', 'corPainel', 'corPainel2', 'corTexto', 'corSuave', 'corBorda'];
-const TEMA_PADROES = { fundoAjuste: 'cover', fundoOpacidade: 0.35, fundoDesfoque: 0, fonte: '', tamTexto: 100, tamIcone: 100, cantos: 14, densidade: 100 };
+const TEMA_PADROES = { fundoAjuste: 'cover', fundoOpacidade: 0.35, fundoDesfoque: 0, fonte: '', tamTexto: 100, tamIcone: 100, cantos: 14, densidade: 100,
+  animacao: 'nenhuma', animIntensidade: 60 }; // 🎬 v0.164: o fundo animado do tema
 
 function temaAtual() {
   // 🔒 v0.50: o tema da interface é PESSOAL (deste navegador); quem nunca
@@ -4945,6 +4929,13 @@ function renderTemasGaleria() {
     nome.className = 'tema-nome';
     nome.textContent = pronto.nome;
     card.appendChild(nome);
+    if (pronto.tema && pronto.tema.animacao && pronto.tema.animacao !== 'nenhuma') {
+      // 🎬 v0.164: tema com fundo animado
+      const selo = document.createElement('div');
+      selo.className = 'tema-selo';
+      selo.textContent = '🎬 animado';
+      card.appendChild(selo);
+    }
     const amostra = document.createElement('div');
     amostra.className = 'tema-amostra';
     // as cores do cartão: as do tema ou, no Padrão, as de fábrica do programa
@@ -4966,6 +4957,7 @@ function renderTemasGaleria() {
       // Um tema pronto define TUDO: o que ele não traz volta ao padrão
       mandarTema({ ...TEMA_PADROES, ...limparCores(), ...pronto.tema, nome: pronto.id === 'padrao' ? '' : pronto.nome });
       marcarTemaAtivo(pronto.id);
+      fillTema(); // os controles (cores, 🎬 animação, cantos...) mostram o tema carregado na hora
       // 🖥️ e os overlays da live vestem o tema junto (se o interruptor deixar)
       vestirOverlaysComTema(pronto.tema);
     };
@@ -5072,6 +5064,17 @@ function fillTema() {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el) el.value = t[campo] || '';
   }
+  // 🎬 v0.164: a animação de fundo (lista compartilhada com o mini Mesa)
+  const animSel = document.getElementById('t-animacao');
+  if (animSel) {
+    if (!animSel.options.length) for (const a of TEMA_ANIMACOES) { const o = document.createElement('option'); o.value = a.id; o.textContent = a.nome; animSel.appendChild(o); }
+    if (document.activeElement !== animSel) animSel.value = TEMA_ANIMACOES.some((a) => a.id === t.animacao) ? t.animacao : 'nenhuma';
+    const inten = document.getElementById('t-animIntensidade');
+    const v = Number.isFinite(Number(t.animIntensidade)) ? Number(t.animIntensidade) : 60;
+    if (inten && document.activeElement !== inten) inten.value = String(v);
+    const rot = document.getElementById('t-animIntensidadeVal');
+    if (rot) rot.textContent = v + '%';
+  }
   // marca o tema pronto correspondente (se as cores baterem)
   const igual = TEMAS_PRONTOS.find((p) => TEMA_CAMPOS_COR.every((c) => (p.tema[c] || '') === (t[c] || '')));
   marcarTemaAtivo(igual ? igual.id : null);
@@ -5124,7 +5127,8 @@ for (const btn of document.querySelectorAll('.tema-limpar')) {
   ligarFaixa('t-tamIcone', 'tamIcone', (v) => Number(v));
   ligarFaixa('t-cantos', 'cantos', (v) => Number(v));
   ligarFaixa('t-densidade', 'densidade', (v) => Number(v));
-  for (const [id, campo] of [['t-fundoAjuste', 'fundoAjuste'], ['t-fonte', 'fonte'], ['t-fundoImagem', 'fundoImagem']]) {
+  ligarFaixa('t-animIntensidade', 'animIntensidade', (v) => Number(v)); // 🎬 v0.164
+  for (const [id, campo] of [['t-fundoAjuste', 'fundoAjuste'], ['t-fonte', 'fonte'], ['t-fundoImagem', 'fundoImagem'], ['t-animacao', 'animacao']]) {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', () => mandarTema({ [campo]: el.value }));
   }
@@ -7906,6 +7910,9 @@ function fotoDoTemaParaDeck() {
   if (typeof t.fonte === 'string' && t.fonte) foto.fonte = t.fonte;
   if (Number.isFinite(Number(t.cantos))) foto.cantos = Number(t.cantos);
   if (typeof t.nome === 'string' && t.nome) foto.nome = t.nome;
+  // 🎬 v0.164: a animação do tema viaja na cópia — o celular anima igual
+  if (typeof TEMA_ANIMACOES !== 'undefined' && TEMA_ANIMACOES.some((a) => a.id === t.animacao) && t.animacao !== 'nenhuma') foto.animacao = t.animacao;
+  if (Number.isFinite(Number(t.animIntensidade))) foto.animIntensidade = Number(t.animIntensidade);
   return foto;
 }
 function mandarDeck(patch) {
@@ -7943,9 +7950,13 @@ function fillDeckCard() {
   }
   const ativo = document.activeElement;
   if (ativo !== temaSel) temaSel.value = d.tema === 'proprio' ? 'proprio' : 'obs';
-  if (ativo !== proprioSel) proprioSel.value = DECK_TEMAS.some((t) => t.id === d.temaProprio) ? d.temaProprio : 'grafite';
+  if (ativo !== proprioSel) proprioSel.value = deckTemaInfo(d.temaProprio).id; // (migra os nomes antigos)
   if (ativo !== animSel) animSel.value = DECK_ANIMACOES.some((a) => a.id === d.animacao) ? d.animacao : 'tema';
   if (ativo !== inten) inten.value = String(d.intensidade ?? 60);
+  // 🎬 v0.164: seguindo o tema do OBS Social, a intensidade é a do tema (aba 🎨)
+  const segueObs = d.tema !== 'proprio' && (!d.animacao || d.animacao === 'tema');
+  inten.disabled = segueObs;
+  inten.title = segueObs ? OBS_I18N.t('Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas') : '';
   const proprio = d.tema === 'proprio';
   document.getElementById('deckTemaProprioLbl').style.display = proprio ? '' : 'none';
   document.getElementById('deckCoresRow').style.display = proprio ? '' : 'none';
@@ -8446,6 +8457,8 @@ function applyPanel() {
   // A cor de destaque do 🎨 Tema manda; a antiga (accentColor) só vale
   // enquanto o tema não define a dele
   if (panel.accentColor && !temaAtual().corDestaque) document.documentElement.style.setProperty('--accent', panel.accentColor);
+  // 🎬 v0.164: a animação de fundo já tinha lido o --accent: reaplica com a cor de destaque de verdade
+  if (panel.accentColor && typeof aplicarAnimacaoDoTema === 'function') aplicarAnimacaoDoTema(temaAtual());
   panelStyle.textContent = String(panel.customCSS || '');
 }
 

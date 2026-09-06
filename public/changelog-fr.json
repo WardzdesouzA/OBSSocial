@@ -1,4 +1,13 @@
 {
+  "0.164.0": {
+    "titulo": "🎬 Thèmes animés dans tout OBS Social — et une seule liste de thèmes sur l’ordinateur et le téléphone",
+    "itens": [
+      "🎬 Les six thèmes animés du mini Mesa (🌌 Aurore, ✨ Ciel étoilé, 🎄 Noël avec neige, 🫧 Bulles, 🕹️ Années 80 avec grille rétro, 🎉 Fête avec confettis) habillent maintenant tout le programme : le panneau et les réglages reçoivent le fond qui bouge derrière les cartes. Dans l’onglet 🎨 Thèmes, les thèmes prêts marqués 🎬 apportent leur animation, et le nouveau sélecteur 🎬 Animation de fond (avec intensité) en met une par-dessus n’importe quel thème — ou la désactive. ♿ « réduire les animations » arrête tout.",
+      "🎨 Une seule liste : les 10 thèmes d’OBS Social et les 6 animés sont désormais la même liste des deux côtés. Le mini Mesa en mode « propre » propose les 16 (📜 Papier avec la police Georgia, ⚡ Contraste élevé, 👾 Rétro…), et en mode « comme OBS Social » la copie du thème emporte l’animation et l’intensité — le téléphone s’anime comme l’ordinateur, et changer sur l’ordinateur change le téléphone aussitôt.",
+      "📱 Qui avait déjà un thème propre sur le mini Mesa le garde (Graphite est devenu 🌙 Padrão, Néon est devenu 🌸 Rose néon, Braise est devenue la 🔥 Braise d’OBS Social) ; le 🕹️ Rétro du téléphone s’appelle maintenant Années 80, pour ne pas le confondre avec le 👾 Rétro habituel.",
+      "🛠️ Charger un thème prêt met maintenant à jour aussitôt les contrôles de couleurs, coins et animation ; enregistrer/charger un thème en fichier inclut l’animation."
+    ]
+  },
   "0.163.0": {
     "titulo": "📱 Mini Mesa de Trilhas : la Mesa sur le téléphone ou la tablette, avec des thèmes animés",
     "itens": [

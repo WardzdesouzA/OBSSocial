@@ -516,148 +516,7 @@ function atualizarAviso() {
 }
 
 // ---------- cara: tema + animação ----------
-const animador = (() => {
-  const canvas = $('deckFundo');
-  const ctx = canvas.getContext('2d');
-  let efeito = 'nenhuma';
-  let forca = 0.6;
-  let cores = { destaque: '#7c4dff', texto: '#ffffff', fundo: '#14161c' };
-  let itens = [];
-  let rodando = false;
-  let ultimo = 0;
-  let W = 0, H = 0, escala = 1;
-  const reduzido = () => document.body.classList.contains('a11y-sem-animacao')
-    || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const hexRgb = (h) => { const m = /^#([0-9a-f]{6})$/i.exec(h || ''); const n = m ? parseInt(m[1], 16) : 0x7c4dff; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
-  const rgba = (h, a) => { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${a})`; };
-  function medirCanvas() {
-    escala = Math.min(1.5, window.devicePixelRatio || 1);
-    // os efeitos pesados desenham em meia resolução: barato na bateria
-    if (efeito === 'aurora') escala = Math.min(escala, 0.5);
-    W = Math.max(1, Math.round(innerWidth * escala));
-    H = Math.max(1, Math.round(innerHeight * escala));
-    canvas.width = W; canvas.height = H;
-    canvas.style.width = innerWidth + 'px'; canvas.style.height = innerHeight + 'px';
-  }
-  function semear() {
-    itens = [];
-    const n = Math.round(20 + forca * 90);
-    const rnd = Math.random;
-    if (efeito === 'estrelas') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 0.6 + rnd() * 1.6, f: rnd() * 6.28, v: 0.4 + rnd() * 1.4 });
-    if (efeito === 'neve') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 1 + rnd() * 2.6, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
-    if (efeito === 'bolhas') for (let i = 0; i < n * 0.5; i++) itens.push({ x: rnd(), y: rnd(), r: 3 + rnd() * 14, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
-    if (efeito === 'confete') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), w: 4 + rnd() * 6, h: 2 + rnd() * 4, v: 0.04 + rnd() * 0.08, a: rnd() * 6.28, va: (rnd() - 0.5) * 4, c: i % 5 });
-    if (efeito === 'aurora') for (let i = 0; i < 4; i++) itens.push({ f: rnd() * 6.28, f2: rnd() * 6.28, r: 0.35 + rnd() * 0.3 });
-  }
-  const PALETA_CONFETE = ['#ff5c5c', '#ffb300', '#4da3ff', '#43a047', '#ec407a'];
-  function desenhar(t, dt) {
-    ctx.clearRect(0, 0, W, H);
-    const seg = t / 1000;
-    if (efeito === 'aurora') {
-      ctx.globalCompositeOperation = 'lighter';
-      itens.forEach((a, i) => {
-        const cx = (0.5 + 0.45 * Math.sin(seg * 0.13 + a.f)) * W;
-        const cy = (0.45 + 0.4 * Math.cos(seg * 0.1 + a.f2)) * H;
-        const r = a.r * Math.max(W, H);
-        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-        const cor = i % 2 ? cores.destaque : cores.texto;
-        g.addColorStop(0, rgba(cor, 0.16 * forca + 0.05));
-        g.addColorStop(1, rgba(cor, 0));
-        ctx.fillStyle = g;
-        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-      });
-      ctx.globalCompositeOperation = 'source-over';
-    } else if (efeito === 'estrelas') {
-      for (const s of itens) {
-        const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(seg * s.v + s.f));
-        ctx.fillStyle = rgba(s.f < 1 ? cores.destaque : cores.texto, a * (0.35 + forca * 0.6));
-        ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r * escala, 0, 6.28); ctx.fill();
-      }
-    } else if (efeito === 'neve') {
-      ctx.fillStyle = rgba(cores.texto, 0.5 + forca * 0.4);
-      for (const f of itens) {
-        f.y += f.v * dt * (0.5 + forca) * 0.06; f.s += dt * 0.001;
-        if (f.y > 1.05) { f.y = -0.05; f.x = Math.random(); }
-        const x = (f.x + Math.sin(f.s) * 0.02) * W;
-        ctx.beginPath(); ctx.arc(x, f.y * H, f.r * escala, 0, 6.28); ctx.fill();
-      }
-    } else if (efeito === 'bolhas') {
-      ctx.lineWidth = 1.2 * escala;
-      for (const b of itens) {
-        b.y -= b.v * dt * (0.5 + forca) * 0.05; b.s += dt * 0.0015;
-        if (b.y < -0.08) { b.y = 1.08; b.x = Math.random(); }
-        const x = (b.x + Math.sin(b.s) * 0.015) * W;
-        ctx.strokeStyle = rgba(cores.destaque, 0.3 + forca * 0.5);
-        ctx.fillStyle = rgba(cores.destaque, 0.05 + forca * 0.1);
-        ctx.beginPath(); ctx.arc(x, b.y * H, b.r * escala, 0, 6.28); ctx.fill(); ctx.stroke();
-      }
-    } else if (efeito === 'grade') {
-      // a grade em perspectiva correndo para a pessoa (sintetizador anos 80)
-      const horizonte = H * 0.42;
-      const g = ctx.createLinearGradient(0, horizonte, 0, H);
-      g.addColorStop(0, rgba(cores.destaque, 0.02)); g.addColorStop(1, rgba(cores.destaque, 0.12 * forca + 0.04));
-      ctx.fillStyle = g; ctx.fillRect(0, horizonte, W, H - horizonte);
-      ctx.strokeStyle = rgba(cores.destaque, 0.25 + forca * 0.5); ctx.lineWidth = 1 * escala;
-      const passo = (seg * (0.3 + forca * 0.8)) % 1;
-      for (let i = 0; i < 12; i++) {
-        const f = ((i + passo) / 12);
-        const y = horizonte + (H - horizonte) * f * f;
-        ctx.globalAlpha = 0.2 + f * 0.8;
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      for (let i = -8; i <= 8; i++) {
-        ctx.beginPath(); ctx.moveTo(W / 2 + i * W * 0.04, horizonte); ctx.lineTo(W / 2 + i * W * 0.28, H); ctx.stroke();
-      }
-      ctx.strokeStyle = rgba(cores.texto, 0.25);
-      ctx.beginPath(); ctx.moveTo(0, horizonte); ctx.lineTo(W, horizonte); ctx.stroke();
-    } else if (efeito === 'confete') {
-      for (const c of itens) {
-        c.y += c.v * dt * (0.4 + forca) * 0.05; c.a += c.va * dt * 0.001;
-        if (c.y > 1.06) { c.y = -0.06; c.x = Math.random(); }
-        ctx.save();
-        ctx.translate((c.x + Math.sin(c.a) * 0.01) * W, c.y * H);
-        ctx.rotate(c.a);
-        ctx.fillStyle = rgba(PALETA_CONFETE[c.c], 0.55 + forca * 0.4);
-        ctx.fillRect(-c.w * escala / 2, -c.h * escala / 2, c.w * escala, c.h * escala);
-        ctx.restore();
-      }
-    }
-  }
-  function laco(t) {
-    if (!rodando) return;
-    requestAnimationFrame(laco);
-    // ~30 quadros por segundo bastam (e poupam a bateria)
-    if (t - ultimo < 32) return;
-    const dt = Math.min(100, t - ultimo || 16);
-    ultimo = t;
-    desenhar(t, dt);
-  }
-  function ligar() {
-    if (rodando) return;
-    if (efeito === 'nenhuma' || reduzido() || document.hidden) return;
-    rodando = true;
-    ultimo = 0;
-    requestAnimationFrame(laco);
-  }
-  function desligar() { rodando = false; ctx.clearRect(0, 0, W, H); }
-  function aplicar(novoEfeito, intensidade, novasCores) {
-    // o servidor manda «settings» por qualquer ajuste do painel: só um efeito
-    // NOVO re-sorteia as partículas — intensidade e cores mudam no que já
-    // está na tela (a prévia do slider escala em vez de piscar)
-    const mudou = (novoEfeito || 'nenhuma') !== efeito;
-    efeito = novoEfeito || 'nenhuma';
-    forca = Math.max(0.1, Math.min(1, (Number(intensidade) || 60) / 100));
-    cores = { ...cores, ...(novasCores || {}) };
-    if (mudou || !itens.length) { medirCanvas(); semear(); }
-    if (efeito === 'nenhuma' || reduzido()) { desligar(); return; }
-    if (mudou) desligar();
-    ligar();
-  }
-  window.addEventListener('resize', () => { if (efeito !== 'nenhuma') { medirCanvas(); } });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) desligar(); else ligar(); });
-  return { aplicar, ligar, desligar, get efeito() { return efeito; }, get rodando() { return rodando; } };
-})();
+const animador = criarAnimadorFundo($('deckFundo'));
 
 function caraEfetiva() {
   return deckResolverTema((settings && settings.deck) || {}, local.ajuste);
@@ -732,6 +591,10 @@ function preencherFolha() {
   }
   sel.value = DECK_ANIMACOES.some((a) => a.id === efetivo.animacao) ? efetivo.animacao : 'tema';
   $('deckIntensidade').value = String(r.intensidade);
+  // seguindo o tema do OBS Social, a intensidade é a do tema (aba 🎨 no computador)
+  const segueObs = r.modo === 'obs' && (!efetivo.animacao || efetivo.animacao === 'tema');
+  $('deckIntensidade').disabled = segueObs;
+  $('deckIntensidade').parentElement.title = segueObs ? T('Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas') : '';
   $('deckSoAqui').checked = papel === 'viewer' || !!local.ajuste;
   $('deckSoAqui').disabled = papel === 'viewer';
   $('deckSoAquiHint').hidden = papel !== 'viewer';

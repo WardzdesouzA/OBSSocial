@@ -464,7 +464,7 @@ const DEFAULT_SETTINGS = {
   // localStorage do computador) ou um tema só dele, com animação de fundo.
   deck: {
     tema: 'obs',            // 'obs' = igual ao OBS Social | 'proprio' = tema próprio do mini Mesa
-    temaProprio: 'grafite', // id do tema próprio (lista DECK_TEMAS em render.js)
+    temaProprio: 'padrao',  // id do tema próprio (a lista TEMAS_PRONTOS de render.js — v0.164)
     temaObs: {},            // a cópia do tema pessoal (cores/cantos/fonte) — vale no modo 'obs'
     animacao: 'tema',       // 'tema' = a que o tema traz | 'nenhuma' | aurora | estrelas | neve | bolhas | grade | confete
     intensidade: 60,        // força da animação (10 a 100 %)
@@ -758,7 +758,10 @@ const AUDIO_OV_MOMENTOS = ['entrada', 'saida', 'tempo', 'fim'];
 // 📱 v0.163: o bloco do mini Mesa só aceita o que conhece — nomes de tema e
 // de animação da lista, cores em #hex, intensidade entre 10 e 100 e a cópia
 // do tema do OBS Social com os mesmos campos do tema de verdade.
-const DECK_TEMAS_IDS = ['grafite', 'neon', 'oceano', 'floresta', 'brasa', 'claro', 'aurora', 'estrelas', 'natal', 'bolhas', 'retro', 'festa'];
+// 🎨 v0.164: a lista é a mesma dos temas prontos do OBS Social (render.js);
+// os nomes do mini Mesa da v0.163 que não existem mais migram
+const DECK_TEMAS_IDS = ['padrao', 'roxo', 'oceano', 'floresta', 'fogo', 'rosa', 'claro', 'papel', 'contraste', 'retro8bit', 'aurora', 'estrelas', 'natal', 'bolhas', 'retro', 'festa'];
+const DECK_TEMAS_ANTIGOS = { grafite: 'padrao', neon: 'rosa', brasa: 'fogo' };
 const DECK_ANIMACOES_IDS = ['tema', 'nenhuma', 'aurora', 'estrelas', 'neve', 'bolhas', 'grade', 'confete'];
 function sanitizeDeck(bruto) {
   const d = bruto && typeof bruto === 'object' ? bruto : {};
@@ -771,9 +774,14 @@ function sanitizeDeck(bruto) {
   const cantos = Number(obs.cantos);
   if (Number.isFinite(cantos)) temaObs.cantos = Math.max(0, Math.min(28, Math.round(cantos)));
   if (typeof obs.nome === 'string' && obs.nome) temaObs.nome = obs.nome.slice(0, 60);
+  // 🎬 v0.164: a animação do tema do OBS Social viaja na cópia
+  if (DECK_ANIMACOES_IDS.includes(obs.animacao) && obs.animacao !== 'tema' && obs.animacao !== 'nenhuma') temaObs.animacao = obs.animacao;
+  const ni = Number(obs.animIntensidade);
+  if (Number.isFinite(ni)) temaObs.animIntensidade = Math.max(10, Math.min(100, Math.round(ni)));
+  const proprio = DECK_TEMAS_ANTIGOS[d.temaProprio] || d.temaProprio;
   return {
     tema: d.tema === 'proprio' ? 'proprio' : 'obs',
-    temaProprio: DECK_TEMAS_IDS.includes(d.temaProprio) ? d.temaProprio : 'grafite',
+    temaProprio: DECK_TEMAS_IDS.includes(proprio) ? proprio : 'padrao',
     temaObs,
     animacao: DECK_ANIMACOES_IDS.includes(d.animacao) ? d.animacao : 'tema',
     intensidade: Math.max(10, Math.min(100, Math.round(Number(d.intensidade)) || 60)),

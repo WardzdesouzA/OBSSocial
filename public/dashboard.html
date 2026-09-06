@@ -6942,6 +6942,8 @@ function applyPanel() {
   // A cor de destaque do 🎨 Tema manda; a antiga (accentColor) só vale
   // enquanto o tema não define a dele
   if (panel.accentColor && !((temaLocalLer() || settings?.tema || {}).corDestaque)) document.documentElement.style.setProperty('--accent', panel.accentColor);
+  // 🎬 v0.164: a animação de fundo já tinha lido o --accent: reaplica a animação com a cor de destaque de verdade
+  if (panel.accentColor && typeof aplicarAnimacaoDoTema === 'function') aplicarAnimacaoDoTema(temaLocalLer() || settings?.tema || {});
   // ✍️ v0.100: a cor do TEXTO dos comentários no painel (vazio = a do tema)
   {
     const cor = /^#[0-9a-f]{6}$/i.test(String(panel.textColor || '')) ? panel.textColor : '';
