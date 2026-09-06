@@ -1,4 +1,13 @@
 {
+  "0.164.1": {
+    "titulo": "🐦 Direct media: the extractor now finds X videos (and those from other sites that do not report codecs)",
+    "itens": [
+      "🎬 When pasting the link of an X post with a video, the 🧪 Labs 🎬 extractor found the mp4 file, but OBS Social threw the answer away: X delivers the file without naming the codecs, and the program treated “did not say” as “does not have” — it looked like the extractor had never been called. Now the video goes to our player, with play, seek bar, volume, speed, 🔁 and full screen. It applies to any site that does the same; only an explicitly declared “no sound” is still refused.",
+      "📱 Portrait videos (720×1280, 1080×1920) now measure quality by the shorter side: before, a 1080p phone video went to the back of the line as if it were 1920p, and the extractor picked a smaller version.",
+      "🛠️ An old option that yt-dlp flagged as deprecated was removed from the call, before it became an error in future versions.",
+      "ℹ️ Reminder of when the extractor steps in: only when the page does not publish the file in its metatags, with the 🎬 switch in 🧪 Labs on and the program downloaded in 🔌 Connections — while searching, the panel shows “🔎 Searching…” and then “🎬 Asking the extractor…”."
+    ]
+  },
   "0.164.0": {
     "titulo": "🎬 Animated themes across OBS Social — and one theme list for computer and phone",
     "itens": [
