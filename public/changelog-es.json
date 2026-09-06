@@ -1,4 +1,12 @@
 {
+  "0.167.1": {
+    "titulo": "🌤️ El Clima ganó lugar fijo en el panel: junto al reloj, en el centro de la barra, con su propio visor",
+    "itens": [
+      "🕐🌤️ El Clima salió de la fila de íconos y pasó a vivir junto al reloj, en el centro de la barra del panel — los dos quedan centrados respecto a la pantalla.",
+      "🌡️ Visor propio, con el mismo molde del reloj: el ícono animado de la condición, la temperatura y la ciudad del momento, cambiando junto con la rotación. Cuando el Clima está en pantalla, el visor se enciende como el del reloj; al hacer clic se abren las opciones de siempre (◀ ▶, 🔄, 👁️).",
+      "🧲 Como ahora tiene lugar fijo, el Clima ya no aparece en 🎨 Temas → 🧲 Organizar el panel (el orden guardado sigue valiendo para los otros íconos)."
+    ]
+  },
   "0.167.0": {
     "titulo": "🌤️ Clima en pantalla — el tiempo ahora, con íconos animados, varias ciudades en rotación y la fuente que elijas",
     "itens": [

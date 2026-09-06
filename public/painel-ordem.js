@@ -21,7 +21,9 @@
 
   // Ferramentas (os ícones da barra). A chave é o prefixo do id do botão no
   // painel: qr → #qrToolBtn, midiaDireta → #midiaDiretaToolBtn…
-  const FERRAMENTAS = ['qr', 'raffle', 'likemeter', 'aud', 'ws', 'aviso', 'clima', 'midiaDireta', 'trilhas', 'obs', 'vmix', 'clip']; // 🌤️ v0.167: clima
+  // (o 🌤️ Clima não está aqui: desde a v0.167.1 ele mora no centro da barra,
+  // ao lado do 🕐 relógio, com mostrador próprio — não é um ícone da fila)
+  const FERRAMENTAS = ['qr', 'raffle', 'likemeter', 'aud', 'ws', 'aviso', 'midiaDireta', 'trilhas', 'obs', 'vmix', 'clip'];
 
   // Abas (data-tab de cada botão .tab do painel)
   const ABAS = ['live', 'saved', 'superchat', 'member', 'whatsapp', 'telegram', 'apoio'];

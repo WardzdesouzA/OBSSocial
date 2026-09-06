@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    "sem cidade": "都市なし",
     "🌤️ Clima": "🌤️ 天気",
     "Clima: o tempo agora na tela": "天気：今の天気を画面に",
     "Cidade anterior": "前の都市",

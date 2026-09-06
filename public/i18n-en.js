@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    "sem cidade": "no city",
     "🌤️ Clima": "🌤️ Weather",
     "Clima: o tempo agora na tela": "Weather: the current conditions on screen",
     "Cidade anterior": "Previous city",

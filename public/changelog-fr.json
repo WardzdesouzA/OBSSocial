@@ -1,4 +1,12 @@
 {
+  "0.167.1": {
+    "titulo": "🌤️ La Météo a sa place fixe dans le panneau : à côté de l’horloge, au centre de la barre, avec son propre afficheur",
+    "itens": [
+      "🕐🌤️ La Météo a quitté la file d’icônes et vit désormais à côté de l’horloge, au centre de la barre du panneau — toutes deux centrées par rapport à l’écran.",
+      "🌡️ Un afficheur à elle, dans le même moule que l’horloge : l’icône animée de la condition, la température et la ville du moment, qui change avec la rotation. Quand la Météo est à l’écran, l’afficheur s’allume comme celui de l’horloge ; un clic ouvre les options habituelles (◀ ▶, 🔄, 👁️).",
+      "🧲 Ayant maintenant une place fixe, la Météo n’apparaît plus dans 🎨 Thèmes → 🧲 Organiser le panneau (l’ordre enregistré vaut toujours pour les autres icônes)."
+    ]
+  },
   "0.167.0": {
     "titulo": "🌤️ Météo à l’écran — le temps qu’il fait, avec des icônes animées, plusieurs villes en rotation et la source de votre choix",
     "itens": [

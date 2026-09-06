@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "sem cidade": "도시 없음",
     "🌤️ Clima": "🌤️ 날씨",
     "Clima: o tempo agora na tela": "날씨: 지금 날씨를 화면에",
     "Cidade anterior": "이전 도시",

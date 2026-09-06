@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    "sem cidade": "нет города",
     "🌤️ Clima": "🌤️ Погода",
     "Clima: o tempo agora na tela": "Погода: текущая погода на экране",
     "Cidade anterior": "Предыдущий город",

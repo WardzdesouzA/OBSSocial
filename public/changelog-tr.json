@@ -1,4 +1,12 @@
 {
+  "0.167.1": {
+    "titulo": "🌤️ Hava durumu panelde sabit bir yer kazandı: saatin yanında, çubuğun ortasında, kendi göstergesiyle",
+    "itens": [
+      "🕐🌤️ Hava durumu simge sırasından çıktı ve artık saatin yanında, panel çubuğunun ortasında yaşıyor — ikisi de ekrana göre ortalanmış.",
+      "🌡️ Saatle aynı kalıpta kendi göstergesi: hareketli durum simgesi, sıcaklık ve o anki şehir, dönüşümle birlikte değişir. Hava durumu ekrandayken gösterge saatinki gibi yanar; tıklayınca her zamanki seçenekler açılır (◀ ▶, 🔄, 👁️).",
+      "🧲 Artık sabit yeri olduğundan Hava durumu 🎨 Temalar → 🧲 Paneli düzenle’de görünmez (kaydedilen sıra diğer simgeler için geçerli kalır)."
+    ]
+  },
   "0.167.0": {
     "titulo": "🌤️ Ekranda hava durumu — şu anki hava hareketli simgelerle, dönüşümlü birden çok şehir ve seçtiğiniz kaynak",
     "itens": [

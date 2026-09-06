@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "sem cidade": "无城市",
     "🌤️ Clima": "🌤️ 天气",
     "Clima: o tempo agora na tela": "天气：把当前天气放到屏幕上",
     "Cidade anterior": "上一个城市",
