@@ -542,7 +542,7 @@ function aplicarCara() {
   // num tema claro, a sombra escura do nome da tecla vira um halo claro
   raiz.setProperty('--deck-sombra-texto', escuro ? '0 1px 3px rgba(0, 0, 0, 0.9)' : '0 1px 2px rgba(255, 255, 255, 0.85)');
   $('deckMetaCor').setAttribute('content', r.cores.barra);
-  animador.aplicar(r.animacao, r.intensidade, { destaque: r.cores.destaque, texto: r.cores.texto, fundo: r.cores.fundo });
+  animador.aplicar(r.animacao, r.intensidade, { destaque: r.cores.destaque, texto: r.cores.texto, fundo: r.cores.fundo }, r.opcoes); // 🎬 v0.168: com as opções
   if (!$('deckFolha').hidden) preencherFolha();
 }
 
@@ -624,7 +624,7 @@ $('deckIntensidade').onchange = (e) => mudarCara({ intensidade: Number(e.target.
 $('deckIntensidade').oninput = (e) => {
   // prévia ao vivo enquanto arrasta (sem gravar a cada pixel)
   const r = caraEfetiva();
-  animador.aplicar(r.animacao, Number(e.target.value), { destaque: r.cores.destaque, texto: r.cores.texto, fundo: r.cores.fundo });
+  animador.aplicar(r.animacao, Number(e.target.value), { destaque: r.cores.destaque, texto: r.cores.texto, fundo: r.cores.fundo }, { ...r.opcoes, intensidade: Number(e.target.value) });
 };
 $('deckSoAqui').onchange = (e) => {
   if (e.target.checked) {

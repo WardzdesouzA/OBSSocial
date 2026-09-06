@@ -1,4 +1,13 @@
 {
+  "0.168.0": {
+    "titulo": "🎬 Canlı ve tamamen kişiselleştirilebilir animasyonlar — James Webb parıltısında yıldızlar ve ekranın her yerinde animasyon",
+    "itens": [
+      "✨ Yeni yıldızlar: çekirdek, hale ve James Webb teleskobu fotoğraflarındaki kırınım ışınları (altıgen dizilimde 6 büyük + 2 kısa — ya da 4, 8, hiç), her biri kendi ritminde pırıldayan beyaz, mavimsi, altın ve turuncu yıldızlar, ara sıra parlamalar, arkada yıldız tozu, kayan yıldızlar ve süzülen renkli bir bulutsu. Hepsi kontrol altında: ışınlar, pırıltı, kayan yıldızlar ve bulutsu.",
+      "🌌 Tüm efektler daha canlı: aurora, arkasında yıldızcıklar olan kardeş renklerde dalgalanan ışık perdelerine dönüştü; karda üç derinlikte dönen altı kollu kristaller ve rüzgâr var; baloncuklar yanardöner kenar, ışık yansıması, salınım ve patlama kazandı; retro ızgara ufukta çizgili güneş, neon parıltı ve yıldızlar kazandı; konfeti iki eksende dönen şekillere (dikdörtgen, daire, yıldız, kurdele) ve pırıltılara sahip.",
+      "🎛️ Her şeyin kontrolü, 🎨 Temalar → 🎬 Arka plan animasyonu’nda: yoğunluk (her zamanki kaydırıcı), hız, miktar, boyut, parlaklık, iz, rüzgâr ve renkler — temadan ya da üç kendi renginiz. Her efektin kendi ayrıntıları var ve «↺ Animasyon varsayılanı» ayarları geri alır. Sayfanın kendisi önizlemedir ve hazır animasyonlu temalar ayarlanmış gelir.",
+      "🪟 Animasyonun göründüğü yer: fabrika ayarında her şeyin arkasındadır ve paneller opaktır (%100). «Panel opaklığı»nı düşürün ki ekranın her yerinde kartların, sütunların ve kutuların içinden geçsin; animasyonun kendi opaklığını ayarlayın ya da katmanı her şeyin üstüne koyun — fareyi asla engellemez. Telefondaki mini Deck aynı seçenekleri tema kopyasında alır."
+    ]
+  },
   "0.167.2": {
     "titulo": "🗂️ Daralt/genişlet standartlaştı: artık 🔌 Bağlantılar ve 🗄️ Günlükler ve veriler’de de",
     "itens": [

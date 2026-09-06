@@ -2315,13 +2315,118 @@
       <!-- 🎬 v0.164: o fundo animado do tema (o mesmo do mini Mesa do celular) -->
       <div class="field">
         <label>🎬 Animação de fundo</label>
-        <div class="hint" style="margin:0 0 6px">Aurora, estrelas, neve, bolhas, grade retrô ou confete atrás de tudo — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar ou desligar. Com ♿ «reduzir animações» ligado, nada se mexe.</div>
+        <div class="hint" style="margin:0 0 6px">Aurora, estrelas, neve, bolhas, grade retrô ou confete — no painel e nas configurações. Os temas prontos marcados com 🎬 já vêm com a sua; aqui dá para trocar, desligar e afinar tudo: força, velocidade, quantidade, tamanho, brilho, rastro, vento, cores e os detalhes de cada efeito. Esta página é a prévia — o que você mexer aparece no fundo dela. Com ♿ «reduzir animações» ligado, nada se mexe.</div>
         <div class="temas-fundo-ops">
           <label>Animação
             <select id="t-animacao"></select>
           </label>
           <label>Intensidade: <b id="t-animIntensidadeVal">60%</b>
             <input type="range" id="t-animIntensidade" min="10" max="100" step="5">
+          </label>
+          <label>Velocidade: <b id="t-animVelocidadeVal">100%</b>
+            <input type="range" id="t-animVelocidade" min="10" max="300" step="5">
+          </label>
+          <label>Quantidade: <b id="t-animQuantidadeVal">100%</b>
+            <input type="range" id="t-animQuantidade" min="10" max="300" step="5">
+          </label>
+          <label>Tamanho: <b id="t-animTamanhoVal">100%</b>
+            <input type="range" id="t-animTamanho" min="30" max="300" step="5">
+          </label>
+          <label>Brilho: <b id="t-animBrilhoVal">60%</b>
+            <input type="range" id="t-animBrilho" min="0" max="100" step="5">
+          </label>
+          <label>Rastro: <b id="t-animRastroVal">0%</b>
+            <input type="range" id="t-animRastro" min="0" max="100" step="5">
+          </label>
+          <label>Vento: <b id="t-animVentoVal">0%</b>
+            <input type="range" id="t-animVento" min="-100" max="100" step="5">
+          </label>
+        </div>
+        <div class="temas-fundo-ops" style="margin-top:10px">
+          <label>Cores da animação
+            <select id="t-animCores">
+              <option value="tema">Do tema</option>
+              <option value="personalizadas">Personalizadas</option>
+            </select>
+          </label>
+          <label class="t-anim-cor">Cor 1 <input type="color" id="t-animCor1"></label>
+          <label class="t-anim-cor">Cor 2 <input type="color" id="t-animCor2"></label>
+          <label class="t-anim-cor">Cor 3 <input type="color" id="t-animCor3"></label>
+        </div>
+        <!-- os ajustes de cada efeito (só o bloco da animação escolhida aparece) -->
+        <div id="t-animEspecifico" style="margin-top:10px">
+          <div class="temas-fundo-ops" data-anim="estrelas">
+            <label>Pontas de difração
+              <select id="t-animPontas">
+                <option value="0">Sem pontas</option>
+                <option value="4">4 pontas</option>
+                <option value="6">6 pontas (James Webb)</option>
+                <option value="8">8 pontas</option>
+              </select>
+            </label>
+            <label>Cintilação: <b id="t-animCintilacaoVal">70%</b>
+              <input type="range" id="t-animCintilacao" min="0" max="100" step="5">
+            </label>
+            <label>Estrelas cadentes: <b id="t-animCadentesVal">30%</b>
+              <input type="range" id="t-animCadentes" min="0" max="100" step="5">
+            </label>
+            <label>Nebulosa: <b id="t-animNebulosaVal">40%</b>
+              <input type="range" id="t-animNebulosa" min="0" max="100" step="5">
+            </label>
+          </div>
+          <div class="temas-fundo-ops" data-anim="aurora">
+            <label>Cortinas: <b id="t-animFaixasVal">4</b>
+              <input type="range" id="t-animFaixas" min="1" max="8" step="1">
+            </label>
+          </div>
+          <div class="temas-fundo-ops" data-anim="neve">
+            <label>Flocos
+              <select id="t-animFlocos">
+                <option value="cristais">Cristais de seis braços</option>
+                <option value="pontos">Pontos</option>
+              </select>
+            </label>
+          </div>
+          <div class="temas-fundo-ops" data-anim="bolhas">
+            <label class="check"><input type="checkbox" id="t-animReflexo" class="sw"><span>Reflexo de luz e borda iridescente</span></label>
+          </div>
+          <div class="temas-fundo-ops" data-anim="grade">
+            <label>Horizonte: <b id="t-animHorizonteVal">42%</b>
+              <input type="range" id="t-animHorizonte" min="20" max="70" step="1">
+            </label>
+            <label class="check"><input type="checkbox" id="t-animSol" class="sw"><span>Sol listrado no horizonte</span></label>
+          </div>
+          <div class="temas-fundo-ops" data-anim="confete">
+            <label>Formas
+              <select id="t-animFormas">
+                <option value="mistas">Mistas</option>
+                <option value="retangulos">Retângulos</option>
+                <option value="circulos">Círculos</option>
+                <option value="estrelas">Estrelas</option>
+                <option value="fitas">Fitas</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px"><button id="t-animPadrao" class="btn-link" title="Volta os ajustes da animação ao padrão (a animação escolhida fica)">↺ Padrão da animação</button></div>
+      </div>
+
+      <!-- 🪟 v0.168: onde a animação aparece — camada, opacidade e os painéis translúcidos -->
+      <div class="field">
+        <label>🪟 Onde a animação aparece</label>
+        <div class="hint" style="margin:0 0 6px">De fábrica a animação fica atrás de tudo e os painéis são opacos (100%): ela só aparece nos vãos. Baixe a opacidade dos painéis para ela atravessar cards, colunas e caixas em qualquer lugar da tela, ou ponha a camada por cima de tudo — ela nunca atrapalha o mouse.</div>
+        <div class="temas-fundo-ops">
+          <label>Camada
+            <select id="t-animCamada">
+              <option value="atras">Atrás de tudo</option>
+              <option value="frente">Por cima de tudo</option>
+            </select>
+          </label>
+          <label>Opacidade da animação: <b id="t-animOpacidadeVal">100%</b>
+            <input type="range" id="t-animOpacidade" min="0" max="100" step="5">
+          </label>
+          <label>Opacidade dos painéis: <b id="t-painelOpacidadeVal">100%</b>
+            <input type="range" id="t-painelOpacidade" min="20" max="100" step="5">
           </label>
         </div>
       </div>
@@ -3062,6 +3167,7 @@
       <details class="faq-item"><summary>Dá para usar o Stream Deck (ou outro aparelho de botões) com o OBS Social?</summary><div class="faq-resposta">Dá — é o 🕹️ Controle externo, em 🧪 Labs (experimental). Cada ação do OBS Social ganha um endereço (URL) com um token; o aparelho abre o endereço e a ação acontece. Funciona com qualquer coisa que saiba abrir um endereço: Stream Deck (com um plugin de requisição HTTP da loja da Elgato, ou a ação «Site»), Bitfocus Companion (conexão Generic: HTTP), Touch Portal, Loupedeck, Razer Stream Controller, Macro Deck, Streamer.bot, o app Atalhos do iPhone, HTTP Shortcuts no Android, Node-RED... A página 🕹️ Controle Externo lista todos os endereços prontos para copiar, com um ▶ para testar cada um antes de gravar no aparelho.</div></details>
       <details class="faq-item"><summary>O que o controle externo consegue fazer?</summary><div class="faq-resposta">Tudo o que o painel faz pela rede com senha: limpar a tela, destacar o último comentário (de qualquer rede ou de uma só) ou um salvo, tirar o destaque, soltar a fila, player da mídia, sortear/esconder/zerar o sorteio, likômetro, audiência, winstreak (+1, −1, zerar, mostrar), QR code, escrever e mostrar avisos, relógio, cronômetro e timer (iniciar, pausar, zerar, duração, mostrar), ligar/desligar/reiniciar cada conexão, disparar qualquer tecla da Mesa de trilhas (pelo id ou pelo nome), qualquer ação do OBS Studio e do vMix (as mesmas das teclas), comentário de teste, área de transferência — e, para quem programa, a operação livre («op») manda qualquer operação do painel. Fora só o que é do computador local: senha, atualizações, reiniciar, apagar dados, backups e credenciais.</div></details>
       <details class="faq-item"><summary>O que é a 🎵 Mesa de trilhas?</summary><div class="faq-resposta">Uma mesa de som experimental (🧪 Labs): cada trilha vira um botão no painel — e no celular na mesma rede. Uma toca por vez, apertar outra troca com fade, BGM pode repetir (🔁) e o ⏹ para tudo. O som pode sair na live (pelo overlay no OBS), só no painel, ou nos dois. Dá até para importar os botões de som do seu Stream Deck, com um backup de perfis.</div></details>
+      <details class="faq-item"><summary>Como deixo a animação de fundo do meu jeito?</summary><div class="faq-resposta">Em 🎨 Temas → 🎬 Animação de fundo: escolha a animação (aurora, estrelas, neve, bolhas, grade retrô, confete) e afine tudo — intensidade, velocidade, quantidade, tamanho, brilho, rastro, vento e as cores (do tema ou três suas). Cada efeito tem os próprios detalhes: nas estrelas, as pontas de difração como as fotos do telescópio James Webb, a cintilação, as estrelas cadentes e a nebulosa; na aurora, as cortinas; na neve, cristais ou pontos; nas bolhas, o reflexo; na grade, o sol e o horizonte; no confete, as formas. Em 🪟 Onde a animação aparece dá para pôr a camada por cima de tudo e baixar a opacidade dos painéis (padrão 100%, opaco) para a animação atravessar cards e colunas em qualquer lugar. A própria página é a prévia. «↺ Padrão da animação» desfaz os ajustes.</div></details>
       <details class="faq-item"><summary>Como funciona o 🌤️ Clima na tela?</summary><div class="faq-resposta">É um widget com o tempo agora e um ícone animado (sol, lua, nuvens, chuva, trovoada, neve…). Em 🎨 Aparência → 🌤️ Clima você procura a sua cidade (ou adiciona as capitais do Brasil de uma vez), liga o <b>rodízio</b> para a tela passar por várias cidades a cada tantos segundos, escolhe se o nome da cidade aparece e de quanto em quanto tempo as informações são atualizadas (10 a 60 minutos). As informações vêm das fontes marcadas em 🔌 Conexões → 🌤️ Fontes de clima: Open-Meteo e MET Norway funcionam sem cadastro; OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo e Weather Underground pedem uma chave gratuita, que fica só no seu computador. O botão 🌤️ do painel põe e tira da tela; posição, tamanho e cores no 🖱️ Organizar a tela.</div></details>
       <details class="faq-item"><summary>O que são os 🎭 Perfis de overlay?</summary><div class="faq-resposta">Moldes completos do comentário em destaque — cores, letra, arte, posição e as peças — salvos com um nome, no card 🎭 da aba Aparência. Monte o visual, salve como perfil e troque o overlay inteiro em um clique. Com a <b>troca automática</b> ligada, cada comentário destacado veste o molde certo sozinho: um perfil para os comentários comuns e um por <b>faixa de valor</b> para Super Chats e 💝 doações — em qualquer moeda, convertida para reais pela cotação do dia. O 🧪 de cada faixa põe no ar um Super Chat de teste com aquele valor, para conferir antes da live.</div></details>
       <details class="faq-item"><summary>Achei um problema ou tenho uma ideia. Para onde mando?</summary><div class="faq-resposta">Aba 📣 Feedback: escolha o assunto, escreva e envie — o botão abre o seu programa de e-mail já preenchido, e cada mensagem é lida.</div></details>
@@ -5189,7 +5295,7 @@ for (const b of document.querySelectorAll('[data-aov-ir]')) b.addEventListener('
 
 const TEMA_CAMPOS_COR = ['corDestaque', 'corFundo', 'corPainel', 'corPainel2', 'corTexto', 'corSuave', 'corBorda'];
 const TEMA_PADROES = { fundoAjuste: 'cover', fundoOpacidade: 0.35, fundoDesfoque: 0, fonte: '', tamTexto: 100, tamIcone: 100, cantos: 14, densidade: 100,
-  animacao: 'nenhuma', animIntensidade: 60 }; // 🎬 v0.164: o fundo animado do tema
+  animacao: 'nenhuma', ...TEMA_ANIM_PADROES }; // 🎬 v0.164/v0.168: o fundo animado do tema e todas as opções dele (render.js)
 
 function temaAtual() {
   // 🔒 v0.50: o tema da interface é PESSOAL (deste navegador); quem nunca
@@ -5365,6 +5471,20 @@ function fillTema() {
     if (inten && document.activeElement !== inten) inten.value = String(v);
     const rot = document.getElementById('t-animIntensidadeVal');
     if (rot) rot.textContent = v + '%';
+    // 🎬 v0.168: todas as opções da animação (com os limites do render.js)
+    const op = temaAnimOpcoes(t);
+    const por = (id, valor) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = String(valor); const r = document.getElementById(id + 'Val'); if (r) r.textContent = id === 't-animFaixas' ? String(valor) : valor + '%'; };
+    por('t-animVelocidade', op.velocidade); por('t-animQuantidade', op.quantidade); por('t-animTamanho', op.tamanho); por('t-animBrilho', op.brilho);
+    por('t-animRastro', op.rastro); por('t-animVento', op.vento); por('t-animOpacidade', op.opacidade); por('t-painelOpacidade', op.painelOpacidade);
+    por('t-animCintilacao', op.cintilacao); por('t-animCadentes', op.cadentes); por('t-animNebulosa', op.nebulosa); por('t-animFaixas', op.faixas); por('t-animHorizonte', op.horizonte);
+    for (const [id, valor] of [['t-animCamada', op.camada], ['t-animCores', op.cores], ['t-animPontas', op.pontas], ['t-animFlocos', op.flocos], ['t-animFormas', op.formas], ['t-animCor1', op.cor1], ['t-animCor2', op.cor2], ['t-animCor3', op.cor3]]) {
+      const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = String(valor);
+    }
+    const chk = (id, valor) => { const el = document.getElementById(id); if (el) el.checked = !!valor; };
+    chk('t-animReflexo', op.reflexo); chk('t-animSol', op.sol);
+    for (const el of document.querySelectorAll('.t-anim-cor')) el.style.display = op.cores === 'personalizadas' ? '' : 'none';
+    const animAtual = animSel.value;
+    for (const bloco of document.querySelectorAll('#t-animEspecifico [data-anim]')) bloco.style.display = bloco.dataset.anim === animAtual ? '' : 'none';
   }
   // marca o tema pronto correspondente (se as cores baterem)
   const igual = TEMAS_PRONTOS.find((p) => TEMA_CAMPOS_COR.every((c) => (p.tema[c] || '') === (t[c] || '')));
@@ -5406,12 +5526,27 @@ for (const btn of document.querySelectorAll('.tema-limpar')) {
     el.addEventListener('input', () => {
       const rotulo = document.getElementById(id + 'Val');
       if (rotulo) {
-        const sufixo = (campo === 'fundoDesfoque' || campo === 'cantos') ? ' px' : '%';
+        const sufixo = (campo === 'fundoDesfoque' || campo === 'cantos') ? ' px' : campo === 'animFaixas' ? '' : '%';
         rotulo.textContent = el.value + sufixo;
       }
       mandarTema({ [campo]: converte(el.value) });
     });
   };
+  // 🎬 v0.168: as faixas da animação
+  for (const campo of ['animVelocidade', 'animQuantidade', 'animTamanho', 'animBrilho', 'animRastro', 'animVento', 'animOpacidade', 'painelOpacidade', 'animCintilacao', 'animCadentes', 'animNebulosa', 'animFaixas', 'animHorizonte']) ligarFaixa('t-' + campo, campo, (v) => Number(v));
+  for (const [id, campo, converte] of [['t-animCamada', 'animCamada', (v) => v], ['t-animCores', 'animCores', (v) => v], ['t-animPontas', 'animPontas', (v) => Number(v)], ['t-animFlocos', 'animFlocos', (v) => v], ['t-animFormas', 'animFormas', (v) => v], ['t-animCor1', 'animCor1', (v) => v], ['t-animCor2', 'animCor2', (v) => v], ['t-animCor3', 'animCor3', (v) => v]]) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => { mandarTema({ [campo]: converte(el.value) }); if (campo === 'animCores') fillTema(); });
+  }
+  for (const [id, campo] of [['t-animReflexo', 'animReflexo'], ['t-animSol', 'animSol']]) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => mandarTema({ [campo]: el.checked }));
+  }
+  document.getElementById('t-animPadrao').addEventListener('click', () => {
+    // volta só os ajustes (a animação escolhida fica); a intensidade também
+    const padrao = {}; for (const k of TEMA_ANIM_CHAVES) padrao[k] = TEMA_ANIM_PADROES[k];
+    mandarTema(padrao); fillTema();
+  });
   ligarFaixa('t-fundoOpacidade', 'fundoOpacidade', (v) => Number(v) / 100);
   ligarFaixa('t-fundoDesfoque', 'fundoDesfoque', (v) => Number(v));
   ligarFaixa('t-tamTexto', 'tamTexto', (v) => Number(v));
@@ -5421,7 +5556,7 @@ for (const btn of document.querySelectorAll('.tema-limpar')) {
   ligarFaixa('t-animIntensidade', 'animIntensidade', (v) => Number(v)); // 🎬 v0.164
   for (const [id, campo] of [['t-fundoAjuste', 'fundoAjuste'], ['t-fonte', 'fonte'], ['t-fundoImagem', 'fundoImagem'], ['t-animacao', 'animacao']]) {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('input', () => mandarTema({ [campo]: el.value }));
+    if (el) el.addEventListener('input', () => { mandarTema({ [campo]: el.value }); if (campo === 'animacao') fillTema(); });
   }
 }
 
@@ -8245,6 +8380,8 @@ function fotoDoTemaParaDeck() {
   // 🎬 v0.164: a animação do tema viaja na cópia — o celular anima igual
   if (typeof TEMA_ANIMACOES !== 'undefined' && TEMA_ANIMACOES.some((a) => a.id === t.animacao) && t.animacao !== 'nenhuma') foto.animacao = t.animacao;
   if (Number.isFinite(Number(t.animIntensidade))) foto.animIntensidade = Number(t.animIntensidade);
+  // 🎬 v0.168: velocidade, brilho, pontas, cores… — só o que difere do padrão
+  for (const k of TEMA_ANIM_CHAVES) if (k !== 'animIntensidade' && t[k] !== undefined && t[k] !== TEMA_ANIM_PADROES[k]) foto[k] = t[k];
   return foto;
 }
 function mandarDeck(patch) {

@@ -1,4 +1,13 @@
 {
+  "0.168.0": {
+    "titulo": "🎬 Animaciones vívidas y totalmente personalizables — estrellas con el brillo del James Webb, y la animación en cualquier lugar de la pantalla",
+    "itens": [
+      "✨ Estrellas nuevas: núcleo, halo y las puntas de difracción de las fotos del telescopio James Webb (6 grandes en hexágono + 2 cortas — o 4, 8, ninguna), estrellas blancas, azuladas, doradas y anaranjadas centelleando cada una a su ritmo, con destellos de vez en cuando, polvo de estrellas al fondo, estrellas fugaces y una nebulosa de colores a la deriva. Todo con control: puntas, centelleo, fugaces y nebulosa.",
+      "🌌 Todos los efectos quedaron más vivos: la aurora se volvió cortinas de luz ondulando en colores hermanos con estrellitas detrás; la nieve tiene cristales de seis brazos girando en tres profundidades y viento; las burbujas ganaron borde iridiscente, reflejo de luz, balanceo y estallido; la grilla retro ganó el sol rayado en el horizonte, brillo neón y estrellas; el confeti tiene formas (rectángulos, círculos, estrellas, cintas) girando en dos ejes y brillitos.",
+      "🎛️ Control de todo, en 🎨 Temas → 🎬 Animación de fondo: intensidad (el selector de siempre), velocidad, cantidad, tamaño, brillo, estela, viento y los colores — del tema o tres tuyos. Cada efecto tiene sus detalles, y «↺ Animación al estándar» deshace los ajustes. La propia página es la vista previa, y los temas listos animados ya vienen afinados.",
+      "🪟 Dónde aparece la animación: de fábrica queda detrás de todo y los paneles son opacos (100%). Baja la «opacidad de los paneles» para que atraviese tarjetas, columnas y cajas en cualquier lugar de la pantalla, ajusta la opacidad de la propia animación o pon la capa por encima de todo — nunca estorba al ratón. La mini Mesa del celular recibe las mismas opciones en la copia del tema."
+    ]
+  },
   "0.167.2": {
     "titulo": "🗂️ Recoger/expandir estandarizado: ahora también en 🔌 Conexiones y en 🗄️ Logs y datos",
     "itens": [

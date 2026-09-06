@@ -1,4 +1,13 @@
 {
+  "0.168.0": {
+    "titulo": "🎬 Lebendige, komplett anpassbare Animationen — Sterne mit dem James-Webb-Glanz, und die Animation überall auf dem Bildschirm",
+    "itens": [
+      "✨ Neue Sterne: Kern, Halo und die Beugungsspitzen der James-Webb-Teleskopfotos (6 große im Sechseck + 2 kurze — oder 4, 8, keine), weiße, bläuliche, goldene und orange Sterne, die jeder in seinem Rhythmus funkeln, gelegentliche Flares, Sternenstaub im Hintergrund, Sternschnuppen und ein treibender farbiger Nebel. Alles einstellbar: Spitzen, Funkeln, Sternschnuppen und Nebel.",
+      "🌌 Alle Effekte sind lebendiger: die Aurora ist jetzt wogende Lichtvorhänge in Schwesterfarben mit kleinen Sternen dahinter; der Schnee hat sechsarmige Kristalle, die in drei Tiefen rotieren, plus Wind; die Blasen bekamen einen schillernden Rand, Lichtreflex, Schwanken und Zerplatzen; das Retro-Raster bekam die gestreifte Sonne am Horizont, Neonleuchten und Sterne; das Konfetti hat Formen (Rechtecke, Kreise, Sterne, Bänder), die um zwei Achsen rotieren, und Glitzer.",
+      "🎛️ Kontrolle über alles, unter 🎨 Themen → 🎬 Hintergrundanimation: Intensität (der gewohnte Regler), Tempo, Menge, Größe, Leuchten, Spur, Wind und die Farben — vom Thema oder drei eigene. Jeder Effekt hat eigene Details, und „↺ Animation auf Standard“ macht die Anpassungen rückgängig. Die Seite selbst ist die Vorschau, und die animierten fertigen Themen kommen bereits abgestimmt.",
+      "🪟 Wo die Animation erscheint: ab Werk liegt sie hinter allem und die Panels sind deckend (100 %). Senke die „Deckkraft der Panels“, damit sie überall durch Karten, Spalten und Boxen scheint, stelle die Deckkraft der Animation selbst ein oder lege die Ebene über alles — sie stört die Maus nie. Das Handy-Mini-Deck bekommt dieselben Optionen in der Themenkopie."
+    ]
+  },
   "0.167.2": {
     "titulo": "🗂️ Ein-/Ausklappen vereinheitlicht: jetzt auch in 🔌 Verbindungen und 🗄️ Logs & Daten",
     "itens": [

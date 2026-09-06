@@ -1,4 +1,13 @@
 {
+  "0.168.0": {
+    "titulo": "🎬 Animations vives et entièrement personnalisables — des étoiles à l’éclat du James Webb, et l’animation n’importe où sur l’écran",
+    "itens": [
+      "✨ Nouvelles étoiles : cœur, halo et les aigrettes de diffraction des photos du télescope James Webb (6 grandes en hexagone + 2 courtes — ou 4, 8, aucune), des étoiles blanches, bleutées, dorées et orangées scintillant chacune à son rythme, des flares de temps en temps, de la poussière d’étoiles au fond, des étoiles filantes et une nébuleuse colorée à la dérive. Tout se règle : aigrettes, scintillement, filantes et nébuleuse.",
+      "🌌 Tous les effets sont plus vivants : l’aurore est devenue des rideaux de lumière ondulant en couleurs sœurs avec de petites étoiles derrière ; la neige a des cristaux à six branches tournant sur trois profondeurs, et du vent ; les bulles ont gagné un bord irisé, un reflet de lumière, un balancement et l’éclatement ; la grille rétro a gagné le soleil rayé à l’horizon, l’éclat néon et des étoiles ; les confettis ont des formes (rectangles, cercles, étoiles, rubans) tournant sur deux axes et des paillettes.",
+      "🎛️ Contrôle de tout, dans 🎨 Thèmes → 🎬 Animation de fond : intensité (le curseur habituel), vitesse, quantité, taille, éclat, traînée, vent et couleurs — du thème ou trois à vous. Chaque effet a ses détails, et « ↺ Animation par défaut » annule les réglages. La page elle-même est l’aperçu, et les thèmes prêts animés arrivent déjà réglés.",
+      "🪟 Où l’animation apparaît : par défaut elle est derrière tout et les panneaux sont opaques (100 %). Baissez l’« opacité des panneaux » pour qu’elle traverse cartes, colonnes et boîtes n’importe où, réglez l’opacité de l’animation elle-même ou placez la couche par-dessus tout — elle ne gêne jamais la souris. Le mini Deck du téléphone reçoit les mêmes options dans la copie du thème."
+    ]
+  },
   "0.167.2": {
     "titulo": "🗂️ Replier/déplier standardisé : désormais aussi dans 🔌 Connexions et 🗄️ Journaux et données",
     "itens": [
