@@ -1301,6 +1301,16 @@ function aplicarTema(tema) {
       const n = parseInt(m[1], 16);
       raiz.style.setProperty(cssVar, `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${pct / 100})`);
     }
+    // v0.168.2: as colunas do painel (Unificado, YouTube, Twitch…) pintam o
+    // fundo da página (--bg) por cima da animação — elas seguem a opacidade
+    // dos painéis por --bg-painel (sem o ajuste, a variável nem existe)
+    const pctCol = num(t.painelOpacidade, 20, 100, 100);
+    if (pctCol >= 100) raiz.style.removeProperty('--bg-painel');
+    else {
+      const base = typeof t.corFundo === 'string' && /^#[0-9a-f]{6}$/i.test(t.corFundo) ? t.corFundo : (getComputedStyle(raiz).getPropertyValue('--bg').trim() || '');
+      const m = /^#([0-9a-f]{6})$/i.exec(base);
+      if (m) { const n = parseInt(m[1], 16); raiz.style.setProperty('--bg-painel', `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${pctCol / 100})`); }
+    }
   }
 
   // Imagem de fundo do programa (só das mídias enviadas)

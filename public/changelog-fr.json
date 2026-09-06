@@ -1,4 +1,10 @@
 {
+  "0.168.2": {
+    "titulo": "🪟 Les colonnes du panneau deviennent translucides aussi",
+    "itens": [
+      "🪟 Les colonnes du panneau (Unifié, YouTube, Twitch…) et l’onglet actif peignaient le fond de la page par-dessus l’animation et restaient opaques même avec l’opacité des panneaux baissée — elles suivent désormais le même curseur. Panneaux et cartes baissés, l’animation traverse tout le panneau."
+    ]
+  },
   "0.168.1": {
     "titulo": "🪟 Opacité des cartes — le même curseur que les panneaux, désormais aussi pour les cartes et les commentaires",
     "itens": [

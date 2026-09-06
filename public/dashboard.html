@@ -350,7 +350,7 @@
   .live-columns { display: flex; gap: 10px; height: 100%; overflow-x: auto; padding: 4px; }
   .live-col {
     flex: 1 1 0; min-width: 230px; display: flex; flex-direction: column;
-    border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 10px; background: var(--bg-painel, var(--bg)); /* 🪟 v0.168.2: segue a opacidade dos painéis */
     overflow: hidden;
   }
   .live-col-head {
@@ -539,7 +539,7 @@
   }
   .tab:hover { color: var(--text); filter: none; }
   .tab.active {
-    background: var(--bg); color: var(--text);
+    background: var(--bg-painel, var(--bg)); color: var(--text);
     border-color: var(--border);
     position: relative; top: 1px;
   }

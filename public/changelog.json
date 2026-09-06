@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.168.2",
+    "titulo": "🪟 As colunas do painel também ficam translúcidas",
+    "itens": [
+      "🪟 As colunas do painel (Unificado, YouTube, Twitch…) e a aba ativa pintavam o fundo da página por cima da animação e ficavam opacas mesmo com a opacidade dos painéis lá embaixo — agora seguem o mesmo seletor. Com painéis e cartões baixos, a animação atravessa o painel inteiro."
+    ]
+  },
+  {
     "version": "0.168.1",
     "titulo": "🪟 Opacidade dos cartões — o mesmo seletor dos painéis, agora também para os cards e os comentários",
     "itens": [

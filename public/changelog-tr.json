@@ -1,4 +1,10 @@
 {
+  "0.168.2": {
+    "titulo": "🪟 Panel sütunları da yarı saydam oluyor",
+    "itens": [
+      "🪟 Panel sütunları (Birleşik, YouTube, Twitch…) ve etkin sekme, sayfa arka planını animasyonun üstüne boyuyor ve panel opaklığı düşük olsa bile opak kalıyordu — artık aynı kaydırıcıyı izliyorlar. Paneller ve kartlar düşükken animasyon panelin tamamından geçiyor."
+    ]
+  },
   "0.168.1": {
     "titulo": "🪟 Kart opaklığı — panellerdeki aynı kaydırıcı, artık kartlar ve yorumlar için de",
     "itens": [

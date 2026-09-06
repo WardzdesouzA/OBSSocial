@@ -1,4 +1,10 @@
 {
+  "0.168.2": {
+    "titulo": "🪟 The panel columns turn translucent too",
+    "itens": [
+      "🪟 The panel columns (Unified, YouTube, Twitch…) and the active tab painted the page background over the animation and stayed opaque even with the panel opacity turned down — now they follow the same slider. With panels and cards lowered, the animation shines through the whole panel."
+    ]
+  },
   "0.168.1": {
     "titulo": "🪟 Card opacity — the same slider as the panels, now for the cards and comments too",
     "itens": [
