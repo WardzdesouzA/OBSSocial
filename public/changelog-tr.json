@@ -1,4 +1,13 @@
 {
+  "0.164.0": {
+    "titulo": "🎬 Tüm OBS Social’da hareketli temalar — bilgisayar ve telefonda tek tema listesi",
+    "itens": [
+      "🎬 Mini Mesa’nın altı hareketli teması (🌌 Aurora, ✨ Yıldızlı gökyüzü, 🎄 Karlı Noel, 🫧 Baloncuklar, 🕹️ Retro ızgaralı 80’ler, 🎉 Konfetili Parti) artık tüm programı giydiriyor: panel ve ayarlar, kartların arkasında hareket eden arka planı kazanıyor. 🎨 Temalar sekmesinde 🎬 işaretli hazır temalar animasyonuyla geliyor; yeni 🎬 Arka plan animasyonu seçicisi (yoğunlukla) herhangi birini herhangi bir temanın üstüne koyuyor — ya da kapatıyor. ♿ “animasyonları azalt” her şeyi durdurur.",
+      "🎨 Tek liste: OBS Social’ın 10 teması ve 6 hareketli tema artık iki tarafta da aynı liste. Mini Mesa “özel” modda 16’sını sunuyor (Georgia yazı tipli 📜 Kağıt, ⚡ Yüksek kontrast, 👾 Retro…), “OBS Social ile aynı” modda ise tema kopyası animasyonu ve yoğunluğu da taşıyor — telefon bilgisayar gibi hareket ediyor, bilgisayarda değiştirmek telefonu anında değiştiriyor.",
+      "📱 Mini Mesa’da zaten özel teması olanlar onu koruyor (Grafit 🌙 Varsayılan oldu, Neon 🌸 Neon pembe oldu, Kor OBS Social’ın 🔥 Kor’u oldu); telefonun 🕹️ Retro’su, alışıldık 👾 Retro ile karışmasın diye artık 80’ler.",
+      "🛠️ Hazır tema yüklemek artık renk, köşe ve animasyon denetimlerini anında güncelliyor; temayı dosyaya kaydetmek/yüklemek animasyonu da içeriyor."
+    ]
+  },
   "0.163.0": {
     "titulo": "📱 Mini Mesa de Trilhas: telefon veya tablette Mesa, hareketli temalarla",
     "itens": [

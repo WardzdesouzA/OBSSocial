@@ -1,4 +1,13 @@
 {
+  "0.164.0": {
+    "titulo": "🎬 Temas animados en todo OBS Social — y la misma lista de temas en la computadora y el celular",
+    "itens": [
+      "🎬 Los seis temas animados del mini Mesa (🌌 Aurora, ✨ Cielo estrellado, 🎄 Navidad con nieve, 🫧 Burbujas, 🕹️ Años 80 con cuadrícula retro, 🎉 Fiesta con confeti) ahora visten todo el programa: el panel y la configuración ganan el fondo que se mueve detrás de las tarjetas. En la pestaña 🎨 Temas, los listos marcados con 🎬 ya traen su animación, y el nuevo selector 🎬 Animación de fondo (con intensidad) pone cualquiera por encima de cualquier tema — o la apaga. ♿ «reducir animaciones» detiene todo.",
+      "🎨 Una sola lista: los 10 temas de OBS Social y los 6 animados pasaron a ser la misma lista en los dos lados. El mini Mesa en modo «propio» ofrece los 16 (📜 Papel con la fuente Georgia, ⚡ Alto contraste, 👾 Retro…), y en modo «igual que OBS Social» la copia del tema lleva la animación y la intensidad — el celular anima igual que la computadora, y cambiar en la computadora cambia en el celular al instante.",
+      "📱 Quien ya tenía un tema propio en el mini Mesa lo conserva (Grafito pasó a ser 🌙 Padrão, Neón pasó a 🌸 Rosa neón, Brasa pasó a la 🔥 Brasa de OBS Social); el 🕹️ Retro del celular ahora se llama Años 80, para no confundirse con el 👾 Retro de siempre.",
+      "🛠️ Cargar un tema listo ahora actualiza al instante los controles de colores, esquinas y animación; guardar/cargar un tema en archivo incluye la animación."
+    ]
+  },
   "0.163.0": {
     "titulo": "📱 Mini Mesa de Trilhas: la Mesa en el celular o la tablet, con temas animados",
     "itens": [

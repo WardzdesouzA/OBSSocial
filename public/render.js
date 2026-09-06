@@ -1208,6 +1208,36 @@ function aplicarTema(tema) {
     camada.remove();
   }
   garantirCssTema();
+  aplicarAnimacaoDoTema(t);
+}
+
+// 🎬 v0.164: o fundo animado do tema (painel + configurações) — o mesmo
+// motor do mini Mesa, num <canvas> atrás de tudo (por cima da imagem de
+// fundo). Sem animação, o canvas nem é criado.
+function aplicarAnimacaoDoTema(t) {
+  if (typeof document === 'undefined' || !document.body || typeof criarAnimadorFundo !== 'function') return;
+  const anim = typeof TEMA_ANIMACOES !== 'undefined' && TEMA_ANIMACOES.some((a) => a.id === t.animacao) ? t.animacao : 'nenhuma';
+  let canvas = document.getElementById('obs-tema-anim');
+  if (anim === 'nenhuma') {
+    // o canvas fica (escondido) — criar e jogar fora a cada troca vazava
+    // ouvintes de resize/visibilidade e um bitmap do tamanho da tela
+    if (aplicarAnimacaoDoTema.motor) aplicarAnimacaoDoTema.motor.aplicar('nenhuma', 60, {});
+    if (canvas) canvas.hidden = true;
+    return;
+  }
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'obs-tema-anim';
+    canvas.style.cssText = 'position:fixed;inset:0;z-index:-1;pointer-events:none;';
+    document.body.appendChild(canvas);
+    aplicarAnimacaoDoTema.motor = null;
+  }
+  canvas.hidden = false;
+  if (!aplicarAnimacaoDoTema.motor) aplicarAnimacaoDoTema.motor = criarAnimadorFundo(canvas);
+  const cs = getComputedStyle(document.documentElement);
+  const cor = (v, padrao) => { const x = cs.getPropertyValue(v).trim(); return /^#[0-9a-f]{6}$/i.test(x) ? x : padrao; };
+  const n = Number(t.animIntensidade);
+  aplicarAnimacaoDoTema.motor.aplicar(anim, Number.isFinite(n) ? n : 60, { destaque: cor('--accent', '#7c3aed'), texto: cor('--text', '#e6edf3'), fundo: cor('--bg', '#0d1117') });
 }
 
 function garantirCssTema() {
@@ -1216,7 +1246,7 @@ function garantirCssTema() {
   style.id = 'obs-tema-css';
   style.textContent = `
     #obs-tema-fundo {
-      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      position: fixed; inset: 0; z-index: -2; pointer-events: none; /* 🎬 v0.164: atrás do canvas da animação (-1) */
       background-color: transparent;
     }
     body { font-family: var(--tema-fonte, var(--font-family, 'Segoe UI', system-ui, sans-serif)); }
@@ -2187,27 +2217,66 @@ function montarBotaoTrilha(t, opts = {}) {
 })();
 
 // ---------------------------------------------------------------------------
-// 📱 v0.163: os temas do mini Mesa de Trilhas (/deck — a Mesa no celular ou
-// tablet). Cada tema traz as cores e a animação de fundo que combina com ele
-// ('nenhuma' nos parados). A lista vale nas configurações (o card 📱) e na
-// própria página do celular — mudar aqui muda nos dois.
-const DECK_TEMAS = [
-  { id: 'grafite', nome: '🪨 Grafite', anim: 'nenhuma', fundo: '#14161c', barra: '#1d2029', tecla: '#232733', texto: '#e8eaf0', suave: '#8b94a6', borda: '#343a4a', destaque: '#7c4dff' },
-  { id: 'neon', nome: '💜 Neon', anim: 'nenhuma', fundo: '#0b0614', barra: '#150c26', tecla: '#1c1030', texto: '#f3e9ff', suave: '#a58cc9', borda: '#4c2a7a', destaque: '#d946ef' },
-  { id: 'oceano', nome: '🌊 Oceano', anim: 'nenhuma', fundo: '#06192b', barra: '#0b2540', tecla: '#0f3050', texto: '#e2f3ff', suave: '#7fa6c3', borda: '#1f5a7a', destaque: '#22b8cf' },
-  { id: 'floresta', nome: '🌲 Floresta', anim: 'nenhuma', fundo: '#0b1a12', barra: '#11261b', tecla: '#163223', texto: '#e6f4ea', suave: '#86a894', borda: '#2a5a3c', destaque: '#34c759' },
-  { id: 'brasa', nome: '🔥 Brasa', anim: 'nenhuma', fundo: '#1c0d08', barra: '#2a1510', tecla: '#3a1c14', texto: '#ffece4', suave: '#c48a72', borda: '#6b3423', destaque: '#ff6b2b' },
-  { id: 'claro', nome: '☀️ Claro', anim: 'nenhuma', fundo: '#eef1f6', barra: '#ffffff', tecla: '#ffffff', texto: '#1a2330', suave: '#5c6b7f', borda: '#d5dbe5', destaque: '#7c3aed' },
+// 🎨 v0.164: os temas prontos do OBS Social — UMA lista para o painel, as
+// configurações e o mini Mesa do celular (/deck). Cada tema traz as cores
+// (campo vazio = a cor de fábrica do modo claro/escuro), cantos/fonte e a
+// animação de fundo que combina com ele ('nenhuma' nos parados). Os seis
+// animados nasceram no mini Mesa (v0.163) e agora vestem o programa inteiro.
+const TEMAS_PRONTOS = [
+  // 🌙 O Padrão não guarda cores (ele LIMPA as suas, e o programa volta às
+  // de fábrica) — «amostra» existe só para o cartão mostrar quais são elas,
+  // as mesmas do :root do painel e das configurações
+  { id: 'padrao', nome: '🌙 Padrão', tema: {}, amostra: {
+    corFundo: '#0d1117', corPainel: '#161b22', corPainel2: '#1c2330', corDestaque: '#7c3aed', corTexto: '#e6edf3' } },
+  { id: 'roxo', nome: '🟣 Roxo profundo', tema: {
+    corFundo: '#140b1f', corPainel: '#1e1030', corPainel2: '#2a1743', corTexto: '#f0e7ff',
+    corSuave: '#a992c9', corBorda: '#3d2359', corDestaque: '#a855f7', cantos: 18 } },
+  { id: 'oceano', nome: '🌊 Oceano', tema: {
+    corFundo: '#08131f', corPainel: '#0e2033', corPainel2: '#132c45', corTexto: '#e3f2fd',
+    corSuave: '#8bb0cc', corBorda: '#1d3d5c', corDestaque: '#22a6f0', cantos: 16 } },
+  { id: 'floresta', nome: '🌲 Floresta', tema: {
+    corFundo: '#0b1712', corPainel: '#12241c', corPainel2: '#1a3327', corTexto: '#e6f5ec',
+    corSuave: '#95bda6', corBorda: '#234634', corDestaque: '#2ecc71', cantos: 14 } },
+  { id: 'fogo', nome: '🔥 Brasa', tema: {
+    corFundo: '#1a0d08', corPainel: '#2a150d', corPainel2: '#3a1d12', corTexto: '#ffeee4',
+    corSuave: '#d0a48e', corBorda: '#4d2718', corDestaque: '#ff6b35', cantos: 12 } },
+  { id: 'rosa', nome: '🌸 Rosa neon', tema: {
+    corFundo: '#160a14', corPainel: '#241021', corPainel2: '#33172e', corTexto: '#ffe9f7',
+    corSuave: '#c795b7', corBorda: '#482240', corDestaque: '#ff2d95', cantos: 20 } },
+  { id: 'claro', nome: '☀️ Claro suave', tema: {
+    corFundo: '#f4f6fb', corPainel: '#ffffff', corPainel2: '#eef1f7', corTexto: '#1a2330',
+    corSuave: '#5c6b7f', corBorda: '#dde3ec', corDestaque: '#4f46e5', cantos: 16 } },
+  { id: 'papel', nome: '📜 Papel', tema: {
+    corFundo: '#f5efe2', corPainel: '#fffaf0', corPainel2: '#efe6d5', corTexto: '#2f2a22',
+    corSuave: '#7a6f5d', corBorda: '#ddd0b8', corDestaque: '#b8860b', fonte: 'Georgia', cantos: 8 } },
+  { id: 'contraste', nome: '⚡ Alto contraste', tema: {
+    corFundo: '#000000', corPainel: '#0d0d0d', corPainel2: '#1a1a1a', corTexto: '#ffffff',
+    corSuave: '#cccccc', corBorda: '#555555', corDestaque: '#ffe600', tamTexto: 110, cantos: 4 } },
+  { id: 'retro8bit', nome: '👾 Retrô', tema: {
+    corFundo: '#0b0f0b', corPainel: '#111a11', corPainel2: '#16241a', corTexto: '#9dff9d',
+    corSuave: '#5fa05f', corBorda: '#1f3a24', corDestaque: '#39ff14', fonte: 'Courier New', cantos: 2 } },
   // 🎬 os animados: o fundo se mexe (a animação pode ser trocada ou desligada)
-  { id: 'aurora', nome: '🌌 Aurora', anim: 'aurora', fundo: '#070b1a', barra: '#0e1530', tecla: '#131b3a', texto: '#eaf0ff', suave: '#8fa0d0', borda: '#2b3a70', destaque: '#4dd0e1' },
-  { id: 'estrelas', nome: '✨ Céu estrelado', anim: 'estrelas', fundo: '#05070f', barra: '#0c1020', tecla: '#12172a', texto: '#f0f2ff', suave: '#8890b0', borda: '#2c3350', destaque: '#ffd166' },
-  { id: 'natal', nome: '🎄 Natal', anim: 'neve', fundo: '#0f2a1a', barra: '#163a24', tecla: '#1d4a2e', texto: '#fff8f0', suave: '#9fc7ac', borda: '#2f6b43', destaque: '#e53935' },
-  { id: 'bolhas', nome: '🫧 Bolhas', anim: 'bolhas', fundo: '#062a3a', barra: '#0a3a50', tecla: '#0f4a66', texto: '#e8fbff', suave: '#86bfd0', borda: '#1f6f8f', destaque: '#38bdf8' },
-  { id: 'retro', nome: '🕹️ Retrô', anim: 'grade', fundo: '#12021f', barra: '#1c0530', tecla: '#2a0a4a', texto: '#ffe9ff', suave: '#c58fd6', borda: '#6a1f9a', destaque: '#ff2fb9' },
-  { id: 'festa', nome: '🎉 Festa', anim: 'confete', fundo: '#17111f', barra: '#221a2e', tecla: '#2c2140', texto: '#fff4e0', suave: '#b8a5c9', borda: '#4d3a66', destaque: '#ffb300' },
+  { id: 'aurora', nome: '🌌 Aurora', tema: {
+    corFundo: '#070b1a', corPainel: '#0e1530', corPainel2: '#131b3a', corTexto: '#eaf0ff',
+    corSuave: '#8fa0d0', corBorda: '#2b3a70', corDestaque: '#4dd0e1', cantos: 16, animacao: 'aurora' } },
+  { id: 'estrelas', nome: '✨ Céu estrelado', tema: {
+    corFundo: '#05070f', corPainel: '#0c1020', corPainel2: '#12172a', corTexto: '#f0f2ff',
+    corSuave: '#8890b0', corBorda: '#2c3350', corDestaque: '#ffd166', cantos: 14, animacao: 'estrelas' } },
+  { id: 'natal', nome: '🎄 Natal', tema: {
+    corFundo: '#0f2a1a', corPainel: '#163a24', corPainel2: '#1d4a2e', corTexto: '#fff8f0',
+    corSuave: '#9fc7ac', corBorda: '#2f6b43', corDestaque: '#e53935', cantos: 14, animacao: 'neve' } },
+  { id: 'bolhas', nome: '🫧 Bolhas', tema: {
+    corFundo: '#062a3a', corPainel: '#0a3a50', corPainel2: '#0f4a66', corTexto: '#e8fbff',
+    corSuave: '#86bfd0', corBorda: '#1f6f8f', corDestaque: '#38bdf8', cantos: 20, animacao: 'bolhas' } },
+  { id: 'retro', nome: '🕹️ Anos 80', tema: {
+    corFundo: '#12021f', corPainel: '#1c0530', corPainel2: '#2a0a4a', corTexto: '#ffe9ff',
+    corSuave: '#c58fd6', corBorda: '#6a1f9a', corDestaque: '#ff2fb9', cantos: 10, animacao: 'grade' } },
+  { id: 'festa', nome: '🎉 Festa', tema: {
+    corFundo: '#17111f', corPainel: '#221a2e', corPainel2: '#2c2140', corTexto: '#fff4e0',
+    corSuave: '#b8a5c9', corBorda: '#4d3a66', corDestaque: '#ffb300', cantos: 16, animacao: 'confete' } },
 ];
-const DECK_ANIMACOES = [
-  { id: 'tema', nome: '✨ A do tema' },
+// As animações de fundo (a mesma lista no card 🎨 Temas e no mini Mesa)
+const TEMA_ANIMACOES = [
   { id: 'nenhuma', nome: '⏹ Nenhuma' },
   { id: 'aurora', nome: '🌌 Aurora' },
   { id: 'estrelas', nome: '✨ Estrelas' },
@@ -2216,23 +2285,41 @@ const DECK_ANIMACOES = [
   { id: 'grade', nome: '🕹️ Grade retrô' },
   { id: 'confete', nome: '🎉 Confete' },
 ];
-const deckTemaInfo = (id) => DECK_TEMAS.find((t) => t.id === id) || DECK_TEMAS[0];
+const temaAnimacaoOk = (id) => TEMA_ANIMACOES.some((a) => a.id === id);
+// 📱 o mini Mesa: 'tema' = a animação que o tema traz
+const DECK_ANIMACOES = [{ id: 'tema', nome: '✨ A do tema' }, ...TEMA_ANIMACOES];
+// A mesma lista, na forma que o mini Mesa desenha (fundo/barra/tecla...).
+// As cores de fábrica entram onde o tema não define (o 🌙 Padrão).
+const DECK_TEMAS = TEMAS_PRONTOS.map((p) => {
+  const t = p.tema || {};
+  return {
+    id: p.id, nome: p.nome, anim: t.animacao || 'nenhuma',
+    fundo: t.corFundo || '#0d1117', barra: t.corPainel || '#161b22', tecla: t.corPainel2 || '#1c2330',
+    texto: t.corTexto || '#e6edf3', suave: t.corSuave || '#8b98a8', borda: t.corBorda || '#2d3748',
+    destaque: t.corDestaque || '#7c3aed', cantos: Number.isFinite(Number(t.cantos)) ? Number(t.cantos) : 14, fonte: t.fonte || '',
+  };
+});
+// os nomes que o mini Mesa usava antes da lista única (v0.163)
+const DECK_TEMAS_ANTIGOS = { grafite: 'padrao', neon: 'rosa', brasa: 'fogo' };
+const deckTemaInfo = (id) => DECK_TEMAS.find((t) => t.id === (DECK_TEMAS_ANTIGOS[id] || id)) || DECK_TEMAS[0];
 
 // Do bloco deck das configurações (mais, opcionalmente, o ajuste só deste
 // aparelho) para a cara efetiva: cores, animação, intensidade, cantos e fonte.
 // No modo 'obs' a cara é a cópia do tema pessoal do OBS Social gravada pelas
-// configurações (temaObs); no 'proprio', um tema desta lista com as cores
-// extras por cima. A animação 'tema' é a que o tema traz (nenhuma no 'obs').
+// configurações (temaObs — animação inclusa); no 'proprio', um tema da lista
+// com as cores extras por cima. A animação 'tema' é a que o tema traz.
 function deckResolverTema(conf, ajuste) {
   const d = { ...(conf || {}), ...(ajuste || {}) };
   const hex = (v) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : '');
   const extra = (conf && conf.cores) || {};
-  let cores, animBase, cantos = 14, fonte = '', nome = '';
+  let cores, animBase, cantos = 14, fonte = '', nome = '', intensidadeBase = null;
   if (d.tema === 'proprio') {
     const t = deckTemaInfo(d.temaProprio);
     nome = t.nome;
     cores = { fundo: t.fundo, barra: t.barra, tecla: t.tecla, texto: t.texto, suave: t.suave, borda: t.borda, destaque: t.destaque };
     animBase = t.anim;
+    cantos = t.cantos;
+    fonte = t.fonte;
   } else {
     const o = (conf && conf.temaObs) || {};
     nome = o.nome || '';
@@ -2241,7 +2328,9 @@ function deckResolverTema(conf, ajuste) {
       texto: hex(o.corTexto) || '#e6edf3', suave: hex(o.corSuave) || '#8b98a8', borda: hex(o.corBorda) || '#2d3748',
       destaque: hex(o.corDestaque) || '#7c3aed',
     };
-    animBase = 'nenhuma';
+    animBase = temaAnimacaoOk(o.animacao) ? o.animacao : 'nenhuma';
+    const ni = Number(o.animIntensidade);
+    if (Number.isFinite(ni)) intensidadeBase = Math.max(10, Math.min(100, ni));
     const c = Number(o.cantos);
     if (Number.isFinite(c)) cantos = Math.max(0, Math.min(28, c));
     fonte = typeof o.fonte === 'string' ? o.fonte : '';
@@ -2254,14 +2343,181 @@ function deckResolverTema(conf, ajuste) {
     if (hex(extra.texto)) cores.texto = extra.texto;
     if (hex(extra.destaque)) cores.destaque = extra.destaque;
   }
-  const animacao = d.animacao && d.animacao !== 'tema' ? d.animacao : animBase;
+  const segueTema = !d.animacao || d.animacao === 'tema';
+  const animacao = segueTema ? animBase : d.animacao;
   const n = Number(d.intensidade);
   return {
     modo: d.tema === 'proprio' ? 'proprio' : 'obs', nome, cores,
-    animacao: DECK_ANIMACOES.some((a) => a.id === animacao) && animacao !== 'tema' ? animacao : 'nenhuma',
-    intensidade: Number.isFinite(n) ? Math.max(10, Math.min(100, n)) : 60,
+    animacao: temaAnimacaoOk(animacao) ? animacao : 'nenhuma',
+    // no modo «igual ao OBS Social» seguindo o tema, a intensidade também é a dele
+    intensidade: segueTema && intensidadeBase !== null ? intensidadeBase : (Number.isFinite(n) ? Math.max(10, Math.min(100, n)) : 60),
     cantos, fonte,
   };
+}
+
+// ---------------------------------------------------------------------------
+// 🎬 v0.164: o fundo animado (aurora, estrelas, neve, bolhas, grade, confete)
+// desenhado num <canvas> — o mesmo motor no painel, nas configurações e no
+// mini Mesa. ~30 quadros por segundo, meia resolução na aurora, para com a
+// aba escondida e com ♿ «reduzir animações» / prefers-reduced-motion.
+function criarAnimadorFundo(canvas) {
+  const ctx = canvas.getContext('2d');
+  let efeito = 'nenhuma';
+  let forca = 0.6;
+  let cores = { destaque: '#7c4dff', texto: '#ffffff', fundo: '#14161c', particula: '#ffffff' };
+  let claro = false; // fundo claro: partículas na cor de destaque, aurora escurecendo
+  let itens = [];
+  let rodando = false;
+  let ultimo = 0;
+  let W = 0, H = 0, escala = 1;
+  const reduzido = () => document.body.classList.contains('a11y-sem-animacao')
+    || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const hexRgb = (h) => { const m = /^#([0-9a-f]{6})$/i.exec(h || ''); const n = m ? parseInt(m[1], 16) : 0x7c4dff; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const rgba = (h, a) => { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${a})`; };
+  function medirCanvas() {
+    escala = Math.min(1.5, window.devicePixelRatio || 1);
+    // os efeitos pesados desenham em meia resolução: barato na bateria
+    if (efeito === 'aurora') escala = Math.min(escala, 0.5);
+    W = Math.max(1, Math.round(innerWidth * escala));
+    H = Math.max(1, Math.round(innerHeight * escala));
+    canvas.width = W; canvas.height = H;
+    // o canvas é fixo em inset:0 — em % ele acompanha até o 🔍 zoom do painel
+    // (body.style.zoom), em que um tamanho em px cobriria só parte da tela
+    canvas.style.width = '100%'; canvas.style.height = '100%';
+  }
+  function semear() {
+    itens = [];
+    const n = Math.round(20 + forca * 90);
+    const rnd = Math.random;
+    if (efeito === 'estrelas') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 0.6 + rnd() * 1.6, f: rnd() * 6.28, v: 0.4 + rnd() * 1.4 });
+    if (efeito === 'neve') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), r: 1 + rnd() * 2.6, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
+    if (efeito === 'bolhas') for (let i = 0; i < n * 0.5; i++) itens.push({ x: rnd(), y: rnd(), r: 3 + rnd() * 14, v: 0.02 + rnd() * 0.05, s: rnd() * 6.28 });
+    if (efeito === 'confete') for (let i = 0; i < n; i++) itens.push({ x: rnd(), y: rnd(), w: 4 + rnd() * 6, h: 2 + rnd() * 4, v: 0.04 + rnd() * 0.08, a: rnd() * 6.28, va: (rnd() - 0.5) * 4, c: i % 5 });
+    if (efeito === 'aurora') for (let i = 0; i < 4; i++) itens.push({ f: rnd() * 6.28, f2: rnd() * 6.28, r: 0.35 + rnd() * 0.3 });
+  }
+  const PALETA_CONFETE = ['#ff5c5c', '#ffb300', '#4da3ff', '#43a047', '#ec407a'];
+  function desenhar(t, dt) {
+    ctx.clearRect(0, 0, W, H);
+    const seg = t / 1000;
+    if (efeito === 'aurora') {
+      ctx.globalCompositeOperation = claro ? 'multiply' : 'lighter';
+      itens.forEach((a, i) => {
+        const cx = (0.5 + 0.45 * Math.sin(seg * 0.13 + a.f)) * W;
+        const cy = (0.45 + 0.4 * Math.cos(seg * 0.1 + a.f2)) * H;
+        const r = a.r * Math.max(W, H);
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        const cor = i % 2 ? cores.destaque : cores.particula;
+        g.addColorStop(0, rgba(cor, 0.16 * forca + 0.05));
+        g.addColorStop(1, rgba(cor, 0));
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      });
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (efeito === 'estrelas') {
+      for (const s of itens) {
+        const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(seg * s.v + s.f));
+        ctx.fillStyle = rgba(s.f < 1 ? cores.destaque : cores.particula, a * (0.35 + forca * 0.6));
+        ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r * escala, 0, 6.28); ctx.fill();
+      }
+    } else if (efeito === 'neve') {
+      ctx.fillStyle = rgba(cores.particula, 0.5 + forca * 0.4);
+      for (const f of itens) {
+        f.y += f.v * dt * (0.5 + forca) * 0.06; f.s += dt * 0.001;
+        if (f.y > 1.05) { f.y = -0.05; f.x = Math.random(); }
+        const x = (f.x + Math.sin(f.s) * 0.02) * W;
+        ctx.beginPath(); ctx.arc(x, f.y * H, f.r * escala, 0, 6.28); ctx.fill();
+      }
+    } else if (efeito === 'bolhas') {
+      ctx.lineWidth = 1.2 * escala;
+      for (const b of itens) {
+        b.y -= b.v * dt * (0.5 + forca) * 0.05; b.s += dt * 0.0015;
+        if (b.y < -0.08) { b.y = 1.08; b.x = Math.random(); }
+        const x = (b.x + Math.sin(b.s) * 0.015) * W;
+        ctx.strokeStyle = rgba(cores.destaque, 0.3 + forca * 0.5);
+        ctx.fillStyle = rgba(cores.destaque, 0.05 + forca * 0.1);
+        ctx.beginPath(); ctx.arc(x, b.y * H, b.r * escala, 0, 6.28); ctx.fill(); ctx.stroke();
+      }
+    } else if (efeito === 'grade') {
+      // a grade em perspectiva correndo para a pessoa (sintetizador anos 80)
+      const horizonte = H * 0.42;
+      const g = ctx.createLinearGradient(0, horizonte, 0, H);
+      g.addColorStop(0, rgba(cores.destaque, 0.02)); g.addColorStop(1, rgba(cores.destaque, 0.12 * forca + 0.04));
+      ctx.fillStyle = g; ctx.fillRect(0, horizonte, W, H - horizonte);
+      ctx.strokeStyle = rgba(cores.destaque, 0.25 + forca * 0.5); ctx.lineWidth = 1 * escala;
+      const passo = (seg * (0.3 + forca * 0.8)) % 1;
+      for (let i = 0; i < 12; i++) {
+        const f = ((i + passo) / 12);
+        const y = horizonte + (H - horizonte) * f * f;
+        ctx.globalAlpha = 0.2 + f * 0.8;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      for (let i = -8; i <= 8; i++) {
+        ctx.beginPath(); ctx.moveTo(W / 2 + i * W * 0.04, horizonte); ctx.lineTo(W / 2 + i * W * 0.28, H); ctx.stroke();
+      }
+      ctx.strokeStyle = rgba(cores.particula, 0.25);
+      ctx.beginPath(); ctx.moveTo(0, horizonte); ctx.lineTo(W, horizonte); ctx.stroke();
+    } else if (efeito === 'confete') {
+      for (const c of itens) {
+        c.y += c.v * dt * (0.4 + forca) * 0.05; c.a += c.va * dt * 0.001;
+        if (c.y > 1.06) { c.y = -0.06; c.x = Math.random(); }
+        ctx.save();
+        ctx.translate((c.x + Math.sin(c.a) * 0.01) * W, c.y * H);
+        ctx.rotate(c.a);
+        ctx.fillStyle = rgba(PALETA_CONFETE[c.c], 0.55 + forca * 0.4);
+        ctx.fillRect(-c.w * escala / 2, -c.h * escala / 2, c.w * escala, c.h * escala);
+        ctx.restore();
+      }
+    }
+  }
+  let raf = 0; // o quadro pendente — desligar cancela de verdade (sem dois laços ao mesmo tempo)
+  function laco(t) {
+    if (!rodando) return;
+    raf = requestAnimationFrame(laco);
+    // ~30 quadros por segundo bastam (e poupam a bateria)
+    if (t - ultimo < 32) return;
+    const dt = Math.min(100, t - ultimo || 16);
+    ultimo = t;
+    desenhar(t, dt);
+  }
+  function ligar() {
+    if (rodando) return;
+    if (efeito === 'nenhuma' || reduzido() || document.hidden) return;
+    rodando = true;
+    ultimo = 0;
+    raf = requestAnimationFrame(laco);
+  }
+  function desligar() {
+    rodando = false;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    ctx.clearRect(0, 0, W, H);
+  }
+  function aplicar(novoEfeito, intensidade, novasCores) {
+    // o servidor manda «settings» por qualquer ajuste do painel: só um efeito
+    // NOVO re-sorteia as partículas — intensidade e cores mudam no que já
+    // está na tela (a prévia do slider escala em vez de piscar)
+    const mudou = (novoEfeito || 'nenhuma') !== efeito;
+    efeito = novoEfeito || 'nenhuma';
+    forca = Math.max(0.1, Math.min(1, (Number(intensidade) || 60) / 100));
+    cores = { ...cores, ...(novasCores || {}) };
+    // 🎨 v0.164: num tema CLARO (Papel, Claro suave) a neve e as estrelas na
+    // cor do texto viravam sujeira preta — nesses, as partículas usam a cor
+    // de destaque e a aurora escurece em vez de clarear
+    {
+      const [r, g, b] = hexRgb(cores.fundo);
+      claro = 0.299 * r + 0.587 * g + 0.114 * b >= 140;
+      cores.particula = claro ? cores.destaque : cores.texto;
+    }
+    if (mudou || !itens.length) { medirCanvas(); semear(); }
+    if (efeito === 'nenhuma' || reduzido()) { desligar(); return; }
+    if (mudou) desligar();
+    ligar();
+  }
+  window.addEventListener('resize', () => { if (efeito !== 'nenhuma') { medirCanvas(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) desligar(); else ligar(); });
+  // ♿ o «reduzir movimento» do sistema mudou com a página aberta: obedece na hora
+  try { const mq = matchMedia('(prefers-reduced-motion: reduce)'); if (mq && mq.addEventListener) mq.addEventListener('change', () => { if (reduzido()) desligar(); else ligar(); }); } catch { /* sem matchMedia */ }
+  return { aplicar, ligar, desligar, get efeito() { return efeito; }, get rodando() { return rodando; } };
 }
 
 // ---------------------------------------------------------------------------
