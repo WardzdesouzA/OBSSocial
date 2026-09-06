@@ -1,4 +1,12 @@
 {
+  "0.165.0": {
+    "titulo": "📡 Direktmedien: das vom Extraktor (oder den Metatags) gefundene Video kommt jetzt über OBS Social — Schluss mit der schwarzen Vorschau",
+    "itens": [
+      "📡 Wenn die Sonde oder der 🎬 Extraktor die Videodatei findet, holen Panel und Bildschirm sie nicht mehr direkt vom Server der Seite: OBS Social holt sie und reicht sie weiter (lokale Adresse /midia-direta/remota/…). Grund, gesehen in einem echten Edge: derselbe Tracking-Blocker, der das X-Widget versteckte, sperrte video.twimg.com, und die Vorschau blieb schwarz, während die Leiste lief. Von localhost aus haben weder Blocker noch Herkunftsprüfung noch CORS etwas zu sperren. Nichts wird auf die Platte geschrieben; Spulen (Range) funktioniert weiter, und die von yt-dlp verlangten Header (User-Agent, Referer…) gehen mit.",
+      "⚠️ Die Panel-Vorschau warnt jetzt, wenn der Browser das Medium nicht laden kann (Quelle verweigert, Adresse abgelaufen…), statt eine schwarze Box zu zeigen.",
+      "🔗 Beim Überfahren des Mediennamens erscheint die echte Dateiadresse (nicht die der Weiterleitung)."
+    ]
+  },
   "0.164.1": {
     "titulo": "🐦 Direktmedien: der Extraktor findet jetzt das Video von X (und von anderen Seiten, die keine Codecs angeben)",
     "itens": [

@@ -1,4 +1,12 @@
 {
+  "0.165.0": {
+    "titulo": "📡 Média direct : la vidéo trouvée par l’extracteur (ou les métabalises) passe désormais par OBS Social — fini l’aperçu noir",
+    "itens": [
+      "📡 Quand la sonde ou l’🎬 extracteur trouve le fichier vidéo, le panneau et l’écran ne vont plus le chercher directement sur le serveur du site : OBS Social le récupère et le relaie (adresse locale /midia-direta/remota/…). Raison vue sur un vrai Edge : le même bloqueur de pistage qui cachait le widget de X bloquait video.twimg.com, et l’aperçu restait noir avec la barre qui avançait. Venant de localhost, ni bloqueur, ni contrôle d’origine, ni CORS n’ont rien à bloquer. Rien n’est écrit sur le disque ; la recherche (Range) continue de fonctionner, et les en-têtes demandés par yt-dlp (User-Agent, Referer…) suivent.",
+      "⚠️ L’aperçu du panneau prévient maintenant quand le navigateur ne peut pas charger le média (source refusée, adresse expirée…), au lieu d’une boîte noire.",
+      "🔗 Survoler le nom du média montre l’adresse réelle du fichier (pas celle du relais)."
+    ]
+  },
   "0.164.1": {
     "titulo": "🐦 Média direct : l’extracteur trouve maintenant la vidéo de X (et celle d’autres sites qui n’indiquent pas les codecs)",
     "itens": [

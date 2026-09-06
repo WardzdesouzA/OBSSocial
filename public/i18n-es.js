@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    "⚠️ O navegador não conseguiu carregar esta mídia — a fonte pode ter recusado ou o endereço venceu. Tente carregar o link de novo.": "⚠️ El navegador no pudo cargar este medio — la fuente puede haberlo rechazado o la dirección venció. Intenta cargar el enlace de nuevo.",
     "Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas": "Siguiendo el tema de OBS Social: la animación y la intensidad son las de la pestaña 🎨 Temas",
     "🎬 animado": "🎬 animado",
     "Animação": "Animación",

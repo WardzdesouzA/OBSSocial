@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "⚠️ O navegador não conseguiu carregar esta mídia — a fonte pode ter recusado ou o endereço venceu. Tente carregar o link de novo.": "⚠️ Tarayıcı bu medyayı yükleyemedi — kaynak reddetmiş ya da adres süresi dolmuş olabilir. Bağlantıyı yeniden yüklemeyi deneyin.",
     "Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas": "OBS Social temasını izliyor: animasyon ve yoğunluk 🎨 Temalar sekmesindekiler",
     "🎬 animado": "🎬 hareketli",
     "Animação": "Animasyon",

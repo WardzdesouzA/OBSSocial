@@ -5883,7 +5883,7 @@ function renderMidiaDireta() {
     document.getElementById('mdItemIcone').textContent = MD_ICONES[item.tipo] || '📎';
     const nome = document.getElementById('mdItemNome');
     nome.textContent = item.nome || item.url || '';
-    nome.title = item.url || '';
+    nome.title = item.urlFonte || item.url || ''; // 📡 v0.165: o endereço real, não o da retransmissão
     const prov = item.tipo === 'embed' ? (MD_PROVEDORES[item.embed?.provedor] || OBS_I18N.t(MD_PROVEDORES.outro)) : (item.fonte === 'arquivo' ? '💻' : '🔗');
     document.getElementById('mdItemProvedor').textContent = prov;
   }
@@ -5996,6 +5996,17 @@ function mdMontarPreview(item) {
       mdFimMandado = true;
       hub.send({ type: 'midiaDiretaFim' });
     });
+    // 📡 v0.165: o navegador não conseguiu carregar (fonte recusou, endereço
+    // venceu, bloqueador…) — antes a caixa ficava preta com a régua andando
+    el.addEventListener('error', () => {
+      const atual = mdItem();
+      if (!atual || atual.id !== item.id || box.querySelector('.md-falhou')) return;
+      const recado = document.createElement('div');
+      recado.className = 'hint md-falhou';
+      recado.style.cssText = 'margin:0;padding:10px;text-align:center;line-height:1.5';
+      recado.textContent = OBS_I18N.t('⚠️ O navegador não conseguiu carregar esta mídia — a fonte pode ter recusado ou o endereço venceu. Tente carregar o link de novo.');
+      box.insertBefore(recado, box.firstChild);
+    }, { once: true });
     if (item.tipo === 'audio') {
       const capa = document.createElement('div');
       capa.style.cssText = 'padding:14px;font-size:26px;text-align:center';

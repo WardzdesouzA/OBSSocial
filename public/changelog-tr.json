@@ -1,4 +1,12 @@
 {
+  "0.165.0": {
+    "titulo": "📡 Doğrudan medya: çıkarıcının (ya da meta etiketlerinin) bulduğu video artık OBS Social üzerinden geliyor — siyah önizleme bitti",
+    "itens": [
+      "📡 Sonda veya 🎬 çıkarıcı video dosyasını bulduğunda panel ve ekran artık onu doğrudan sitenin sunucusundan almıyor: OBS Social alıp aktarıyor (yerel adres /midia-direta/remota/…). Gerçek bir Edge’de görülen neden: X pencere öğesini gizleyen aynı izleme engelleyici video.twimg.com’u da engelliyordu ve önizleme, çubuk ilerlerken siyah kalıyordu. localhost’tan gelince ne engelleyicinin, ne köken denetiminin ne de CORS’un engelleyecek bir şeyi var. Diske hiçbir şey yazılmaz; arama (Range) çalışmaya devam eder ve yt-dlp’nin istediği başlıklar (User-Agent, Referer…) birlikte gider.",
+      "⚠️ Panel önizlemesi artık tarayıcı medyayı yükleyemediğinde (kaynak reddetti, adres süresi doldu…) siyah kutu yerine uyarı gösteriyor.",
+      "🔗 Medya adının üzerine gelince dosyanın gerçek adresi (aktarma adresi değil) görünür."
+    ]
+  },
   "0.164.1": {
     "titulo": "🐦 Doğrudan medya: çıkarıcı artık X videosunu buluyor (ve codec bildirmeyen diğer sitelerinkini)",
     "itens": [

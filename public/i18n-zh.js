@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "⚠️ O navegador não conseguiu carregar esta mídia — a fonte pode ter recusado ou o endereço venceu. Tente carregar o link de novo.": "⚠️ 浏览器无法加载此媒体——来源可能拒绝了请求，或地址已过期。请重新加载链接。",
     "Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas": "跟随 OBS Social 主题：动画和强度来自 🎨 主题选项卡",
     "🎬 animado": "🎬 动画",
     "Animação": "动画",
