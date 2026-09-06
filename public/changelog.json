@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.169.0",
+    "titulo": "🗺️ Clima pelo Brasil inteiro ou por um estado, mostrador do painel com a sua cidade e 🗂️ cartão completo com os próximos dias",
+    "itens": [
+      "🗺️ O rodízio do Clima («Passar pelas cidades, uma de cada vez») ganhou o seletor «Passar por»: as cidades cadastradas, todos os municípios do Brasil (a lista do IBGE, 5.570) ou os municípios de um estado — sem cadastrar nada, um por um. A lista vai em ordem alfabética, estado por estado; nesses modos o rodízio fica ligado e o mínimo é 15 s por cidade. O servidor busca o tempo só da cidade da vez e das próximas (pouco antes de entrarem), não de milhares de uma vez — as cotas das fontes gratuitas seguem respeitadas.",
+      "📍 O mostrador ao lado do relógio, no painel, mostra a SUA cidade (uma das cadastradas — a primeira, ou a escolhida em «Mostrador do painel: a sua cidade»), não a que está passando na tela. Quem preferir acompanhar o rodízio liga «acompanhar a tela» (desligado de fábrica).",
+      "🗂️ Cartão completo: um botão novo no 🌤️ do painel põe no meio da tela, temporariamente, o tempo agora com tudo (sensação, umidade, vento, pressão, UV, nuvens, visibilidade, orvalho, nascer e pôr do sol), as próximas horas e os próximos dias (3 a 7, à escolha). No painel ele aparece como uma janela completa — a mesma coisa que o público vê — com seletor de cidade e busca; o ✖ tira dos dois lugares sem mexer no cartão pequeno do canto. A previsão vem da mesma ordem de fontes: Open-Meteo, MET Norway, OpenWeatherMap, WeatherAPI, AccuWeather e Climatempo (o Weather Underground não faz previsão).",
+      "🎛️ Controle externo: clima/completo, clima/completoFechar e clima/completoAlternar; o /status traz a lista do rodízio, a cidade do mostrador e o cartão completo.",
+      "ℹ️ Bairros de um município não existem nas fontes de clima: a previsão vem numa grade de uns 10 km, então todos os bairros de uma cidade recebem o mesmo tempo — por isso não há seletor de bairros."
+    ]
+  },
+  {
     "version": "0.168.3",
     "titulo": "🌤️ O Clima se atualiza mesmo fora da tela — o mostrador do painel fica sempre em dia",
     "itens": [

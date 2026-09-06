@@ -2068,7 +2068,7 @@
     <!-- 🌤️ v0.167: Clima -->
     <div class="card" id="cardClima">
       <h3>🌤️ Clima</h3>
-      <div class="hint">O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 27); com o rodízio ligado, a tela passa por elas de tantos em tantos segundos. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, com o Clima na tela ou não (o mostrador do painel fica sempre em dia). Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.</div>
+      <div class="hint">O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 27) — elas valem para o cartão da tela, para o mostrador do painel e para o 🗂️ cartão completo. Com o rodízio ligado, a tela passa por elas de tantos em tantos segundos; e o rodízio também pode percorrer, sem cadastrar nada, todos os municípios do Brasil ou os de um estado. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, com o Clima na tela ou não (o mostrador do painel fica sempre em dia). Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.</div>
       <div class="row">
         <input type="text" id="clBusca" placeholder="Procurar cidade (ex.: Curitiba)" maxlength="80" style="flex:1">
         <button id="clBuscarBtn" class="icon-btn" title="Procurar a cidade">🔎</button>
@@ -2078,11 +2078,19 @@
       <div id="clLista" class="hint" style="margin-bottom:8px">Nenhuma cidade ainda.</div>
       <div class="settings-grid">
         <div><label>Rodízio de cidades</label><label class="check"><input type="checkbox" id="clRodizio" class="sw"><span>Passar pelas cidades, uma de cada vez</span></label></div>
+        <!-- 🗺️ v0.169: o que o rodízio percorre — sem precisar cadastrar cidade por cidade -->
+        <div><label>Passar por</label><select id="clModo" title="O que o rodízio percorre: as cidades cadastradas acima, todos os municípios do Brasil ou os municípios de um estado (do IBGE, em ordem alfabética)"><option value="cidades">As cidades cadastradas acima</option><option value="brasil">🇧🇷 Todos os municípios do Brasil</option><option value="uf">Todos os municípios de um estado</option></select></div>
+        <div id="clUfWrap" style="display:none"><label>Estado (UF)</label><select id="clUf"></select></div>
         <div><label>Trocar de cidade a cada (segundos)</label><input type="number" id="clRodizioSeg" min="5" max="600" step="1"></div>
         <div><label>Atualizar as informações a cada (minutos)</label><input type="number" id="clAtualizarMin" min="10" max="60" step="1"></div>
         <div><label>Unidade</label><select id="clUnidade"><option value="C">°C</option><option value="F">°F</option></select></div>
         <div><label>Estilo do cartão</label><select id="clEstilo"><option value="cartao">Cartão (ícone, temperatura, cidade, detalhes)</option><option value="compacto">Compacto (ícone, temperatura, cidade)</option><option value="grande">Grande (ícone e temperatura em destaque)</option></select></div>
+        <!-- 🗺️ v0.169: o mostrador do painel (ao lado do relógio) -->
+        <div><label>Mostrador do painel: a sua cidade</label><select id="clPainelCidade" title="A cidade que aparece ao lado do relógio no painel, para quem apresenta (uma das cadastradas acima)"></select></div>
+        <div><label>Mostrador do painel: acompanhar a tela</label><label class="check"><input type="checkbox" id="clPainelSegueTela" class="sw"><span>Mostrar a cidade que está passando na tela (rodízio) em vez da sua</span></label></div>
+        <div><label>🗂️ Cartão completo: dias de previsão</label><input type="number" id="clCompletoDias" min="3" max="7" step="1" title="Quantos dias aparecem no cartão completo (3 a 7 — as fontes gratuitas dão 7; algumas com chave dão 3 ou 5)"></div>
       </div>
+      <div class="hint" id="clListaDica">🗺️ Com «todos os municípios do Brasil» (5.570) ou «de um estado», o rodízio percorre a lista do IBGE em ordem alfabética, estado por estado, sem cadastrar nada — e busca o tempo de cada cidade pouco antes de ela entrar na tela (uma consulta por troca; por isso o mínimo é 15 s por cidade). Bairros de um município não existem nas fontes de clima: a previsão vem numa grade de uns 10 km, então todos os bairros de uma cidade recebem o mesmo tempo. O 🗂️ cartão completo (botão no painel) mostra o tempo agora com tudo, as próximas horas e os próximos dias, no meio da tela, temporariamente — o ✖ tira dos dois lugares.</div>
       <div class="row" style="flex-wrap:wrap;gap:6px 14px;margin-top:6px">
         <label class="check"><input type="checkbox" id="clMostrarCidade" class="sw"><span>📍 Nome da cidade</span></label>
         <label class="check"><input type="checkbox" id="clMostrarDescricao" class="sw"><span>📝 Descrição (nublado, chuva…)</span></label>
@@ -3171,7 +3179,7 @@
       <details class="faq-item"><summary>O que o controle externo consegue fazer?</summary><div class="faq-resposta">Tudo o que o painel faz pela rede com senha: limpar a tela, destacar o último comentário (de qualquer rede ou de uma só) ou um salvo, tirar o destaque, soltar a fila, player da mídia, sortear/esconder/zerar o sorteio, likômetro, audiência, winstreak (+1, −1, zerar, mostrar), QR code, escrever e mostrar avisos, relógio, cronômetro e timer (iniciar, pausar, zerar, duração, mostrar), ligar/desligar/reiniciar cada conexão, disparar qualquer tecla da Mesa de trilhas (pelo id ou pelo nome), qualquer ação do OBS Studio e do vMix (as mesmas das teclas), comentário de teste, área de transferência — e, para quem programa, a operação livre («op») manda qualquer operação do painel. Fora só o que é do computador local: senha, atualizações, reiniciar, apagar dados, backups e credenciais.</div></details>
       <details class="faq-item"><summary>O que é a 🎵 Mesa de trilhas?</summary><div class="faq-resposta">Uma mesa de som experimental (🧪 Labs): cada trilha vira um botão no painel — e no celular na mesma rede. Uma toca por vez, apertar outra troca com fade, BGM pode repetir (🔁) e o ⏹ para tudo. O som pode sair na live (pelo overlay no OBS), só no painel, ou nos dois. Dá até para importar os botões de som do seu Stream Deck, com um backup de perfis.</div></details>
       <details class="faq-item"><summary>Como deixo a animação de fundo do meu jeito?</summary><div class="faq-resposta">Em 🎨 Temas → 🎬 Animação de fundo: escolha a animação (aurora, estrelas, neve, bolhas, grade retrô, confete) e afine tudo — intensidade, velocidade, quantidade, tamanho, brilho, rastro, vento e as cores (do tema ou três suas). Cada efeito tem os próprios detalhes: nas estrelas, as pontas de difração como as fotos do telescópio James Webb, a cintilação, as estrelas cadentes e a nebulosa; na aurora, as cortinas; na neve, cristais ou pontos; nas bolhas, o reflexo; na grade, o sol e o horizonte; no confete, as formas. Em 🪟 Onde a animação aparece dá para pôr a camada por cima de tudo e baixar a opacidade dos painéis (padrão 100%, opaco) para a animação atravessar cards e colunas em qualquer lugar. A própria página é a prévia. «↺ Padrão da animação» desfaz os ajustes.</div></details>
-      <details class="faq-item"><summary>Como funciona o 🌤️ Clima na tela?</summary><div class="faq-resposta">É um widget com o tempo agora e um ícone animado (sol, lua, nuvens, chuva, trovoada, neve…). Em 🎨 Aparência → 🌤️ Clima você procura a sua cidade (ou adiciona as capitais do Brasil de uma vez), liga o <b>rodízio</b> para a tela passar por várias cidades a cada tantos segundos, escolhe se o nome da cidade aparece e de quanto em quanto tempo as informações são atualizadas (10 a 60 minutos). As informações vêm das fontes marcadas em 🔌 Conexões → 🌤️ Fontes de clima: Open-Meteo e MET Norway funcionam sem cadastro; OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo e Weather Underground pedem uma chave gratuita, que fica só no seu computador. O botão 🌤️ do painel põe e tira da tela; posição, tamanho e cores no 🖱️ Organizar a tela.</div></details>
+      <details class="faq-item"><summary>Como funciona o 🌤️ Clima na tela?</summary><div class="faq-resposta">É um widget com o tempo agora e um ícone animado (sol, lua, nuvens, chuva, trovoada, neve…). Em 🎨 Aparência → 🌤️ Clima você procura a sua cidade (ou adiciona as capitais do Brasil de uma vez), liga o rodízio para a tela passar por várias cidades a cada tantos segundos, escolhe se o nome da cidade aparece e de quanto em quanto tempo as informações são atualizadas (10 a 60 minutos). O rodízio também pode percorrer, sem cadastrar nada, todos os municípios do Brasil ou os de um estado (a lista do IBGE, em ordem alfabética) — o tempo de cada cidade é buscado pouco antes de ela entrar. As cidades cadastradas valem para o cartão da tela, para o mostrador do painel (ao lado do relógio, que mostra a sua cidade — ou o que está na tela, se você marcar) e para o 🗂️ cartão completo: o tempo agora com tudo, as próximas horas e os próximos dias, no meio da tela, temporário — o ✖ tira dos dois lugares sem mexer no cartão pequeno. Bairros não existem nas fontes de clima: a previsão vem numa grade de uns 10 km. As informações vêm das fontes marcadas em 🔌 Conexões → 🌤️ Fontes de clima: Open-Meteo e MET Norway funcionam sem cadastro; OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo e Weather Underground pedem uma chave gratuita, que fica só no seu computador. O botão 🌤️ do painel põe e tira da tela; posição, tamanho e cores no 🖱️ Organizar a tela.</div></details>
       <details class="faq-item"><summary>O que são os 🎭 Perfis de overlay?</summary><div class="faq-resposta">Moldes completos do comentário em destaque — cores, letra, arte, posição e as peças — salvos com um nome, no card 🎭 da aba Aparência. Monte o visual, salve como perfil e troque o overlay inteiro em um clique. Com a <b>troca automática</b> ligada, cada comentário destacado veste o molde certo sozinho: um perfil para os comentários comuns e um por <b>faixa de valor</b> para Super Chats e 💝 doações — em qualquer moeda, convertida para reais pela cotação do dia. O 🧪 de cada faixa põe no ar um Super Chat de teste com aquele valor, para conferir antes da live.</div></details>
       <details class="faq-item"><summary>Achei um problema ou tenho uma ideia. Para onde mando?</summary><div class="faq-resposta">Aba 📣 Feedback: escolha o assunto, escreva e envie — o botão abre o seu programa de e-mail já preenchido, e cada mensagem é lida.</div></details>
     </div>
@@ -3526,6 +3534,11 @@ const hub = connectHub((event) => {
       climaEstadoCfg = event.clima || null;
       fillClimaLista();
       fillClimaFontes();
+      // 🗺️ v0.169: o «clima» chega junto de toda mudança nas cidades/lista —
+      // e fora da janela do applyingSettings; os campos derivados (rodízio
+      // travado, mínimo 10 s, seletor do mostrador) acompanham por aqui
+      fillClimaModoUi();
+      fillClimaPainelSel();
       break;
     case 'climaChaves':
       cfgClimaChaves = event.climaChaves || null;
@@ -4875,16 +4888,74 @@ function fillClimaConf() {
   const c = climaConf();
   const ativo = document.activeElement;
   const setar = (id, valor, prop = 'value') => { const el = document.getElementById(id); if (el && ativo !== el) el[prop] = valor; };
-  setar('clRodizio', c.rodizio === true, 'checked');
-  setar('clRodizioSeg', c.rodizioSegundos ?? 15);
+  // 🗺️ v0.169: o que o rodízio percorre + o mostrador do painel
+  fillClimaModoUi();
+  // a caixa mostra o que VALE (com o Brasil / um estado, no mínimo 15 s); a
+  // preferência gravada fica intacta para quando voltar às cidades soltas
+  setar('clRodizioSeg', climaRodizioEfetivo(c).rodizioSegundos);
   setar('clAtualizarMin', c.atualizarMin ?? 15);
   setar('clUnidade', c.unidade === 'F' ? 'F' : 'C');
   setar('clEstilo', ['cartao', 'compacto', 'grande'].includes(c.estilo) ? c.estilo : 'cartao');
   for (const [id, chave] of [['clMostrarCidade', 'mostrarCidade'], ['clMostrarDescricao', 'mostrarDescricao'], ['clMostrarSensacao', 'mostrarSensacao'], ['clMostrarUmidade', 'mostrarUmidade'], ['clMostrarVento', 'mostrarVento']]) setar(id, c[chave] !== false, 'checked');
   setar('clMostrarFonte', c.mostrarFonte === true, 'checked');
+  fillClimaPainelSel();
+  setar('clPainelSegueTela', (c.painel || {}).seguirTela === true, 'checked');
+  setar('clCompletoDias', c.completoDias ?? 7);
   fillClimaLista();
   fillClimaFontes();
 }
+// 🗺️ v0.169: «Passar por» — com o Brasil / um estado, o rodízio fica ligado
+// (o servidor força) e o mínimo passa a 10 s; a caixa mostra isso
+function fillClimaModoUi() {
+  const c = climaConf();
+  const ativo = document.activeElement;
+  const lista = c.lista || { modo: 'cidades', uf: '' };
+  const modoLista = ['cidades', 'brasil', 'uf'].includes(lista.modo) ? lista.modo : 'cidades';
+  const modoSel = document.getElementById('clModo');
+  if (modoSel && ativo !== modoSel) modoSel.value = modoLista;
+  const ufSel = document.getElementById('clUf');
+  if (ufSel && !ufSel.options.length) {
+    for (const uf of CLIMA_UFS) { const o = document.createElement('option'); o.value = uf; o.textContent = uf + ' — ' + (CLIMA_UF_NOMES[uf] || uf); o.dataset.noI18n = '1'; ufSel.appendChild(o); }
+  }
+  if (ufSel && ativo !== ufSel) ufSel.value = CLIMA_UFS.includes(lista.uf) ? lista.uf : 'SP';
+  const ufWrap = document.getElementById('clUfWrap');
+  if (ufWrap) ufWrap.style.display = modoLista === 'uf' ? '' : 'none';
+  const rod = document.getElementById('clRodizio');
+  if (rod) { rod.checked = modoLista !== 'cidades' || c.rodizio === true; rod.disabled = modoLista !== 'cidades'; rod.title = modoLista !== 'cidades' ? OBS_I18N.t('Com o Brasil inteiro ou um estado, o rodízio fica sempre ligado') : ''; }
+  const seg = document.getElementById('clRodizioSeg');
+  if (seg) seg.min = modoLista !== 'cidades' ? 15 : 5;
+}
+// o mostrador do painel: a cidade de quem apresenta (uma das soltas)
+function fillClimaPainelSel() {
+  const c = climaConf();
+  const painel = c.painel || { seguirTela: false, cidadeId: '' };
+  const pSel = document.getElementById('clPainelCidade');
+  if (!pSel || document.activeElement === pSel) return;
+  pSel.innerHTML = '';
+  const o0 = document.createElement('option'); o0.value = ''; o0.textContent = OBS_I18N.t('A primeira da lista'); pSel.appendChild(o0);
+  for (const cid of Array.isArray(c.cidades) ? c.cidades : []) { const o = document.createElement('option'); o.value = cid.id; o.textContent = cid.nome + (cid.uf ? ' · ' + cid.uf : '') + (cid.pais && cid.pais !== 'BR' ? ' (' + cid.pais + ')' : ''); o.dataset.noI18n = '1'; pSel.appendChild(o); }
+  pSel.value = (c.cidades || []).some((x) => x.id === painel.cidadeId) ? painel.cidadeId : '';
+}
+const CLIMA_UF_NOMES = { AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal', ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MT: 'Mato Grosso', MS: 'Mato Grosso do Sul', MG: 'Minas Gerais', PA: 'Pará', PB: 'Paraíba', PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí', RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul', RO: 'Rondônia', RR: 'Roraima', SC: 'Santa Catarina', SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins' };
+// 🗺️ v0.169: a lista do rodízio vai inteira (é uma escolha, não um ajuste)
+function mandarListaClima() {
+  const modo = document.getElementById('clModo').value;
+  const uf = document.getElementById('clUf').value || 'SP';
+  document.getElementById('clUfWrap').style.display = modo === 'uf' ? '' : 'none';
+  // a caixa já mostra o que o servidor vai fazer (rodízio ligado, mínimo 10 s)
+  const rod = document.getElementById('clRodizio');
+  if (modo !== 'cidades') { rod.checked = true; rod.disabled = true; } else rod.disabled = false;
+  document.getElementById('clRodizioSeg').min = modo !== 'cidades' ? 15 : 5;
+  mandarClima({ lista: { modo, uf: modo === 'uf' ? uf : '' } });
+}
+document.getElementById('clModo').addEventListener('input', mandarListaClima);
+document.getElementById('clUf').addEventListener('input', mandarListaClima);
+function mandarPainelClima() {
+  mandarClima({ painel: { seguirTela: document.getElementById('clPainelSegueTela').checked, cidadeId: document.getElementById('clPainelCidade').value || '' } });
+}
+document.getElementById('clPainelCidade').addEventListener('input', mandarPainelClima);
+document.getElementById('clPainelSegueTela').addEventListener('input', mandarPainelClima);
+document.getElementById('clCompletoDias').addEventListener('change', (e) => { const v = Math.min(7, Math.max(3, Math.round(Number(e.target.value) || 7))); e.target.value = v; mandarClima({ completoDias: v }); });
 // a lista de cidades, com o tempo de cada uma quando já veio
 function fillClimaLista() {
   const alvo = document.getElementById('clLista');
@@ -4893,8 +4964,21 @@ function fillClimaLista() {
   alvo.innerHTML = '';
   if (!cidades.length) { alvo.className = 'hint'; alvo.textContent = OBS_I18N.t('Nenhuma cidade ainda — procure acima ou adicione as capitais.'); return; }
   alvo.className = '';
+  // 🗺️ v0.169: com o Brasil / um estado no rodízio, estas cidades servem ao
+  // mostrador do painel e ao cartão completo (a tela passa pela lista do IBGE)
+  const modoLista = (climaConf().lista || {}).modo;
+  if (modoLista === 'brasil' || modoLista === 'uf') {
+    const aviso = document.createElement('div');
+    aviso.className = 'hint';
+    aviso.style.margin = '0 0 6px';
+    aviso.textContent = OBS_I18N.t('Na tela, o rodízio passa pelos municípios do IBGE (veja «Passar por»). Estas cidades valem para o mostrador do painel e para o 🗂️ cartão completo.');
+    alvo.appendChild(aviso);
+  }
   climaGarantirCss();
+  // o tempo de cada uma: da lista pronta ou — com o Brasil / um estado no
+  // rodízio, quando só o mostrador é buscado — de «retratos» por id
   const retratos = new Map(((climaEstadoCfg && climaEstadoCfg.cidades) || []).map((x) => [x.id, x]));
+  for (const cid of cidades) { const r = climaEstadoCfg && climaEstadoCfg.retratos && climaEstadoCfg.retratos[cid.id]; if (r && !retratos.has(cid.id)) retratos.set(cid.id, r); }
   cidades.forEach((cid, i) => {
     const linha = document.createElement('div');
     linha.className = 'pop-row';
@@ -4935,7 +5019,7 @@ function adicionarCidadesClima(novas) {
   for (const c of novas) {
     if (atuais.length >= 27) break;
     if (atuais.some((x) => Math.abs(x.lat - c.lat) < 0.01 && Math.abs(x.lon - c.lon) < 0.01)) continue;
-    atuais.push({ nome: c.nome, uf: c.uf || '', pais: c.pais || 'BR', lat: c.lat, lon: c.lon });
+    atuais.push({ nome: c.nome, uf: c.uf || '', pais: c.pais || 'BR', lat: c.lat, lon: c.lon, tz: c.tz || '' }); // v0.169: o fuso vai junto
   }
   mandarClima({ cidades: atuais });
 }
@@ -4984,7 +5068,8 @@ document.getElementById('clCapitaisBtn').addEventListener('click', () => {
 });
 document.getElementById('clRodizio').addEventListener('input', (e) => mandarClima({ rodizio: e.target.checked }));
 // os limites valem já na caixa (o servidor confere de novo): 5–600 s e 10–60 min
-document.getElementById('clRodizioSeg').addEventListener('change', (e) => { const v = Math.min(600, Math.max(5, Math.round(Number(e.target.value) || 15))); e.target.value = v; mandarClima({ rodizioSegundos: v }); });
+// a preferência vai crua (5–600); a caixa mostra o que VALE (com o Brasil / um estado, no mínimo 15 s)
+document.getElementById('clRodizioSeg').addEventListener('change', (e) => { const v = Math.min(600, Math.max(5, Math.round(Number(e.target.value) || 15))); e.target.value = climaRodizioEfetivo({ ...climaConf(), rodizioSegundos: v }).rodizioSegundos; mandarClima({ rodizioSegundos: v }); });
 document.getElementById('clAtualizarMin').addEventListener('change', (e) => { const v = Math.min(60, Math.max(10, Math.round(Number(e.target.value) || 15))); e.target.value = v; mandarClima({ atualizarMin: v }); });
 document.getElementById('clUnidade').addEventListener('input', (e) => mandarClima({ unidade: e.target.value }));
 document.getElementById('clEstilo').addEventListener('input', (e) => mandarClima({ estilo: e.target.value }));

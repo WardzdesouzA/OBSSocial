@@ -1,4 +1,14 @@
 {
+  "0.169.0": {
+    "titulo": "🗺️ Wetter durch ganz Brasilien oder einen Bundesstaat, Panel-Anzeige mit deiner Stadt und 🗂️ Vollkarte mit den nächsten Tagen",
+    "itens": [
+      "🗺️ Die Wetter-Rotation („Städte nacheinander durchlaufen“) hat einen „Durchlaufen“-Wähler bekommen: die eingetragenen Städte, alle Gemeinden Brasiliens (IBGE-Liste, 5.570) oder die Gemeinden eines Bundesstaates – ohne einzeln etwas einzutragen. Die Liste läuft alphabetisch, Bundesstaat für Bundesstaat; in diesen Modi bleibt die Rotation an und das Minimum sind 15 s pro Stadt. Der Server holt das Wetter nur für die aktuelle Stadt und die nächsten (kurz bevor sie erscheinen), nicht für Tausende auf einmal – die Kontingente der kostenlosen Quellen bleiben gewahrt.",
+      "📍 Die Anzeige neben der Uhr im Panel zeigt DEINE Stadt (eine der eingetragenen – die erste oder die unter „Panel-Anzeige: deine Stadt“ gewählte), nicht die gerade auf dem Bildschirm. Wer der Rotation folgen will, schaltet „dem Bildschirm folgen“ ein (standardmäßig aus).",
+      "🗂️ Vollkarte: ein neuer Knopf im 🌤️ des Panels legt vorübergehend in die Bildschirmmitte das aktuelle Wetter mit allem (gefühlt, Luftfeuchtigkeit, Wind, Luftdruck, UV, Wolken, Sicht, Taupunkt, Sonnenauf- und -untergang), die nächsten Stunden und die nächsten Tage (3 bis 7, nach Wahl). Im Panel erscheint sie als vollständiges Fenster – dasselbe, was das Publikum sieht – mit Stadtauswahl und Suche; das ✖ entfernt sie an beiden Orten, ohne die kleine Karte in der Ecke anzurühren. Die Vorhersage kommt in derselben Quellenreihenfolge: Open-Meteo, MET Norway, OpenWeatherMap, WeatherAPI, AccuWeather und Climatempo (Weather Underground liefert keine Vorhersage).",
+      "🎛️ Externe Steuerung: clima/completo, clima/completoFechar und clima/completoAlternar; /status enthält die Rotationsliste, die Anzeigestadt und die Vollkarte.",
+      "ℹ️ Stadtviertel gibt es in den Wetterquellen nicht: die Vorhersage kommt auf einem Raster von etwa 10 km, also bekommen alle Viertel einer Stadt dasselbe Wetter – deshalb gibt es keine Viertelauswahl."
+    ]
+  },
   "0.168.3": {
     "titulo": "🌤️ Das Wetter aktualisiert sich auch außerhalb des Bildschirms — die Panel-Anzeige bleibt aktuell",
     "itens": [

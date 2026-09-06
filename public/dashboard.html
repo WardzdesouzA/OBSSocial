@@ -816,6 +816,30 @@
   @media (prefers-reduced-motion: reduce) {
     .telinha-chip.ativa, .telinha-chip.encerrada { animation: none; }
   }
+  /* 🗂️ v0.169: o cartão completo do Clima no painel — a MESMA janela-telinha
+     do sorteio; dentro, o mesmo cartão da tela do público (render.js) */
+  #climaCompletoModal {
+    position: fixed; inset: 0; z-index: 97; display: none;
+    background: transparent; pointer-events: none;
+    align-items: center; justify-content: center;
+  }
+  #climaCompletoModal.open { display: flex; }
+  #climaCompletoModal .rf-card {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;
+    min-width: min(88vw, 420px); width: min(92vw, 760px); position: relative;
+    animation: rfPop 0.25s ease-out;
+    pointer-events: auto; box-shadow: 0 18px 60px var(--shadow);
+    resize: both; overflow: auto; min-height: 200px;
+  }
+  #climaCompletoModal .rf-card:not(.geo-esticada) { max-width: 92vw; max-height: 92vh; }
+  #climaCompletoModal .rf-titulo { cursor: grab; user-select: none; font-weight: 800; font-size: 18px; }
+  #climaCompletoModal #clcFechar { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; }
+  #climaCompletoModal .clc { --clc-size: 14px; }
+  #climaCompletoModal .clc-picker { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  #climaCompletoModal .clc-picker select, #climaCompletoModal .clc-picker input { flex: 1; min-width: 140px; }
+  #climaCompletoModal .clc-resultados button { margin: 4px 6px 0 0; padding: 4px 10px; width: auto; font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) { #climaCompletoModal .rf-card { animation: none; } }
   @keyframes rfPop { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { #raffleModal .rf-card { animation: none; } }
   #raffleModal .rf-titulo { font-weight: 800; font-size: 18px; }
@@ -1012,6 +1036,26 @@
     <div id="rfPalco"></div>
     <div class="hint" style="margin:0">Este é o MESMO pódio da tela do OBS (widget 🎁), com o mesmo dado 🎲 e as mesmas configurações — o suspense aqui é o do seu público. O 🗕 acima minimiza para a barra de cima (a tela do OBS continua como está); arraste pela parte de cima para mover.</div>
     <button class="apoie-btn" id="rfTirarBtn" title="Tirar o pódio da tela do OBS (o mesmo botão da ferramenta 🎁)">✖ Tirar o pódio da tela</button>
+  </div>
+</div>
+<!-- 🗂️ v0.169: o cartão completo do Clima — o apresentador vê a MESMA coisa
+     que está no meio da tela do público; o ✖ tira dos dois lugares (o cartão
+     pequeno do canto não é afetado) -->
+<div id="climaCompletoModal" role="dialog" aria-label="Cartão completo do clima">
+  <div class="rf-card">
+    <button class="icon-btn jan-opcoes-btn" data-jan="telinha:climaCompleto" title="Opções desta janela" style="position:absolute;top:8px;right:80px;width:30px;height:30px">⚙</button>
+    <button class="icon-btn jan-max-btn" data-jan="telinha:climaCompleto" title="Maximizar / restaurar (estilo janela)" style="position:absolute;top:8px;right:44px;width:30px;height:30px">🗖</button>
+    <button class="icon-btn danger" id="clcFechar" title="Fechar: tira o cartão completo da tela do público e daqui (o cartão pequeno fica)" aria-label="Fechar o cartão completo">✖</button>
+    <div class="jan-opcoes" data-jan="telinha:climaCompleto" style="display:none"></div>
+    <div class="rf-titulo">🗂️ CLIMA COMPLETO <span class="pop-extra" id="clcTag"></span></div>
+    <div class="clc-picker">
+      <select id="clcCidadeSel" title="Trocar a cidade do cartão (vale na tela do público também)"></select>
+      <input type="text" id="clcBusca" placeholder="Outra cidade (ex.: Santos, SP)" maxlength="80">
+      <button id="clcBuscarBtn" class="icon-btn" title="Procurar a cidade">🔎</button>
+    </div>
+    <div id="clcResultados" class="hint clc-resultados" style="display:none;margin:0"></div>
+    <div id="clcPalco" data-no-i18n></div>
+    <div class="hint" style="margin:0">Este é o MESMO cartão que está no meio da tela do público: o tempo agora com tudo, as próximas horas e os próximos dias. Ele é temporário — o ✖ acima tira dos dois lugares; o cartão pequeno do canto continua como está. Arraste pela parte de cima para mover.</div>
   </div>
 </div>
 <div id="ctxMenu"></div>
@@ -1669,8 +1713,14 @@
           <button id="climaBtn" class="icon-btn" title="Mostrar/tirar da tela">👁️</button>
           <span id="climaBtnLabel">Mostrar na tela</span>
         </div>
+        <!-- 🗂️ v0.169: o cartão completo (temporário, no meio da tela) -->
+        <div class="pop-row">
+          <button id="climaCompletoBtn" class="icon-btn" title="Cartão completo: o tempo agora com tudo, as próximas horas e os próximos dias, no meio da tela (e numa janela aqui)">🗂️</button>
+          <span id="climaCompletoLabel">Cartão completo</span>
+        </div>
+        <div id="climaMostradorInfo" class="hint" style="display:none"></div>
         <div id="climaSemCidade" class="hint" style="display:none">Nenhuma cidade cadastrada ainda: em Configurações → 🎨 Aparência → 🌤️ Clima, procure a sua cidade ou adicione as capitais do Brasil.</div>
-        <div class="hint">O tempo vem das fontes escolhidas em 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e é atualizado a cada 10–60 minutos. Cidades, rodízio e o que aparece se ajustam em 🎨 Aparência → 🌤️ Clima; posição e tamanho no 🖱️.</div>
+        <div class="hint">O tempo vem das fontes escolhidas em 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e é atualizado a cada 10–60 minutos. Cidades, rodízio (inclusive o Brasil inteiro ou um estado) e o que aparece se ajustam em 🎨 Aparência → 🌤️ Clima; posição e tamanho no 🖱️.</div>
       </div>
     </div>
     <span style="flex:1"></span>
@@ -2312,6 +2362,9 @@ const hub = connectHub((event) => {
       break;
     case 'relogio':
       updateRelogio(event.relogio, event.fim);
+      break;
+    case 'climaCidades': // 🗂️ v0.169: a busca de cidade da janela do cartão completo
+      mostrarResultadosClc(event.resultados || [], event.erro);
       break;
     case 'clima': // 🌤️ v0.167
       updateClima(event.clima);
@@ -5223,8 +5276,9 @@ function tornarTelinhaMovel(card) {
 }
 tornarTelinhaMovel(document.querySelector('#raffleModal .rf-card'));
 tornarTelinhaMovel(document.querySelector('#avatarModal .av-card'));
+tornarTelinhaMovel(document.querySelector('#climaCompletoModal .rf-card')); // 🗂️ v0.169
 // 📐 v0.52.1: cada telinha volta no lugar e no tamanho em que foi deixada
-for (const [sel, chave] of [['#raffleModal .rf-card', 'telinha:raffle'], ['#avatarModal .av-card', 'telinha:avatar']]) {
+for (const [sel, chave] of [['#raffleModal .rf-card', 'telinha:raffle'], ['#avatarModal .av-card', 'telinha:avatar'], ['#climaCompletoModal .rf-card', 'telinha:climaCompleto']]) {
   const card = document.querySelector(sel);
   if (!card) continue;
   card.dataset.geo = chave;
@@ -5482,6 +5536,7 @@ for (const btn of document.querySelectorAll('.jan-opcoes-btn')) {
 }
 janelaAplicarMax(document.querySelector('#avatarModal .av-card'), 'telinha:avatar');
 janelaAplicarMax(document.querySelector('#raffleModal .rf-card'), 'telinha:raffle');
+janelaAplicarMax(document.querySelector('#climaCompletoModal .rf-card'), 'telinha:climaCompleto'); // 🗂️ v0.169
 
 // A janela mudou de tamanho (ou a telinha vai reabrir): ela nunca pode ficar
 // perdida fora da tela — sem alcançar a alça, não teria mais volta
@@ -6462,36 +6517,45 @@ function desenharMdPastas() {
 // ---------- 🌤️ v0.167: Clima ----------
 let climaState = null;
 let climaDeltaPainel = 0;
-function climaIndicePainel() {
+// 🗺️ v0.169: quantas cidades o rodízio tem (as soltas, ou o Brasil / um estado)
+function climaTotalPainel() {
   const c = climaState;
-  const conf = (settings && settings.clima) || {};
-  const n = c && Array.isArray(c.cidades) ? c.cidades.length : 0;
-  if (!n) return 0;
-  if (!conf.rodizio || n < 2) return ((Number(c.indice) || 0) % n + n) % n;
-  const per = Math.max(5, Number(conf.rodizioSegundos) || 15) * 1000;
-  const decorrido = Math.max(0, Math.floor((Date.now() + climaDeltaPainel - (Number(c.desde) || 0)) / per));
-  return (((Number(c.indice) || 0) + decorrido) % n + n) % n;
+  if (!c) return 0;
+  return c.lista ? (Number(c.lista.total) || 0) : (Array.isArray(c.cidades) ? c.cidades.length : 0);
+}
+function climaIndicePainel(n) {
+  return climaIndiceRodizio(climaState, (settings && settings.clima) || {}, n === undefined ? climaTotalPainel() : n, Date.now() + climaDeltaPainel);
 }
 function updateClima(clima) {
   if (clima) { climaState = clima; if (Number(clima.agora)) climaDeltaPainel = clima.agora - Date.now(); }
   pintarClimaPainel();
+  renderClimaCompletoModal(); // 🗂️ v0.169
 }
 let climaIndicePintado = -1;
 function pintarClimaPainel(soSeTrocou) {
   const c = climaState;
-  const cidades = c && Array.isArray(c.cidades) ? c.cidades : [];
-  const i = climaIndicePainel();
+  const total = climaTotalPainel();
+  // 🗺️ v0.169: a lista do rodízio (o Brasil / um estado vem de municipios-br.json)
+  const lista = c ? climaCidadesDoRodizio(c) : [];
+  if (lista === null) { climaCarregarMunicipios(() => pintarClimaPainel()); }
+  const cidades = lista || [];
+  const i = climaIndicePainel(cidades.length);
   if (soSeTrocou && i === climaIndicePintado) return;
   climaIndicePintado = i;
-  const cidade = cidades[i] || null;
+  const naTela = cidades[i] || null;
   const conf = (settings && settings.clima) || {};
-  const visivel = !!(c && c.visible && cidades.length);
-  // o mostrador do centro (ao lado do relógio): acende quando está na tela
+  const visivel = !!(c && c.visible && total);
+  // 🗺️ v0.169: o mostrador do centro (ao lado do relógio) mostra a cidade de
+  // quem apresenta (settings.clima.painel) — só acompanha o rodízio se a
+  // pessoa pedir («seguir a tela») ou se não houver cidade solta cadastrada
+  const segueTela = !c || !c.painel || c.painel.seguirTela === true;
+  const cidade = segueTela ? naTela : c.painel;
   const topo = document.getElementById('climaTopo');
   if (topo) {
     topo.classList.toggle('ativo', visivel);
-    topo.classList.toggle('velho', !!(cidade && cidade.erro && cidade.retrato));
-    const rt = cidade && cidade.retrato ? cidade.retrato : null;
+    const rc = climaRetratoDe(c, cidade);
+    topo.classList.toggle('velho', !!(rc.erro && rc.retrato));
+    const rt = rc.retrato;
     const chaveIcone = rt ? rt.condicao + '|' + rt.dia : (cidade ? 'vazio' : 'nada');
     if (topo.dataset.icone !== chaveIcone) {
       topo.dataset.icone = chaveIcone;
@@ -6499,7 +6563,12 @@ function pintarClimaPainel(soSeTrocou) {
       else document.getElementById('climaTopoIcone').textContent = '🌤️';
     }
     document.getElementById('climaTopoTemp').textContent = rt ? climaTemp(rt.temp, conf.unidade) : '--°';
-    document.getElementById('climaTopoCidade').textContent = cidade ? cidade.nome + (cidade.uf ? ' · ' + cidade.uf : '') : OBS_I18N.t('sem cidade');
+    document.getElementById('climaTopoCidade').textContent = cidade ? climaNomeCidade(cidade) : OBS_I18N.t('sem cidade');
+  }
+  const info = document.getElementById('climaMostradorInfo');
+  if (info) {
+    if (cidade && !segueTela && total) { info.style.display = ''; info.textContent = OBS_I18N.t('O mostrador ao lado do relógio mostra a sua cidade:') + ' ' + climaNomeCidade(cidade) + '. ' + OBS_I18N.t('A prévia acima é o que está passando na tela.'); }
+    else info.style.display = 'none';
   }
   const olho = document.getElementById('climaBtn');
   if (olho) { olho.innerHTML = visivel ? EYE_OPEN : EYE_CLOSED; olho.classList.toggle('active', visivel); }
@@ -6508,34 +6577,116 @@ function pintarClimaPainel(soSeTrocou) {
   const tag = document.getElementById('climaPageTag');
   if (tag) tag.textContent = visivel ? OBS_I18N.t('na tela') : '';
   const lab = document.getElementById('climaPageLabel');
-  if (lab) lab.textContent = cidades.length ? (i + 1) + '/' + cidades.length : '0/0';
+  if (lab) lab.textContent = total ? (i + 1) + '/' + total : '0/0';
   const sem = document.getElementById('climaSemCidade');
-  if (sem) sem.style.display = cidades.length ? 'none' : '';
+  if (sem) sem.style.display = total ? 'none' : '';
   const previa = document.getElementById('climaPrevia');
-  if (previa) previa.style.display = cidades.length ? 'flex' : 'none';
-  if (!cidade) return;
+  if (previa) previa.style.display = total ? 'flex' : 'none';
+  // 🗂️ o cartão completo: o botão acende quando está na tela
+  const comp = c && c.completo;
+  const bc = document.getElementById('climaCompletoBtn');
+  if (bc) bc.classList.toggle('active', !!(comp && comp.visible));
+  const lc = document.getElementById('climaCompletoLabel');
+  if (lc) lc.textContent = comp && comp.visible ? OBS_I18N.t('Cartão completo na tela') + (comp.cidade ? ' — ' + climaNomeCidade(comp.cidade) : '') : OBS_I18N.t('Cartão completo');
+  if (!naTela) return;
   climaGarantirCss();
-  const r = cidade.retrato || {};
+  const { retrato, erro } = climaRetratoDe(c, naTela);
+  const r = retrato || {};
   document.getElementById('climaPreviaIcone').innerHTML = climaIconeSvg(r.condicao, r.dia);
-  document.getElementById('climaPreviaTemp').textContent = cidade.retrato ? climaTemp(r.temp, conf.unidade) : '--°';
-  document.getElementById('climaPreviaCidade').textContent = cidade.nome + (cidade.uf ? ' · ' + cidade.uf : '') + (cidade.retrato && r.descricao ? ' — ' + r.descricao : '');
+  document.getElementById('climaPreviaTemp').textContent = retrato ? climaTemp(r.temp, conf.unidade) : '--°';
+  document.getElementById('climaPreviaCidade').textContent = climaNomeCidade(naTela) + (retrato && r.descricao ? ' — ' + r.descricao : '');
   const det = [];
-  if (cidade.retrato) {
+  if (retrato) {
     if (r.sensacao !== null && r.sensacao !== undefined) det.push('🌡️ ' + climaTemp(r.sensacao, conf.unidade));
     if (r.umidade !== null && r.umidade !== undefined) det.push('💧 ' + r.umidade + '%');
     if (r.vento !== null && r.vento !== undefined) det.push('💨 ' + Math.round(r.vento) + ' km/h');
     if (r.fonte) det.push((c.fontes && c.fontes[r.fonte] && c.fontes[r.fonte].nome) || r.fonte);
   }
-  if (cidade.erro && !cidade.retrato) det.push('⚠️ ' + cidade.erro);
-  else if (cidade.erro) det.push('⚠️ ' + OBS_I18N.t('fonte fora do ar — mostrando o último retrato'));
-  else if (!cidade.retrato) det.push(OBS_I18N.t('buscando…')); // v0.168.3: a busca está sempre ligada
+  if (erro && !retrato) det.push('⚠️ ' + erro);
+  else if (erro) det.push('⚠️ ' + OBS_I18N.t('fonte fora do ar — mostrando o último retrato'));
+  else if (!retrato) det.push(OBS_I18N.t('buscando…')); // v0.168.3: a busca está sempre ligada
   document.getElementById('climaPreviaDet').textContent = det.join(' · ');
 }
-setInterval(() => { if (climaState && climaState.cidades && climaState.cidades.length > 1) pintarClimaPainel(true); }, 700);
+setInterval(() => { if (climaTotalPainel() > 1) pintarClimaPainel(true); }, 700);
 document.getElementById('climaBtn').addEventListener('click', () => hub.send({ type: 'climaToggle' }));
 document.getElementById('climaNextBtn').addEventListener('click', () => hub.send({ type: 'climaProxima', passo: 1 }));
 document.getElementById('climaPrevBtn').addEventListener('click', () => hub.send({ type: 'climaProxima', passo: -1 }));
 document.getElementById('climaRefreshBtn').addEventListener('click', () => { hub.send({ type: 'climaAtualizar' }); const d = document.getElementById('climaPreviaDet'); if (d) d.textContent = OBS_I18N.t('atualizando…'); });
+// 🗂️ v0.169: o cartão completo — abre com a cidade do mostrador (o servidor
+// escolhe); a janela aqui espelha a tela e o ✖ tira dos dois lugares
+document.getElementById('climaCompletoBtn').addEventListener('click', () => {
+  const comp = climaState && climaState.completo;
+  hub.send({ type: 'climaCompleto', visible: !(comp && comp.visible) });
+});
+const climaCompletoModal = document.getElementById('climaCompletoModal');
+let clcCidadeMostrada = '';
+function renderClimaCompletoModal() {
+  if (!climaCompletoModal) return;
+  const c = climaState;
+  const comp = c && c.completo;
+  if (!comp || !comp.visible || !comp.cidade) { climaCompletoModal.classList.remove('open'); clcCidadeMostrada = ''; return; }
+  const abrindo = !climaCompletoModal.classList.contains('open');
+  climaCompletoModal.classList.add('open');
+  if (abrindo) telinhaDentroDaTela(climaCompletoModal.querySelector('.rf-card'));
+  climaPintarCompleto(document.getElementById('clcPalco'), comp, climaRetratoDe(c, comp.cidade), (settings && settings.clima) || {}, { fontes: c.fontes, compacto: true });
+  const tag = document.getElementById('clcTag');
+  if (tag) tag.textContent = OBS_I18N.t('na tela');
+  // o seletor de cidade: as soltas, a do mostrador, a que está passando na tela
+  const sel = document.getElementById('clcCidadeSel');
+  if (sel && document.activeElement !== sel) {
+    const opcoes = [];
+    const vistos = new Set();
+    const por = (cid, rotulo) => { if (!cid || vistos.has(cid.id)) return; vistos.add(cid.id); opcoes.push([cid.id, rotulo || climaNomeCidade(cid)]); };
+    por(comp.cidade);
+    if (c.painel) por(c.painel, '📍 ' + climaNomeCidade(c.painel));
+    const lista = climaCidadesDoRodizio(c) || [];
+    const naTela = lista[climaIndicePainel(lista.length)];
+    if (naTela) por(naTela, '📺 ' + climaNomeCidade(naTela));
+    if (lista.length <= CLIMA_MAX_CIDADES) for (const cid of lista) por(cid);
+    for (const cid of ((settings && settings.clima && settings.clima.cidades) || [])) por(cid);
+    sel.innerHTML = '';
+    for (const [id, rotulo] of opcoes) { const o = document.createElement('option'); o.value = id; o.textContent = rotulo; o.dataset.noI18n = '1'; sel.appendChild(o); }
+    sel.value = comp.cidade.id;
+  }
+  clcCidadeMostrada = comp.cidade.id;
+}
+document.getElementById('clcFechar').onclick = () => { hub.send({ type: 'climaCompleto', visible: false }); climaCompletoModal.classList.remove('open'); };
+document.getElementById('clcCidadeSel').addEventListener('change', (e) => { if (e.target.value && e.target.value !== clcCidadeMostrada) hub.send({ type: 'climaCompleto', visible: true, cidade: e.target.value }); });
+function procurarCidadeClc() {
+  const nome = document.getElementById('clcBusca').value.trim();
+  if (!nome) return;
+  const box = document.getElementById('clcResultados');
+  box.style.display = '';
+  box.textContent = OBS_I18N.t('Procurando…');
+  // «Santos, SP» é cidade + estado; fora do Brasil, a sigla do país («Lisboa, PT»)
+  const m = /^(.*),\s*([A-Za-z]{2})$/.exec(nome);
+  const sigla = m ? m[2].toUpperCase() : '';
+  const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+  const ehUf = UFS.includes(sigla);
+  box.dataset.uf = ehUf ? sigla : '';
+  hub.send({ type: 'climaProcurar', nome: m ? m[1].trim() : nome, pais: m && !ehUf ? sigla : 'BR' });
+}
+function mostrarResultadosClc(resultados, erro) {
+  const box = document.getElementById('clcResultados');
+  if (!box || !climaCompletoModal.classList.contains('open')) return;
+  const uf = box.dataset.uf || '';
+  const doEstado = uf ? resultados.filter((r) => r.uf === uf) : [];
+  const lista = doEstado.length ? doEstado : resultados;
+  box.innerHTML = '';
+  box.style.display = '';
+  if (erro) { box.textContent = '⚠️ ' + erro; return; }
+  if (!lista.length) { box.textContent = OBS_I18N.t('Nenhuma cidade com esse nome. Tente sem acento ou com o nome completo.'); return; }
+  for (const r of lista.slice(0, 8)) {
+    const b = document.createElement('button');
+    b.className = 'icon-btn';
+    b.dataset.noI18n = '1';
+    b.textContent = '🗂️ ' + r.nome + (r.uf ? ' · ' + r.uf : '') + (r.pais && r.pais !== 'BR' ? ' (' + r.pais + ')' : '');
+    b.onclick = () => { hub.send({ type: 'climaCompleto', visible: true, cidade: { nome: r.nome, uf: r.uf || '', pais: r.pais || 'BR', lat: r.lat, lon: r.lon, tz: r.tz || '' } }); box.style.display = 'none'; document.getElementById('clcBusca').value = ''; };
+    box.appendChild(b);
+  }
+}
+document.getElementById('clcBuscarBtn').addEventListener('click', procurarCidadeClc);
+document.getElementById('clcBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); procurarCidadeClc(); } });
 
 let relogioState = {
   relogio: { visible: false },

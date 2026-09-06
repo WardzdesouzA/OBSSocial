@@ -1,4 +1,14 @@
 {
+  "0.169.0": {
+    "titulo": "🗺️ Weather across all of Brazil or one state, panel display with your city and 🗂️ full card with the next days",
+    "itens": [
+      "🗺️ The Weather rotation (“Go through the cities, one at a time”) got a “Go through” selector: the registered cities, every municipality in Brazil (the IBGE list, 5,570) or the municipalities of one state — with nothing to register one by one. The list runs alphabetically, state by state; in these modes the rotation is always on and the minimum is 15 s per city. The server fetches the weather only for the current city and the next ones (shortly before they come on), not thousands at once — the free sources’ quotas are still respected.",
+      "📍 The display next to the clock in the panel shows YOUR city (one of the registered ones — the first, or the one chosen in “Panel display: your city”), not the one currently on screen. Those who prefer to follow the rotation turn on “follow the screen” (off by default).",
+      "🗂️ Full card: a new button in the panel’s 🌤️ puts in the middle of the screen, temporarily, the weather right now with everything (feels like, humidity, wind, pressure, UV, clouds, visibility, dew point, sunrise and sunset), the next hours and the next days (3 to 7, your choice). In the panel it appears as a full window — the same thing the audience sees — with a city selector and search; the ✖ removes it from both places without touching the small card in the corner. The forecast comes from the same order of sources: Open-Meteo, MET Norway, OpenWeatherMap, WeatherAPI, AccuWeather and Climatempo (Weather Underground has no forecast).",
+      "🎛️ External control: clima/completo, clima/completoFechar and clima/completoAlternar; /status carries the rotation list, the display city and the full card.",
+      "ℹ️ Neighbourhoods of a municipality do not exist in weather sources: the forecast comes on a grid of about 10 km, so every neighbourhood of a city gets the same weather — hence no neighbourhood selector."
+    ]
+  },
   "0.168.3": {
     "titulo": "🌤️ Weather keeps updating even off screen — the panel display is always current",
     "itens": [
