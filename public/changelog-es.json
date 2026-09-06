@@ -1,4 +1,11 @@
 {
+  "0.167.2": {
+    "titulo": "🗂️ Recoger/expandir estandarizado: ahora también en 🔌 Conexiones y en 🗄️ Logs y datos",
+    "itens": [
+      "🔌 Cada tarjeta de la página Conexiones (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, Fuentes de clima, Reiniciar conexiones…) se recoge y expande por el título, como ya pasaba en la página Temas y en Labs. Nacen recogidas, la elección queda guardada en este navegador, y la línea de estado (● Conectado / Desconectado) sigue a la vista aun con la tarjeta cerrada.",
+      "🗂️ La regla pasó a ser el estándar: toda página de configuración con más de una tarjeta gana el recoger/expandir (🗄️ Logs y datos también). Una página de una sola tarjeta no se recoge, y el Editor visual de overlay sigue siempre abierto."
+    ]
+  },
   "0.167.1": {
     "titulo": "🌤️ El Clima ganó lugar fijo en el panel: junto al reloj, en el centro de la barra, con su propio visor",
     "itens": [

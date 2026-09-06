@@ -1,4 +1,11 @@
 {
+  "0.167.2": {
+    "titulo": "🗂️ Daralt/genişlet standartlaştı: artık 🔌 Bağlantılar ve 🗄️ Günlükler ve veriler’de de",
+    "itens": [
+      "🔌 Bağlantılar sayfasındaki her kart (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, Hava durumu kaynakları, Bağlantıları yeniden başlat…) Temalar sayfası ve Labs’ta olduğu gibi başlığından daralıp genişler. Daraltılmış başlarlar, seçim bu tarayıcıda hatırlanır ve durum satırı (● Bağlı / Bağlı değil) kart kapalıyken bile görünür kalır.",
+      "🗂️ Kural standart oldu: birden çok kartı olan her ayar sayfası daralt/genişlet kazanır (🗄️ Günlükler ve veriler de). Tek kartlı sayfa daralmaz ve katman Görsel düzenleyicisi her zaman açık kalır."
+    ]
+  },
   "0.167.1": {
     "titulo": "🌤️ Hava durumu panelde sabit bir yer kazandı: saatin yanında, çubuğun ortasında, kendi göstergesiyle",
     "itens": [

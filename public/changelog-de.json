@@ -1,4 +1,11 @@
 {
+  "0.167.2": {
+    "titulo": "🗂️ Ein-/Ausklappen vereinheitlicht: jetzt auch in 🔌 Verbindungen und 🗄️ Logs & Daten",
+    "itens": [
+      "🔌 Jede Karte der Seite Verbindungen (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, Wetterquellen, Verbindungen neu starten…) klappt über ihren Titel ein und aus, wie schon die Seite Themen und das Labs. Sie starten eingeklappt, die Wahl wird in diesem Browser gemerkt, und die Statuszeile (● Verbunden / Getrennt) bleibt auch bei geschlossener Karte sichtbar.",
+      "🗂️ Die Regel ist jetzt Standard: jede Einstellungsseite mit mehr als einer Karte bekommt das Ein-/Ausklappen (🗄️ Logs & Daten ebenfalls). Eine Seite mit nur einer Karte klappt nicht ein, und der visuelle Overlay-Editor bleibt immer offen."
+    ]
+  },
   "0.167.1": {
     "titulo": "🌤️ Das Wetter hat jetzt einen festen Platz im Panel: neben der Uhr, mittig in der Leiste, mit eigener Anzeige",
     "itens": [

@@ -167,13 +167,16 @@
      páginas reescreve o display dos cartões */
   .card.rede-off { display: none !important; }
   .card h3 { font-size: 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  /* 🗂️ v0.117: na Aparência, todo card fora o Editor visual expande/recolhe
-     pelo título (▸ recolhido / ▾ aberto); o estado fica neste navegador */
+  /* 🗂️ v0.117: todo card expande/recolhe pelo título (▸ recolhido / ▾ aberto);
+     o estado fica neste navegador. v0.167.2: o padrão vale em TODA página com
+     mais de um card (Conexões, Logs e dados…), fora o Editor visual — e a
+     linha de status de uma conexão (● Conectado) continua à vista recolhida */
   .card--recolhivel > h3 { cursor: pointer; user-select: none; }
   .card--recolhivel > h3:hover { color: var(--accent); }
   .card--recolhivel > h3 .card-seta { display: inline-block; width: 1em; color: var(--muted); font-size: 0.95em; text-align: center; flex: none; }
-  .card--recolhivel.recolhido > :not(h3) { display: none !important; }
+  .card--recolhivel.recolhido > :not(h3):not(.status) { display: none !important; }
   .card--recolhivel.recolhido > h3 { margin-bottom: 0; }
+  .card--recolhivel.recolhido > .status { margin-top: 6px; }
   .card .hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
   .row { display: flex; gap: 8px; margin-bottom: 8px; }
   /* type=password incluso: senha do OBS, senhas da rede e URLs secretas —
@@ -13221,10 +13224,16 @@ const cfgPages = {};
   // 🗂️ v0.117: todo card da Aparência, fora o Editor visual, vira um bloco
   // expandir/recolher pelo título — nasce recolhido (fica mais organizado) e
   // lembra o estado neste navegador; ganhar foco lá dentro (Tab, um "abrir"
-  // por código) expande sozinho, para nada ficar escondido de quem precisa
-  for (const card of cfgPages.aparencia || []) {
-    if (card.id === 'sec-widgets') continue;
-    tornarCardRecolhivel(card);
+  // por código) expande sozinho, para nada ficar escondido de quem precisa.
+  // 🗂️ v0.167.2: o mesmo padrão em TODA página com mais de um card (Conexões,
+  // Logs e dados…); uma página de card único não tem o que recolher, e o
+  // Labs tem o recolher próprio de cada item (v0.125)
+  for (const [pagina, cards] of Object.entries(cfgPages)) {
+    if (pagina === 'labs' || cards.length < 2) continue;
+    for (const card of cards) {
+      if (card.id === 'sec-widgets') continue;
+      tornarCardRecolhivel(card);
+    }
   }
 }
 

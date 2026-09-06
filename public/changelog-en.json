@@ -1,4 +1,11 @@
 {
+  "0.167.2": {
+    "titulo": "🗂️ Collapse/expand standardised: now in 🔌 Connections and 🗄️ Logs & data too",
+    "itens": [
+      "🔌 Every card on the Connections page (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, Weather sources, Restart connections…) collapses and expands from its title, as the Themes page and Labs already did. They start collapsed, the choice is remembered in this browser, and the status line (● Connected / Disconnected) stays visible even when the card is closed.",
+      "🗂️ The rule is now the standard: every settings page with more than one card gets collapse/expand (🗄️ Logs & data too). A single-card page does not collapse, and the overlay Visual Editor always stays open."
+    ]
+  },
   "0.167.1": {
     "titulo": "🌤️ Weather gets a fixed spot in the panel: next to the clock, centred in the bar, with its own display",
     "itens": [

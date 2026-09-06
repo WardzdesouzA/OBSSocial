@@ -1,4 +1,11 @@
 {
+  "0.167.2": {
+    "titulo": "🗂️ Replier/déplier standardisé : désormais aussi dans 🔌 Connexions et 🗄️ Journaux et données",
+    "itens": [
+      "🔌 Chaque carte de la page Connexions (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, Sources météo, Redémarrer les connexions…) se replie et se déplie par son titre, comme déjà sur la page Thèmes et dans Labs. Elles naissent repliées, le choix est mémorisé dans ce navigateur, et la ligne d’état (● Connecté / Déconnecté) reste visible même carte fermée.",
+      "🗂️ La règle devient le standard : toute page de réglages ayant plus d’une carte reçoit le replier/déplier (🗄️ Journaux et données aussi). Une page à carte unique ne se replie pas, et l’Éditeur visuel d’overlay reste toujours ouvert."
+    ]
+  },
   "0.167.1": {
     "titulo": "🌤️ La Météo a sa place fixe dans le panneau : à côté de l’horloge, au centre de la barre, avec son propre afficheur",
     "itens": [
