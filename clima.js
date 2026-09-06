@@ -24,7 +24,7 @@ const http = require('http');
 
 const UA = 'OBSSocial/clima (+https://github.com/WardzdesouzA/OBSSocial)';
 const TEMPO_MS = 12000;
-const MAX_CIDADES = 12;
+const MAX_CIDADES = 27; // cabem as 27 capitais de uma vez
 const MIN_ATUALIZAR_MIN = 10;
 const MAX_ATUALIZAR_MIN = 60;
 
@@ -85,15 +85,24 @@ function buscarJsonPadrao(url, { cabecalhos = {}, metodo = 'GET', corpo = null, 
   return new Promise((resolve, reject) => {
     let u;
     try { u = new URL(url); } catch (e) { return reject(new Error('url inválida')); }
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return reject(new Error('url inválida'));
     const lib = u.protocol === 'https:' ? https : http;
+    // prazo total, além do de inatividade: uma fonte que pinga um byte por
+    // vez não segura a fila de atualização para sempre
+    const prazo = setTimeout(() => req.destroy(new Error('a fonte demorou demais')), TEMPO_MS * 2);
     const req = lib.request(u, { method: metodo, timeout: TEMPO_MS, headers: { 'User-Agent': UA, Accept: 'application/json', ...cabecalhos } }, (res) => {
       const status = res.statusCode || 0;
       if (status >= 300 && status < 400 && res.headers.location && saltos < 3) {
         res.resume();
+        clearTimeout(prazo);
         let prox;
-        try { prox = new URL(res.headers.location, u).toString(); } catch { return reject(new Error('redirecionamento inválido')); }
-        return buscarJsonPadrao(prox, { cabecalhos, metodo, corpo, saltos: saltos + 1 }).then(resolve, reject);
+        try { prox = new URL(res.headers.location, u); } catch { return reject(new Error('redirecionamento inválido')); }
+        // só http(s), nunca de https para http (a chave iria em claro) e nunca
+        // para a própria máquina ou a rede local
+        if ((prox.protocol !== 'https:' && prox.protocol !== 'http:') || (u.protocol === 'https:' && prox.protocol !== 'https:') || hostLocal(prox.hostname)) return reject(new Error('redirecionamento recusado'));
+        return buscarJsonPadrao(prox.toString(), { cabecalhos, metodo, corpo, saltos: saltos + 1 }).then(resolve, reject);
       }
+      res.on('close', () => clearTimeout(prazo));
       const partes = [];
       let tam = 0;
       res.on('data', (c) => { tam += c.length; if (tam <= 2 * 1024 * 1024) partes.push(c); else res.destroy(new Error('resposta grande demais')); });
@@ -106,10 +115,21 @@ function buscarJsonPadrao(url, { cabecalhos = {}, metodo = 'GET', corpo = null, 
       res.on('error', reject);
     });
     req.on('timeout', () => req.destroy(new Error('a fonte demorou demais')));
-    req.on('error', reject);
+    req.on('error', (e) => { clearTimeout(prazo); reject(e); });
     if (corpo) req.write(corpo);
     req.end();
   });
+}
+// localhost, IP de loopback, rede privada, link-local ou CGNAT (só o
+// literal: a fonte legítima nunca redireciona para um IP desses)
+function hostLocal(h) {
+  const host = String(h || '').toLowerCase().replace(/^\[|\]$/g, '');
+  if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true;
+  if (/^(::1|::|0:0:0:0:0:0:0:1)$/.test(host) || /^(fe80|fc|fd)[0-9a-f]*:/i.test(host) || /^::ffff:/i.test(host)) return true;
+  const m = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(host);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
 }
 
 // ---------- normalização ----------
@@ -124,7 +144,7 @@ function retrato({ temp, sensacao, umidade, vento, condicao, descricao, dia, fon
   return {
     temp: arred(num(temp)),
     sensacao: arred(num(sensacao)),
-    umidade: umidade === null || umidade === undefined ? null : Math.round(num(umidade)),
+    umidade: num(umidade) === null ? null : Math.round(num(umidade)),
     vento: arred(num(vento)),
     condicao: cond,
     descricao: String(descricao || (cond ? DESCRICAO[cond] : '') || '').slice(0, 60),
@@ -300,7 +320,7 @@ const FETCHERS = {
     // três passos na primeira vez: id da cidade, registrar o id no token, e
     // então o tempo atual (o Advisor só responde para cidades registradas)
     const k = encodeURIComponent(chave);
-    const base = 'http://apiadvisor.climatempo.com.br';
+    const base = 'https://apiadvisor.climatempo.com.br'; // o token vai na URL: só por TLS
     let id = memoria && memoria.climatempoId;
     if (!id) {
       const r1 = await buscarJson(`${base}/api/v1/locale/city?name=${encodeURIComponent(cidade.nome)}${cidade.uf ? '&state=' + encodeURIComponent(cidade.uf) : ''}&token=${k}`);
@@ -331,7 +351,7 @@ const FETCHERS = {
     const m = o.metric || {};
     const chovendo = num(m.precipRate) > 0;
     const dia = num(o.solarRadiation) !== null ? o.solarRadiation > 5 : null;
-    return retrato({ temp: m.temp, sensacao: m.heatIndex !== undefined && num(m.heatIndex) !== null && m.temp >= 24 ? m.heatIndex : m.windChill, umidade: o.humidity, vento: m.windSpeed, condicao: chovendo ? 'chuva' : dia === false ? 'lua' : 'sol', dia, fonte: 'wunderground', extra: { estacao: String(estacao).slice(0, 30) } });
+    return retrato({ temp: m.temp, sensacao: m.heatIndex !== undefined && num(m.heatIndex) !== null && m.temp >= 24 ? m.heatIndex : m.windChill, umidade: o.humidity, vento: m.windSpeed, condicao: chovendo ? 'chuva' : dia === false ? 'lua' : 'sol', dia, fonte: 'wunderground' });
   },
 };
 
@@ -378,7 +398,8 @@ function sanitizeClima(c, padrao) {
     if (c2 && !cidades.some((x) => x.id === c2.id)) cidades.push(c2);
     if (cidades.length >= MAX_CIDADES) break;
   }
-  const inteiro = (v, min, max, d) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : d; };
+  // null, vazio e não-número caem no padrão (não no mínimo)
+  const inteiro = (v, min, max, d) => { const n = (typeof v === 'number' || typeof v === 'string') ? num(v) : null; return n === null ? d : Math.max(min, Math.min(max, Math.round(n))); };
   return {
     fontes: fontes.length ? fontes : FONTES_PADRAO.slice(),
     cidades,
@@ -439,13 +460,17 @@ class Clima {
   // Passa pelas cidades vencidas, uma de cada vez (as fontes gratuitas
   // pedem calma); avisa a tela quando algo mudou
   async atualizar(forcar = false) {
-    if (this.buscando) return;
+    // já numa volta: guarda o pedido e refaz quando ela acabar (o 🔄 do
+    // painel e uma cidade recém-adicionada não se perdem)
+    if (this.buscando) { if (forcar) this.pendenteForcar = true; else this.pendente = true; return false; }
     this.buscando = true;
     let mudou = false;
     try {
-      for (const cidade of this.conf.cidades) {
+      for (const cidade of this.conf.cidades.slice()) {
+        if (!this.conf.cidades.some((c) => c.id === cidade.id)) continue; // tirada no meio da volta
         if (!forcar && !this.vencido(cidade.id)) continue;
         const r = await this.buscarCidade(cidade);
+        if (!this.conf.cidades.some((c) => c.id === cidade.id)) continue;
         const atual = this.dados.get(cidade.id) || { memoria: {} };
         this.dados.set(cidade.id, { ...atual, ...r, em: this.agora() });
         mudou = true;
@@ -455,6 +480,9 @@ class Clima {
       if (this.ativo) this.agendar(false);
     }
     if (mudou) this.aoMudar(this.retratoGeral());
+    const denovo = this.pendenteForcar ? 'forcar' : this.pendente ? 'normal' : '';
+    this.pendenteForcar = false; this.pendente = false;
+    if (denovo && (this.ativo || denovo === 'forcar')) setTimeout(() => this.atualizar(denovo === 'forcar').catch(() => {}), 50);
     return mudou;
   }
 
@@ -489,8 +517,9 @@ class Clima {
         const d = this.dados.get(c.id) || {};
         return { id: c.id, nome: c.nome, uf: c.uf, pais: c.pais, retrato: d.retrato || null, erro: d.erro || null, em: d.em || 0 };
       }),
-      conf: { ...this.conf, cidades: undefined },
-      fontes: Object.fromEntries(Object.keys(FONTES).map((f) => [f, { nome: FONTES[f].nome, precisaChave: FONTES[f].chave, erro: this.ultimoErroFonte[f] || null }])),
+      // só o nome de cada fonte: a ordem, as chaves e os erros ficam no
+      // resumo de Conexões (climaChaves), que o público (viewer) não recebe
+      fontes: Object.fromEntries(Object.keys(FONTES).map((f) => [f, { nome: FONTES[f].nome }])),
     };
   }
 

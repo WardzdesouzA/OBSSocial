@@ -426,7 +426,7 @@ const DEFAULT_SETTINGS = {
   // 🌤️ v0.167: o Clima — o QUE mostrar e de ONDE (o visual mora em widgets.clima)
   clima: {
     fontes: ['open-meteo', 'met.no'], // em ordem: a primeira que responder vale
-    cidades: [],                       // [{ id, nome, uf, pais, lat, lon }] (até 12)
+    cidades: [],                       // [{ id, nome, uf, pais, lat, lon }] (até 27)
     mostrarCidade: true,
     mostrarSensacao: true,
     mostrarUmidade: true,
@@ -1019,7 +1019,7 @@ const state = {
   },
   // 🌤️ v0.167: o Clima na tela + o rodízio (índice e desde quando — cada tela
   // calcula sozinha em que cidade está, sem o servidor mandar mensagem a cada troca)
-  clima: { visible: false, indice: 0, desde: 0 },
+  clima: { visible: false, indice: 0, desde: Date.now() }, // «desde» nunca é 0: as telas contam o rodízio a partir dele
   clipboard: loadClipboard(), // 📋 v0.90: HISTÓRICO da área de transferência (lista de entradas)
   connections: loadConnections(), // memoria das conexoes: plataforma -> { channel, active }
   readIds: loadRead(),      // ids de comentarios que ja foram para a tela ("lidos")
@@ -1816,6 +1816,7 @@ function climaPublico() {
   return { visible: state.clima.visible, indice: state.clima.indice, desde: state.clima.desde, agora: Date.now(), ...climaServico.retratoGeral() };
 }
 function broadcastClima() { broadcast({ type: 'clima', clima: climaPublico() }); }
+let climaUltimaForcada = 0; // o último «atualizar agora» (🔄, controle externo)
 // O resumo das fontes para o card de 🔌 Conexões: só o computador local vê
 // se há chave (e nem ele vê a chave)
 function climaChavesResumo(ws) {
@@ -5041,6 +5042,9 @@ function restaurarBackup(item, marcaBruta) {
       state.settings = mergeSettings(bruto);
       saveSettingsAgora();
       broadcast({ type: 'settings', settings: state.settings });
+      // 🌤️ o Clima segue a lista de cidades restaurada (não a de antes)
+      state.clima.indice = 0; state.clima.desde = Date.now();
+      sincronizarClima(); broadcastClima();
       // 🎭 Perfis de overlay: o arquivo já voltou para o lugar; relê e avisa.
       // Backup de uma época SEM perfis (o arquivo não existe lá): a restauração
       // volta para "nenhum perfil" — senão o usuário ficava com um híbrido de
@@ -10007,8 +10011,8 @@ wss.on('connection', (ws, req) => {
     avisos: state.avisos,      // 📢 v0.128: o principal + adicionais
     aviso: state.avisos[0],    // (clientes antigos)
     relogio: relogioPublico(),
-    clima: climaPublico(),                       // 🌤️ v0.167
-    climaChaves: climaChavesResumo(ws),          // (só «tem chave», nunca a chave)
+    clima: climaPublico(),                       // 🌤️ v0.167 (o público vê só cidades e retratos)
+    climaChaves: ws.role === 'viewer' ? null : climaChavesResumo(ws),          // (só «tem chave», nunca a chave)
     audience: state.audience,
     exemplo: exemploAntes ? exemploAntes.alvo : null, // 🧪 v0.99
     exemploQr: exemploQrMatriz(), // 📺 v0.103: o QR de exemplo da prévia do editor
@@ -11786,6 +11790,9 @@ function tratarMensagem(ws, raw) {
     // ---------- 🌤️ v0.167: Clima ----------
     case 'climaToggle': {
       const antes = state.clima.visible;
+      // sem cidade não há o que mostrar: fica fora da tela (senão a primeira
+      // cidade cadastrada depois apareceria na live sem ninguém pedir)
+      if (!state.settings.clima.cidades.length) { state.clima.visible = false; sincronizarClima(); broadcastClima(); break; }
       state.clima.visible = typeof msg.visible === 'boolean' ? msg.visible : !state.clima.visible;
       if (state.clima.visible && !antes) { state.clima.desde = Date.now(); scheduleWidgetHide('clima', '', () => { state.clima.visible = false; sincronizarClima(); broadcastClima(); }); }
       sincronizarClima();
@@ -11798,19 +11805,27 @@ function tratarMensagem(ws, raw) {
       if (!n) break;
       const passo = msg.passo === -1 ? -1 : 1;
       const per = state.settings.clima.rodizioSegundos * 1000;
-      const decorrido = state.settings.clima.rodizio && state.clima.desde ? Math.floor((Date.now() - state.clima.desde) / per) : 0;
+      // a mesma conta das telas (overlay e painel), para o ▶ partir da cidade que está aparecendo
+      const decorrido = state.settings.clima.rodizio ? Math.max(0, Math.floor((Date.now() - (state.clima.desde || 0)) / per)) : 0;
       state.clima.indice = ((state.clima.indice + decorrido + passo) % n + n) % n;
       state.clima.desde = Date.now();
       broadcastClima();
       break;
     }
     case 'climaAtualizar':
-      // busca agora, de todas as cidades, mesmo que o retrato ainda valha
+      // busca agora, de todas as cidades, mesmo que o retrato ainda valha —
+      // no máximo uma vez a cada 15 s (a cota das fontes pagas é curta); fora
+      // disso só reenvia o que há, para o painel sair do «atualizando…»
+      if (Date.now() - climaUltimaForcada < 15000) { broadcastClima(); break; }
+      climaUltimaForcada = Date.now();
       climaServico.configurar(state.settings.clima);
       climaServico.atualizar(true).catch(() => {});
       break;
     case 'climaProcurar': {
-      // geocodificação (Open-Meteo, sem chave): responde só para quem pediu
+      // geocodificação (Open-Meteo, sem chave): responde só para quem pediu;
+      // uma busca por segundo por cliente
+      if (ws.climaProcurouEm && Date.now() - ws.climaProcurouEm < 1000) break;
+      ws.climaProcurouEm = Date.now();
       const nome = String(msg.nome || '').trim().slice(0, 80);
       const pais = /^[A-Za-z]{2}$/.test(String(msg.pais || '')) ? String(msg.pais).toUpperCase() : (msg.pais === '' ? '' : 'BR');
       procurarCidadeClima(nome, climaBuscarJson, pais)

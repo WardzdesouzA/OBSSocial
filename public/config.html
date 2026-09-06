@@ -2065,11 +2065,11 @@
     <!-- 🌤️ v0.167: Clima -->
     <div class="card" id="cardClima">
       <h3>🌤️ Clima</h3>
-      <div class="hint">O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 12); com o rodízio ligado, a tela passa por elas de tantos em tantos segundos. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, só enquanto o Clima está na tela. Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.</div>
+      <div class="hint">O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 27); com o rodízio ligado, a tela passa por elas de tantos em tantos segundos. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, só enquanto o Clima está na tela. Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.</div>
       <div class="row">
         <input type="text" id="clBusca" placeholder="Procurar cidade (ex.: Curitiba)" maxlength="80" style="flex:1">
         <button id="clBuscarBtn" class="icon-btn" title="Procurar a cidade">🔎</button>
-        <button id="clCapitaisBtn" class="icon-btn" title="Adicionar as capitais do Brasil (completa até 12 cidades)">🇧🇷</button>
+        <button id="clCapitaisBtn" class="icon-btn" title="Adicionar as capitais do Brasil (completa até 27 cidades)">🇧🇷</button>
       </div>
       <div id="clResultados" class="hint" style="display:none"></div>
       <div id="clLista" class="hint" style="margin-bottom:8px">Nenhuma cidade ainda.</div>
@@ -3419,9 +3419,13 @@ const hub = connectHub((event) => {
       cfgClimaChaves = event.climaChaves || null;
       fillClimaFontes();
       break;
-    case 'climaCidades':
-      mostrarResultadosCidade(event.resultados || [], event.erro);
+    case 'climaCidades': {
+      // com a UF na busca, só as cidades daquele estado (se houver alguma)
+      const todas = event.resultados || [];
+      const doEstado = climaFiltroUf ? todas.filter((c) => c.uf === climaFiltroUf) : [];
+      mostrarResultadosCidade(doEstado.length ? doEstado : todas, event.erro);
       break;
+    }
     case 'pix':
       cfgPix = event.pix || null;
       fillPixLab();
@@ -4817,7 +4821,7 @@ function fillClimaLista() {
 function adicionarCidadesClima(novas) {
   const atuais = Array.isArray(climaConf().cidades) ? climaConf().cidades.slice() : [];
   for (const c of novas) {
-    if (atuais.length >= 12) break;
+    if (atuais.length >= 27) break;
     if (atuais.some((x) => Math.abs(x.lat - c.lat) < 0.01 && Math.abs(x.lon - c.lon) < 0.01)) continue;
     atuais.push({ nome: c.nome, uf: c.uf || '', pais: c.pais || 'BR', lat: c.lat, lon: c.lon });
   }
@@ -4849,10 +4853,16 @@ function procurarCidadeClima() {
   const box = document.getElementById('clResultados');
   box.style.display = '';
   box.textContent = OBS_I18N.t('Procurando…');
-  // fora do Brasil? termine com a sigla do país: «Lisboa, PT»
+  // «Santos, SP» é cidade + estado (filtra pela UF); fora do Brasil, a sigla
+  // do país: «Lisboa, PT» (PT não é UF)
   const m = /^(.*),\s*([A-Za-z]{2})$/.exec(nome);
-  hub.send({ type: 'climaProcurar', nome: m ? m[1].trim() : nome, pais: m ? m[2].toUpperCase() : 'BR' });
+  const sigla = m ? m[2].toUpperCase() : '';
+  const ehUf = CLIMA_UFS.includes(sigla);
+  climaFiltroUf = ehUf ? sigla : '';
+  hub.send({ type: 'climaProcurar', nome: m ? m[1].trim() : nome, pais: m && !ehUf ? sigla : 'BR' });
 }
+const CLIMA_UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+let climaFiltroUf = '';
 document.getElementById('clBuscarBtn').addEventListener('click', procurarCidadeClima);
 document.getElementById('clBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); procurarCidadeClima(); } });
 document.getElementById('clCapitaisBtn').addEventListener('click', () => {
@@ -4890,6 +4900,7 @@ function fillClimaFontes() {
     chk.onchange = () => {
       const nova = ligadas.filter((x) => x !== id);
       if (chk.checked) nova.push(id);
+      if (!nova.length) { chk.checked = true; return; } // uma fonte sempre fica
       mandarClima({ fontes: nova });
     };
     linha.appendChild(chk);
