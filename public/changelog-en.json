@@ -1,4 +1,10 @@
 {
+  "0.168.3": {
+    "titulo": "🌤️ Weather keeps updating even off screen — the panel display is always current",
+    "itens": [
+      "🌤️ Weather fetching used to run only while the Weather was on screen; since the panel has the display next to the clock, the presenter needs the weather all the time. Now, with a city registered, the server queries the sources every 10–60 minutes (the chosen interval) whether the Weather is on screen or not — from the moment the program opens."
+    ]
+  },
   "0.168.2": {
     "titulo": "🪟 The panel columns turn translucent too",
     "itens": [

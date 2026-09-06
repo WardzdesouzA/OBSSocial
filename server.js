@@ -1856,9 +1856,12 @@ function broadcastClimaChaves() {
 }
 // Liga a busca só enquanto o Clima está na tela (as fontes gratuitas pedem
 // calma e a cota das pagas é curta); desligado, o que já veio fica guardado
+// 🌤️ v0.168.3: a busca fica ligada sempre que houver cidade cadastrada —
+// na tela ou não — porque o mostrador do painel (ao lado do relógio) mostra o
+// tempo o tempo todo para quem apresenta. O intervalo (10–60 min) segue valendo.
 function sincronizarClima() {
   climaServico.configurar(state.settings.clima);
-  if (state.clima.visible && state.settings.clima.cidades.length) climaServico.ligar();
+  if (state.settings.clima.cidades.length) climaServico.ligar();
   else climaServico.desligar();
 }
 
@@ -12559,8 +12562,8 @@ const recargaTimer = setInterval(vigiarRecarga, 30000);
 if (recargaTimer.unref) recargaTimer.unref();
 
 currency.init(DATA_DIR);
-loadClimaChaves(); // 🌤️ v0.167 (a busca só liga quando o Clima vai para a tela)
-climaServico.configurar(state.settings.clima);
+loadClimaChaves(); // 🌤️ v0.167
+sincronizarClima(); // 🌤️ v0.168.3: com cidade cadastrada, já busca no boot (o painel mostra o tempo mesmo fora da tela)
 restoreFromLog();
 cleanOldLogs();
 const logCleanTimer = setInterval(cleanOldLogs, 6 * 60 * 60 * 1000);

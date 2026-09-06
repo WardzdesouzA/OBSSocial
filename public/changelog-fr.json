@@ -1,4 +1,10 @@
 {
+  "0.168.3": {
+    "titulo": "🌤️ La Météo se met à jour même hors écran — l’afficheur du panneau reste à jour",
+    "itens": [
+      "🌤️ La récupération de la météo ne tournait que lorsque la Météo était à l’écran ; comme le panneau a l’afficheur à côté de l’horloge, le présentateur a besoin du temps en permanence. Désormais, avec une ville enregistrée, le serveur interroge les sources toutes les 10–60 minutes (l’intervalle choisi), Météo à l’écran ou non — dès l’ouverture du programme."
+    ]
+  },
   "0.168.2": {
     "titulo": "🪟 Les colonnes du panneau deviennent translucides aussi",
     "itens": [

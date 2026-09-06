@@ -1195,7 +1195,7 @@
       <h3>🌤️ Fontes de clima</h3>
       <div class="hint">O overlay 🌤️ Clima pergunta às fontes marcadas, nesta ordem: a primeira que responder vale; se falhar, a próxima. Open-Meteo e MET Norway funcionam sem cadastro. As outras pedem uma chave de API gratuita no site de cada uma — a chave fica só neste computador, criptografada, e nunca aparece de novo aqui (só «guardada»). Weather Underground: só estações pessoais (PWS) — informe CHAVE@IDDAESTACAO. Climatempo: o token gratuito do Advisor.</div>
       <div id="clFontes"></div>
-      <div class="hint" style="margin-bottom:0">⚖️ Cada fonte tem os seus termos e limites de uso; as gratuitas pedem calma (o programa só consulta enquanto o Clima está na tela, a cada 10–60 min).</div>
+      <div class="hint" style="margin-bottom:0">⚖️ Cada fonte tem os seus termos e limites de uso; as gratuitas pedem calma (o programa consulta a cada 10–60 min enquanto houver cidade cadastrada — na tela ou não, para o mostrador do painel ficar em dia).</div>
     </div>
 
     <div class="card cardOculto" id="cardYtDlp">
@@ -2068,7 +2068,7 @@
     <!-- 🌤️ v0.167: Clima -->
     <div class="card" id="cardClima">
       <h3>🌤️ Clima</h3>
-      <div class="hint">O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 27); com o rodízio ligado, a tela passa por elas de tantos em tantos segundos. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, só enquanto o Clima está na tela. Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.</div>
+      <div class="hint">O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 27); com o rodízio ligado, a tela passa por elas de tantos em tantos segundos. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, com o Clima na tela ou não (o mostrador do painel fica sempre em dia). Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.</div>
       <div class="row">
         <input type="text" id="clBusca" placeholder="Procurar cidade (ex.: Curitiba)" maxlength="80" style="flex:1">
         <button id="clBuscarBtn" class="icon-btn" title="Procurar a cidade">🔎</button>

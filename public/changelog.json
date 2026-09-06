@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.168.3",
+    "titulo": "🌤️ O Clima se atualiza mesmo fora da tela — o mostrador do painel fica sempre em dia",
+    "itens": [
+      "🌤️ A busca do tempo ficava ligada só enquanto o Clima estava na tela; como o painel tem o mostrador ao lado do relógio, quem apresenta precisa do tempo o tempo todo. Agora, havendo cidade cadastrada, o servidor consulta as fontes a cada 10–60 minutos (o intervalo escolhido) com o Clima na tela ou não — já a partir da abertura do programa."
+    ]
+  },
+  {
     "version": "0.168.2",
     "titulo": "🪟 As colunas do painel também ficam translúcidas",
     "itens": [

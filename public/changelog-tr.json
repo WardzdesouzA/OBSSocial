@@ -1,4 +1,10 @@
 {
+  "0.168.3": {
+    "titulo": "🌤️ Hava durumu ekran dışındayken de güncelleniyor — panel göstergesi hep güncel",
+    "itens": [
+      "🌤️ Hava durumu yalnızca ekrandayken alınıyordu; panelde saatin yanında gösterge olduğundan sunucu yapan kişinin hava durumuna her zaman ihtiyacı var. Artık kayıtlı bir şehir varken sunucu, Hava durumu ekranda olsun olmasın, kaynakları 10–60 dakikada bir (seçilen aralık) sorguluyor — program açıldığı andan itibaren."
+    ]
+  },
   "0.168.2": {
     "titulo": "🪟 Panel sütunları da yarı saydam oluyor",
     "itens": [

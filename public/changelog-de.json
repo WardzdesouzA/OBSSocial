@@ -1,4 +1,10 @@
 {
+  "0.168.3": {
+    "titulo": "🌤️ Das Wetter aktualisiert sich auch außerhalb des Bildschirms — die Panel-Anzeige bleibt aktuell",
+    "itens": [
+      "🌤️ Das Wetter wurde nur abgefragt, solange es auf dem Bildschirm war; da das Panel die Anzeige neben der Uhr hat, braucht der Moderator das Wetter die ganze Zeit. Jetzt fragt der Server bei eingetragener Stadt die Quellen alle 10–60 Minuten (das gewählte Intervall) ab, ob das Wetter auf dem Bildschirm ist oder nicht — ab dem Programmstart."
+    ]
+  },
   "0.168.2": {
     "titulo": "🪟 Auch die Panel-Spalten werden durchscheinend",
     "itens": [
