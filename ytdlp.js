@@ -278,8 +278,11 @@ function escolherFormato(bruto) {
   // eram descartados e o extrator parecia nem ter sido chamado.
   const sabe = (v) => typeof v === 'string' && v !== '';
   const EXT_DE_VIDEO = /^(mp4|m4v|webm|mov|mkv|ogv|3gp)$/i;
+  // (o video_ext que o yt-dlp deriva só vale como NÃO: fora do 'none' ele é
+  // a mera extensão do arquivo — um podcast .mp3 sem codecs vem com
+  // video_ext 'mp3', e isso não faz dele um vídeo)
   const temVideo = (f) => (sabe(f.vcodec) ? f.vcodec !== 'none'
-    : sabe(f.video_ext) ? f.video_ext !== 'none'
+    : f.video_ext === 'none' ? false
       : (Number(f.width) > 0 || Number(f.height) > 0 || EXT_DE_VIDEO.test(String(f.ext || ''))));
   const temSom = (f) => (sabe(f.acodec) ? f.acodec !== 'none' : true);
   // a «linha» de qualidade é o lado MENOR: um vídeo em pé de 1080×1920 é um
