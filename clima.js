@@ -27,6 +27,7 @@ const TEMPO_MS = 12000;
 const MAX_CIDADES = 27; // cabem as 27 capitais de uma vez
 const MIN_ATUALIZAR_MIN = 10;
 const MAX_ATUALIZAR_MIN = 60;
+const REPETE_FALHA_MS = 2 * 60 * 1000; // uma busca que falhou tenta de novo em 2 min
 
 const FONTES = {
   'open-meteo':     { nome: 'Open-Meteo', chave: false, site: 'https://open-meteo.com' },
@@ -472,7 +473,11 @@ class Clima {
         const r = await this.buscarCidade(cidade);
         if (!this.conf.cidades.some((c) => c.id === cidade.id)) continue;
         const atual = this.dados.get(cidade.id) || { memoria: {} };
-        this.dados.set(cidade.id, { ...atual, ...r, em: this.agora() });
+        // v0.168.3: quando nenhuma fonte respondeu (ou a que valia caiu), a
+        // cidade vence de novo em 2 min — sem isso uma falha passageira (rede
+        // ainda subindo no boot, fonte fora do ar) ficava presa o intervalo inteiro
+        const falhou = !r.retrato || !!r.erro;
+        this.dados.set(cidade.id, { ...atual, ...r, em: falhou ? this.agora() - this.conf.atualizarMin * 60 * 1000 + REPETE_FALHA_MS : this.agora() });
         mudou = true;
       }
     } finally {

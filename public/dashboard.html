@@ -6528,7 +6528,7 @@ function pintarClimaPainel(soSeTrocou) {
   }
   if (cidade.erro && !cidade.retrato) det.push('⚠️ ' + cidade.erro);
   else if (cidade.erro) det.push('⚠️ ' + OBS_I18N.t('fonte fora do ar — mostrando o último retrato'));
-  else if (!cidade.retrato) det.push(visivel ? OBS_I18N.t('buscando…') : OBS_I18N.t('busca quando estiver na tela'));
+  else if (!cidade.retrato) det.push(OBS_I18N.t('buscando…')); // v0.168.3: a busca está sempre ligada
   document.getElementById('climaPreviaDet').textContent = det.join(' · ');
 }
 setInterval(() => { if (climaState && climaState.cidades && climaState.cidades.length > 1) pintarClimaPainel(true); }, 700);

@@ -1,4 +1,10 @@
 {
+  "0.168.3": {
+    "titulo": "🌤️ El Clima se actualiza aunque esté fuera de pantalla — el visor del panel siempre al día",
+    "itens": [
+      "🌤️ La búsqueda del tiempo solo funcionaba mientras el Clima estaba en pantalla; como el panel tiene el visor junto al reloj, quien presenta necesita el tiempo todo el tiempo. Ahora, con una ciudad registrada, el servidor consulta las fuentes cada 10–60 minutos (el intervalo elegido) con el Clima en pantalla o no — desde que el programa abre."
+    ]
+  },
   "0.168.2": {
     "titulo": "🪟 Las columnas del panel también quedan translúcidas",
     "itens": [
