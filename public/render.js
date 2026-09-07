@@ -1898,9 +1898,22 @@ const TRILHA_PLAYER = (() => {
     }
   }
 
+  // 🎵 v0.169.2: «desde» é o relógio do SERVIDOR. Com o «agora» do servidor
+  // junto, o «há quanto tempo toca» sai da diferença entre os dois e é
+  // trazido para o relógio deste aparelho — um celular com o relógio 7 s
+  // adiantado (a mini Mesa monitorando) começava a trilha cortada em 7 s.
+  // Sem «agora» (servidor antigo), fica como era.
+  function desdeLocal(desde, agora) {
+    const d = Number(desde), a = Number(agora);
+    if (!d) return desde;
+    if (!a) return d;
+    return Date.now() - Math.max(0, a - d);
+  }
+
   // Toca esta trilha agora, cada modo do seu jeito
-  function tocar(trilha, desde) {
+  function tocar(trilha, desde, agora) {
     if (!trilha || !trilha.url) return;
+    desde = desdeLocal(desde, agora);
     if (trilha.modo === 'sobrepor' || trilha.modo === 'recomecar') {
       tocarPorCima(trilha);
       return;
@@ -1945,7 +1958,7 @@ const TRILHA_PLAYER = (() => {
   }
 
   return {
-    tocar, parar,
+    tocar, parar, desdeLocal,
     tocando: () => atual,
     temPendente: () => !!pendente,
     quandoBloquear: (fn) => { aoBloquear = fn; },

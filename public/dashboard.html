@@ -2077,7 +2077,7 @@ const hub = connectHub((event) => {
       vmixInfo = event.vmix || null; // 🎛️ v0.122
       renderTrilhas();
       renderTrilhaTelaPainel();
-      if (event.trilhaTocando) trilhaPlayNoPainel(event.trilhaTocando.id, event.trilhaTocando.desde);
+      if (event.trilhaTocando) trilhaPlayNoPainel(event.trilhaTocando.id, event.trilhaTocando.desde, event.trilhaTocando.agora);
       renderObs();
       renderVmix(); // 🎛️ v0.122
       if (event.version) document.getElementById('versionTag').textContent = `v${event.version} Beta™`;
@@ -2237,7 +2237,7 @@ const hub = connectHub((event) => {
       renderTrilhas();
       break;
     case 'trilhaPlay':
-      trilhaPlayNoPainel(event.id, event.desde);
+      trilhaPlayNoPainel(event.id, event.desde, event.agora);
       break;
     case 'trilhaStop':
       trilhaTocandoId = null;
@@ -7839,14 +7839,14 @@ function aplicarAjustesTelaPainel(box, t) {
   if (qual && document.activeElement !== qual) qual.value = ['alta', 'suave', 'pixelada'].includes(t.qualidade) ? t.qualidade : 'alta';
 }
 
-function trilhaPlayNoPainel(id, desde) {
+function trilhaPlayNoPainel(id, desde, agora) {
   const labs = (settings && settings.labs) || {};
   const t = trilhasLista.find((x) => x.id === id);
   const solo = !t || t.modo === 'solo' || t.modo === 'loop' || !t.modo;
   // Só as trilhas de BASE mudam o "tocando" — efeitos passam por cima
   if (solo) trilhaTocandoId = id;
   if (labs.trilhas === true && t && t.url && (t.destino === 'painel' || t.destino === 'ambos')) {
-    TRILHA_PLAYER.tocar(t, desde);
+    TRILHA_PLAYER.tocar(t, desde, agora); // v0.169.2: o «agora» do servidor acerta o relógio deste aparelho
   } else if (solo && TRILHA_PLAYER.tocando()) {
     // A base trocou para uma trilha que não toca aqui: cala a antiga
     TRILHA_PLAYER.parar();

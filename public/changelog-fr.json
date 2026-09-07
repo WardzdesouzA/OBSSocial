@@ -1,4 +1,11 @@
 {
+  "0.169.2": {
+    "titulo": "🎵 La piste ne démarre plus coupée sur un appareil dont l’horloge diffère — et qui arrive en cours entre au bon endroit",
+    "itens": [
+      "🎵 Au lancement d’une piste, le point de départ était calculé avec l’horloge de chaque appareil face à celle du serveur : un téléphone avec la mini Table de pistes (monitoring activé) en avance d’environ 7 s croyait que la piste « jouait déjà depuis 7 s » et la démarrait coupée — idem pour le panneau ou l’écran OBS ouverts sur un autre ordinateur. Désormais le serveur envoie sa propre heure avec, et chaque écran mesure « depuis combien de temps ça joue » sans dépendre de son horloge : la piste démarre du début, avec le fondu et le volume configurés.",
+      "⏩ Les audios/vidéos envoyés et les sons intégrés sont désormais servis avec la prise en charge de Range : sans elle le navigateur ne pouvait pas sauter de position, et un écran arrivant en cours de piste (reconnexion, panneau ouvert après, mini Table qui arrive) repartait de zéro au lieu du bon endroit."
+    ]
+  },
   "0.169.1": {
     "titulo": "☀️ Le Soleil de la Météo bouge vraiment",
     "itens": [
