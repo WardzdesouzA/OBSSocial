@@ -1,4 +1,11 @@
 {
+  "0.169.2": {
+    "titulo": "🎵 La pista ya no empieza cortada en un aparato con el reloj distinto, y quien llega a mitad entra en el punto correcto",
+    "itens": [
+      "🎵 Al tocar una pista, el punto de inicio se calculaba con el reloj de cada aparato contra el del servidor: un celular con la mini Mesa de Pistas (monitorear activado) unos 7 s adelantado creía que la pista «ya sonaba hace 7 s» y la empezaba cortada; lo mismo valía para el panel o la pantalla del OBS abiertos en otra computadora. Ahora el servidor manda su propia hora junto, y cada pantalla mide «cuánto lleva sonando» sin depender de su reloj: la pista empieza desde el principio, con el fade y el volumen configurados.",
+      "⏩ Los audios y videos subidos y los sonidos de fábrica pasan a servirse con soporte de Range: sin eso el navegador no podía saltar de posición, y una pantalla que entraba a mitad de una pista (reconexión, panel abierto después, mini Mesa que llega) volvía a empezar de cero en vez de entrar en el punto correcto."
+    ]
+  },
   "0.169.1": {
     "titulo": "☀️ El Sol del Clima se mueve de verdad",
     "itens": [

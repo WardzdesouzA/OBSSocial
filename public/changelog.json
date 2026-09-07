@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.169.2",
+    "titulo": "🎵 A trilha não começa mais cortada num aparelho com o relógio diferente — e quem chega no meio entra no ponto certo",
+    "itens": [
+      "🎵 Ao tocar uma trilha, o ponto de início era calculado pelo relógio de cada aparelho contra o do servidor: um celular com a mini Mesa de Trilhas (monitorar ligado) uns 7 s adiantado achava que a trilha «já tocava há 7 s» e começava cortada — o mesmo valia para o painel ou a tela do OBS abertos noutro computador. Agora o servidor manda a própria hora junto, e cada tela mede o «há quanto tempo toca» sem depender do relógio dela: a trilha começa do começo, com o fade e o volume como configurados.",
+      "⏩ Os áudios e vídeos enviados (uploads) e os sons de fábrica passaram a sair com suporte a Range: sem isso o navegador não conseguia pular posição, e uma tela que entrava no meio de uma trilha (reconexão, painel aberto depois, mini Mesa que chega) recomeçava do zero em vez de entrar no ponto certo."
+    ]
+  },
+  {
     "version": "0.169.1",
     "titulo": "☀️ O Sol do Clima se mexe de verdade",
     "itens": [

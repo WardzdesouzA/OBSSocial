@@ -1,4 +1,11 @@
 {
+  "0.169.2": {
+    "titulo": "🎵 Tracks no longer start cut off on a device with a different clock — and late joiners come in at the right point",
+    "itens": [
+      "🎵 When a track played, its start point was computed from each device’s clock against the server’s: a phone running the mini Sound Deck (monitoring on) about 7 s ahead thought the track had “already been playing for 7 s” and started it cut off — the same applied to the panel or the OBS screen opened on another computer. Now the server sends its own time along, and each screen measures “playing for how long” without relying on its clock: the track starts from the beginning, with the fade and volume as configured.",
+      "⏩ Uploaded audio/video and the built-in sounds are now served with Range support: without it the browser could not seek, and a screen joining mid-track (reconnect, panel opened later, a mini Deck arriving) restarted from zero instead of the right point."
+    ]
+  },
   "0.169.1": {
     "titulo": "☀️ The Weather sun really moves now",
     "itens": [

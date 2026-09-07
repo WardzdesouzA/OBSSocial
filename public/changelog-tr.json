@@ -1,4 +1,11 @@
 {
+  "0.169.2": {
+    "titulo": "🎵 Saati farklı bir cihazda parça artık kesik başlamıyor — ortada katılan doğru noktadan giriyor",
+    "itens": [
+      "🎵 Bir parça çalınırken başlangıç noktası her cihazın saatiyle sunucununki karşılaştırılarak hesaplanıyordu: mini Parça Masası (izleme açık) olan, yaklaşık 7 s ileri bir telefon parçanın «zaten 7 s’dir çaldığını» sanıp kesik başlatıyordu — başka bir bilgisayarda açık panel veya OBS ekranı için de aynıydı. Artık sunucu kendi saatini de gönderiyor ve her ekran «ne zamandır çalıyor»u kendi saatine bağlı kalmadan ölçüyor: parça, ayarlanan fade ve sesle baştan başlıyor.",
+      "⏩ Yüklenen ses/videolar ve fabrika sesleri artık Range desteğiyle sunuluyor: onsuz tarayıcı konum atlayamıyordu ve bir parçanın ortasında katılan ekran (yeniden bağlanma, sonradan açılan panel, gelen mini Masa) doğru nokta yerine sıfırdan başlıyordu."
+    ]
+  },
   "0.169.1": {
     "titulo": "☀️ Hava’daki Güneş artık gerçekten hareket ediyor",
     "itens": [

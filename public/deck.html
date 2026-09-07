@@ -681,11 +681,13 @@ for (const ev of ['pointerdown', 'touchstart', 'keydown']) {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) manterAcordado(); });
 
 // ---------- som local (monitorar) ----------
-function tocarAqui(id, desde) {
+function tocarAqui(id, desde, agora) {
   const t = trilhasLista.find((x) => x.id === id);
   const solo = !t || t.modo === 'solo' || t.modo === 'loop' || !t.modo;
-  if (solo) { trilhaTocandoId = id; tocandoDesde = desde || Date.now(); }
-  if (local.som && t && t.url) TRILHA_PLAYER.tocar(t, desde);
+  // v0.169.2: o «desde» vira relógio DESTE aparelho (pelo «agora» do servidor)
+  const desdeAqui = desde ? TRILHA_PLAYER.desdeLocal(desde, agora) : Date.now();
+  if (solo) { trilhaTocandoId = id; tocandoDesde = desdeAqui; }
+  if (local.som && t && t.url) TRILHA_PLAYER.tocar(t, desdeAqui);
   else if (solo && TRILHA_PLAYER.tocando()) TRILHA_PLAYER.parar();
   renderDeck();
 }
@@ -702,7 +704,7 @@ const hub = connectHub((event) => {
       lanUrl = event.lanUrl || '';
       trilhasLista = Array.isArray(event.trilhas) ? event.trilhas : [];
       trilhaTocandoId = event.trilhaTocando ? event.trilhaTocando.id : null;
-      tocandoDesde = event.trilhaTocando ? event.trilhaTocando.desde : null;
+      tocandoDesde = event.trilhaTocando ? TRILHA_PLAYER.desdeLocal(event.trilhaTocando.desde, event.trilhaTocando.agora) : null; // v0.169.2
       pastaTocandoId = event.pastaTocando || null;
       trilhaTela = event.trilhaTela || null;
       obsInfo = event.obs || null;
@@ -718,7 +720,7 @@ const hub = connectHub((event) => {
         if (!event.trilhaTocando || !local.som) { if (aqui || !local.som) TRILHA_PLAYER.parar(); }
         else {
           const t = trilhasLista.find((x) => x.id === event.trilhaTocando.id);
-          if (t && t.url && !(aqui && aqui.id === t.id)) TRILHA_PLAYER.tocar(t, event.trilhaTocando.desde);
+          if (t && t.url && !(aqui && aqui.id === t.id)) TRILHA_PLAYER.tocar(t, tocandoDesde);
         }
       }
       break;
@@ -735,7 +737,7 @@ const hub = connectHub((event) => {
       atualizarAviso();
       break;
     case 'trilhaPlay':
-      tocarAqui(event.id, event.desde);
+      tocarAqui(event.id, event.desde, event.agora);
       break;
     case 'trilhaStop':
       trilhaTocandoId = null;

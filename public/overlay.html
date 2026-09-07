@@ -3366,7 +3366,7 @@ function noFimOv(zerado) {
 // uma fonte de navegador do OBS, então o áudio dele entra na transmissão,
 // no mesmo mixer das outras fontes. Só toca o que tem destino live/ambos.
 let trilhasOv = [];
-function tocarTrilhaNaLive(id, desde) {
+function tocarTrilhaNaLive(id, desde, agora) {
   if (settings?.labs?.trilhas !== true) return;
   const t = trilhasOv.find((x) => x && x.id === id);
   if (!t || !t.url) return;
@@ -3377,7 +3377,7 @@ function tocarTrilhaNaLive(id, desde) {
     if (solo && TRILHA_PLAYER.tocando()) TRILHA_PLAYER.parar();
     return;
   }
-  TRILHA_PLAYER.tocar(t, desde);
+  TRILHA_PLAYER.tocar(t, desde, agora); // v0.169.2: o «agora» do servidor acerta o relógio desta tela
 }
 // Num navegador comum (fora do OBS), trilha presa por falta de toque também
 // acende o convite 🔇 — dentro do OBS toca direto
@@ -3830,7 +3830,7 @@ const hubOv = connectHub((event) => {
       prepararSomNaLive();
       trilhasOv = Array.isArray(event.trilhas) ? event.trilhas : [];
       // Quem abre no meio de uma trilha entra tocando junto (sincronizado)
-      if (event.trilhaTocando) tocarTrilhaNaLive(event.trilhaTocando.id, event.trilhaTocando.desde);
+      if (event.trilhaTocando) tocarTrilhaNaLive(event.trilhaTocando.id, event.trilhaTocando.desde, event.trilhaTocando.agora);
       // 🖼️🎞️ v0.86: mídia de tecla que já estava na tela entra junto
       trilhaTelaAtual = event.trilhaTela || null;
       renderMidiaTrilha();
@@ -3865,7 +3865,7 @@ const hubOv = connectHub((event) => {
       trilhasOv = Array.isArray(event.trilhas) ? event.trilhas : [];
       break;
     case 'trilhaPlay':
-      tocarTrilhaNaLive(event.id, event.desde);
+      tocarTrilhaNaLive(event.id, event.desde, event.agora);
       break;
     case 'trilhaStop':
       TRILHA_PLAYER.parar();

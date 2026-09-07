@@ -2750,6 +2750,31 @@ function entregarArquivo(res, fluxo) {
   });
   fluxo.pipe(res);
 }
+// 🎵 v0.169.2: um arquivo servido COM suporte a Range (206). Sem isso o
+// navegador não deixa PULAR posição no <audio>/<video>: uma tela que entra no
+// meio de uma trilha (reconexão, painel aberto depois, mini Mesa que chega)
+// começava do zero em vez do ponto certo. Vale para /uploads/ e para os
+// áudios/vídeos de public/ (os /sons/ de fábrica); /trilha-local/ já tinha.
+function entregarComRange(req, res, arquivo, tamanho, cabecalhos) {
+  const base = { ...cabecalhos, 'Accept-Ranges': 'bytes' };
+  const faixa = String(req.headers.range || '').match(/^bytes=(\d*)-(\d*)$/);
+  if (faixa && (faixa[1] || faixa[2]) && tamanho > 0) {
+    const inicio = faixa[1] ? Number(faixa[1]) : Math.max(0, tamanho - Number(faixa[2]));
+    const fim = faixa[1] && faixa[2] ? Math.min(Number(faixa[2]), tamanho - 1) : tamanho - 1;
+    if (!Number.isFinite(inicio) || !Number.isFinite(fim) || inicio > fim || inicio >= tamanho) {
+      res.writeHead(416, { 'Content-Range': `bytes */${tamanho}` });
+      res.end();
+      return;
+    }
+    res.writeHead(206, { ...base, 'Content-Range': `bytes ${inicio}-${fim}/${tamanho}`, 'Content-Length': fim - inicio + 1 });
+    entregarArquivo(res, fs.createReadStream(arquivo, { start: inicio, end: fim }));
+    return;
+  }
+  res.writeHead(200, { ...base, 'Content-Length': tamanho });
+  entregarArquivo(res, fs.createReadStream(arquivo));
+}
+// extensões de mídia que o navegador precisa poder «pular» (seek)
+const EXT_COM_RANGE = new Set(['.mp3', '.wav', '.ogg', '.oga', '.opus', '.m4a', '.aac', '.flac', '.weba', '.mp4', '.webm', '.m4v', '.mov', '.ogv']);
 
 // Rede de proteção final: um erro sem dono (uma promessa esquecida, um
 // callback que estourou) não pode fechar o programa no meio da live. Fica
@@ -3431,9 +3456,9 @@ const server = http.createServer((req, res) => {
     }
     fs.stat(filePath, (err, stat) => {
       if (err || !stat.isFile()) { res.writeHead(404); res.end('Não encontrado'); return; }
-      res.writeHead(200, {
+      // 🎵 v0.169.2: com Range — o seek das trilhas/vídeos enviados depende disto
+      entregarComRange(req, res, filePath, stat.size, {
         'Content-Type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
-        'Content-Length': stat.size,
         // Não deixa o navegador "adivinhar" outro tipo do arquivo.
         'X-Content-Type-Options': 'nosniff',
         // Um arquivo enviado, se aberto direto, não pode virar uma página de
@@ -3442,7 +3467,6 @@ const server = http.createServer((req, res) => {
         'Content-Security-Policy':
           "default-src 'none'; img-src 'self'; media-src 'self'; font-src 'self'; style-src 'unsafe-inline'",
       });
-      entregarArquivo(res, fs.createReadStream(filePath));
     });
     return;
   }
@@ -3456,6 +3480,17 @@ const server = http.createServer((req, res) => {
   const filePath = path.join(PUBLIC_DIR, path.normalize(urlPath));
   if (filePath !== PUBLIC_DIR && !filePath.startsWith(PUBLIC_DIR + path.sep)) {
     res.writeHead(403); res.end('Proibido'); return;
+  }
+  // 🎵 v0.169.2: áudio/vídeo de public/ (os /sons/ de fábrica) saem em fluxo e
+  // com Range, para o player poder pular posição
+  if (EXT_COM_RANGE.has(path.extname(filePath).toLowerCase())) {
+    fs.stat(filePath, (err, stat) => {
+      if (err || !stat.isFile()) { res.writeHead(404); res.end('Não encontrado'); return; }
+      const etag = `"${stat.size}-${Math.floor(stat.mtimeMs)}"`;
+      if (req.headers['if-none-match'] === etag && !req.headers.range) { res.writeHead(304, { 'ETag': etag, 'Cache-Control': 'no-cache' }); res.end(); return; }
+      entregarComRange(req, res, filePath, stat.size, { 'Content-Type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff', 'ETag': etag });
+    });
+    return;
   }
   fs.readFile(filePath, (err, content) => {
     if (err) { res.writeHead(404); res.end('Não encontrado'); return; }
@@ -7622,10 +7657,19 @@ function tocarTecla(t) {
   // som e comando (trocar de cena, mostrar uma fonte, começar a gravar...)
   if (t.tipo === 'obs') { if (t.obsAcao) obsExecutarAcao(t.obsAcao, t.obsAlvo, pastaFila && pastaFila.quem); return; }
   if (t.tipo === 'vmix') { if (t.vmixAcao) vmixExecutarAcao(t.vmixAcao, t.vmixAlvo, pastaFila && pastaFila.quem); return; }
+  // 🎵 v0.169.2: «agora» vai junto — as telas medem o «há quanto tempo toca»
+  // pela diferença entre os dois (relógio do servidor com ele mesmo), nunca
+  // pelo relógio do aparelho: um celular 7 s adiantado começava a trilha
+  // cortada em 7 s
+  const agora = Date.now();
   if (t.modo === 'solo' || t.modo === 'loop') {
-    state.trilhaTocando = { id: t.id, desde: Date.now() };
+    state.trilhaTocando = { id: t.id, desde: agora };
   }
-  broadcast({ type: 'trilhaPlay', id: t.id, desde: Date.now() });
+  broadcast({ type: 'trilhaPlay', id: t.id, desde: agora, agora });
+}
+// o que está tocando, com a referência de relógio do servidor (para o init)
+function trilhaTocandoPublica() {
+  return state.trilhaTocando ? { ...state.trilhaTocando, agora: Date.now() } : null;
 }
 // 🪆 v0.89: com pastas dentro de pastas, a fila do 🎛️ ACHATA a árvore — um
 // 🎛️ filho entra na fila com todo o conteúdo dele, na ordem, e a ⏱ espera
@@ -10081,7 +10125,7 @@ wss.on('connection', (ws, req) => {
     perfisOverlay: state.perfisOverlay,
     // 🏭 v0.59: os moldes de fábrica originais viajam junto — é o botão de
     // resgate do editor ("De fábrica") para desfazer qualquer bagunça
-    trilhaTocando: state.trilhaTocando,
+    trilhaTocando: trilhaTocandoPublica(), // 🎵 v0.169.2: com «agora» (quem chega atrasado entra no ponto certo, seja qual for o relógio dele)
     trilhaTela: state.trilhaTela, // 🖼️🎞️ v0.86
     midiaDireta: state.midiaDireta, // 🎞️ v0.129
     pastaTocando: pastaFila ? pastaFila.id : null,

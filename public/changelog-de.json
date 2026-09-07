@@ -1,4 +1,11 @@
 {
+  "0.169.2": {
+    "titulo": "🎵 Die Spur beginnt auf einem Gerät mit anderer Uhr nicht mehr abgeschnitten – und wer mittendrin dazukommt, steigt an der richtigen Stelle ein",
+    "itens": [
+      "🎵 Beim Abspielen wurde der Startpunkt mit der Uhr jedes Geräts gegen die des Servers berechnet: ein Handy mit dem Mini-Soundpult (Mithören an), etwa 7 s vorgestellt, glaubte, die Spur „laufe schon seit 7 s“, und begann sie abgeschnitten – dasselbe galt für Panel oder OBS-Bildschirm auf einem anderen Rechner. Jetzt schickt der Server seine eigene Zeit mit, und jeder Bildschirm misst „wie lange läuft es schon“ ohne seine Uhr: die Spur beginnt von vorn, mit Fade und Lautstärke wie eingestellt.",
+      "⏩ Hochgeladene Audios/Videos und die mitgelieferten Klänge werden jetzt mit Range-Unterstützung ausgeliefert: ohne sie konnte der Browser nicht springen, und ein Bildschirm, der mitten in einer Spur dazukam (Neuverbindung, später geöffnetes Panel, ankommendes Mini-Pult), begann bei null statt an der richtigen Stelle."
+    ]
+  },
   "0.169.1": {
     "titulo": "☀️ Die Wetter-Sonne bewegt sich jetzt wirklich",
     "itens": [
