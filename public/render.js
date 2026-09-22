@@ -698,6 +698,47 @@ function connectHub(onEvent) {
   };
 }
 
+// 🟢 v0.169.3: a página como ponte para a API do Kick. O Cloudflare do Kick
+// barra o programa (Node) pela assinatura do TLS, mas deixa um navegador de
+// verdade passar — então o servidor pede a uma página aberta neste
+// computador (painel, configurações, tela no OBS) que faça a consulta e
+// devolva a resposta. Só endereços da API pública do Kick (ou de um servidor
+// de teste local); os cookies do kick.com vão junto quando o navegador
+// deixa (é o que faz a verificação «sou humano» valer aqui também); e o
+// servidor confere o que volta antes de usar.
+const KICK_NAVEGADOR = {
+  aceita(url) {
+    return typeof url === 'string' && url.length < 2000
+      && (/^https:\/\/kick\.com\/api\//.test(url) || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(url));
+  },
+  // Chamado no «init» (a cada conexão): o servidor anota que esta página atende
+  pronto(hub) { try { hub.send({ type: 'kickNavegador', pronto: true }); } catch { /* sem conexão: o próximo init repete */ } },
+  async atender(hub, event) {
+    const pedido = String((event && event.pedido) || '');
+    if (!pedido) return;
+    const responder = (resp) => { try { hub.send({ type: 'kickNavegador', pedido, ...resp }); } catch { /* caiu: o servidor desiste sozinho */ } };
+    if (!this.aceita(event.url)) { responder({ status: 0, erro: 'endereço recusado pela página' }); return; }
+    const buscar = async (credentials) => {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 10000);
+      try {
+        const res = await fetch(event.url, { headers: { Accept: 'application/json' }, mode: 'cors', credentials, cache: 'no-store', signal: ctl.signal });
+        const corpo = (await res.text()).slice(0, 2 * 1024 * 1024);
+        return { status: res.status, corpo };
+      } finally { clearTimeout(t); }
+    };
+    try {
+      // Com os cookies do kick.com primeiro (a verificação feita lá vale aqui);
+      // se o navegador recusar o pedido com credenciais, vai sem elas
+      let resp;
+      try { resp = await buscar('include'); } catch { resp = await buscar('omit'); }
+      responder(resp);
+    } catch (e) {
+      responder({ status: 0, erro: String((e && e.message) || e).slice(0, 200) });
+    }
+  },
+};
+
 // Versão em alta resolução de um avatar, para o zoom (🔍): os CDNs aceitam
 // pedir tamanhos maiores trocando o sufixo do endereço
 // 🔍 v0.53: ao AMPLIAR, a melhor qualidade possível. Cada serviço guarda a

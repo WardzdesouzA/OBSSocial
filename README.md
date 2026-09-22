@@ -180,7 +180,7 @@ Everything is on the **🔗 URLs for OBS** page in the settings. The rules, in s
 
 **Bilibili won't connect.** Bilibili sometimes blocks anonymous connections because of their own risk control. Wait a few minutes and try connecting again.
 
-**Kick gave an error when connecting.** Kick uses protection (Cloudflare) that sometimes blocks the first attempt. Wait a few seconds and click *Connect* again.
+**Kick gave an error when connecting (error 403).** Kick uses protection (Cloudflare) that blocks the program by the "signature" of its connection, not by the channel. OBS Social tries other paths on its own (the system's curl, PowerShell on Windows and, finally, a browser open on this computer): leave the settings page, the dashboard or the OBS screen open on the same computer and it retries by itself. If the message says even the browser was blocked, open kick.com in that browser, pass the "I'm human" check and click 🔄.
 
 **Port 3000 is already in use.** Start it on another port: `PORT=3500 node server.js` (Mac/Linux) or `set PORT=3500 && node server.js` (Windows).
 
@@ -369,6 +369,6 @@ Tudo fica na página **🔗 URLs para o OBS** das configurações. As regras, em
 
 **A Bilibili não conecta.** A Bilibili às vezes bloqueia conexões anônimas por controle de risco deles. Espere alguns minutos e tente conectar de novo.
 
-**O Kick deu erro ao conectar.** O Kick usa uma proteção (Cloudflare) que às vezes bloqueia a primeira tentativa. Espere alguns segundos e clique em *Conectar* de novo.
+**O Kick deu erro ao conectar (erro 403).** O Kick usa uma proteção (Cloudflare) que barra o programa pela «assinatura» da conexão dele, não pelo canal. O OBS Social tenta sozinho outros caminhos (o curl do sistema, o PowerShell no Windows e, por fim, um navegador aberto neste computador): deixe as configurações, o painel ou a tela do OBS abertos no mesmo computador que ele tenta de novo sozinho. Se a mensagem disser que até o navegador foi barrado, abra kick.com nesse navegador, passe pela verificação «sou humano» e clique em 🔄.
 
 **A porta 3000 já está em uso.** Inicie com outra porta: `PORT=3500 node server.js` (Mac/Linux) ou `set PORT=3500 && node server.js` (Windows).

@@ -1073,6 +1073,7 @@
         <button class="reconnect-btn icon-btn" title="Reiniciar esta conexão (derruba e conecta de novo — use se travar ou quebrar)">🔄</button>
       </div>
       <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
+      <div class="hint" style="margin-top:6px;margin-bottom:0">Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.</div>
     </div>
 
     <div class="card" data-platform="bilibili">
@@ -3400,6 +3401,8 @@ const hub = connectHub((event) => {
         }
       }
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
+      // 🟢 v0.169.3: esta página atende consultas ao Kick quando o Cloudflare barra o programa
+      KICK_NAVEGADOR.pronto(hub);
       fillSettingsForm();
       // 📱 v0.163: os endereços/QR do mini Mesa, e a cópia do tema deste
       // navegador quando o celular ainda não tem nenhuma (modo «igual ao OBS Social»)
@@ -3634,6 +3637,10 @@ const hub = connectHub((event) => {
     }
     case 'status':
       updateStatus(event.platform, event.status);
+      break;
+    // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
+    case 'kickNavegador':
+      KICK_NAVEGADOR.atender(hub, event);
       break;
     // 🧪 v0.99: o exemplo de outro overlay entrou/saiu (em qualquer aba)
     case 'exemplo':

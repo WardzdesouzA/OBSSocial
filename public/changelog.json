@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.169.3",
+    "titulo": "🟢 Kick: quando o Cloudflare barra o programa, a consulta vai pelo curl, pelo PowerShell ou pelo navegador aberto — e a «nova tentativa sozinha» agora acontece de verdade",
+    "itens": [
+      "🟢 O Kick passou a responder «erro 403» ao conectar: o Cloudflare deles barra o programa pela assinatura do TLS do Node, não pelo canal. Agora, quando o caminho normal é barrado, o OBS Social tenta sozinho outros caminhos, na ordem: o Node com a assinatura do Chrome, o curl do próprio sistema (o Windows 10+ já vem com ele), o PowerShell (Windows) e, por fim, um navegador aberto neste computador — as configurações, o painel ou a tela no OBS fazem a consulta e devolvem a resposta ao programa. O caminho que funcionou fica lembrado para as próximas consultas (fotos de quem comenta, espectadores, histórico), e de meia em meia hora o programa volta a testar o caminho normal.",
+      "🔁 A «Nova tentativa sozinha em 30s» nunca acontecia: no erro, o servidor desligava o conector do Kick antes de a tentativa chegar — só o 🔄 salvava. Agora o conector fica vivo e tenta de novo como prometido; e, quando uma página deste computador abre (configurações, painel ou tela do OBS), a tentativa é feita na hora, sem esperar.",
+      "📝 A mensagem de erro explica o que fazer: com tudo barrado, pede para deixar o painel ou as configurações abertos num navegador deste computador; se até o navegador foi barrado, pede para abrir kick.com nele, passar pela verificação «sou humano» e clicar em 🔄. O card do Kick nas configurações ganhou uma dica com o mesmo recado.",
+      "🖼️ As fotos de quem comenta na Kick e a contagem de espectadores usam os mesmos caminhos — voltam a aparecer quando só o caminho normal está barrado. Quando tudo está barrado, esses pedidos extras esperam um minuto em vez de insistir a cada mensagem."
+    ]
+  },
+  {
     "version": "0.169.2",
     "titulo": "🎵 A trilha não começa mais cortada num aparelho com o relógio diferente — e quem chega no meio entra no ponto certo",
     "itens": [

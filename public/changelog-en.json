@@ -1,4 +1,13 @@
 {
+  "0.169.3": {
+    "titulo": "🟢 Kick: when Cloudflare blocks the program, the lookup goes through curl, PowerShell or an open browser — and the “retrying on its own” now really happens",
+    "itens": [
+      "🟢 Kick started answering “error 403” on connect: their Cloudflare blocks the program by the TLS signature of Node, not by the channel. Now, when the normal path is blocked, OBS Social tries other paths on its own, in order: Node with Chrome’s signature, the system’s own curl (Windows 10+ ships with it), PowerShell (Windows) and, finally, a browser open on this computer — the settings, the panel or the OBS screen make the lookup and hand the answer back to the program. The path that worked is remembered for the next lookups (commenter photos, viewers, history), and every half hour the program tests the normal path again.",
+      "🔁 “Retrying on its own in 30s” never happened: on error, the server switched the Kick connector off before the retry came — only 🔄 saved it. Now the connector stays alive and retries as promised; and when a page on this computer opens (settings, panel or OBS screen), the retry happens right away, without waiting.",
+      "📝 The error message explains what to do: with everything blocked, it asks you to leave the panel or the settings open in a browser on this computer; if even the browser was blocked, it asks you to open kick.com there, pass the “I’m human” check and click 🔄. The Kick card in the settings got a hint with the same advice.",
+      "🖼️ Kick commenter photos and the viewer count use the same paths — they come back when only the normal path is blocked. When everything is blocked, these extra requests wait a minute instead of insisting on every message."
+    ]
+  },
   "0.169.2": {
     "titulo": "🎵 Tracks no longer start cut off on a device with a different clock — and late joiners come in at the right point",
     "itens": [

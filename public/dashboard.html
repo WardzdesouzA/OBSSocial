@@ -2002,6 +2002,8 @@ const hub = connectHub((event) => {
       else if (event.version && window.versaoDoPrograma !== event.version) { location.reload(); break; }
       settings = event.settings;
       defaultSettings = event.defaults || null;
+      // 🟢 v0.169.3: o painel atende consultas ao Kick quando o Cloudflare barra o programa
+      KICK_NAVEGADOR.pronto(hub);
       if (event.updateAvailable) showUpdateBanner(event.updateAvailable);
       updateFeedPending(event.feedPending || 0);
       colTotals = event.feedTotals || {};
@@ -2121,6 +2123,10 @@ const hub = connectHub((event) => {
       break;
     case 'status':
       updateStatus(event.platform, event.status);
+      break;
+    // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
+    case 'kickNavegador':
+      KICK_NAVEGADOR.atender(hub, event);
       break;
     case 'avatarFix': {
       // Foto descoberta depois: preenche as mensagens antigas dessa pessoa

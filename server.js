@@ -167,7 +167,7 @@ const { Clima: ClimaServico, sanitizeClima, sanitizeCidade: sanitizeCidadeClima,
 const PAINEL_ORDEM = require('./public/painel-ordem');
 
 const { TwitchConnector } = require('./connectors/twitch');
-const { KickConnector } = require('./connectors/kick');
+const { KickConnector, kickApi, kickApiConfigurar } = require('./connectors/kick');
 const { YouTubeConnector, baixarFigurinha: baixarFigurinhaYouTube } = require('./connectors/youtube');
 const { BilibiliConnector } = require('./connectors/bilibili');
 const { TelegramConnector } = require('./connectors/telegram');
@@ -3855,6 +3855,8 @@ function podeObs(ws) {
 
 // Operações de segurança/atualização/reinício: SÓ do computador local.
 const LOCAL_ONLY_OPS = new Set(['securityPassword', 'securityMode', 'securityPerms', 'updateCheck', 'updateApply', 'updateAuto', 'restartApp', 'limpar',
+  // 🟢 v0.169.3: só uma página deste computador pode consultar o Kick pelo programa
+  'kickNavegador',
   // 💾 Backup mexe em arquivos do computador: só a máquina local comanda
   'backupAgora', 'backupRestaurar',
   // 🎬 A senha do OBS e 🎵 a importação/casamento por pasta leem/gravam
@@ -4482,9 +4484,12 @@ const kickAvatarPending = new Set();
 function lookupKickAvatar(slug) {
   if (!slug || avatarJaTratado(kickAvatarCache, kickAvatarPending, slug)) return;
   kickAvatarPending.add(slug);
-  const kickBase = process.env.OBS_SOCIAL_KICK_AVATAR_API || 'https://kick.com/api/v2/channels/';
-  fetch(kickBase + encodeURIComponent(slug), { headers: AVATAR_LOOKUP_HEADERS, signal: AbortSignal.timeout(10000) })
-    .then((res) => (res.ok ? res.json() : null))
+  // 🟢 v0.169.3: pelo mesmo caminho do chat (kickApi) — quando o Cloudflare
+  // barra o Node, a foto vem pelo curl/PowerShell/navegador; e «extra» =
+  // se tudo acabou de ser barrado, desiste na hora em vez de insistir
+  const kickBase = process.env.OBS_SOCIAL_KICK_AVATAR_API || 'v2/channels/';
+  kickApi(kickBase + encodeURIComponent(slug), { extra: true })
+    .then((res) => (res.ok ? res.json : null))
     .then((data) => {
       const pic = data?.user?.profile_pic;
       const ok = typeof pic === 'string' && pic.startsWith('https://') ? pic : null;
@@ -6045,14 +6050,11 @@ function logAudienceIssue(platform, message) {
 }
 
 async function fetchKickViewers(slug) {
-  const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
-      'Accept': 'application/json',
-    },
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
+  // 🟢 v0.169.3: pelos mesmos caminhos do chat (fetch → curl → PowerShell →
+  // navegador aberto), com «extra»: barrado agora há pouco = espera a vez
+  const res = await kickApi(`v2/channels/${encodeURIComponent(slug)}`, { extra: true });
+  if (!res.ok || !res.json) return null;
+  const data = res.json;
   const ls = data?.livestream;
   if (!ls) return { count: null, online: false, since: null }; // canal fora do ar
   const count = ls.viewer_count;
@@ -6557,10 +6559,13 @@ function connect(platform, channel, options = {}) {
     // WhatsApp) — espalha retroativamente nas mensagens já na memória e
     // avisa os painéis (avatarFix), como nos avatares das outras redes
     onAvatar: (chave, avatar) => backfillAvatar(platform, chave, avatar),
-    onStatus: (statusState, detail) => {
+    onStatus: (statusState, detail, extra) => {
       // Ignora eventos de um conector que ja foi trocado/desligado.
       if (state.connectors[platform] !== instance) return;
-      if (statusState === 'error') {
+      // 🟢 v0.169.3: «erro, mas vou tentar de novo sozinho» (Kick barrado
+      // pelo Cloudflare) deixa o conector vivo — antes ele era desligado
+      // aqui e a «nova tentativa sozinha em 30s» prometida nunca acontecia
+      if (statusState === 'error' && !(extra && extra.insiste === true)) {
         delete state.connectors[platform];
         instance.stop();
       }
@@ -10064,7 +10069,7 @@ wss.on('connection', (ws, req) => {
     });
   }
   broadcastClients();
-  ws.on('close', () => broadcastClients());
+  ws.on('close', () => { broadcastClients(); kickNavegadorCaiu(ws); });
   // Sem este ouvinte, QUALQUER erro de protocolo do WebSocket (um quadro
   // grande demais, texto malformado, bytes estranhos) virava um erro sem dono
   // e fechava o programa inteiro. Agora a conexão problemática cai sozinha e
@@ -10162,6 +10167,57 @@ wss.on('connection', (ws, req) => {
 });
 
 // ---------------------------------------------------------------------------
+// 🟢 v0.169.3: a ponte para o Kick pelo navegador. O Cloudflare do Kick barra
+// o programa (403) pela assinatura do TLS do Node, mas deixa um navegador de
+// verdade passar. Quando todos os caminhos do servidor falham, a consulta é
+// pedida a uma página aberta NESTE computador (painel, configurações ou a
+// tela no OBS) — só páginas locais (papel 'local'); a rede nunca é chamada e
+// nunca é ouvida. A página busca kick.com/api/... e devolve o corpo; quem
+// pediu confere o que veio antes de usar. Um pedido por vez por página, em
+// rodízio, e poucos ao mesmo tempo: avatar em massa não vira enxurrada.
+// ---------------------------------------------------------------------------
+const kickPedidosNavegador = new Map(); // id -> { resolve, reject, timer, ws }
+let kickPedidoSeq = 0;
+let kickNavegadorRodizio = 0;
+const KICK_NAVEGADOR_MS = Number(process.env.OBS_TESTE_KICK_NAVEGADOR_MS) || 12000;
+const KICK_NAVEGADOR_MAX = 4;
+function kickNavegadoresLocais() {
+  const lista = [];
+  for (const c of wss.clients) if (c.readyState === WebSocket.OPEN && c.role === 'local' && c.consultaKick) lista.push(c);
+  return lista;
+}
+function kickConsultaPeloNavegador(url) {
+  const candidatos = kickNavegadoresLocais();
+  if (!candidatos.length) {
+    const e = new Error('nenhum navegador aberto neste computador');
+    e.semNavegador = true;
+    return Promise.reject(e);
+  }
+  if (kickPedidosNavegador.size >= KICK_NAVEGADOR_MAX) return Promise.reject(new Error('o navegador já tem consultas demais na fila'));
+  const alvo = candidatos[kickNavegadorRodizio++ % candidatos.length];
+  const id = 'k' + (++kickPedidoSeq);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      kickPedidosNavegador.delete(id);
+      reject(new Error('o navegador não respondeu a tempo'));
+    }, KICK_NAVEGADOR_MS);
+    kickPedidosNavegador.set(id, { resolve, reject, timer, ws: alvo });
+    try { alvo.send(JSON.stringify({ type: 'kickNavegador', pedido: id, url })); }
+    catch (err) { clearTimeout(timer); kickPedidosNavegador.delete(id); reject(err); }
+  });
+}
+// A página caiu no meio: os pedidos dela falham na hora (o caminho seguinte entra)
+function kickNavegadorCaiu(ws) {
+  for (const [id, p] of kickPedidosNavegador) {
+    if (p.ws !== ws) continue;
+    clearTimeout(p.timer);
+    kickPedidosNavegador.delete(id);
+    p.reject(new Error('a página fechou no meio da consulta'));
+  }
+}
+kickApiConfigurar({ navegador: { disponivel: () => kickNavegadoresLocais().length > 0, pedir: kickConsultaPeloNavegador } });
+
+// ---------------------------------------------------------------------------
 // O despachante de TODAS as operações do painel. Ficava dentro do
 // wss.on('connection'); v0.126 o trouxe para fora, porque o 🕹️ Controle
 // externo (Stream Deck e afins) manda as MESMAS operações por HTTP — e
@@ -10195,6 +10251,27 @@ function tratarMensagem(ws, raw) {
         ? state.recent
         : (state.recentByPlatform[rede] || []);
       ws.send(JSON.stringify({ type: 'recarga', platform: rede, messages: lista }));
+      break;
+    }
+    case 'kickNavegador': {
+      // 🟢 v0.169.3 (LOCAL_ONLY_OPS): a página se apresenta como ponte
+      // («pronto») ou devolve a resposta de uma consulta pedida a ela
+      if (msg.pronto === true) {
+        ws.consultaKick = true;
+        // Apareceu um caminho novo: se o Kick está só esperando a próxima
+        // tentativa (barrado), tenta agora
+        const k = state.connectors.kick;
+        if (k && typeof k.acordar === 'function') k.acordar();
+        break;
+      }
+      const id = String(msg.pedido || '');
+      const p = kickPedidosNavegador.get(id);
+      if (!p || p.ws !== ws) break; // só a página a quem se pediu responde
+      clearTimeout(p.timer);
+      kickPedidosNavegador.delete(id);
+      const status = Number(msg.status) || 0;
+      if (!status) { p.reject(new Error(String(msg.erro || 'o navegador não conseguiu consultar').slice(0, 200))); break; }
+      p.resolve({ status, texto: typeof msg.corpo === 'string' ? msg.corpo.slice(0, 4 * 1024 * 1024) : '' });
       break;
     }
     case 'reconnect': {
