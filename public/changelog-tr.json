@@ -1,4 +1,10 @@
 {
+  "0.169.5": {
+    "titulo": "🔒 Ağ üzerinden «Yeni sürüm var mı kontrol et»: sayfa artık bunun yalnızca OBS Social bilgisayarında çalıştığını açıklıyor",
+    "itens": [
+      "🔒 Güncellemeyi kontrol etmek ve kurmak «yalnızca yerel bilgisayar» işlemleridir (güvenlik için). Ayarları ağ adresinden (192.168… veya başka bir bilgisayardan) açanların isteği sessizce atılıyordu: düğme «GitHub’da kontrol ediliyor…» üzerinde takılı kalıyor ve 0.169.4’te GitHub’ın yanıt vermediği uyarısıyla bitiyordu — GitHub sorunu gibi görünüyordu. Artık sunucu nedenini açıklayarak hemen yanıt veriyor ve sayfa tıklamadan önce uyarıyor (düğmeler devre dışı, programın bilgisayarında http://localhost:3000 adresini açma ipucuyla). Aynısı diğer yalnızca yerel işlemler için de geçerli (şifre, yedek, yeniden başlatma…): sessizlik yerine bir uyarı."
+    ]
+  },
   "0.169.4": {
     "titulo": "🔄 «Yeni sürüm var mı kontrol et» saniyeler içinde yanıt veriyor — ve artık «GitHub’da kontrol ediliyor…» üzerinde takılı kalmıyor",
     "itens": [

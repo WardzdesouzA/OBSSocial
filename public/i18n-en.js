@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "This operation can only be done on the computer where OBS Social runs (this page came through the network). Open the panel there at the address http://localhost:3000 shown in the black window.",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ This page came through the network. Checking and installing the update only works on the computer where OBS Social runs: open the settings there at the address http://localhost:3000 shown in the black window.",
+    "Só no computador do OBS Social": "Only on the OBS Social computer",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "This operation can only be done on the computer where OBS Social runs.",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub didn’t answer in time. Check the OBS Social black window (it tells the reason) and try again.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick’s Cloudflare blocked the program. Open the panel or the settings in a browser on this computer and leave it open: the lookup will be made through it.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick’s Cloudflare blocked even this computer’s browser. Open kick.com in this same browser, pass the “I’m human” check and click 🔄 here.",

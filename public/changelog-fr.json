@@ -1,4 +1,10 @@
 {
+  "0.169.5": {
+    "titulo": "🔒 « Vérifier s’il y a une nouvelle version » via le réseau : la page explique maintenant que cela ne marche que sur l’ordinateur d’OBS Social",
+    "itens": [
+      "🔒 Vérifier et installer la mise à jour sont des opérations « ordinateur local seulement » (par sécurité). Qui ouvrait les réglages par l’adresse réseau (192.168…, ou depuis un autre ordinateur) voyait sa demande ignorée en silence : le bouton restait bloqué sur « Vérification sur GitHub… » et, en 0.169.4, finissait sur l’avis que GitHub n’avait pas répondu — comme un problème GitHub. Maintenant le serveur répond tout de suite en expliquant pourquoi, et la page prévient avant le clic (boutons désactivés avec l’astuce d’ouvrir http://localhost:3000 sur l’ordinateur du programme). Idem pour les autres opérations locales (mot de passe, sauvegarde, redémarrage…) : un avis au lieu du silence."
+    ]
+  },
   "0.169.4": {
     "titulo": "🔄 « Vérifier s’il y a une nouvelle version » répond en quelques secondes — et ne reste plus bloqué sur « Vérification sur GitHub… »",
     "itens": [

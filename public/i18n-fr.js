@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "Cette opération ne peut être faite que sur l’ordinateur où OBS Social tourne (cette page est venue par le réseau). Ouvrez le panneau là-bas à l’adresse http://localhost:3000 affichée dans la fenêtre noire.",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ Cette page est venue par le réseau. Vérifier et installer la mise à jour ne fonctionne que sur l’ordinateur où OBS Social tourne : ouvrez les réglages là-bas à l’adresse http://localhost:3000 affichée dans la fenêtre noire.",
+    "Só no computador do OBS Social": "Seulement sur l’ordinateur d’OBS Social",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "Cette opération ne peut être faite que sur l’ordinateur où OBS Social tourne.",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub n’a pas répondu à temps. Regardez la fenêtre noire d’OBS Social (elle donne la raison) et réessayez.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Le Cloudflare de Kick a bloqué le programme. Ouvrez le panneau ou les réglages dans un navigateur de cet ordinateur et laissez-le ouvert : la requête passera par lui.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Le Cloudflare de Kick a bloqué même le navigateur de cet ordinateur. Ouvrez kick.com dans ce même navigateur, passez la vérification « je suis humain » et cliquez sur 🔄 ici.",

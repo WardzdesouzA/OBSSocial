@@ -1,4 +1,10 @@
 {
+  "0.169.5": {
+    "titulo": "🔒 «Verificar si hay versión nueva» por la red: ahora la página explica que solo funciona en el equipo de OBS Social",
+    "itens": [
+      "🔒 Verificar e instalar la actualización son operaciones «solo del equipo local» (por seguridad). Quien abría la configuración por la dirección de red (192.168…, o desde otro equipo) tenía la petición descartada en silencio: el botón se quedaba atascado en «Verificando en GitHub…» y, en la 0.169.4, terminaba con el aviso de que GitHub no respondió — pareciendo un problema de GitHub. Ahora el servidor responde al instante explicando el motivo, y la página avisa antes del clic (botones desactivados con la pista de abrir http://localhost:3000 en el equipo del programa). Lo mismo vale para las otras operaciones solo locales (contraseña, copia de seguridad, reiniciar…): un aviso en vez de silencio."
+    ]
+  },
   "0.169.4": {
     "titulo": "🔄 «Verificar si hay versión nueva» responde en segundos — y ya no se queda atascado en «Verificando en GitHub…»",
     "itens": [

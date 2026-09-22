@@ -1,4 +1,10 @@
 {
+  "0.169.5": {
+    "titulo": "🔒 „Nach neuer Version suchen“ über das Netzwerk: Die Seite erklärt jetzt, dass das nur auf dem OBS-Social-Computer geht",
+    "itens": [
+      "🔒 Update prüfen und installieren sind Vorgänge „nur am lokalen Computer“ (aus Sicherheitsgründen). Wer die Einstellungen über die Netzwerkadresse öffnete (192.168…, oder von einem anderen Computer), bekam die Anfrage stillschweigend verworfen: Der Button blieb bei „Prüfe auf GitHub…“ hängen und endete in 0.169.4 mit dem Hinweis, GitHub habe nicht geantwortet — als wäre es ein GitHub-Problem. Jetzt antwortet der Server sofort mit dem Grund, und die Seite warnt schon vor dem Klick (Buttons deaktiviert, mit dem Tipp, http://localhost:3000 auf dem Computer des Programms zu öffnen). Dasselbe gilt für die anderen nur-lokalen Vorgänge (Passwort, Backup, Neustart…): ein Hinweis statt Schweigen."
+    ]
+  },
   "0.169.4": {
     "titulo": "🔄 „Nach neuer Version suchen“ antwortet in Sekunden — und bleibt nicht mehr bei „Prüfe auf GitHub…“ hängen",
     "itens": [

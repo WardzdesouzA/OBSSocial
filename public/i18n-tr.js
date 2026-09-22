@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "Bu işlem yalnızca OBS Social’ın çalıştığı bilgisayarda yapılabilir (bu sayfa ağ üzerinden geldi). Paneli orada, siyah pencerenin gösterdiği http://localhost:3000 adresinden açın.",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ Bu sayfa ağ üzerinden geldi. Güncellemeyi kontrol etmek ve kurmak yalnızca OBS Social’ın çalıştığı bilgisayarda çalışır: ayarları orada, siyah pencerenin gösterdiği http://localhost:3000 adresinden açın.",
+    "Só no computador do OBS Social": "Yalnızca OBS Social bilgisayarında",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "Bu işlem yalnızca OBS Social’ın çalıştığı bilgisayarda yapılabilir.",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub zamanında yanıt vermedi. OBS Social’ın siyah penceresine bakın (nedenini söyler) ve yeniden deneyin.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick’in Cloudflare’i programı engelledi. Paneli veya ayarları bu bilgisayardaki bir tarayıcıda açın ve açık bırakın: sorgu onun üzerinden yapılır.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick’in Cloudflare’i bu bilgisayarın tarayıcısını bile engelledi. kick.com’u aynı tarayıcıda açın, «insanım» doğrulamasını geçin ve burada 🔄 düğmesine tıklayın.",

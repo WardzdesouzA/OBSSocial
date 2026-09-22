@@ -3403,6 +3403,12 @@ const hub = connectHub((event) => {
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
       // 🟢 v0.169.3: esta página atende consultas ao Kick quando o Cloudflare barra o programa
       KICK_NAVEGADOR.pronto(hub);
+      // 🔒 v0.169.5: a atualização só se verifica/instala no computador do
+      // OBS Social — quem abriu pela rede fica sabendo antes de clicar
+      if (event.security && event.security.role && event.security.role !== 'local') {
+        for (const id of ['updCheckBtn', 'updApplyBtn', 'updAutoChk']) { const el = document.getElementById(id); if (el) el.disabled = true; }
+        document.getElementById('updStatus').textContent = 'ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+      }
       fillSettingsForm();
       // 📱 v0.163: os endereços/QR do mini Mesa, e a cópia do tema deste
       // navegador quando o celular ainda não tem nenhuma (modo «igual ao OBS Social»)
@@ -3637,6 +3643,10 @@ const hub = connectHub((event) => {
     }
     case 'status':
       updateStatus(event.platform, event.status);
+      break;
+    // 🔒 v0.169.5: uma operação só do computador local, pedida pela rede
+    case 'somenteLocal':
+      obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒');
       break;
     // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
     case 'kickNavegador':

@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "この操作はOBS Socialが動いているパソコンでしか行えません（このページはネットワーク経由で開かれています）。そのパソコンで、黒いウィンドウに表示されるアドレス http://localhost:3000 からパネルを開いてください。",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ このページはネットワーク経由で開かれています。更新の確認とインストールはOBS Socialが動いているパソコンでしか動作しません。そのパソコンで、黒いウィンドウに表示されるアドレス http://localhost:3000 から設定を開いてください。",
+    "Só no computador do OBS Social": "OBS Socialのパソコンでのみ",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "この操作はOBS Socialが動いているパソコンでしか行えません。",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHubが時間内に応答しませんでした。OBS Socialの黒いウィンドウ（理由が表示されます）を確認して、もう一度お試しください。",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "KickのCloudflareがプログラムをブロックしました。このパソコンのブラウザでパネルか設定を開いたままにしてください。問い合わせはブラウザ経由で行われます。",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "KickのCloudflareはこのパソコンのブラウザまでブロックしました。同じブラウザでkick.comを開き、「私は人間です」の確認を通過してから、ここで🔄を押してください。",

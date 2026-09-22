@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "Dieser Vorgang geht nur auf dem Computer, auf dem OBS Social läuft (diese Seite kam über das Netzwerk). Öffne das Panel dort unter der Adresse http://localhost:3000, die das schwarze Fenster zeigt.",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ Diese Seite kam über das Netzwerk. Das Update prüfen und installieren geht nur auf dem Computer, auf dem OBS Social läuft: Öffne die Einstellungen dort unter der Adresse http://localhost:3000, die das schwarze Fenster zeigt.",
+    "Só no computador do OBS Social": "Nur auf dem OBS-Social-Computer",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "Dieser Vorgang geht nur auf dem Computer, auf dem OBS Social läuft.",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub hat nicht rechtzeitig geantwortet. Sieh ins schwarze Fenster von OBS Social (dort steht der Grund) und versuch es erneut.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kicks Cloudflare hat das Programm blockiert. Öffne das Panel oder die Einstellungen in einem Browser auf diesem Computer und lass ihn offen: Die Abfrage läuft dann über ihn.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kicks Cloudflare hat sogar den Browser dieses Computers blockiert. Öffne kick.com in demselben Browser, bestehe die „Ich bin ein Mensch“-Prüfung und klicke hier auf 🔄.",
