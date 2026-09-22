@@ -3705,6 +3705,10 @@ const hub = connectHub((event) => {
       const chk = document.getElementById('updCheckBtn');
       const apl = document.getElementById('updApplyBtn');
       const st = document.getElementById('updStatus');
+      // 🔄 v0.169.4: andamento («tentando outro caminho, 2 de 5») — só o texto,
+      // a verificação continua
+      if (event.progresso) { st.textContent = event.progresso; armarEsperaUpd(); break; } // andamento = o servidor está vivo: o relógio recomeça
+      if (window.updEsperaTimer) { clearTimeout(window.updEsperaTimer); window.updEsperaTimer = null; }
       chk.disabled = false;
       apl.disabled = false;
       if (event.error) {
@@ -13846,7 +13850,19 @@ updCheckBtn.onclick = () => {
   updCheckBtn.disabled = true;
   updStatus.textContent = '⏳ Verificando no GitHub...';
   hub.send({ type: 'updateCheck' });
+  armarEsperaUpd();
 };
+// 🔄 v0.169.4: nada pode deixar o botão preso para sempre — se em 4 min sem
+// NENHUM sinal (resposta ou andamento), libera e explica onde olhar
+function armarEsperaUpd() {
+  if (window.updEsperaTimer) clearTimeout(window.updEsperaTimer);
+  window.updEsperaTimer = setTimeout(() => {
+    window.updEsperaTimer = null;
+    if (!updCheckBtn.disabled) return;
+    updCheckBtn.disabled = false;
+    updStatus.textContent = '⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.';
+  }, 4 * 60 * 1000);
+}
 document.getElementById('updAutoChk').onchange = (e) => {
   hub.send({ type: 'updateAuto', enabled: e.target.checked });
 };

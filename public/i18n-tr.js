@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub zamanında yanıt vermedi. OBS Social’ın siyah penceresine bakın (nedenini söyler) ve yeniden deneyin.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick’in Cloudflare’i programı engelledi. Paneli veya ayarları bu bilgisayardaki bir tarayıcıda açın ve açık bırakın: sorgu onun üzerinden yapılır.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick’in Cloudflare’i bu bilgisayarın tarayıcısını bile engelledi. kick.com’u aynı tarayıcıda açın, «insanım» doğrulamasını geçin ve burada 🔄 düğmesine tıklayın.",
     "Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.": "Kick programı engellerse (Cloudflare koruması, 403 hatası), bu sayfayı, paneli veya OBS ekranını bu bilgisayarda açık bırakın: sorguyu program adına tarayıcı yapar.",
@@ -3179,6 +3180,8 @@ window.OBS_I18N_DICTS.tr = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Sadece kullandıklarınızı işaretleyin. Bu, panelin 🎛️ aracını değiştirir — Ses Masası’ndaki 🎛️ tuşları her hâlükârda çalışır.",
   },
   padroes: [
+    [/^⏳ Verificando no GitHub\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ GitHub’da kontrol ediliyor... (başka bir yol deneniyor, $1/$2)"],
+    [/^⏳ Baixando a atualização\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ Güncelleme indiriliyor... (başka bir yol deneniyor, $1/$2)"],
     // 💬 v0.140.2: os recados da biblioteca local do WhatsApp
     [/^⚠️ O npm não conseguiu baixar a biblioteca: (.+)$/, "⚠️ npm kitaplığı indiremedi: $1"],
     [/^⚠️ A instalação passou do tempo limite \((\d+) min\) e foi encerrada\. Confira a internet e tente de novo\.$/, "⚠️ Kurulum süre sınırını ($1 dk) aştı ve sonlandırıldı. İnternetinizi kontrol edip yeniden deneyin."],

@@ -1,4 +1,12 @@
 {
+  "0.169.4": {
+    "titulo": "🔄 « Vérifier s’il y a une nouvelle version » répond en quelques secondes — et ne reste plus bloqué sur « Vérification sur GitHub… »",
+    "itens": [
+      "🔄 La vérification lisait la version en téléchargeant tout le paquet depuis GitHub (5 Mo) juste pour regarder le numéro ; sur un réseau lent ou avec un chemin bloqué, chaque essai attendait jusqu’à 1 minute — et il y en avait jusqu’à 8 — et « Vérification sur GitHub… » restait des minutes figé, comme si la nouvelle version n’existait pas. Maintenant elle ne lit que le package.json (349 octets) via deux adresses légères, 15 s par essai ; le paquet n’est téléchargé que quand vous lancez l’installation.",
+      "📬 La réponse arrive même si la page s’est reconnectée entre-temps : avant, elle partait vers l’ancienne connexion (déjà fermée) et le bouton restait bloqué. L’écran affiche l’avancement (« essai d’un autre chemin, 2 sur 5 ») et, si rien n’arrive en 4 minutes, libère le bouton avec une indication d’où regarder.",
+      "🧭 Deux clics (ou un clic pendant la recherche automatique) ne lancent plus deux vérifications à la fois ; la recherche automatique à l’ouverture et une fois par jour est devenue légère aussi."
+    ]
+  },
   "0.169.3": {
     "titulo": "🟢 Kick : quand Cloudflare bloque le programme, la requête passe par curl, PowerShell ou le navigateur ouvert — et la « nouvelle tentative seule » a maintenant vraiment lieu",
     "itens": [

@@ -1,4 +1,12 @@
 {
+  "0.169.4": {
+    "titulo": "🔄 «Yeni sürüm var mı kontrol et» saniyeler içinde yanıt veriyor — ve artık «GitHub’da kontrol ediliyor…» üzerinde takılı kalmıyor",
+    "itens": [
+      "🔄 Kontrol, sadece numaraya bakmak için GitHub’dan paketin tamamını (5 MB) indirerek sürümü okuyordu; yavaş ağlarda veya bir yol engelliyken her deneme 1 dakikaya kadar bekliyordu — ve 8 denemeye kadar çıkıyordu — «GitHub’da kontrol ediliyor…» dakikalarca öylece kalıyor, yeni sürüm yokmuş gibi görünüyordu. Artık iki hafif adres üzerinden yalnızca package.json’u (349 bayt) okuyor, deneme başına 15 s; paket yalnızca siz kurulumu başlattığınızda indiriliyor.",
+      "📬 Sayfa arada yeniden bağlansa bile yanıt geliyor: eskiden yanıt eski (zaten kapalı) bağlantıya gidiyor ve düğme takılı kalıyordu. Ekran ilerlemeyi gösteriyor («başka bir yol deneniyor, 2/5») ve 4 dakika içinde hiçbir şey gelmezse düğmeyi nereye bakılacağına dair bir notla serbest bırakıyor.",
+      "🧭 İki tıklama (veya otomatik arama sırasında bir tıklama) artık aynı anda iki kontrol başlatmıyor; programı açarken ve günde 1 kez yapılan otomatik arama da hafifledi."
+    ]
+  },
   "0.169.3": {
     "titulo": "🟢 Kick: Cloudflare programı engellediğinde sorgu curl, PowerShell veya açık tarayıcı üzerinden gider — ve «kendi başına yeni deneme» artık gerçekten oluyor",
     "itens": [

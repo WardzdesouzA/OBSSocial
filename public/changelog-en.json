@@ -1,4 +1,12 @@
 {
+  "0.169.4": {
+    "titulo": "🔄 “Check for a new version” answers in seconds — and no longer gets stuck on “Checking GitHub…”",
+    "itens": [
+      "🔄 The check read the version by downloading the whole package from GitHub (5 MB) just to look at the number; on slow networks or with one blocked path, each attempt waited up to 1 minute — and there were up to 8 — so “Checking GitHub…” sat there for minutes, looking as if the new version didn’t exist. Now it reads only package.json (349 bytes) through two lightweight addresses, 15 s per attempt; the package is downloaded only when you choose to install.",
+      "📬 The answer arrives even if the page reconnected midway: before, it went to the old (already closed) connection and the button stayed stuck. The screen shows progress (“trying another path, 2 of 5”) and, if nothing arrives in 4 minutes, frees the button with a note on where to look.",
+      "🧭 Two clicks (or a click during the automatic check) no longer run two checks at once; the automatic check at startup and once a day also became lightweight."
+    ]
+  },
   "0.169.3": {
     "titulo": "🟢 Kick: when Cloudflare blocks the program, the lookup goes through curl, PowerShell or an open browser — and the “retrying on its own” now really happens",
     "itens": [

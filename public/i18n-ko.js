@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub가 제때 응답하지 않았습니다. OBS Social의 검은 창(이유가 표시됨)을 확인하고 다시 시도하세요.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick의 Cloudflare가 프로그램을 차단했습니다. 이 컴퓨터의 브라우저에서 패널이나 설정을 열어 두세요. 조회는 브라우저를 통해 이루어집니다.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick의 Cloudflare가 이 컴퓨터의 브라우저까지 차단했습니다. 같은 브라우저에서 kick.com을 열고 «사람입니다» 확인을 통과한 뒤 여기서 🔄를 누르세요.",
     "Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.": "Kick이 프로그램을 차단하면(Cloudflare 보호, 오류 403) 이 페이지, 패널 또는 OBS 화면을 이 컴퓨터에서 열어 두세요. 브라우저가 프로그램 대신 조회합니다.",
@@ -3179,6 +3180,8 @@ window.OBS_I18N_DICTS.ko = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "쓰는 것만 체크하세요. 패널의 🎛️ 도구가 달라집니다 — 사운드보드의 🎛️ 키는 어느 쪽이든 그대로 작동합니다.",
   },
   padroes: [
+    [/^⏳ Verificando no GitHub\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ GitHub에서 확인 중... (다른 경로 시도 중, $1/$2)"],
+    [/^⏳ Baixando a atualização\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ 업데이트 다운로드 중... (다른 경로 시도 중, $1/$2)"],
     // 💬 v0.140.2: os recados da biblioteca local do WhatsApp
     [/^⚠️ O npm não conseguiu baixar a biblioteca: (.+)$/, "⚠️ npm이 라이브러리를 내려받지 못했습니다: $1"],
     [/^⚠️ A instalação passou do tempo limite \((\d+) min\) e foi encerrada\. Confira a internet e tente de novo\.$/, "⚠️ 설치가 제한 시간($1분)을 넘겨 중단됐습니다. 인터넷을 확인하고 다시 시도해 보세요."],

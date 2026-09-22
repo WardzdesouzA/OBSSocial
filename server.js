@@ -4105,7 +4105,19 @@ const UPDATE_ZIP_URLS = process.env.OBS_SOCIAL_UPDATE_ZIP
     `https://codeload.github.com/${UPDATE_REPO}/zip/refs/heads/main`,
     `https://github.com/${UPDATE_REPO}/archive/refs/heads/main.zip`,
   ];
-let updateCache = null; // { buffer, latest, at }
+// 🔄 v0.169.4: a VERIFICAÇÃO lê só o package.json do main (349 bytes) por
+// dois endereços leves — antes baixava o pacote inteiro (5 MB) só para ler a
+// versão, com até 8 tentativas de 60 s: em redes lentas ou com um caminho
+// bloqueado, o «Verificando no GitHub...» ficava minutos sem resposta. O
+// pacote só é baixado quando o streamer manda instalar.
+const UPDATE_VERSION_URLS = process.env.OBS_SOCIAL_UPDATE_VERSION
+  ? [process.env.OBS_SOCIAL_UPDATE_VERSION]
+  : [
+    `https://raw.githubusercontent.com/${UPDATE_REPO}/main/package.json`,
+    `https://api.github.com/repos/${UPDATE_REPO}/contents/package.json?ref=main`,
+  ];
+const UPDATE_VERSAO_TEMPO_MS = Number(process.env.OBS_TESTE_UPDATE_TEMPO_MS) || 15000;
+let updateCache = null; // { buffer (null = só a versão), latest, at }
 
 // Preferências de atualização (data/update.json)
 function loadUpdateConfig() {
@@ -4129,10 +4141,20 @@ function persistUpdateConfig() {
 
 // Baixa uma URL com o módulo http(s) do Node (mais tolerante que o fetch em
 // redes problemáticas), seguindo redirecionamentos e com tempo limite.
+// Opções nossas (não vão para o http): `timeoutMs` = tempo sem resposta;
+// `prazoMs` = prazo total, para nada ficar pendurado (o pacote de 5 MB numa
+// conexão lenta ganha um prazo folgado — só a leitura leve é curta);
+// `maxBytes` = teto do corpo (um portal cativo respondendo 200 com HTML
+// gigante não pode encher a memória).
 function baixar(url, options = {}, redirects = 3) {
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('http:') ? require('http') : require('https');
-    const req = mod.get(url, { ...options, headers: { 'User-Agent': 'OBS-Social', ...(options.headers || {}) } }, (res) => {
+    const { timeoutMs, prazoMs, maxBytes, ...opcoesHttp } = options;
+    const limite = Number(timeoutMs) || 60000;
+    const prazoTotal = Number(prazoMs) || 15 * 60 * 1000;
+    const teto = Number(maxBytes) || 100 * 1024 * 1024;
+    const seg = Math.round(limite / 1000);
+    const req = mod.get(url, { ...opcoesHttp, headers: { 'User-Agent': 'OBS-Social', ...(options.headers || {}) } }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirects > 0) {
         res.resume();
         // Nunca aceitar sair de https para http no meio do caminho
@@ -4157,13 +4179,79 @@ function baixar(url, options = {}, redirects = 3) {
         return;
       }
       const chunks = [];
-      res.on('data', (c) => chunks.push(c));
+      let tamanho = 0;
+      res.on('data', (c) => {
+        tamanho += c.length;
+        if (tamanho > teto) { req.destroy(new Error('a resposta é maior do que o esperado (não parece o GitHub)')); return; }
+        chunks.push(c);
+      });
       res.on('end', () => resolve(Buffer.concat(chunks)));
       res.on('error', reject);
     });
-    req.setTimeout(60000, () => req.destroy(new Error('tempo esgotado (60s)')));
+    req.setTimeout(limite, () => req.destroy(new Error(`tempo esgotado (${seg}s)`)));
+    const prazo = setTimeout(() => req.destroy(new Error(`tempo esgotado (${Math.round(prazoTotal / 1000)}s no total)`)), prazoTotal);
+    req.on('close', () => clearTimeout(prazo));
     req.on('error', reject);
   });
+}
+
+// A versão que veio num package.json cru (raw) ou embrulhado pela API do
+// GitHub (JSON com o arquivo em base64)
+function versaoDoPacote(buffer) {
+  const dados = JSON.parse(buffer.toString('utf8'));
+  if (dados && typeof dados.version === 'string') return dados.version;
+  if (dados && typeof dados.content === 'string') {
+    const interno = JSON.parse(Buffer.from(dados.content.replace(/\s+/g, ''), 'base64').toString('utf8'));
+    if (interno && typeof interno.version === 'string') return interno.version;
+  }
+  throw new Error('a resposta do GitHub não trouxe a versão');
+}
+
+// Os caminhos a tentar para uma lista de endereços: direto, IPv4 forçado
+// (redes em que o IPv6 "existe" mas não funciona) e certificados do sistema
+// (antivírus com inspeção HTTPS) — até funcionar.
+function tentativasDe(urls, extras) {
+  const cas = extraCAs();
+  const lista = [];
+  for (const url of urls) {
+    lista.push([url, { ...extras }], [url, { ...extras, family: 4 }]);
+    if (cas) lista.push([url, { ...extras, ca: cas }], [url, { ...extras, ca: cas, family: 4 }]);
+  }
+  return lista;
+}
+
+// Só a versão mais nova (leve). Dois cliques (ou o clique + a busca
+// automática) não viram duas buscas: a que está em curso é compartilhada.
+// Se nenhum endereço leve responde, cai no pacote inteiro (outro caminho).
+let versaoEmCurso = null;
+let versaoOuvintes = []; // quem quer o andamento da busca em curso (o 2º clique também)
+function buscarVersaoNova(aoProgresso) {
+  if (typeof aoProgresso === 'function') versaoOuvintes.push(aoProgresso);
+  if (versaoEmCurso) return versaoEmCurso;
+  const avisar = (n, total) => { for (const fn of versaoOuvintes) { try { fn(n, total); } catch { /* ouvinte quebrado não derruba a busca */ } } };
+  versaoEmCurso = (async () => {
+    const tentativas = tentativasDe(UPDATE_VERSION_URLS, { timeoutMs: UPDATE_VERSAO_TEMPO_MS, prazoMs: UPDATE_VERSAO_TEMPO_MS * 3, maxBytes: 256 * 1024 });
+    const totalZip = tentativasDe(UPDATE_ZIP_URLS, {}).length;
+    const total = tentativas.length + totalZip; // a numeração segue pelo pacote inteiro
+    let n = 0;
+    for (const [url, opts] of tentativas) {
+      n += 1;
+      try {
+        const latest = versaoDoPacote(await baixar(url, opts));
+        // O pacote guardado só continua valendo se é da mesma versão
+        const buffer = updateCache && updateCache.buffer && updateCache.latest === latest ? updateCache.buffer : null;
+        updateCache = { buffer, latest, at: Date.now() };
+        return updateCache;
+      } catch (err) {
+        const causa = err?.cause?.code || err?.code || err.message;
+        console.log(`  ⚠️ Verificação de versão: falha (${causa}) — tentando outro caminho...`);
+        avisar(n + 1, total);
+      }
+    }
+    // Último recurso: o pacote inteiro (é outro domínio — às vezes passa)
+    return downloadUpdate((k, t) => avisar(tentativas.length + k, tentativas.length + t));
+  })().finally(() => { versaoEmCurso = null; versaoOuvintes = []; });
+  return versaoEmCurso;
 }
 
 function cmpVersions(a, b) {
@@ -4238,18 +4326,15 @@ function extraCAs() {
   return cas.length ? cas : null;
 }
 
-async function downloadUpdate() {
+async function downloadUpdate(aoProgresso) {
   // Tenta em ordem, para cada caminho do pacote: direto, IPv4 forçado (redes
   // em que o IPv6 "existe" mas não funciona) e certificados do sistema
   // (antivírus com inspeção HTTPS) — até funcionar.
-  const cas = extraCAs();
-  const tentativas = [];
-  for (const url of UPDATE_ZIP_URLS) {
-    tentativas.push([url, {}], [url, { family: 4 }]);
-    if (cas) tentativas.push([url, { ca: cas }], [url, { ca: cas, family: 4 }]);
-  }
+  const tentativas = tentativasDe(UPDATE_ZIP_URLS, {});
   let ultimoErro = null;
+  let n = 0;
   for (const [url, opts] of tentativas) {
+    n += 1;
     try {
       const buffer = await baixar(url, opts);
       const entries = zipEntries(buffer);
@@ -4262,6 +4347,7 @@ async function downloadUpdate() {
       ultimoErro = err;
       const causa = err?.cause?.code || err?.code || err.message;
       console.log(`  ⚠️ Atualização: falha ao baixar (${causa}) — tentando outro caminho...`);
+      if (n < tentativas.length && typeof aoProgresso === 'function') aoProgresso(n + 1, tentativas.length);
     }
   }
   let causa = String(ultimoErro?.cause?.code || ultimoErro?.code || ultimoErro?.message || 'erro desconhecido');
@@ -4353,7 +4439,7 @@ function relaunchApp() {
 // instala nada sozinho; o aviso vai apenas para o computador local).
 function autoUpdateTick() {
   if (!updateConfig.autoCheck) return;
-  downloadUpdate().then((cache) => {
+  buscarVersaoNova().then((cache) => {
     if (cmpVersions(cache.latest, APP_VERSION) > 0) {
       console.log('  ' + tcons('🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.', cache.latest, APP_VERSION));
       const msg = JSON.stringify({ type: 'update', hasUpdate: true, current: APP_VERSION, latest: cache.latest, auto: true });
@@ -10168,6 +10254,18 @@ wss.on('connection', (ws, req) => {
 
 });
 
+// 🔄 v0.169.4: a resposta de uma operação demorada (verificar/instalar
+// atualização) vai para quem pediu — e, se essa página já reconectou ou
+// fechou no meio, para todas as páginas deste computador. Antes ia para a
+// conexão antiga (fechada) e o botão ficava preso no «Verificando...».
+function responderLocal(ws, obj) {
+  const msg = JSON.stringify(obj);
+  if (ws && ws.readyState === WebSocket.OPEN) { try { ws.send(msg); return; } catch { /* caiu agora: espalha */ } }
+  for (const c of wss.clients) {
+    if (c.readyState === WebSocket.OPEN && c.role === 'local') { try { c.send(msg); } catch { /* já caiu */ } }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 🟢 v0.169.3: a ponte para o Kick pelo navegador. O Cloudflare do Kick barra
 // o programa (403) pela assinatura do TLS do Node, mas deixa um navegador de
@@ -10356,40 +10454,40 @@ function tratarMensagem(ws, raw) {
       ws.send(JSON.stringify({ type: 'updateAuto', enabled: updateConfig.autoCheck }));
       break;
     case 'updateCheck':
-      // Verifica se existe versão nova no GitHub (só quando o streamer pede)
+      // Verifica se existe versão nova no GitHub (só quando o streamer pede).
+      // 🔄 v0.169.4: leve (só a versão), com o andamento na tela, e a resposta
+      // chega mesmo se esta página reconectou no meio (responderLocal)
       (async () => {
+        const responder = (obj) => responderLocal(ws, { type: 'update', ...obj });
         try {
-          const cache = await downloadUpdate();
-          ws.send(JSON.stringify({
-            type: 'update',
-            current: APP_VERSION,
-            latest: cache.latest,
-            hasUpdate: cmpVersions(cache.latest, APP_VERSION) > 0,
-          }));
+          const cache = await buscarVersaoNova((n, total) => responder({ progresso: `⏳ Verificando no GitHub... (tentando outro caminho, ${n} de ${total})` }));
+          responder({ current: APP_VERSION, latest: cache.latest, hasUpdate: cmpVersions(cache.latest, APP_VERSION) > 0 });
         } catch (err) {
-          ws.send(JSON.stringify({ type: 'update', error: `Não consegui verificar agora (${err.message}). Confira a internet e tente de novo.` }));
+          responder({ error: `Não consegui verificar agora (${err.message}). Confira a internet e tente de novo.` });
         }
       })();
       break;
     case 'updateApply':
       // Instala a atualização — só depois do clique de confirmação do streamer
       (async () => {
+        const responder = (obj) => responderLocal(ws, { type: 'update', ...obj });
         try {
-          const fresh = updateCache && Date.now() - updateCache.at < 10 * 60 * 1000;
-          const cache = fresh ? updateCache : await downloadUpdate();
+          // O pacote guardado vale por 10 min (e só se é o pacote, não só a versão)
+          const fresh = updateCache && updateCache.buffer && Date.now() - updateCache.at < 10 * 60 * 1000;
+          const cache = fresh ? updateCache : await downloadUpdate((n, total) => responder({ progresso: `⏳ Baixando a atualização... (tentando outro caminho, ${n} de ${total})` }));
           if (cmpVersions(cache.latest, APP_VERSION) <= 0) {
-            ws.send(JSON.stringify({ type: 'update', current: APP_VERSION, latest: cache.latest, hasUpdate: false }));
+            responder({ current: APP_VERSION, latest: cache.latest, hasUpdate: false });
             return;
           }
           const files = applyUpdate(cache.buffer);
           console.log(`  ⬇️ Atualização v${cache.latest} instalada (${files} arquivos). Reiniciando o OBS Social...`);
-          ws.send(JSON.stringify({ type: 'update', applied: true, restarting: true, current: APP_VERSION, latest: cache.latest, files }));
+          responder({ applied: true, restarting: true, current: APP_VERSION, latest: cache.latest, files });
           // Reabre sozinho: espera o aviso chegar às telas e renasce
           setTimeout(() => {
             try { relaunchApp(); } catch (err) { console.log('  Não consegui reabrir sozinho (' + err.message + ') — feche e abra o OBS Social.'); }
           }, 1200);
         } catch (err) {
-          ws.send(JSON.stringify({ type: 'update', error: `A atualização falhou (${err.message}). Nada foi quebrado — tente de novo ou baixe o ZIP no GitHub.` }));
+          responder({ error: `A atualização falhou (${err.message}). Nada foi quebrado — tente de novo ou baixe o ZIP no GitHub.` });
         }
       })();
       break;

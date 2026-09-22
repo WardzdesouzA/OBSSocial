@@ -1,4 +1,12 @@
 {
+  "0.169.4": {
+    "titulo": "🔄 „Nach neuer Version suchen“ antwortet in Sekunden — und bleibt nicht mehr bei „Prüfe auf GitHub…“ hängen",
+    "itens": [
+      "🔄 Die Prüfung las die Version, indem sie das ganze Paket von GitHub (5 MB) herunterlud, nur um die Nummer anzusehen; in langsamen Netzen oder mit einem blockierten Weg wartete jeder Versuch bis zu 1 Minute — und es waren bis zu 8 — und „Prüfe auf GitHub…“ stand minutenlang still, als gäbe es die neue Version nicht. Jetzt liest sie nur die package.json (349 Bytes) über zwei leichte Adressen, 15 s pro Versuch; das Paket wird erst geladen, wenn du die Installation startest.",
+      "📬 Die Antwort kommt an, auch wenn die Seite zwischendurch neu verbunden hat: Vorher ging sie an die alte (schon geschlossene) Verbindung und der Button blieb hängen. Der Bildschirm zeigt den Fortschritt („versuche einen anderen Weg, 2 von 5“) und gibt den Button nach 4 Minuten ohne Antwort mit einem Hinweis frei, wo nachzusehen ist.",
+      "🧭 Zwei Klicks (oder ein Klick während der automatischen Suche) lösen nicht mehr zwei Prüfungen gleichzeitig aus; die automatische Suche beim Start und einmal täglich ist ebenfalls leicht geworden."
+    ]
+  },
   "0.169.3": {
     "titulo": "🟢 Kick: Wenn Cloudflare das Programm blockiert, läuft die Abfrage über curl, PowerShell oder den offenen Browser — und der „neue Versuch von selbst“ passiert jetzt wirklich",
     "itens": [
