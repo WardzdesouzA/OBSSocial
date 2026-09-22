@@ -1,4 +1,10 @@
 {
+  "0.169.6": {
+    "titulo": "🔒 Via le réseau, les boutons de mise à jour disparaissent de la page À propos — seul l’avis d’utiliser localhost reste",
+    "itens": [
+      "🔒 Quand les réglages sont ouverts par l’adresse réseau (192.168…, ou depuis un autre ordinateur), les boutons « Vérifier s’il y a une nouvelle version » et « Mettre à jour maintenant » et l’interrupteur de recherche automatique n’apparaissent plus : à leur place reste seulement l’avis que la mise à jour se fait sur l’ordinateur d’OBS Social, à http://localhost:3000. Avant (0.169.5) ils restaient visibles mais désactivés."
+    ]
+  },
   "0.169.5": {
     "titulo": "🔒 « Vérifier s’il y a une nouvelle version » via le réseau : la page explique maintenant que cela ne marche que sur l’ordinateur d’OBS Social",
     "itens": [

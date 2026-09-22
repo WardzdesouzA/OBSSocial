@@ -3405,8 +3405,12 @@ const hub = connectHub((event) => {
       KICK_NAVEGADOR.pronto(hub);
       // 🔒 v0.169.5: a atualização só se verifica/instala no computador do
       // OBS Social — quem abriu pela rede fica sabendo antes de clicar
+      // 🔒 v0.169.6: os botões e o seletor SOMEM — fica só o aviso no lugar deles
       if (event.security && event.security.role && event.security.role !== 'local') {
-        for (const id of ['updCheckBtn', 'updApplyBtn', 'updAutoChk']) { const el = document.getElementById(id); if (el) el.disabled = true; }
+        const chk = document.getElementById('updCheckBtn');
+        if (chk && chk.parentElement) chk.parentElement.style.display = 'none';
+        const auto = document.getElementById('updAutoChk');
+        if (auto && auto.closest('label')) auto.closest('label').style.display = 'none';
         document.getElementById('updStatus').textContent = 'ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
       }
       fillSettingsForm();

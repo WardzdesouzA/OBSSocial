@@ -1,4 +1,10 @@
 {
+  "0.169.6": {
+    "titulo": "🔒 Über das Netzwerk verschwinden die Update-Buttons von der Seite „Über“ — nur der Hinweis, localhost zu nutzen, bleibt",
+    "itens": [
+      "🔒 Werden die Einstellungen über die Netzwerkadresse geöffnet (192.168…, oder von einem anderen Computer), erscheinen die Buttons „Nach neuer Version suchen“ und „Jetzt aktualisieren“ und der Schalter der automatischen Suche nicht mehr: An ihrer Stelle bleibt nur der Hinweis, dass das Update auf dem OBS-Social-Computer unter http://localhost:3000 gemacht wird. Vorher (0.169.5) blieben sie sichtbar, aber deaktiviert."
+    ]
+  },
   "0.169.5": {
     "titulo": "🔒 „Nach neuer Version suchen“ über das Netzwerk: Die Seite erklärt jetzt, dass das nur auf dem OBS-Social-Computer geht",
     "itens": [

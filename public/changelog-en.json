@@ -1,4 +1,10 @@
 {
+  "0.169.6": {
+    "titulo": "🔒 Over the network, the update buttons disappear from the About page — only the “use localhost” notice remains",
+    "itens": [
+      "🔒 When the settings are opened through the network address (192.168…, or from another computer), the “Check for a new version” and “Update now” buttons and the automatic-check switch no longer appear: in their place stays only the notice that updating is done on the OBS Social computer, at http://localhost:3000. Before (0.169.5) they stayed visible but disabled."
+    ]
+  },
   "0.169.5": {
     "titulo": "🔒 “Check for a new version” over the network: the page now explains it only works on the OBS Social computer",
     "itens": [

@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.169.6",
+    "titulo": "🔒 Pela rede, os botões de atualização somem da página Sobre — fica só o aviso de usar o localhost",
+    "itens": [
+      "🔒 Quando as configurações são abertas pelo endereço da rede (192.168…, ou de outro computador), os botões «Verificar se há versão nova» e «Atualizar agora» e o seletor da busca automática deixam de aparecer: no lugar deles fica só o aviso de que a atualização se faz no computador do OBS Social, pelo http://localhost:3000. Antes (0.169.5) eles ficavam visíveis, mas desativados."
+    ]
+  },
+  {
     "version": "0.169.5",
     "titulo": "🔒 «Verificar se há versão nova» pela rede: agora a página explica que isso só funciona no computador do OBS Social",
     "itens": [

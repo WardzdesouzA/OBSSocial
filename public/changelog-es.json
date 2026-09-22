@@ -1,4 +1,10 @@
 {
+  "0.169.6": {
+    "titulo": "🔒 Por la red, los botones de actualización desaparecen de la página Acerca de — queda solo el aviso de usar localhost",
+    "itens": [
+      "🔒 Cuando la configuración se abre por la dirección de red (192.168…, o desde otro equipo), los botones «Verificar si hay versión nueva» y «Actualizar ahora» y el selector de búsqueda automática dejan de aparecer: en su lugar queda solo el aviso de que la actualización se hace en el equipo de OBS Social, en http://localhost:3000. Antes (0.169.5) quedaban visibles pero desactivados."
+    ]
+  },
   "0.169.5": {
     "titulo": "🔒 «Verificar si hay versión nueva» por la red: ahora la página explica que solo funciona en el equipo de OBS Social",
     "itens": [

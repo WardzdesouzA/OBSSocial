@@ -1,4 +1,10 @@
 {
+  "0.169.6": {
+    "titulo": "🔒 Ağ üzerinden, güncelleme düğmeleri Hakkında sayfasından kayboluyor — yalnızca localhost kullanma uyarısı kalıyor",
+    "itens": [
+      "🔒 Ayarlar ağ adresinden (192.168… veya başka bir bilgisayardan) açıldığında «Yeni sürüm var mı kontrol et» ve «Şimdi güncelle» düğmeleri ile otomatik arama anahtarı artık görünmüyor: yerlerinde yalnızca güncellemenin OBS Social bilgisayarında, http://localhost:3000 üzerinden yapıldığı uyarısı kalıyor. Önceden (0.169.5) görünür ama devre dışıydılar."
+    ]
+  },
   "0.169.5": {
     "titulo": "🔒 Ağ üzerinden «Yeni sürüm var mı kontrol et»: sayfa artık bunun yalnızca OBS Social bilgisayarında çalıştığını açıklıyor",
     "itens": [
