@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "Esta operación solo se puede hacer en el equipo donde corre OBS Social (esta página vino por la red). Abre el panel allí en la dirección http://localhost:3000 que muestra la ventana negra.",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ Esta página vino por la red. Verificar e instalar la actualización solo funciona en el equipo donde corre OBS Social: abre la configuración allí en la dirección http://localhost:3000 que muestra la ventana negra.",
+    "Só no computador do OBS Social": "Solo en el equipo de OBS Social",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "Esta operación solo se puede hacer en el equipo donde corre OBS Social.",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub no respondió a tiempo. Mira la ventana negra de OBS Social (ahí dice el motivo) e inténtalo de nuevo.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "El Cloudflare de Kick bloqueó el programa. Abre el panel o la configuración en un navegador de este equipo y déjalo abierto: la consulta pasa a hacerse por él.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "El Cloudflare de Kick bloqueó incluso el navegador de este equipo. Abre kick.com en este mismo navegador, pasa la verificación «soy humano» y haz clic en 🔄 aquí.",

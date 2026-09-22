@@ -10333,10 +10333,21 @@ function tratarMensagem(ws, raw) {
   try { msg = JSON.parse(raw.toString()); } catch { return; }
 
   // ---------- 🔐 Portão de operações ----------
+  // Operações de segurança: SÓ do computador local — nem com senha.
+  // 🔒 v0.169.5: antes o pedido era descartado em silêncio, e quem abria as
+  // configurações pelo endereço da rede (192.168…, ou de outro PC) via o
+  // «Verificar se há versão nova» preso para sempre. Agora a página fica
+  // sabendo o motivo.
+  if (LOCAL_ONLY_OPS.has(msg.type) && ws.role !== 'local') {
+    const mensagem = 'Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+    const resposta = (msg.type === 'updateCheck' || msg.type === 'updateApply')
+      ? { type: 'update', error: mensagem }
+      : { type: 'somenteLocal', op: String(msg.type), mensagem };
+    try { ws.send(JSON.stringify(resposta)); } catch { /* já caiu */ }
+    return;
+  }
   // Modo restrito (rede sem senha): só o que os seletores liberarem.
   if (ws.role === 'viewer' && !viewerOpAllowed(msg.type, security.permissions)) return;
-  // Operações de segurança: SÓ do computador local — nem com senha.
-  if (LOCAL_ONLY_OPS.has(msg.type) && ws.role !== 'local') return;
 
   switch (msg.type) {
     case 'connect':

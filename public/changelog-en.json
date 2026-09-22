@@ -1,4 +1,10 @@
 {
+  "0.169.5": {
+    "titulo": "🔒 “Check for a new version” over the network: the page now explains it only works on the OBS Social computer",
+    "itens": [
+      "🔒 Checking and installing the update are “local computer only” operations (for safety). Whoever opened the settings through the network address (192.168…, or from another computer) had the request silently dropped: the button stayed stuck on “Checking GitHub…” and, in 0.169.4, ended with the notice that GitHub did not answer — looking like a GitHub problem. Now the server answers right away explaining why, and the page warns before the click (buttons disabled with the tip to open http://localhost:3000 on the program’s computer). The same applies to the other local-only operations (password, backup, restart…): a notice instead of silence."
+    ]
+  },
   "0.169.4": {
     "titulo": "🔄 “Check for a new version” answers in seconds — and no longer gets stuck on “Checking GitHub…”",
     "itens": [

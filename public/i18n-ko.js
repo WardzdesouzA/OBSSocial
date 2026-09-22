@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "이 작업은 OBS Social이 실행 중인 컴퓨터에서만 할 수 있습니다(이 페이지는 네트워크를 통해 열렸습니다). 그 컴퓨터에서 검은 창에 표시된 주소 http://localhost:3000 으로 패널을 여세요.",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ 이 페이지는 네트워크를 통해 열렸습니다. 업데이트 확인과 설치는 OBS Social이 실행 중인 컴퓨터에서만 됩니다. 그 컴퓨터에서 검은 창에 표시된 주소 http://localhost:3000 으로 설정을 여세요.",
+    "Só no computador do OBS Social": "OBS Social 컴퓨터에서만",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "이 작업은 OBS Social이 실행 중인 컴퓨터에서만 할 수 있습니다.",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub가 제때 응답하지 않았습니다. OBS Social의 검은 창(이유가 표시됨)을 확인하고 다시 시도하세요.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick의 Cloudflare가 프로그램을 차단했습니다. 이 컴퓨터의 브라우저에서 패널이나 설정을 열어 두세요. 조회는 브라우저를 통해 이루어집니다.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick의 Cloudflare가 이 컴퓨터의 브라우저까지 차단했습니다. 같은 브라우저에서 kick.com을 열고 «사람입니다» 확인을 통과한 뒤 여기서 🔄를 누르세요.",

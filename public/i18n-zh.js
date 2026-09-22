@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "此操作只能在运行 OBS Social 的电脑上进行（本页面是通过网络打开的）。请在那台电脑上，通过黑色窗口显示的地址 http://localhost:3000 打开面板。",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ 本页面是通过网络打开的。检查和安装更新只能在运行 OBS Social 的电脑上进行：请在那台电脑上，通过黑色窗口显示的地址 http://localhost:3000 打开设置。",
+    "Só no computador do OBS Social": "仅限 OBS Social 所在电脑",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "此操作只能在运行 OBS Social 的电脑上进行。",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub 未及时响应。请查看 OBS Social 的黑色窗口（里面写明原因），然后重试。",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick 的 Cloudflare 拦截了本程序。请在这台电脑的浏览器中打开面板或设置并保持打开：查询将改由浏览器完成。",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick 的 Cloudflare 连这台电脑的浏览器也拦截了。请在同一浏览器中打开 kick.com，通过“我是人类”验证，然后在这里点击 🔄。",

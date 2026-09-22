@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    "Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.": "Эту операцию можно выполнить только на компьютере, где работает OBS Social (эта страница открыта по сети). Откройте панель там по адресу http://localhost:3000, который показывает чёрное окно.",
+    "ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.": "ℹ️ Эта страница открыта по сети. Проверка и установка обновления работают только на компьютере, где запущен OBS Social: откройте настройки там по адресу http://localhost:3000, который показывает чёрное окно.",
+    "Só no computador do OBS Social": "Только на компьютере с OBS Social",
+    "Essa operação só pode ser feita no computador onde o OBS Social roda.": "Эту операцию можно выполнить только на компьютере, где работает OBS Social.",
     "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub не ответил вовремя. Посмотрите в чёрное окно OBS Social (там указана причина) и попробуйте снова.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Cloudflare Kick заблокировал программу. Откройте панель или настройки в браузере на этом компьютере и оставьте их открытыми: запрос будет выполняться через него.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Cloudflare Kick заблокировал даже браузер этого компьютера. Откройте kick.com в этом же браузере, пройдите проверку «я человек» и нажмите здесь 🔄.",
