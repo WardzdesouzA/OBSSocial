@@ -1,4 +1,13 @@
 {
+  "0.169.3": {
+    "titulo": "🟢 Kick: cuando Cloudflare bloquea el programa, la consulta va por curl, PowerShell o el navegador abierto — y el «nuevo intento solo» ahora ocurre de verdad",
+    "itens": [
+      "🟢 Kick empezó a responder «error 403» al conectar: su Cloudflare bloquea el programa por la firma TLS de Node, no por el canal. Ahora, cuando el camino normal está bloqueado, OBS Social prueba solo otros caminos, en orden: Node con la firma de Chrome, el curl del propio sistema (Windows 10+ ya lo trae), PowerShell (Windows) y, por último, un navegador abierto en este equipo — la configuración, el panel o la pantalla del OBS hacen la consulta y devuelven la respuesta al programa. El camino que funcionó queda recordado para las próximas consultas (fotos de quien comenta, espectadores, historial), y cada media hora el programa vuelve a probar el camino normal.",
+      "🔁 El «Nuevo intento solo en 30s» nunca ocurría: en el error, el servidor apagaba el conector de Kick antes de que llegara el intento — solo el 🔄 salvaba. Ahora el conector sigue vivo y reintenta como prometido; y cuando se abre una página de este equipo (configuración, panel o pantalla del OBS), el intento se hace al instante, sin esperar.",
+      "📝 El mensaje de error explica qué hacer: con todo bloqueado, pide dejar el panel o la configuración abiertos en un navegador de este equipo; si hasta el navegador fue bloqueado, pide abrir kick.com en él, pasar la verificación «soy humano» y hacer clic en 🔄. La tarjeta de Kick en la configuración ganó una pista con el mismo consejo.",
+      "🖼️ Las fotos de quien comenta en Kick y el recuento de espectadores usan los mismos caminos — vuelven a aparecer cuando solo el camino normal está bloqueado. Cuando todo está bloqueado, esas peticiones extra esperan un minuto en vez de insistir en cada mensaje."
+    ]
+  },
   "0.169.2": {
     "titulo": "🎵 La pista ya no empieza cortada en un aparato con el reloj distinto, y quien llega a mitad entra en el punto correcto",
     "itens": [

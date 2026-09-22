@@ -1,4 +1,13 @@
 {
+  "0.169.3": {
+    "titulo": "🟢 Kick : quand Cloudflare bloque le programme, la requête passe par curl, PowerShell ou le navigateur ouvert — et la « nouvelle tentative seule » a maintenant vraiment lieu",
+    "itens": [
+      "🟢 Kick s’est mis à répondre « erreur 403 » à la connexion : leur Cloudflare bloque le programme par la signature TLS de Node, pas par la chaîne. Désormais, quand le chemin normal est bloqué, OBS Social essaie seul d’autres chemins, dans l’ordre : Node avec la signature de Chrome, le curl du système (Windows 10+ l’inclut), PowerShell (Windows) et, enfin, un navigateur ouvert sur cet ordinateur — les réglages, le panneau ou l’écran OBS font la requête et rendent la réponse au programme. Le chemin qui a marché est mémorisé pour les requêtes suivantes (photos des commentateurs, spectateurs, historique), et toutes les demi-heures le programme reteste le chemin normal.",
+      "🔁 La « Nouvelle tentative seule dans 30s » n’avait jamais lieu : à l’erreur, le serveur éteignait le connecteur Kick avant la tentative — seul le 🔄 sauvait. Maintenant le connecteur reste vivant et réessaie comme promis ; et quand une page de cet ordinateur s’ouvre (réglages, panneau ou écran OBS), la tentative se fait tout de suite, sans attendre.",
+      "📝 Le message d’erreur explique quoi faire : tout bloqué, il demande de laisser le panneau ou les réglages ouverts dans un navigateur de cet ordinateur ; si même le navigateur a été bloqué, il demande d’y ouvrir kick.com, de passer la vérification « je suis humain » et de cliquer sur 🔄. La carte Kick des réglages a gagné une astuce avec le même conseil.",
+      "🖼️ Les photos des commentateurs Kick et le nombre de spectateurs utilisent les mêmes chemins — ils reviennent quand seul le chemin normal est bloqué. Quand tout est bloqué, ces requêtes en plus attendent une minute au lieu d’insister à chaque message."
+    ]
+  },
   "0.169.2": {
     "titulo": "🎵 La piste ne démarre plus coupée sur un appareil dont l’horloge diffère — et qui arrive en cours entre au bon endroit",
     "itens": [

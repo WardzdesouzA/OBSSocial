@@ -1,4 +1,13 @@
 {
+  "0.169.3": {
+    "titulo": "🟢 Kick: Cloudflare programı engellediğinde sorgu curl, PowerShell veya açık tarayıcı üzerinden gider — ve «kendi başına yeni deneme» artık gerçekten oluyor",
+    "itens": [
+      "🟢 Kick bağlanırken «403 hatası» vermeye başladı: Cloudflare’leri programı kanala göre değil, Node’un TLS imzasına göre engelliyor. Artık normal yol engellendiğinde OBS Social kendi başına sırayla başka yolları dener: Chrome imzalı Node, sistemin kendi curl’ü (Windows 10+ ile birlikte gelir), PowerShell (Windows) ve son olarak bu bilgisayarda açık bir tarayıcı — ayarlar, panel veya OBS ekranı sorguyu yapar ve yanıtı programa geri verir. İşe yarayan yol sonraki sorgular için hatırlanır (yorum yapanların fotoğrafları, izleyiciler, geçmiş) ve program her yarım saatte bir normal yolu yeniden dener.",
+      "🔁 «30 sn içinde kendi başına yeni deneme» hiç olmuyordu: hatada sunucu, deneme gelmeden Kick bağlayıcısını kapatıyordu — sadece 🔄 kurtarıyordu. Artık bağlayıcı canlı kalıyor ve söz verildiği gibi yeniden deniyor; bu bilgisayarda bir sayfa açıldığında (ayarlar, panel veya OBS ekranı) deneme beklemeden hemen yapılıyor.",
+      "📝 Hata mesajı ne yapılacağını açıklıyor: her şey engelliyse paneli veya ayarları bu bilgisayardaki bir tarayıcıda açık bırakmanızı ister; tarayıcı bile engellendiyse orada kick.com’u açıp «insanım» doğrulamasını geçmenizi ve 🔄’ye tıklamanızı ister. Ayarlardaki Kick kartına aynı öneriyi taşıyan bir ipucu eklendi.",
+      "🖼️ Kick’te yorum yapanların fotoğrafları ve izleyici sayısı aynı yolları kullanır — yalnızca normal yol engelliyken geri gelirler. Her şey engelliyken bu ek istekler her mesajda ısrar etmek yerine bir dakika bekler."
+    ]
+  },
   "0.169.2": {
     "titulo": "🎵 Saati farklı bir cihazda parça artık kesik başlamıyor — ortada katılan doğru noktadan giriyor",
     "itens": [

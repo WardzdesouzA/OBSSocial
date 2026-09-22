@@ -1,4 +1,13 @@
 {
+  "0.169.3": {
+    "titulo": "🟢 Kick: Wenn Cloudflare das Programm blockiert, läuft die Abfrage über curl, PowerShell oder den offenen Browser — und der „neue Versuch von selbst“ passiert jetzt wirklich",
+    "itens": [
+      "🟢 Kick antwortete beim Verbinden plötzlich mit „Fehler 403“: deren Cloudflare blockiert das Programm anhand der TLS-Signatur von Node, nicht anhand des Kanals. Wenn der normale Weg blockiert ist, probiert OBS Social jetzt von selbst andere Wege, der Reihe nach: Node mit Chromes Signatur, das curl des Systems (Windows 10+ bringt es mit), PowerShell (Windows) und zuletzt einen auf diesem Computer offenen Browser — Einstellungen, Panel oder OBS-Bildschirm machen die Abfrage und geben die Antwort ans Programm zurück. Der Weg, der funktioniert hat, wird für die nächsten Abfragen gemerkt (Fotos der Kommentierenden, Zuschauer, Verlauf), und jede halbe Stunde testet das Programm den normalen Weg erneut.",
+      "🔁 Der „Neuer Versuch von selbst in 30s“ passierte nie: Beim Fehler schaltete der Server den Kick-Connector ab, bevor der Versuch kam — nur 🔄 half. Jetzt bleibt der Connector am Leben und versucht es wie versprochen erneut; und wenn eine Seite auf diesem Computer aufgeht (Einstellungen, Panel oder OBS-Bildschirm), passiert der Versuch sofort, ohne Warten.",
+      "📝 Die Fehlermeldung erklärt, was zu tun ist: Ist alles blockiert, bittet sie, Panel oder Einstellungen in einem Browser auf diesem Computer offen zu lassen; wurde sogar der Browser blockiert, bittet sie, dort kick.com zu öffnen, die „Ich bin ein Mensch“-Prüfung zu bestehen und auf 🔄 zu klicken. Die Kick-Karte in den Einstellungen hat einen Hinweis mit demselben Rat bekommen.",
+      "🖼️ Die Fotos der Kick-Kommentierenden und die Zuschauerzahl nutzen dieselben Wege — sie kommen zurück, wenn nur der normale Weg blockiert ist. Ist alles blockiert, warten diese Extra-Anfragen eine Minute, statt bei jeder Nachricht zu drängen."
+    ]
+  },
   "0.169.2": {
     "titulo": "🎵 Die Spur beginnt auf einem Gerät mit anderer Uhr nicht mehr abgeschnitten – und wer mittendrin dazukommt, steigt an der richtigen Stelle ein",
     "itens": [

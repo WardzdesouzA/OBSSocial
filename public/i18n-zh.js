@@ -10,6 +10,9 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick 的 Cloudflare 拦截了本程序。请在这台电脑的浏览器中打开面板或设置并保持打开：查询将改由浏览器完成。",
+    "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick 的 Cloudflare 连这台电脑的浏览器也拦截了。请在同一浏览器中打开 kick.com，通过“我是人类”验证，然后在这里点击 🔄。",
+    "Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.": "如果 Kick 拦截了本程序（Cloudflare 防护，错误 403），请让本页面、面板或 OBS 画面在这台电脑上保持打开：浏览器会替程序完成查询。",
     "O tempo agora na tela, com ícone animado. Cadastre uma ou mais cidades (até 27) — elas valem para o cartão da tela, para o mostrador do painel e para o 🗂️ cartão completo. Com o rodízio ligado, a tela passa por elas de tantos em tantos segundos; e o rodízio também pode percorrer, sem cadastrar nada, todos os municípios do Brasil ou os de um estado. As informações vêm das fontes de 🔌 Conexões (de fábrica, Open-Meteo, sem cadastro) e são atualizadas a cada 10–60 minutos, com o Clima na tela ou não (o mostrador do painel fica sempre em dia). Posição, tamanho, cores e fonte ficam no 🖱️ Organizar a tela (widget 🌤️ Clima); o botão 🌤️ do painel põe e tira da tela.": "在屏幕上显示当前天气，带动画图标。登记一个或多个城市（最多 27 个）——它们用于屏幕卡片、面板显示器和 🗂️ 完整卡片。开启轮播后，屏幕每隔若干秒切换城市；轮播还可以在不登记任何内容的情况下遍历巴西全部市镇或某个州的市镇。数据来自 🔌 连接中的来源（默认 Open-Meteo，无需注册），无论天气是否在屏幕上都每 10–60 分钟更新一次（面板显示器始终是最新的）。位置、大小、颜色和字体在 🖱️ 布置屏幕（🌤️ 天气组件）中设置；面板的 🌤️ 按钮用于上屏和下屏。",
     "Passar por": "轮播对象",
     "O que o rodízio percorre: as cidades cadastradas acima, todos os municípios do Brasil ou os municípios de um estado (do IBGE, em ordem alfabética)": "轮播遍历的对象：上面登记的城市、巴西全部市镇或某个州的市镇（IBGE，按字母顺序）",

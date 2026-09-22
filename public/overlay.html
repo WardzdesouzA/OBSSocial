@@ -3799,6 +3799,11 @@ setInterval(() => {
 
 const hubOv = connectHub((event) => {
   switch (event.type) {
+    // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
+    // (a fonte do OBS é um Chromium de verdade — e costuma estar aberta a live toda)
+    case 'kickNavegador':
+      KICK_NAVEGADOR.atender(hubOv, event);
+      break;
     case 'init':
       // 🔄 v0.75.1: o programa foi ATUALIZADO com esta tela aberta (fonte
       // do OBS ou aba do navegador): a versão do servidor mudou desde o
@@ -3806,6 +3811,7 @@ const hubOv = connectHub((event) => {
       // novos não aparecem, ex.: figurinha animada virando 📎 arquivo)
       if (!window.versaoDoPrograma) window.versaoDoPrograma = event.version || 'x';
       else if (event.version && window.versaoDoPrograma !== event.version) { location.reload(); break; }
+      KICK_NAVEGADOR.pronto(hubOv); // 🟢 v0.169.3: esta tela também atende consultas ao Kick
       settingsBase = event.settings;
       perfisOverlay = Array.isArray(event.perfisOverlay) ? event.perfisOverlay : [];
       destaqueReal = event.featured || null;
