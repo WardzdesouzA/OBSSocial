@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.169.4",
+    "titulo": "🔄 «Verificar se há versão nova» responde em segundos — e não fica mais preso no «Verificando no GitHub…»",
+    "itens": [
+      "🔄 A verificação lia a versão baixando o pacote inteiro do GitHub (5 MB) só para olhar o número; em redes lentas ou com um caminho bloqueado, cada tentativa esperava até 1 minuto — e eram até 8 — e o «Verificando no GitHub…» ficava minutos parado, parecendo que a versão nova não existia. Agora ela lê só o package.json (349 bytes) por dois endereços leves, com 15 s por tentativa; o pacote só é baixado quando você manda instalar.",
+      "📬 A resposta chega mesmo se a página reconectou no meio: antes ia para a conexão antiga (já fechada) e o botão ficava preso. A tela mostra o andamento («tentando outro caminho, 2 de 5») e, se nada chegar em 4 minutos, libera o botão com um aviso de onde olhar.",
+      "🧭 Dois cliques (ou o clique junto da busca automática) não viram duas verificações ao mesmo tempo; a busca automática ao abrir o programa e 1x por dia também ficou leve."
+    ]
+  },
+  {
     "version": "0.169.3",
     "titulo": "🟢 Kick: quando o Cloudflare barra o programa, a consulta vai pelo curl, pelo PowerShell ou pelo navegador aberto — e a «nova tentativa sozinha» agora acontece de verdade",
     "itens": [

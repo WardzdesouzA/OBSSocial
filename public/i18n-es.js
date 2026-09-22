@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub no respondió a tiempo. Mira la ventana negra de OBS Social (ahí dice el motivo) e inténtalo de nuevo.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "El Cloudflare de Kick bloqueó el programa. Abre el panel o la configuración en un navegador de este equipo y déjalo abierto: la consulta pasa a hacerse por él.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "El Cloudflare de Kick bloqueó incluso el navegador de este equipo. Abre kick.com en este mismo navegador, pasa la verificación «soy humano» y haz clic en 🔄 aquí.",
     "Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.": "Si Kick bloquea el programa (protección Cloudflare, error 403), deja esta página, el panel o la pantalla del OBS abiertos en este equipo: el navegador hace la consulta por el programa.",
@@ -3179,6 +3180,8 @@ window.OBS_I18N_DICTS.es = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Marca solo lo que usas. Esto cambia la herramienta 🎛️ del panel — las teclas 🎛️ de la Mesa de pistas siguen funcionando igual.",
   },
   padroes: [
+    [/^⏳ Verificando no GitHub\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ Verificando en GitHub... (probando otro camino, $1 de $2)"],
+    [/^⏳ Baixando a atualização\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ Descargando la actualización... (probando otro camino, $1 de $2)"],
     // 💬 v0.140.2: os recados da biblioteca local do WhatsApp
     [/^⚠️ O npm não conseguiu baixar a biblioteca: (.+)$/, "⚠️ npm no consiguió descargar la biblioteca: $1"],
     [/^⚠️ A instalação passou do tempo limite \((\d+) min\) e foi encerrada\. Confira a internet e tente de novo\.$/, "⚠️ La instalación pasó del tiempo límite ($1 min) y fue interrumpida. Revisa tu internet e inténtalo de nuevo."],

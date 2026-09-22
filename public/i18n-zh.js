@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub 未及时响应。请查看 OBS Social 的黑色窗口（里面写明原因），然后重试。",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Kick 的 Cloudflare 拦截了本程序。请在这台电脑的浏览器中打开面板或设置并保持打开：查询将改由浏览器完成。",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Kick 的 Cloudflare 连这台电脑的浏览器也拦截了。请在同一浏览器中打开 kick.com，通过“我是人类”验证，然后在这里点击 🔄。",
     "Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.": "如果 Kick 拦截了本程序（Cloudflare 防护，错误 403），请让本页面、面板或 OBS 画面在这台电脑上保持打开：浏览器会替程序完成查询。",
@@ -3179,6 +3180,8 @@ window.OBS_I18N_DICTS.zh = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "只勾选你会用的。这会改变面板的 🎛️ 工具 — 音板上的 🎛️ 按键无论如何都能用。",
   },
   padroes: [
+    [/^⏳ Verificando no GitHub\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ 正在检查 GitHub...（尝试另一条路径，$1/$2）"],
+    [/^⏳ Baixando a atualização\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ 正在下载更新...（尝试另一条路径，$1/$2）"],
     // 💬 v0.140.2: os recados da biblioteca local do WhatsApp
     [/^⚠️ O npm não conseguiu baixar a biblioteca: (.+)$/, "⚠️ npm 没能下载这个库：$1"],
     [/^⚠️ A instalação passou do tempo limite \((\d+) min\) e foi encerrada\. Confira a internet e tente de novo\.$/, "⚠️ 安装超过了时间上限（$1 分钟），已经中止。检查一下网络再试一次。"],

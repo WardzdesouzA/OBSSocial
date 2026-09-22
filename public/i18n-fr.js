@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    "⚠️ O GitHub não respondeu a tempo. Veja a janela preta do OBS Social (ela conta o motivo) e tente de novo.": "⚠️ GitHub n’a pas répondu à temps. Regardez la fenêtre noire d’OBS Social (elle donne la raison) et réessayez.",
     "O Cloudflare do Kick barrou o programa. Abra o painel ou as configurações num navegador deste computador e deixe aberto: a consulta passa a ser feita por ele.": "Le Cloudflare de Kick a bloqué le programme. Ouvrez le panneau ou les réglages dans un navigateur de cet ordinateur et laissez-le ouvert : la requête passera par lui.",
     "O Cloudflare do Kick barrou até o navegador deste computador. Abra kick.com neste mesmo navegador, passe pela verificação «sou humano» e clique em 🔄 aqui.": "Le Cloudflare de Kick a bloqué même le navigateur de cet ordinateur. Ouvrez kick.com dans ce même navigateur, passez la vérification « je suis humain » et cliquez sur 🔄 ici.",
     "Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.": "Si Kick bloque le programme (protection Cloudflare, erreur 403), laissez cette page, le panneau ou l’écran OBS ouverts sur cet ordinateur : le navigateur fait la requête à la place du programme.",
@@ -3179,6 +3180,8 @@ window.OBS_I18N_DICTS.fr = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Cochez seulement ce que vous utilisez. Cela change l’outil 🎛️ du panneau — les touches 🎛️ de la Table de pistes fonctionnent de toute façon.",
   },
   padroes: [
+    [/^⏳ Verificando no GitHub\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ Vérification sur GitHub... (essai d’un autre chemin, $1 sur $2)"],
+    [/^⏳ Baixando a atualização\.\.\. \(tentando outro caminho, (\d+) de (\d+)\)$/, "⏳ Téléchargement de la mise à jour... (essai d’un autre chemin, $1 sur $2)"],
     // 💬 v0.140.2: os recados da biblioteca local do WhatsApp
     [/^⚠️ O npm não conseguiu baixar a biblioteca: (.+)$/, "⚠️ npm n’a pas réussi à télécharger la bibliothèque : $1"],
     [/^⚠️ A instalação passou do tempo limite \((\d+) min\) e foi encerrada\. Confira a internet e tente de novo\.$/, "⚠️ L’installation a dépassé le temps limite ($1 min) et a été arrêtée. Vérifiez votre connexion et réessayez."],
