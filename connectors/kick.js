@@ -160,9 +160,13 @@ async function viaPowerShell(url) {
   const seg = Math.ceil(KICK_TEMPO_MS / 1000);
   // Primeira linha: o status; o resto: o corpo. Só aspas simples lá dentro
   // (o endereço já foi conferido), para o comando não virar outra coisa.
+  // O corpo sai dos bytes crus decodificados como UTF-8: o Kick manda o JSON
+  // sem «charset», e o PowerShell antigo leria como Latin-1 (João → JoÃ£o).
   const script = "$ProgressPreference='SilentlyContinue';[Console]::OutputEncoding=[Text.Encoding]::UTF8;"
     + `$h=@{'User-Agent'='${BROWSER_HEADERS['User-Agent']}';'Accept'='application/json';'Accept-Language'='en-US,en;q=0.9'};`
-    + `try{$r=Invoke-WebRequest -UseBasicParsing -Uri '${url}' -Headers $h -TimeoutSec ${seg};[Console]::Out.Write([string]$r.StatusCode+[char]10+$r.Content)}`
+    + `try{$r=Invoke-WebRequest -UseBasicParsing -Uri '${url}' -Headers $h -TimeoutSec ${seg};`
+    + '$t=$r.Content;try{$t=[Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())}catch{};'
+    + '[Console]::Out.Write([string]$r.StatusCode+[char]10+$t)}'
     + 'catch{$c=0;try{$c=[int]$_.Exception.Response.StatusCode}catch{};[Console]::Out.Write([string]$c+[char]10+$_.Exception.Message)}';
   const { err, stdout, stderr } = await rodarPrograma(exe, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script]);
   const quebra = stdout.indexOf('\n');
@@ -180,12 +184,13 @@ const KICK_PEDIDORES = { fetch: viaFetch, tls: viaTls, curl: viaCurl, powershell
 
 // Falha de rede pura (sem resposta HTTP nenhuma) num caminho do Node: os
 // outros caminhos usam a mesma internet e vão cair igual — não vale a espera.
+// Só as falhas claras (DNS, conexão recusada, sem rota): tempo esgotado e
+// conexão derrubada podem ser o próprio Cloudflare segurando o Node — aí os
+// outros caminhos ainda valem a pena.
 function redeFora(err) {
   const causa = err && (err.cause || err);
   const code = String((causa && causa.code) || '');
-  return err && (err.name === 'TimeoutError' || err.name === 'AbortError'
-    || /ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|UND_ERR_CONNECT_TIMEOUT/.test(code)
-    || /tempo esgotado/.test(String(err.message || '')));
+  return /ENOTFOUND|ECONNREFUSED|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH/.test(code);
 }
 
 function lembrarVia(via) {
@@ -195,43 +200,34 @@ function lembrarVia(via) {
   kickVia.boa = via;
 }
 
-// Devolve { status, ok, texto, json, via }. Lança erro quando nenhum caminho
-// respondeu — com .barrado (todos levaram 403/429/503), .status, .vias
-// (os caminhos tentados) e .semNavegador (não havia página aberta para o 5).
-// `extra: true` = pedido que não é essencial (avatar, audiência): quando
-// tudo acabou de ser barrado, desiste na hora em vez de insistir.
-async function kickApi(caminho, opcoes = {}) {
-  const url = /^https?:\/\//.test(caminho) ? caminho : KICK_API + caminho;
-  if (opcoes.extra && kickVia.tudoBarradoEm && Date.now() - kickVia.tudoBarradoEm < KICK_PAUSA_EXTRAS_MS) {
-    const e = new Error('Kick barrado agora há pouco; este pedido pode esperar.');
-    e.barrado = true; e.status = 403; e.vias = [];
-    throw e;
-  }
-  const ordem = [kickVia.boa, ...KICK_VIAS.filter((v) => v !== kickVia.boa)];
-  if (kickVia.boa !== 'fetch' && !opcoes.extra && Date.now() >= kickVia.sondaEm) {
-    kickVia.sondaEm = Date.now() + KICK_SONDA_MS;
-    ordem.splice(ordem.indexOf('fetch'), 1);
-    ordem.unshift('fetch');
-  }
-  const tentadas = [];
-  let barrado = null;   // { status, via } do último caminho barrado
-  let navegadorBarrado = false;
-  let ultimoErro = null;
-  for (const via of ordem) {
-    if (!viaDisponivel(via)) continue;
-    tentadas.push(via);
+// Tenta os caminhos na ordem; devolve a resposta do primeiro que passou ou
+// null. `est` acumula o que aconteceu (para a mensagem final).
+async function tentarVias(url, vias, est) {
+  for (const via of vias) {
+    if (est.parou || !viaDisponivel(via)) continue;
+    est.tentadas.push(via);
     let r;
     try {
       r = await KICK_PEDIDORES[via](url);
     } catch (err) {
-      ultimoErro = err;
+      est.ultimoErro = err;
       if (err && err.code === 'ENOENT') kickVia.indisponiveis.add(via);
-      if ((via === 'fetch' || via === 'tls') && redeFora(err)) break;
+      // O navegador está com a fila cheia: não é um caminho barrado — o
+      // pedido extra desiste sem aprender nada disso
+      if (err && err.ocupado && est.extra) { est.parou = true; est.ocupado = true; }
+      // A página tentou e o pedido «falhou» sem status: é a cara do desafio
+      // do Cloudflare (a resposta 403 vem sem os cabeçalhos CORS, e o
+      // navegador esconde o status). Se algum caminho levou 403 nesta rodada,
+      // conta como o navegador barrado — a dica certa é passar pela verificação
+      if (via === 'navegador' && err && err.corsBarrado) est.navegadorCors = true;
+      // Rede fora num caminho do Node, sem NENHUMA resposta HTTP até agora:
+      // os outros caminhos vão cair igual
+      if ((via === 'fetch' || via === 'tls') && !est.barrado && redeFora(err)) est.parou = true;
       continue;
     }
     if (KICK_BARRADO.has(r.status)) {
-      barrado = { status: r.status, via };
-      if (via === 'navegador') navegadorBarrado = true;
+      est.barrado = { status: r.status, via };
+      if (via === 'navegador') est.navegadorBarrado = true;
       continue;
     }
     lembrarVia(via);
@@ -240,15 +236,58 @@ async function kickApi(caminho, opcoes = {}) {
     try { json = JSON.parse(r.texto); } catch { /* não era JSON: quem pediu confere */ }
     return { status: r.status, ok: r.status >= 200 && r.status < 300, texto: r.texto, json, via };
   }
-  const e = new Error(barrado
-    ? `Kick respondeu com erro ${barrado.status}.`
-    : (ultimoErro && ultimoErro.message) || 'O Kick não respondeu.');
-  e.barrado = !!barrado;
-  e.status = barrado ? barrado.status : 0;
-  e.vias = tentadas;
-  e.semNavegador = !tentadas.includes('navegador');
-  e.navegadorBarrado = navegadorBarrado;
-  if (barrado) kickVia.tudoBarradoEm = Date.now();
+  return null;
+}
+
+// Os pedidos extras (avatar, audiência, histórico) não podem virar uma
+// enxurrada de curl/PowerShell quando chegam 50 comentários de uma vez:
+// eles usam só o caminho lembrado e, se ele falhar, UM de cada vez percorre
+// a cadeia inteira — os outros desistem na hora (a foto volta na varredura).
+let extraNaCadeia = false;
+
+// Devolve { status, ok, texto, json, via }. Lança erro quando nenhum caminho
+// respondeu — com .barrado (todos levaram 403/429/503), .status, .vias
+// (os caminhos tentados), .semNavegador (não havia página aberta para o 5)
+// e .navegadorBarrado (a página foi consultada e também levou 403).
+// `extra: true` = pedido que não é essencial (avatar, audiência): quando
+// tudo acabou de ser barrado, desiste na hora em vez de insistir.
+async function kickApi(caminho, opcoes = {}) {
+  const url = /^https?:\/\//.test(caminho) ? caminho : KICK_API + caminho;
+  const extra = opcoes.extra === true;
+  const erroRapido = (msg) => { const e = new Error(msg); e.barrado = true; e.status = 403; e.vias = []; e.rapido = true; return e; };
+  if (extra && kickVia.tudoBarradoEm && Date.now() - kickVia.tudoBarradoEm < KICK_PAUSA_EXTRAS_MS) {
+    throw erroRapido('Kick barrado agora há pouco; este pedido pode esperar.');
+  }
+  const ordem = [kickVia.boa, ...KICK_VIAS.filter((v) => v !== kickVia.boa)];
+  if (kickVia.boa !== 'fetch' && !extra && Date.now() >= kickVia.sondaEm) {
+    kickVia.sondaEm = Date.now() + KICK_SONDA_MS;
+    ordem.splice(ordem.indexOf('fetch'), 1);
+    ordem.unshift('fetch');
+  }
+  const est = { extra, tentadas: [], barrado: null, navegadorBarrado: false, navegadorCors: false, ultimoErro: null, parou: false, ocupado: false };
+  let r;
+  if (!extra) {
+    r = await tentarVias(url, ordem, est);
+  } else {
+    r = await tentarVias(url, ordem.slice(0, 1), est); // só o caminho lembrado
+    if (!r && !est.parou) {
+      if (extraNaCadeia) throw erroRapido('Outro pedido já está procurando um caminho para o Kick; este pode esperar.');
+      extraNaCadeia = true;
+      try { r = await tentarVias(url, ordem.slice(1), est); } finally { extraNaCadeia = false; }
+    }
+  }
+  if (r) return r;
+  if (est.ocupado) throw erroRapido('O navegador já tem consultas demais na fila; este pedido pode esperar.');
+  if (est.barrado && est.navegadorCors) est.navegadorBarrado = true;
+  const e = new Error(est.barrado
+    ? `Kick respondeu com erro ${est.barrado.status}.`
+    : (est.ultimoErro && est.ultimoErro.message) || 'O Kick não respondeu.');
+  e.barrado = !!est.barrado;
+  e.status = est.barrado ? est.barrado.status : 0;
+  e.vias = est.tentadas;
+  e.semNavegador = !est.tentadas.includes('navegador');
+  e.navegadorBarrado = est.navegadorBarrado;
+  if (est.barrado) kickVia.tudoBarradoEm = Date.now();
   throw e;
 }
 

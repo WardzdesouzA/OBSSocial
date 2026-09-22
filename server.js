@@ -6159,7 +6159,9 @@ async function pollAudience() {
     // Kick: a cada 30s (1 em cada 3 ciclos) — o Cloudflare deles é o mais
     // sensível a consultas frequentes, e foi o que bloqueou o streamer na live
     audiencePollTick++;
-    if (state.connectors.kick?.channel && audiencePollTick % 3 === 0) watch('kick', fetchKickViewers(state.connectors.kick.channel));
+    // 🟢 v0.169.3: com o Kick em erro (barrado, esperando a nova tentativa) não
+    // vale consultar espectadores — só somaria pedidos no Cloudflare deles
+    if (state.connectors.kick?.channel && state.status.kick?.state !== 'error' && audiencePollTick % 3 === 0) watch('kick', fetchKickViewers(state.connectors.kick.channel));
     if (state.connectors.youtube?.videoId) {
       const videoId = state.connectors.youtube.videoId;
       watch('youtube', Promise.all([
@@ -10193,7 +10195,11 @@ function kickConsultaPeloNavegador(url) {
     e.semNavegador = true;
     return Promise.reject(e);
   }
-  if (kickPedidosNavegador.size >= KICK_NAVEGADOR_MAX) return Promise.reject(new Error('o navegador já tem consultas demais na fila'));
+  if (kickPedidosNavegador.size >= KICK_NAVEGADOR_MAX) {
+    const e = new Error('o navegador já tem consultas demais na fila');
+    e.ocupado = true; // não é um caminho barrado: o pedido extra só desiste
+    return Promise.reject(e);
+  }
   const alvo = candidatos[kickNavegadorRodizio++ % candidatos.length];
   const id = 'k' + (++kickPedidoSeq);
   return new Promise((resolve, reject) => {
@@ -10270,8 +10276,16 @@ function tratarMensagem(ws, raw) {
       clearTimeout(p.timer);
       kickPedidosNavegador.delete(id);
       const status = Number(msg.status) || 0;
-      if (!status) { p.reject(new Error(String(msg.erro || 'o navegador não conseguiu consultar').slice(0, 200))); break; }
-      p.resolve({ status, texto: typeof msg.corpo === 'string' ? msg.corpo.slice(0, 4 * 1024 * 1024) : '' });
+      if (!status) {
+        const e = new Error(String(msg.erro || 'o navegador não conseguiu consultar').slice(0, 200));
+        // «cors» = o fetch da página falhou sem status: é como o desafio do
+        // Cloudflare chega a uma página de outra origem
+        if (msg.motivo === 'cors') e.corsBarrado = true;
+        p.reject(e);
+        break;
+      }
+      // (a página já limita o corpo a 400 KB — abaixo do maxPayload do WebSocket)
+      p.resolve({ status, texto: typeof msg.corpo === 'string' ? msg.corpo.slice(0, 512 * 1024) : '' });
       break;
     }
     case 'reconnect': {

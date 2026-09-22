@@ -723,7 +723,9 @@ const KICK_NAVEGADOR = {
       const t = setTimeout(() => ctl.abort(), 10000);
       try {
         const res = await fetch(event.url, { headers: { Accept: 'application/json' }, mode: 'cors', credentials, cache: 'no-store', signal: ctl.signal });
-        const corpo = (await res.text()).slice(0, 2 * 1024 * 1024);
+        // O WebSocket do servidor aceita quadros de até 512 KB: o corpo vai
+        // cortado em 400 KB (o JSON que o programa precisa tem algumas dezenas)
+        const corpo = (await res.text()).slice(0, 400 * 1024);
         return { status: res.status, corpo };
       } finally { clearTimeout(t); }
     };
@@ -734,7 +736,10 @@ const KICK_NAVEGADOR = {
       try { resp = await buscar('include'); } catch { resp = await buscar('omit'); }
       responder(resp);
     } catch (e) {
-      responder({ status: 0, erro: String((e && e.message) || e).slice(0, 200) });
+      // «tempo» = a página esperou 10 s; «cors» = o fetch falhou sem status —
+      // é como o desafio do Cloudflare (403 sem cabeçalhos CORS) chega aqui
+      const motivo = e && e.name === 'AbortError' ? 'tempo' : 'cors';
+      responder({ status: 0, motivo, erro: String((e && e.message) || e).slice(0, 200) });
     }
   },
 };
