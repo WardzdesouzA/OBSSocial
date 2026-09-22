@@ -4141,13 +4141,18 @@ function persistUpdateConfig() {
 
 // Baixa uma URL com o módulo http(s) do Node (mais tolerante que o fetch em
 // redes problemáticas), seguindo redirecionamentos e com tempo limite.
-// `timeoutMs` (opção nossa, não vai para o http) é o tempo sem resposta; o
-// prazo total é o triplo dele — nada fica pendurado para sempre.
+// Opções nossas (não vão para o http): `timeoutMs` = tempo sem resposta;
+// `prazoMs` = prazo total, para nada ficar pendurado (o pacote de 5 MB numa
+// conexão lenta ganha um prazo folgado — só a leitura leve é curta);
+// `maxBytes` = teto do corpo (um portal cativo respondendo 200 com HTML
+// gigante não pode encher a memória).
 function baixar(url, options = {}, redirects = 3) {
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('http:') ? require('http') : require('https');
-    const { timeoutMs, ...opcoesHttp } = options;
+    const { timeoutMs, prazoMs, maxBytes, ...opcoesHttp } = options;
     const limite = Number(timeoutMs) || 60000;
+    const prazoTotal = Number(prazoMs) || 15 * 60 * 1000;
+    const teto = Number(maxBytes) || 100 * 1024 * 1024;
     const seg = Math.round(limite / 1000);
     const req = mod.get(url, { ...opcoesHttp, headers: { 'User-Agent': 'OBS-Social', ...(options.headers || {}) } }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirects > 0) {
@@ -4174,12 +4179,17 @@ function baixar(url, options = {}, redirects = 3) {
         return;
       }
       const chunks = [];
-      res.on('data', (c) => chunks.push(c));
+      let tamanho = 0;
+      res.on('data', (c) => {
+        tamanho += c.length;
+        if (tamanho > teto) { req.destroy(new Error('a resposta é maior do que o esperado (não parece o GitHub)')); return; }
+        chunks.push(c);
+      });
       res.on('end', () => resolve(Buffer.concat(chunks)));
       res.on('error', reject);
     });
     req.setTimeout(limite, () => req.destroy(new Error(`tempo esgotado (${seg}s)`)));
-    const prazo = setTimeout(() => req.destroy(new Error(`tempo esgotado (${seg * 3}s no total)`)), limite * 3);
+    const prazo = setTimeout(() => req.destroy(new Error(`tempo esgotado (${Math.round(prazoTotal / 1000)}s no total)`)), prazoTotal);
     req.on('close', () => clearTimeout(prazo));
     req.on('error', reject);
   });
@@ -4214,10 +4224,15 @@ function tentativasDe(urls, extras) {
 // automática) não viram duas buscas: a que está em curso é compartilhada.
 // Se nenhum endereço leve responde, cai no pacote inteiro (outro caminho).
 let versaoEmCurso = null;
+let versaoOuvintes = []; // quem quer o andamento da busca em curso (o 2º clique também)
 function buscarVersaoNova(aoProgresso) {
+  if (typeof aoProgresso === 'function') versaoOuvintes.push(aoProgresso);
   if (versaoEmCurso) return versaoEmCurso;
+  const avisar = (n, total) => { for (const fn of versaoOuvintes) { try { fn(n, total); } catch { /* ouvinte quebrado não derruba a busca */ } } };
   versaoEmCurso = (async () => {
-    const tentativas = tentativasDe(UPDATE_VERSION_URLS, { timeoutMs: UPDATE_VERSAO_TEMPO_MS });
+    const tentativas = tentativasDe(UPDATE_VERSION_URLS, { timeoutMs: UPDATE_VERSAO_TEMPO_MS, prazoMs: UPDATE_VERSAO_TEMPO_MS * 3, maxBytes: 256 * 1024 });
+    const totalZip = tentativasDe(UPDATE_ZIP_URLS, {}).length;
+    const total = tentativas.length + totalZip; // a numeração segue pelo pacote inteiro
     let n = 0;
     for (const [url, opts] of tentativas) {
       n += 1;
@@ -4230,12 +4245,12 @@ function buscarVersaoNova(aoProgresso) {
       } catch (err) {
         const causa = err?.cause?.code || err?.code || err.message;
         console.log(`  ⚠️ Verificação de versão: falha (${causa}) — tentando outro caminho...`);
-        if (typeof aoProgresso === 'function') aoProgresso(Math.min(n + 1, tentativas.length + 1), tentativas.length + 1);
+        avisar(n + 1, total);
       }
     }
     // Último recurso: o pacote inteiro (é outro domínio — às vezes passa)
-    return downloadUpdate(aoProgresso);
-  })().finally(() => { versaoEmCurso = null; });
+    return downloadUpdate((k, t) => avisar(tentativas.length + k, tentativas.length + t));
+  })().finally(() => { versaoEmCurso = null; versaoOuvintes = []; });
   return versaoEmCurso;
 }
 
