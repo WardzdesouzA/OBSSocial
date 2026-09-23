@@ -2645,9 +2645,16 @@
     <div class="card" id="sec-logs">
       <h3>🗄️ Logs de comentários</h3>
       <div class="hint">Cada dia de live gera um arquivo de log em <code>data/logs/</code> — é ele que recupera o chat e o sorteio se o programa reiniciar. Em uso agora: <b id="logsInfoText">—</b></div>
+      <div class="field">
+        <label>Apagar automaticamente logs com mais de (dias; 0 = nunca apagar; mínimo 366, máximo 3650)</label>
+        <input type="number" id="logRetentionInput" min="0" max="3650" step="1">
+        <div class="hint" style="margin-bottom:0">Os logs são o arquivo das suas lives: ficam guardados por, no mínimo, um ano (366 dias), para qualquer dia poder ser revisto. 0 = nunca apagar.</div>
+      </div>
       <div class="field" style="margin-bottom:0">
-        <label>Apagar automaticamente logs com mais de (dias; 0 = nunca apagar; máximo 365)</label>
-        <input type="number" id="logRetentionInput" min="0" max="365" step="1">
+        <label>📅 Rever um dia de live</label>
+        <div class="hint">Os dias com log ficam clicáveis. Escolha um e o painel abre com tudo o que foi preservado naquele dia — a live de hoje continua rolando por baixo, e o botão «Voltar para hoje» fecha a revisão.</div>
+        <div id="logsCalendario"></div>
+        <div class="hint" id="logsCalendarioInfo" style="margin:6px 0 0">—</div>
       </div>
     </div>
 
@@ -3422,6 +3429,7 @@ const hub = connectHub((event) => {
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
       // 🟢 v0.169.3: esta página atende consultas ao Kick quando o Cloudflare barra o programa
       KICK_NAVEGADOR.pronto(hub);
+      hub.send({ type: 'logsDias' }); // 📅 v0.171: o calendário dos dias com log
       // 🔒 v0.169.5: a atualização só se verifica/instala no computador do
       // OBS Social — quem abriu pela rede fica sabendo antes de clicar
       // 🔒 v0.169.6: os botões e o seletor SOMEM — fica só o aviso no lugar deles
@@ -3715,7 +3723,18 @@ const hub = connectHub((event) => {
     case 'logs':
       updateLogsInfo(event.logs);
       atualizarDados(event.dados);
+      hub.send({ type: 'logsDias' }); // 📅 v0.171: o calendário acompanha
       break;
+    // 📅 v0.171: os dias com log → calendário; escolher abre o painel naquele dia
+    case 'logsDias': {
+      const alvo = document.getElementById('logsCalendario');
+      const dias = new Set((event.dias || []).map((d) => d.dia));
+      if (typeof CALENDARIO_LOGS_CSS === 'string' && !document.getElementById('calLogsCss')) { const st = document.createElement('style'); st.id = 'calLogsCss'; st.textContent = CALENDARIO_LOGS_CSS; document.head.appendChild(st); }
+      montarCalendarioLogs(alvo, { dias, hoje: event.hoje, aoEscolher: (dia) => window.open('/dashboard.html?dia=' + dia, '_blank') });
+      const n = dias.size;
+      document.getElementById('logsCalendarioInfo').textContent = n ? (n === 1 ? OBS_I18N.t('1 dia com log') : `${n} ${OBS_I18N.t('dias com log')}`) : OBS_I18N.t('Ainda não há nenhum dia com log.');
+      break;
+    }
     case 'security':
       fillSecurity(event.security);
       break;
@@ -4583,7 +4602,7 @@ function fillSettingsForm() {
   // 🎬 v0.134: o card do extrator segue o Labs dele
   const ydCard = document.getElementById('cardYtDlp');
   if (ydCard) ydCard.classList.toggle('cardOculto', (settings.labs || {}).ytdlp !== true);
-  if (document.activeElement !== logRetentionInput) logRetentionInput.value = settings.logRetentionDays ?? 30;
+  if (document.activeElement !== logRetentionInput) logRetentionInput.value = settings.logRetentionDays ?? 366;
   applyPanel();
   {
     const panel = settings.panel || {};

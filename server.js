@@ -290,7 +290,9 @@ const DEFAULT_SETTINGS = {
   layoutV: {},  // posições do overlay vertical: { featured, media, widgets: {chave: {position,x,y}} }
   // Idioma da interface: 'auto' segue o navegador de quem abre cada página
   idioma: 'auto',
-  logRetentionDays: 30, // 0 = nunca apagar; maximo 365
+  // 📅 v0.171: os logs são o arquivo da live — no mínimo 366 dias (um ano
+  // bissexto), para qualquer dia poder ser revisto; 0 = nunca apagar
+  logRetentionDays: 366,
   // Sorteio: fichas por nivel de sub/membro (lidas dos selos publicos do chat)
   raffle: {
     extraTokens: true,  // desligado = sorteio aberto: 1 ficha para todos
@@ -3830,6 +3832,7 @@ const OP_CATEGORY = {
   perfisOverlaySet: 'settings', // 🎭 perfis de overlay mexem no visual = configurações
   deleteMedia: 'media',
   clearLogs: 'logs',
+  logsDias: 'logs', logDia: 'logs', // 📅 v0.171: rever um dia de live
   // 🎵 A mesa de trilhas é uma ferramenta; 🎬 o OBS tem seletor próprio
   trilhasSet: 'tools', trilhaTocar: 'tools', trilhaParar: 'tools', pastaTocar: 'tools',
   trilhaTela: 'tools', trilhaTelaFim: 'tools', // 🖼️🎞️ v0.86: teclas de mídia
@@ -4798,6 +4801,53 @@ function appendLog(entry) {
   }
 }
 
+// 📅 v0.171: 0 = nunca apagar; senão, no mínimo 366 dias (ano bissexto) e
+// no máximo 10 anos — um valor antigo como 30 vira 366
+function sanitizeRetencaoLogs(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.max(366, Math.min(3650, Math.round(n)));
+}
+
+// 📅 v0.171: os dias que têm log (para o calendário), do mais antigo ao mais novo
+function listarDiasDeLog() {
+  try {
+    return fs.readdirSync(LOGS_DIR)
+      .map((f) => f.match(/^chat-(\d{4}-\d{2}-\d{2})\.jsonl$/))
+      .filter(Boolean)
+      .map((m) => { let bytes = 0; try { bytes = fs.statSync(path.join(LOGS_DIR, `chat-${m[1]}.jsonl`)).size; } catch {} return { dia: m[1], bytes }; })
+      .sort((a, b) => (a.dia < b.dia ? -1 : 1));
+  } catch { return []; }
+}
+
+// 📅 v0.171: o log de UM dia, inteiro, para rever no painel — não mexe em
+// nada do dia de hoje (contadores, participantes, memória de exibição)
+const REVISAO_MAX = 50000;
+function lerLogDoDia(dia) {
+  const arquivo = path.join(LOGS_DIR, `chat-${dia}.jsonl`);
+  const mensagens = [];
+  const porRede = {};
+  const valores = { superchat: 0, pix: 0 };
+  let total = 0;
+  let texto = '';
+  try { texto = fs.readFileSync(arquivo, 'utf8'); } catch { return null; }
+  for (const linha of texto.split('\n')) {
+    if (!linha) continue;
+    let entry;
+    try { entry = JSON.parse(linha); } catch { continue; }
+    if (!entry || entry.t !== 'chat' || !entry.m) continue;
+    const m = entry.m;
+    if (ehMensagemDeTeste(m)) continue;
+    total += 1;
+    porRede[m.platform] = (porRede[m.platform] || 0) + 1;
+    if (m.platform === 'doacao') valores.pix = Math.round((valores.pix + valorDaMensagem(m)) * 100) / 100;
+    else if (ehSuperchat(m)) valores.superchat = Math.round((valores.superchat + valorDaMensagem(m)) * 100) / 100;
+    if (mensagens.length < REVISAO_MAX) mensagens.push(m);
+  }
+  mensagens.sort((a, b) => ((a.timestamp || 0) - (b.timestamp || 0)));
+  return { dia, mensagens, total, porRede, valores, cortado: total > REVISAO_MAX };
+}
+
 function logsInfo() {
   try {
     const files = fs.readdirSync(LOGS_DIR).filter((f) => f.endsWith('.jsonl'));
@@ -4813,7 +4863,7 @@ function logsInfo() {
 
 // Limpeza automatica: apaga logs mais antigos que o numero de dias configurado.
 function cleanOldLogs() {
-  const days = Math.max(0, Math.min(365, Number(state.settings.logRetentionDays) || 0));
+  const days = sanitizeRetencaoLogs(state.settings.logRetentionDays);
   if (days > 0) {
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     try {
@@ -10439,6 +10489,18 @@ function tratarMensagem(ws, raw) {
       p.resolve({ status, texto: typeof msg.corpo === 'string' ? msg.corpo.slice(0, 512 * 1024) : '' });
       break;
     }
+    case 'logsDias':
+      // 📅 v0.171: os dias com log, para o calendário
+      try { ws.send(JSON.stringify({ type: 'logsDias', dias: listarDiasDeLog(), hoje: todayLogPath().match(/chat-(\d{4}-\d{2}-\d{2})/)[1] })); } catch { /* já caiu */ }
+      break;
+    case 'logDia': {
+      // 📅 v0.171: o log inteiro de um dia, para rever no painel
+      const dia = String(msg.dia || '');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) break;
+      const lido = lerLogDoDia(dia);
+      try { ws.send(JSON.stringify(lido ? { type: 'logDia', ...lido } : { type: 'logDia', dia, erro: 'Não há log desse dia.' })); } catch { /* já caiu */ }
+      break;
+    }
     case 'taxasBuscar': {
       // 💰 v0.170: busca as taxas nos serviços — YouTube: a página de ajuda
       // dos Supers («os criadores recebem 70%»); Pix: a regra do Banco
@@ -10740,7 +10802,7 @@ function tratarMensagem(ws, raw) {
       // do celular pelo tema do navegador dele)
       if (ws.role !== 'local' && incoming.deck && typeof incoming.deck === 'object') delete incoming.deck.temaObs;
       if ('logRetentionDays' in incoming) {
-        incoming.logRetentionDays = Math.max(0, Math.min(365, Number(incoming.logRetentionDays) || 0));
+        incoming.logRetentionDays = sanitizeRetencaoLogs(incoming.logRetentionDays);
       }
       const widgets = { ...state.settings.widgets };
       for (const [key, value] of Object.entries(incoming.widgets || {})) {

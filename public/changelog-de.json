@@ -1,4 +1,12 @@
 {
+  "0.171.0": {
+    "titulo": "📅 Einen Stream-Tag ansehen: Kalender der Tage mit Log, der ganze Tag zurück im Panel und „Zurück zu heute“ — Logs mindestens ein Jahr aufbewahrt",
+    "itens": [
+      "📅 Im Panel öffnet der Button 📅 das Fenster „Einen Stream-Tag ansehen“: Ein Kalender zeigt die Tage mit Log (nur die sind anklickbar); wählst du einen, erscheint dort alles, was an dem Tag gespeichert wurde — die gewohnten Karten, mit Datum, Gesamt pro Netzwerk und dem 💰 des Tages (Super Chat und Pix/Unterstützungen), ein Filter nach Name oder Text und „Mehr anzeigen“ in 200er-Schritten. Der heutige Stream läuft darunter weiter, ohne sich zu mischen; „🏠 Zurück zu heute“ (oder Esc) schließt die Ansicht. Riesige Tage zeigen die ersten 50 Tausend Kommentare.",
+      "🗄️ In Einstellungen → 🗄️ Logs derselbe Kalender: Ein Klick auf einen Tag öffnet das Panel direkt an dem Tag (/dashboard.html?dia=JJJJ-MM-TT). Die Zahl der Tage mit Log steht darunter.",
+      "📆 Die Log-Aufbewahrung hat jetzt ein Minimum von einem Schaltjahr (366 Tage) und ein Maximum von 10 Jahren — oder 0 für nie löschen. Ein alter Wert (Standard war 30) wird von selbst zu 366: Kein Stream-Tag verschwindet vor einem Jahr."
+    ]
+  },
   "0.170.0": {
     "titulo": "✓ „Gelesen“-Markierungen überleben den Neustart — und 💰 das Panel zeigt die Einnahmen des Streams (Super Chat + Pix), mit den Gebühren der Dienste",
     "itens": [

@@ -1,4 +1,12 @@
 {
+  "0.171.0": {
+    "titulo": "📅 Revisar un día de transmisión: calendario de días con log, el día entero de vuelta en el panel y «Volver a hoy» — logs guardados al menos un año",
+    "itens": [
+      "📅 En el panel, el botón 📅 abre la ventana «Revisar un día de transmisión»: un calendario muestra los días que tienen log (solo esos se pueden clicar); al elegir uno, todo lo preservado ese día aparece ahí — las tarjetas de siempre, con la fecha, el total por red y el 💰 del día (Super Chat y Pix/apoyos), un filtro por nombre o texto y «Mostrar más» de 200 en 200. La transmisión de hoy sigue por debajo, sin mezclarse; «🏠 Volver a hoy» (o Esc) cierra la revisión. Días enormes muestran los primeros 50 mil comentarios.",
+      "🗄️ En Configuración → 🗄️ Logs, el mismo calendario: clicar en un día abre el panel directo en ese día (/dashboard.html?dia=AAAA-MM-DD). La cuenta de días con log aparece debajo.",
+      "📆 La retención de logs pasó a tener mínimo de un año bisiesto (366 días) y máximo de 10 años — o 0 para nunca borrar. Un valor antiguo (el predeterminado era 30) se vuelve 366 solo: ningún día de transmisión desaparece antes de un año."
+    ]
+  },
   "0.170.0": {
     "titulo": "✓ Las marcas de «leído» sobreviven al reinicio — y 💰 el panel muestra lo recaudado en la transmisión (Super Chat + Pix), con las tasas de los servicios",
     "itens": [

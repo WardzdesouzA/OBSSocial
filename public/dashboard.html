@@ -902,6 +902,19 @@
      Mesma casca das outras janelas de confirmação do programa (fundo escuro,
      cartão em --panel2, título com ícone, botões à direita) — tudo em cima
      das variáveis do tema, para os 10 temas vestirem a janela sozinhos. */
+  /* 📅 v0.171: a janela de revisão de um dia */
+  #revisaoModal { position: fixed; inset: 0; z-index: 9997; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(2px); }
+  #revisaoModal.open { display: flex; }
+  #revisaoModal .rv-card { background: var(--panel2); color: var(--text); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; width: min(96vw, 1100px); height: min(90vh, 820px); display: flex; flex-direction: column; box-shadow: 0 18px 60px var(--shadow); }
+  #revisaoModal .rv-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  #revisaoModal .rv-corpo { display: flex; gap: 16px; flex: 1; min-height: 0; }
+  #revisaoModal .rv-lado { flex: 0 0 262px; }
+  #revisaoModal .rv-conteudo { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+  #revisaoModal .rv-lista { flex: 1; overflow-y: auto; min-height: 0; border: 1px solid var(--border); border-radius: 10px; padding: 6px; }
+  #revisaoModal .rv-lista .chat-item { cursor: default; }
+  #revisaoModal .rv-lista .chat-item .actions { display: none !important; }
+  #revisaoModal input[type="search"] { width: 100%; box-sizing: border-box; }
+  @media (max-width: 760px) { #revisaoModal .rv-corpo { flex-direction: column; overflow-y: auto; } #revisaoModal .rv-lado { flex: none; } }
   #comentarioModal {
     /* na mesma camada das outras janelas de confirmação do programa */
     position: fixed; inset: 0; z-index: 9998; display: none;
@@ -978,6 +991,8 @@
       <div class="hint" style="margin:6px 0 0;font-size:11px">Valores em reais (moeda estrangeira pela cotação do dia). As taxas ficam em Configurações → 🧪 Labs → 💰 Arrecadação da live.</div>
     </div>
   </div>
+  <!-- 📅 v0.171: rever um dia de live (o log inteiro daquele dia) -->
+  <button id="revisaoBtn" class="icon-btn" title="Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui">📅</button>
   <button id="testBtn" class="icon-btn" title="Enviar comentário de teste">💬</button>
   <!-- 🧪 v0.137: só aparece quando existe comentário de teste no ar -->
   <button id="testLimparBtn" class="icon-btn danger" style="display:none" title="Apagar todos os comentários de teste (e as fichas que eles criaram no sorteio)">🧹</button>
@@ -1069,6 +1084,29 @@
 </div>
 <div id="ctxMenu"></div>
 <!-- 🖱️ v0.130: a janela que o clique esquerdo abre em cima de um comentário -->
+<!-- 📅 v0.171: janela «Rever um dia de live» -->
+<div id="revisaoModal" role="dialog" aria-label="Rever um dia de live">
+  <div class="rv-card">
+    <div class="rv-topo">
+      <div class="cmt-titulo" style="margin:0">📅 <span>Rever um dia de live</span></div>
+      <span class="spacer"></span>
+      <button id="rvHoje" class="icon-btn" style="width:auto;padding:0 12px;font-size:13px" title="Fecha a revisão e volta para a live de hoje">🏠 Voltar para hoje</button>
+      <button id="rvFechar" class="icon-btn danger" title="Fechar" aria-label="Fechar">✖</button>
+    </div>
+    <div class="rv-corpo">
+      <div class="rv-lado">
+        <div id="rvCalendario"></div>
+        <div class="hint" id="rvDicaCal" style="margin:8px 0 0;font-size:11px">Só os dias com log ficam clicáveis. Os logs são guardados por, no mínimo, um ano (Configurações → 🗄️ Logs).</div>
+      </div>
+      <div class="rv-conteudo">
+        <div id="rvResumo" class="hint" style="margin:0 0 8px">Escolha um dia no calendário.</div>
+        <input type="search" id="rvBusca" placeholder="Filtrar neste dia (nome ou texto)" style="display:none;margin-bottom:8px">
+        <div id="rvLista" class="rv-lista"></div>
+        <button id="rvMais" class="icon-btn" style="display:none;width:auto;padding:0 12px;font-size:13px;margin-top:8px">Mostrar mais</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="comentarioModal" role="dialog" aria-label="Comentário"></div>
 
 </aside>
@@ -2138,6 +2176,13 @@ const hub = connectHub((event) => {
     // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
     case 'kickNavegador':
       KICK_NAVEGADOR.atender(hub, event);
+      break;
+    // 📅 v0.171: rever um dia de live
+    case 'logsDias':
+      revisaoDias(event);
+      break;
+    case 'logDia':
+      revisaoMostrarDia(event);
       break;
     case 'avatarFix': {
       // Foto descoberta depois: preenche as mensagens antigas dessa pessoa
@@ -4001,6 +4046,94 @@ function markReadLocal(id, at) {
     const mark = item.querySelector('.read-mark');
     if (mark) { mark.textContent = readLabel(at || readIds.get(id)); mark.style.display = ''; }
   }
+}
+
+// ---------- 📅 v0.171: rever um dia de live ----------
+// O log inteiro de um dia (o que foi preservado) numa janela própria: a live
+// de hoje continua rolando por baixo, sem misturar. «Voltar para hoje» fecha.
+const revisaoModal = document.getElementById('revisaoModal');
+let rvCalendario = null;
+let rvDia = null;
+let rvMensagens = [];
+let rvMostradas = 0;
+const RV_PAGINA = 200;
+if (typeof CALENDARIO_LOGS_CSS === 'string') { const st = document.createElement('style'); st.textContent = CALENDARIO_LOGS_CSS; document.head.appendChild(st); }
+function abrirRevisao(dia) {
+  revisaoModal.classList.add('open');
+  hub.send({ type: 'logsDias' });
+  if (dia) revisaoEscolher(dia);
+}
+function fecharRevisao() {
+  revisaoModal.classList.remove('open');
+  // o endereço com ?dia= não pode reabrir a revisão num F5
+  if (location.search.includes('dia=')) history.replaceState(null, '', location.pathname + location.hash);
+}
+function revisaoDias(event) {
+  const dias = new Set((event.dias || []).map((d) => d.dia));
+  const alvo = document.getElementById('rvCalendario');
+  rvCalendario = montarCalendarioLogs(alvo, { dias, hoje: event.hoje, escolhido: rvDia, aoEscolher: revisaoEscolher });
+  if (!dias.size) document.getElementById('rvResumo').textContent = OBS_I18N.t('Ainda não há nenhum dia com log.');
+}
+function revisaoEscolher(dia) {
+  rvDia = dia;
+  document.getElementById('rvResumo').textContent = '⏳ ' + OBS_I18N.t('Carregando o log do dia...');
+  document.getElementById('rvLista').innerHTML = '';
+  hub.send({ type: 'logDia', dia });
+}
+function revisaoMostrarDia(event) {
+  if (!event || event.dia !== rvDia) return;
+  const resumo = document.getElementById('rvResumo');
+  if (event.erro) { resumo.textContent = '⚠️ ' + event.erro; return; }
+  rvMensagens = Array.isArray(event.mensagens) ? event.mensagens : [];
+  const [a, m, d] = String(event.dia).split('-');
+  const redes = Object.entries(event.porRede || {}).map(([r, n]) => `${nomeRedeRv(r)} ${n}`).join(' · ');
+  const val = event.valores || {};
+  const dinheiro = (val.superchat || val.pix) ? ` · 💰 ${reais((val.superchat || 0) + (val.pix || 0))} (⭐ ${reais(val.superchat || 0)} + 💠 ${reais(val.pix || 0)})` : '';
+  resumo.textContent = `📅 ${d}/${m}/${a} — ${event.total} ${OBS_I18N.t(event.total === 1 ? 'comentário' : 'comentários')}${redes ? ' · ' + redes : ''}${dinheiro}${event.cortado ? ' · ' + OBS_I18N.t('(dia enorme: mostrando os primeiros 50 mil)') : ''}`;
+  const busca = document.getElementById('rvBusca');
+  busca.style.display = '';
+  busca.value = '';
+  revisaoPintar(true);
+  if (rvCalendario) rvCalendario.marcar(event.dia);
+}
+function nomeRedeRv(r) {
+  return { youtube: '▶️', twitch: '💜', kick: '🟢', bilibili: '💙', doacao: '💝', telegram: '📨', whatsapp: '💬' }[r] || r;
+}
+function revisaoFiltradas() {
+  const q = normText(document.getElementById('rvBusca').value.trim());
+  if (!q) return rvMensagens;
+  return rvMensagens.filter((m) => searchTextOf(m).includes(q));
+}
+function revisaoPintar(doZero) {
+  const lista = document.getElementById('rvLista');
+  const todas = revisaoFiltradas();
+  if (doZero) { lista.innerHTML = ''; rvMostradas = 0; }
+  const fim = Math.min(todas.length, rvMostradas + RV_PAGINA);
+  const frag = document.createDocumentFragment();
+  for (let i = rvMostradas; i < fim; i++) {
+    // o cartão de sempre, sem as ações (é revisão: nada vai para a tela daqui)
+    const el = buildItem(todas[i], true).cloneNode(true);
+    el.classList.add('rv-item');
+    frag.appendChild(el);
+  }
+  lista.appendChild(frag);
+  rvMostradas = fim;
+  const mais = document.getElementById('rvMais');
+  mais.style.display = rvMostradas < todas.length ? '' : 'none';
+  mais.textContent = OBS_I18N.t('Mostrar mais') + ` (${todas.length - rvMostradas})`;
+  if (!todas.length) { const v = document.createElement('div'); v.className = 'hint'; v.textContent = OBS_I18N.t('Nenhum comentário para mostrar.'); lista.appendChild(v); }
+}
+document.getElementById('revisaoBtn').onclick = () => abrirRevisao(null);
+document.getElementById('rvFechar').onclick = fecharRevisao;
+document.getElementById('rvHoje').onclick = fecharRevisao;
+document.getElementById('rvMais').onclick = () => revisaoPintar(false);
+document.getElementById('rvBusca').addEventListener('input', () => revisaoPintar(true));
+revisaoModal.addEventListener('click', (e) => { if (e.target === revisaoModal) fecharRevisao(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && revisaoModal.classList.contains('open')) fecharRevisao(); });
+// vindo das configurações: /dashboard.html?dia=AAAA-MM-DD abre direto naquele dia
+{
+  const diaUrl = new URLSearchParams(location.search).get('dia');
+  if (diaUrl && /^\d{4}-\d{2}-\d{2}$/.test(diaUrl)) setTimeout(() => abrirRevisao(diaUrl), 800);
 }
 
 // ---------- Comentário em destaque ----------

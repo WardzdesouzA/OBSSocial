@@ -744,6 +744,74 @@ const KICK_NAVEGADOR = {
   },
 };
 
+// 📅 v0.171: calendário dos dias com log (compartilhado: painel e configurações).
+// `dias` = Set de 'AAAA-MM-DD' com log; `aoEscolher(dia)`; `hoje` = 'AAAA-MM-DD'.
+// Devolve { ir(ano, mes0), marcar(dia) }.
+function montarCalendarioLogs(container, opcoes) {
+  const dias = opcoes.dias instanceof Set ? opcoes.dias : new Set(opcoes.dias || []);
+  const hoje = opcoes.hoje || new Date().toISOString().slice(0, 10);
+  let escolhido = opcoes.escolhido || null;
+  let ano = Number((escolhido || hoje).slice(0, 4));
+  let mes = Number((escolhido || hoje).slice(5, 7)) - 1;
+  const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  const t = (x) => (typeof OBS_I18N !== 'undefined' && OBS_I18N && OBS_I18N.t ? OBS_I18N.t(x) : x);
+  const chave = (a, m, d) => `${a}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  function pintar() {
+    container.innerHTML = '';
+    container.classList.add('cal-logs');
+    const cabeca = document.createElement('div');
+    cabeca.className = 'cal-cabeca';
+    const ant = document.createElement('button'); ant.type = 'button'; ant.className = 'icon-btn cal-nav'; ant.textContent = '◀'; ant.title = t('Mês anterior');
+    const prox = document.createElement('button'); prox.type = 'button'; prox.className = 'icon-btn cal-nav'; prox.textContent = '▶'; prox.title = t('Mês seguinte');
+    const titulo = document.createElement('b'); titulo.className = 'cal-titulo'; titulo.textContent = `${t(MESES[mes])} ${ano}`;
+    ant.onclick = () => { mes -= 1; if (mes < 0) { mes = 11; ano -= 1; } pintar(); };
+    prox.onclick = () => { mes += 1; if (mes > 11) { mes = 0; ano += 1; } pintar(); };
+    cabeca.append(ant, titulo, prox);
+    container.appendChild(cabeca);
+    const grade = document.createElement('div');
+    grade.className = 'cal-grade';
+    for (const d of SEMANA) { const c = document.createElement('div'); c.className = 'cal-dsem'; c.textContent = d; grade.appendChild(c); }
+    const primeiro = new Date(ano, mes, 1).getDay();
+    const total = new Date(ano, mes + 1, 0).getDate();
+    for (let i = 0; i < primeiro; i++) { const v = document.createElement('div'); v.className = 'cal-vazio'; grade.appendChild(v); }
+    for (let d = 1; d <= total; d++) {
+      const k = chave(ano, mes, d);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cal-dia';
+      b.textContent = String(d);
+      b.dataset.dia = k;
+      const tem = dias.has(k);
+      if (tem) b.classList.add('tem-log');
+      if (k === hoje) b.classList.add('hoje');
+      if (k === escolhido) b.classList.add('escolhido');
+      b.disabled = !tem;
+      b.title = tem ? t('Rever a live deste dia') : t('Sem log neste dia');
+      b.onclick = () => { escolhido = k; pintar(); if (typeof opcoes.aoEscolher === 'function') opcoes.aoEscolher(k); };
+      grade.appendChild(b);
+    }
+    container.appendChild(grade);
+  }
+  pintar();
+  return {
+    ir(a, m) { ano = a; mes = m; pintar(); },
+    marcar(dia) { escolhido = dia; if (dia) { ano = Number(dia.slice(0, 4)); mes = Number(dia.slice(5, 7)) - 1; } pintar(); },
+  };
+}
+const CALENDARIO_LOGS_CSS = `
+  .cal-logs { user-select: none; }
+  .cal-cabeca { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .cal-cabeca .cal-nav { width: 30px; height: 30px; }
+  .cal-grade { display: grid; grid-template-columns: repeat(7, 34px); gap: 3px; }
+  .cal-dsem { text-align: center; font-size: 11px; opacity: 0.6; padding: 2px 0; }
+  .cal-dia { width: 34px; height: 30px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--text); font: inherit; font-size: 13px; cursor: default; opacity: 0.35; }
+  .cal-dia.tem-log { opacity: 1; cursor: pointer; background: var(--panel2); border-color: var(--border); font-weight: 700; }
+  .cal-dia.tem-log:hover { border-color: var(--accent); }
+  .cal-dia.hoje { box-shadow: inset 0 0 0 2px var(--accent); }
+  .cal-dia.escolhido { background: var(--accent); color: #fff; }
+`;
+
 // Versão em alta resolução de um avatar, para o zoom (🔍): os CDNs aceitam
 // pedir tamanhos maiores trocando o sufixo do endereço
 // 🔍 v0.53: ao AMPLIAR, a melhor qualidade possível. Cada serviço guarda a

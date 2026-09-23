@@ -1,4 +1,12 @@
 {
+  "0.171.0": {
+    "titulo": "📅 Bir yayın gününü gözden geçir: log olan günlerin takvimi, günün tamamı panele geri ve «Bugüne dön» — loglar en az bir yıl saklanır",
+    "itens": [
+      "📅 Panelde 📅 düğmesi «Bir yayın gününü gözden geçir» penceresini açar: takvim log olan günleri gösterir (yalnızca onlar tıklanabilir); birini seçince o gün korunan her şey orada görünür — her zamanki kartlar, tarih, ağ başına toplam ve günün 💰’si (Super Chat ve Pix/destekler), ad veya metne göre filtre ve 200’er 200’er «Daha fazla göster». Bugünün yayını altta karışmadan akmaya devam eder; «🏠 Bugüne dön» (veya Esc) incelemeyi kapatır. Dev günler ilk 50 bin yorumu gösterir.",
+      "🗄️ Ayarlar → 🗄️ Loglar’da aynı takvim: bir güne tıklamak paneli doğrudan o günde açar (/dashboard.html?dia=YYYY-AA-GG). Log olan gün sayısı altta görünür.",
+      "📆 Log saklama süresi artık en az bir artık yıl (366 gün) ve en çok 10 yıl — ya da asla silmemek için 0. Eski bir değer (varsayılan 30’du) kendiliğinden 366 olur: hiçbir yayın günü bir yıldan önce kaybolmaz."
+    ]
+  },
   "0.170.0": {
     "titulo": "✓ «Okundu» işaretleri yeniden başlatmaya dayanıyor — ve 💰 panel yayında toplananı (Super Chat + Pix) servis kesintileriyle gösteriyor",
     "itens": [

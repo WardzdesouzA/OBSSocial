@@ -1,4 +1,12 @@
 {
+  "0.171.0": {
+    "titulo": "📅 Revoir un jour de live : calendrier des jours avec log, la journée entière de retour dans le panneau et « Retour à aujourd’hui » — logs gardés au moins un an",
+    "itens": [
+      "📅 Dans le panneau, le bouton 📅 ouvre la fenêtre « Revoir un jour de live » : un calendrier montre les jours qui ont un log (seuls ceux-là sont cliquables) ; en choisissant un jour, tout ce qui a été conservé ce jour-là apparaît — les cartes habituelles, avec la date, le total par réseau et le 💰 du jour (Super Chat et Pix/soutiens), un filtre par nom ou texte et « Afficher plus » par 200. Le live d’aujourd’hui continue en dessous, sans mélange ; « 🏠 Retour à aujourd’hui » (ou Échap) ferme la revue. Les journées énormes affichent les 50 000 premiers commentaires.",
+      "🗄️ Dans Réglages → 🗄️ Logs, le même calendrier : cliquer sur un jour ouvre le panneau directement sur ce jour (/dashboard.html?dia=AAAA-MM-JJ). Le nombre de jours avec log apparaît dessous.",
+      "📆 La rétention des logs a désormais un minimum d’une année bissextile (366 jours) et un maximum de 10 ans — ou 0 pour ne jamais supprimer. Une ancienne valeur (30 par défaut) devient 366 toute seule : aucun jour de live ne disparaît avant un an."
+    ]
+  },
   "0.170.0": {
     "titulo": "✓ Les marques « lu » survivent au redémarrage — et 💰 le panneau affiche ce que le live a récolté (Super Chat + Pix), avec les frais des services",
     "itens": [
