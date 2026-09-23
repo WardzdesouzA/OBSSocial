@@ -1,4 +1,12 @@
 {
+  "0.171.0": {
+    "titulo": "📅 Review a stream day: calendar of days with a log, the whole day back in the panel and “Back to today” — logs kept for at least a year",
+    "itens": [
+      "📅 In the panel, the 📅 button opens the “Review a stream day” window: a calendar shows the days that have a log (only those are clickable); pick one and everything preserved that day appears there — the usual cards, with the date, the total per network and the day’s 💰 (Super Chat and Pix/support), a filter by name or text and “Show more” 200 at a time. Today’s stream keeps running underneath, without mixing; “🏠 Back to today” (or Esc) closes the review. Huge days show the first 50 thousand comments.",
+      "🗄️ In Settings → 🗄️ Logs, the same calendar: clicking a day opens the panel straight on that day (/dashboard.html?dia=YYYY-MM-DD). The count of days with a log appears below.",
+      "📆 Log retention now has a minimum of one leap year (366 days) and a maximum of 10 years — or 0 to never delete. An old value (the default was 30) becomes 366 on its own: no stream day disappears before a year."
+    ]
+  },
   "0.170.0": {
     "titulo": "✓ “Read” marks survive a restart — and 💰 the panel shows what the stream raised (Super Chat + Pix), with the services’ fees",
     "itens": [

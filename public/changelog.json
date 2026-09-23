@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.171.0",
+    "titulo": "📅 Rever um dia de live: calendário dos dias com log, o dia inteiro de volta no painel e «Voltar para hoje» — logs guardados por no mínimo um ano",
+    "itens": [
+      "📅 No painel, o botão 📅 abre a janela «Rever um dia de live»: um calendário mostra os dias que têm log (só eles ficam clicáveis); ao escolher um, tudo o que foi preservado naquele dia aparece ali — os cartões de sempre, com a data, o total por rede e o 💰 do dia (Super Chat e Pix/apoios), um filtro por nome ou texto e «Mostrar mais» de 200 em 200. A live de hoje continua rolando por baixo, sem misturar; «🏠 Voltar para hoje» (ou Esc) fecha a revisão. Dias enormes mostram os primeiros 50 mil comentários.",
+      "🗄️ Em Configurações → 🗄️ Logs, o mesmo calendário: clicar num dia abre o painel direto naquele dia (/dashboard.html?dia=AAAA-MM-DD). A contagem de dias com log aparece embaixo.",
+      "📆 A retenção dos logs passou a ter mínimo de um ano bissexto (366 dias) e máximo de 10 anos — ou 0 para nunca apagar. Um valor antigo (o padrão era 30) vira 366 sozinho: nenhum dia de live some antes de um ano."
+    ]
+  },
+  {
     "version": "0.170.0",
     "titulo": "✓ As marcas de «lido» sobrevivem ao reinício — e 💰 o painel mostra o arrecadado na live (Super Chat + Pix), com as taxas dos serviços",
     "itens": [
