@@ -330,6 +330,9 @@ const DEFAULT_SETTINGS = {
     respostaModo: 'um',    // 'um' = um prêmio (a chance desce a fila) | 'varios' = todos premiados
     respostaSegundos: 60,  // tempo de cada colocado (5 a 600s)
   },
+  // 💰 v0.170: taxas (%) que os serviços cobram — para o painel mostrar o
+  // arrecadado e o valor aproximado que chega de verdade
+  taxas: { superchat: 30, pix: 0 },
   // Labs: funcoes experimentais que podem ser ligadas/desligadas
   // 🧪 Regra da casa: TUDO no Labs começa DESLIGADO — liga quem quiser usar
   labs: {
@@ -337,6 +340,8 @@ const DEFAULT_SETTINGS = {
     // 💠 Pix direto do banco do streamer (API Pix do Bacen): cada Pix
     // recebido vira um apoio na aba Apoios, com a mensagem do pagador
     pix: false,
+    // 💰 v0.170: arrecadação da live no painel (Super Chat + Pix/apoios) e taxas
+    arrecadacao: false,
     // Ao (re)conectar, puxa as mensagens enviadas enquanto o programa estava
     // fora do ar — dentro do que cada servico disponibiliza publicamente
     recoverHistory: false,
@@ -892,6 +897,7 @@ function mergeSettings(base) {
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
     relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
     clima: sanitizeClima(src.clima, DEFAULT_SETTINGS.clima), // 🌤️ v0.167
+    taxas: sanitizeTaxas(src.taxas), // 💰 v0.170
     selos: { ...DEFAULT_SETTINGS.selos, ...(src.selos || {}) },
     // 🪟 Camadas: uma configuração gravada por versão antiga não conhece as
     // camadas novas (🌤️ v0.167) — elas entram no fim, na ordem padrão
@@ -1007,6 +1013,12 @@ const CLIP_PREVIA = 1500;     // o pedaço do texto que viaja para as telas
 // metade do arquivo.
 const CHAVE_LOCAL_FILE = path.join(DATA_DIR, 'chave-local.key');
 
+// ✓ v0.170: estas duas ficavam DEPOIS do state — e loadRead() (chamado ao
+// montar o state) esbarrava numa constante ainda não inicializada, engolia o
+// erro e devolvia vazio: as marcas de «lido» nunca sobreviviam ao reinício.
+const READ_FILE = path.join(DATA_DIR, 'read.json');
+const MAX_READ_IDS = 2000;
+
 const state = {
   settings: loadSettings(),
   featured: null,
@@ -1066,8 +1078,6 @@ const state = {
 };
 
 const CONNECTIONS_FILE = path.join(DATA_DIR, 'connections.json');
-const READ_FILE = path.join(DATA_DIR, 'read.json');
-const MAX_READ_IDS = 2000;
 // Teto para os "adicionar mais...": sem isso, uma sequência de cliques (ou uma
 // máquina da rede repetindo o comando) enchia a memória e o disco.
 const MAX_INSTANCIAS = 30;
@@ -3816,6 +3826,7 @@ const OP_CATEGORY = {
   exemploOverlay: 'tools', // 🧪 v0.99: exemplo de qualquer overlay, do editor
   cronometro: 'tools', timer: 'tools',
   settings: 'settings', qrStyle: 'settings', winstreakStyle: 'settings', avisoStyle: 'settings',
+  taxasBuscar: 'settings', // 💰 v0.170: buscar as taxas nos serviços (só lê páginas públicas)
   perfisOverlaySet: 'settings', // 🎭 perfis de overlay mexem no visual = configurações
   deleteMedia: 'media',
   clearLogs: 'logs',
@@ -4884,10 +4895,11 @@ function limparDados(escopo) {
     // eles voltam a zero junto (senão mostrariam um total sem lastro)
     for (const k of Object.keys(platformTotals)) delete platformTotals[k];
     categoryTotals.superchat = 0; categoryTotals.member = 0; categoryTotals.whatsapp = 0; categoryTotals.telegram = 0; categoryTotals.apoio = 0;
+    valorTotais.superchat = 0; valorTotais.pix = 0; // 💰 v0.170
     state.recent = [];
     state.recentByPlatform = {};
     feedPendingBroadcast();
-    broadcast({ type: 'init-totais', feedTotals: { ...platformTotals }, categoryTotals: { ...categoryTotals } });
+    broadcast({ type: 'init-totais', feedTotals: { ...platformTotals }, categoryTotals: { ...categoryTotals }, valorTotais: { ...valorTotais } });
     feito.push('logs');
   }
   if (tudo || escopo === 'midias') {
@@ -5450,6 +5462,34 @@ const platformTotals = {};
 // painel (os últimos 300 comentários + o que chegou depois), então o número
 // da aba "Ao vivo" ficava muito abaixo do total verdadeiro da live.
 const categoryTotals = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio: 0 }; // 💬📨 v0.124: uma aba para cada
+// 💰 v0.170: o arrecadado do dia, em reais — Super Chat (YouTube e afins,
+// moeda estrangeira convertida pela cotação do dia) e Pix/apoios (aba 💝)
+const valorTotais = { superchat: 0, pix: 0 };
+function valorDaMensagem(message) {
+  const sc = message && message.superchat;
+  if (!sc || !sc.amount) return 0;
+  const v = valorEmReais(sc.amount) ?? (sc.converted ? valorEmReais(sc.converted) : null);
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
+function somarValor(chave, v) {
+  valorTotais[chave] = Math.max(0, Math.round((valorTotais[chave] + v) * 100) / 100);
+}
+// 💰 A taxa do YouTube a partir do texto da página de ajuda dos Supers:
+// «os criadores recebem 70%» → taxa 30. Devolve null se não achar.
+function taxaDoYouTube(html) {
+  let t = String(html || '').replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ');
+  t = t.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+  const m = t.match(/(?:recebem|receive|reciben|reçoivent|erhalten)\s+(\d{1,2})\s?%/i);
+  const parte = m ? Number(m[1]) : NaN;
+  if (Number.isFinite(parte) && parte >= 50 && parte <= 95) return 100 - parte;
+  return null;
+}
+// 💰 taxas (%) 0–100, com 2 casas
+function sanitizeTaxas(src) {
+  const t = src && typeof src === 'object' ? src : {};
+  const pct = (v, padrao) => { const n = Number(v); return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : padrao; };
+  return { superchat: pct(t.superchat, DEFAULT_SETTINGS.taxas.superchat), pix: pct(t.pix, DEFAULT_SETTINGS.taxas.pix) };
+}
 
 function ehSuperchat(message) {
   return !!message.superchat || (message.badges || []).some((b) => String(b).startsWith('superchat'));
@@ -5458,8 +5498,8 @@ function ehMembro(message) {
   return (message.badges || []).includes('membro');
 }
 function contarCategorias(message, sinal = 1) {
-  if (message.platform === 'doacao') categoryTotals.apoio += sinal;
-  else if (ehSuperchat(message)) categoryTotals.superchat += sinal;
+  if (message.platform === 'doacao') { categoryTotals.apoio += sinal; somarValor('pix', sinal * valorDaMensagem(message)); }
+  else if (ehSuperchat(message)) { categoryTotals.superchat += sinal; somarValor('superchat', sinal * valorDaMensagem(message)); }
   if (ehMembro(message)) categoryTotals.member += sinal;
   // 💬📨 v0.124: as abas WhatsApp e Telegram, cada uma com a sua conta
   if (message.platform === 'telegram') categoryTotals.telegram += sinal;
@@ -5635,7 +5675,7 @@ function feedRefreshSeconds() {
 function feedPendingBroadcast() {
   const count = feedQueue.length + feedReleasing.length;
   const totalSum = Object.values(platformTotals).reduce((a, b) => a + b, 0);
-  const sig = count + '|' + totalSum;
+  const sig = count + '|' + totalSum + '|' + valorTotais.superchat + '|' + valorTotais.pix;
   if (sig === feedLastPending) return;
   feedLastPending = sig;
   broadcast({
@@ -5644,6 +5684,7 @@ function feedPendingBroadcast() {
     byPlatform: feedPendingByPlatform(),
     totals: { ...platformTotals },
     categoryTotals: { ...categoryTotals },
+    valorTotais: { ...valorTotais }, // 💰 v0.170
   });
 }
 
@@ -10192,6 +10233,7 @@ wss.on('connection', (ws, req) => {
     feedPendingBy: feedPendingByPlatform(),
     feedTotals: { ...platformTotals },
     categoryTotals: { ...categoryTotals },
+    valorTotais: { ...valorTotais }, // 💰 v0.170
     participantesPorRede: participantesPorRede(),
     saved: state.saved,
     media: listMedia(),
@@ -10395,6 +10437,27 @@ function tratarMensagem(ws, raw) {
       }
       // (a página já limita o corpo a 400 KB — abaixo do maxPayload do WebSocket)
       p.resolve({ status, texto: typeof msg.corpo === 'string' ? msg.corpo.slice(0, 512 * 1024) : '' });
+      break;
+    }
+    case 'taxasBuscar': {
+      // 💰 v0.170: busca as taxas nos serviços — YouTube: a página de ajuda
+      // dos Supers («os criadores recebem 70%»); Pix: a regra do Banco
+      // Central. A página preenche e grava; nada muda aqui sem ela.
+      (async () => {
+        const responder = (obj) => responderLocal(ws, { type: 'taxas', ...obj });
+        const resultado = {
+          superchat: null,
+          pix: { valor: DEFAULT_SETTINGS.taxas.pix, fonte: 'Regra do Banco Central: receber Pix é gratuito para pessoa física; conta PJ pode ter tarifa do banco (confira no seu banco). Doação por plataforma (URL genérica) tem a taxa dela: preencha à mão.' },
+        };
+        try {
+          const url = process.env.OBS_TESTE_TAXAS_YT || 'https://support.google.com/youtube/answer/7288782?hl=pt-BR';
+          const html = (await baixar(url, { timeoutMs: 12000, maxBytes: 4 * 1024 * 1024, headers: { 'User-Agent': 'Mozilla/5.0' } })).toString('utf8');
+          const taxa = taxaDoYouTube(html);
+          if (taxa !== null) resultado.superchat = { valor: taxa, fonte: `Lida agora da página de ajuda do YouTube (os criadores recebem ${100 - taxa}% da receita dos Supers).` };
+        } catch { /* cai no valor de referência */ }
+        if (!resultado.superchat) resultado.superchat = { valor: DEFAULT_SETTINGS.taxas.superchat, referencia: true, fonte: 'Não consegui ler a página do YouTube agora; valor de referência publicado pelo YouTube (os criadores recebem 70%).' };
+        responder(resultado);
+      })();
       break;
     }
     case 'reconnect': {
@@ -10716,6 +10779,7 @@ function tratarMensagem(ws, raw) {
           colDrip: { ...state.settings.panel.colDrip, ...((incoming.panel || {}).colDrip || {}) },
         },
         labs: { ...state.settings.labs, ...(incoming.labs || {}) },
+        taxas: sanitizeTaxas({ ...state.settings.taxas, ...(incoming.taxas || {}) }), // 💰 v0.170
         acessibilidade: { ...state.settings.acessibilidade, ...(incoming.acessibilidade || {}) },
         trilhasTexto: { ...state.settings.trilhasTexto, ...(incoming.trilhasTexto || {}) },
         // 📱 v0.163: o mini Mesa — as cores extras se fundem uma a uma; a cópia

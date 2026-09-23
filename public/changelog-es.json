@@ -1,4 +1,12 @@
 {
+  "0.170.0": {
+    "titulo": "✓ Las marcas de «leído» sobreviven al reinicio — y 💰 el panel muestra lo recaudado en la transmisión (Super Chat + Pix), con las tasas de los servicios",
+    "itens": [
+      "✓ Los comentarios que ya habían ido a la pantalla (atenuados, con el sello «✓ leído HH:MM») perdían la marca cada vez que OBS Social reiniciaba: el archivo de marcas se guardaba bien, pero al abrir el programa la lectura tropezaba con una constante declarada líneas después, se tragaba el error y volvía vacía. Corregido; y cuando un panel reconecta, el sello acompaña la lista nueva (ni sello viejo ni faltante). La sincronía entre navegadores y el sello «📥 en la cola» (en los comentarios guardados) ya existían y siguen valiendo en todo panel abierto.",
+      "💰 Nuevo en 🧪 Labs: «Recaudación de la transmisión». Encendido, aparece un 💰 en el encabezado del panel con el total recaudado; al hacer clic, la tarjeta muestra la suma de los Super Chats, la de los Pix/apoyos, el total y «lo que llega de verdad» — el valor aproximado tras las tasas. La moneda extranjera entra al cambio del día; 🧹 borrar los comentarios de prueba descuenta lo que sumaron; «Borrar los logs» lo pone a cero también.",
+      "🔎 Las tasas están en el mismo ítem de Labs: las escribes a mano (guardadas al salir del campo) o haces clic en «Buscar tasas en los servicios» — el programa lee la página de ayuda de YouTube («los creadores reciben el 70%» → 30%) y aplica la regla del Banco Central para el Pix (gratis para persona física; empresas consulten al banco), rellenando y guardando al instante y diciendo de dónde salió cada valor. La donación por plataforma (URL genérica) tiene la tasa del servicio: rellénala a mano."
+    ]
+  },
   "0.169.6": {
     "titulo": "🔒 Por la red, los botones de actualización desaparecen de la página Acerca de — queda solo el aviso de usar localhost",
     "itens": [

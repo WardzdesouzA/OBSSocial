@@ -969,6 +969,15 @@
 <header>
   <h1>OBS <span>Social</span><span class="ver" id="versionTag"></span></h1>
   <div class="conn-chips" id="connChips" title="Estado das conexões — clique para configurar"></div>
+  <!-- 💰 v0.170: o arrecadado da live (Labs → Arrecadação da live) -->
+  <div class="tool-wrap" id="arrecadadoWrap" style="display:none">
+    <button id="arrecadadoBtn" class="icon-btn pop-toggle" data-pop="arrecadadoPop" style="width:auto;padding:0 10px;font-size:13px" title="Arrecadado na live: Super Chat + Pix/apoios (clique para ver a soma e o valor aproximado depois das taxas)">💰 R$ 0,00</button>
+    <div class="popover" id="arrecadadoPop">
+      <div class="pop-title">💰 Arrecadado na live</div>
+      <div id="arrecadadoLinhas" style="font-size:13px;line-height:1.7"></div>
+      <div class="hint" style="margin:6px 0 0;font-size:11px">Valores em reais (moeda estrangeira pela cotação do dia). As taxas ficam em Configurações → 🧪 Labs → 💰 Arrecadação da live.</div>
+    </div>
+  </div>
   <button id="testBtn" class="icon-btn" title="Enviar comentário de teste">💬</button>
   <!-- 🧪 v0.137: só aparece quando existe comentário de teste no ar -->
   <button id="testLimparBtn" class="icon-btn danger" style="display:none" title="Apagar todos os comentários de teste (e as fichas que eles criaram no sorteio)">🧹</button>
@@ -2008,6 +2017,7 @@ const hub = connectHub((event) => {
       updateFeedPending(event.feedPending || 0);
       colTotals = event.feedTotals || {};
       categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio: 0 };
+      if (event.valorTotais) valorTotais = event.valorTotais; // 💰 v0.170
       participantesPorRede = event.participantesPorRede || {};
       colPendingBy = event.feedPendingBy || {};
       // Modo espectador: o servidor só deixa assistir (rede sem senha, modo restrito)
@@ -2047,6 +2057,7 @@ const hub = connectHub((event) => {
         if (!liveIndex.has(message.id)) addMessage(message, false);
       }
       pintarContadores(); // números reais do dia, vindos do servidor
+      pintarArrecadado(); // 💰 v0.170
       renderLivePage();
       restorePlaceholders();
       setFeatured(event.featured);
@@ -2231,6 +2242,7 @@ const hub = connectHub((event) => {
     case 'settings':
       settings = event.settings;
       applyPanel();
+      pintarArrecadado(); // 💰 v0.170: o seletor e as taxas
       renderLivePage();
       repintarSelos();
       prepararSomDoTimer();
@@ -2339,6 +2351,7 @@ const hub = connectHub((event) => {
       // "Apagar os logs" zera a contagem do dia: os números acompanham
       colTotals = event.feedTotals || {};
       categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio: 0 };
+      valorTotais = event.valorTotais || { superchat: 0, pix: 0 }; pintarArrecadado(); // 💰 v0.170
       pintarContadores();
       break;
     case 'winstreak':
@@ -2382,6 +2395,7 @@ const hub = connectHub((event) => {
       updateFeedPending(event.count || 0);
       if (event.totals) colTotals = event.totals;
       if (event.categoryTotals) categoriaTotais = event.categoryTotals;
+      if (event.valorTotais) { valorTotais = event.valorTotais; pintarArrecadado(); } // 💰 v0.170
       pintarContadores();
       colPendingBy = event.byPlatform || {};
       if (settings?.panel?.liveView === 'colunas' && !searchQuery && !colDragging) updateColBadges();
@@ -2432,6 +2446,39 @@ function updateCount(name, value) {
 // Totais REAIS do dia, contados pelo servidor (nenhum teto). A aba "Fila"
 // continua sendo o tamanho da própria lista, que é o número certo dela.
 let categoriaTotais = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio: 0 };
+// 💰 v0.170: o arrecadado do dia (reais) e o cartão do cabeçalho
+let valorTotais = { superchat: 0, pix: 0 };
+const reais = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function pintarArrecadado() {
+  const wrap = document.getElementById('arrecadadoWrap');
+  if (!wrap) return;
+  const ligado = !!(settings && settings.labs && settings.labs.arrecadacao === true);
+  wrap.style.display = ligado ? '' : 'none';
+  if (!ligado) return;
+  const taxas = (settings && settings.taxas) || {};
+  const tSc = Number(taxas.superchat) || 0;
+  const tPix = Number(taxas.pix) || 0;
+  const sc = Number(valorTotais.superchat) || 0;
+  const pix = Number(valorTotais.pix) || 0;
+  const total = sc + pix;
+  const liquido = sc * (1 - tSc / 100) + pix * (1 - tPix / 100);
+  document.getElementById('arrecadadoBtn').textContent = '💰 ' + reais(total);
+  const linhas = document.getElementById('arrecadadoLinhas');
+  linhas.innerHTML = '';
+  const linha = (rotulo, valor, extra) => {
+    const el = document.createElement('div');
+    el.style.cssText = 'display:flex;justify-content:space-between;gap:16px';
+    const a = document.createElement('span'); a.textContent = rotulo;
+    const b = document.createElement('b'); b.textContent = valor;
+    el.append(a, b);
+    linhas.appendChild(el);
+    if (extra) { const c = document.createElement('div'); c.className = 'hint'; c.style.cssText = 'margin:0;font-size:11px;text-align:right'; c.textContent = extra; linhas.appendChild(c); }
+  };
+  linha('⭐ Super Chat', reais(sc), tSc ? `≈ ${reais(sc * (1 - tSc / 100))} depois da taxa de ${tSc}%` : '');
+  linha('💠 Pix / apoios', reais(pix), tPix ? `≈ ${reais(pix * (1 - tPix / 100))} depois da taxa de ${tPix}%` : '');
+  linha('Σ Total arrecadado', reais(total));
+  linha('≈ Chega de verdade', reais(liquido), 'aproximado: taxas configuradas, sem impostos');
+}
 function pintarContadores() {
   updateCount('live', Object.values(colTotals).reduce((a, b) => a + (Number(b) || 0), 0));
   updateCount('superchat', Number(categoriaTotais.superchat) || 0);
@@ -3402,6 +3449,8 @@ function reconciliarMensagens(corpo, ordenadas) {
     }
     // Os dois estados que o nó "assa" no build ficam sempre em dia
     el.classList.toggle('read', readIds.has(m.id));
+    // ✓ v0.170: o selo acompanha (um init com a lista nova não deixava selo velho nem faltando)
+    { const mk = el.querySelector('.read-mark'); if (mk) { const tem = readIds.has(m.id); mk.style.display = tem ? '' : 'none'; if (tem) mk.textContent = readLabel(readIds.get(m.id)); } }
     el.classList.toggle('on-air', m.id === featuredId);
     const alvo = anterior ? anterior.nextSibling : corpo.firstChild;
     if (el !== alvo) corpo.insertBefore(el, alvo);

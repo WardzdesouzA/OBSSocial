@@ -1,4 +1,12 @@
 {
+  "0.170.0": {
+    "titulo": "✓ “Read” marks survive a restart — and 💰 the panel shows what the stream raised (Super Chat + Pix), with the services’ fees",
+    "itens": [
+      "✓ Comments that had already gone on screen (dimmed, with the “✓ read HH:MM” badge) lost the mark whenever OBS Social restarted: the marks file was written fine, but on startup the reader tripped over a constant declared a few lines later, swallowed the error and came back empty. Fixed; and when a panel reconnects, the badge follows the new list (no stale or missing badge). Sync between browsers and the “📥 queued” badge (on saved comments) already existed and keep working on every open panel.",
+      "💰 New in 🧪 Labs: “Stream earnings”. When on, a 💰 appears in the panel header with the total raised; click it and the card shows the sum of Super Chats, the sum of Pix/support, the total and “what you really get” — the approximate amount after fees. Foreign currency comes in at the day’s rate; 🧹 deleting test comments subtracts what they added; “Delete logs” resets it too.",
+      "🔎 Fees live in the same Labs item: type them by hand (saved when you leave the field) or click “Look up fees from the services” — the program reads YouTube’s help page (“creators receive 70%” → 30%) and applies the Central Bank rule for Pix (free for individuals; businesses check with the bank), filling in and saving right away and saying where each value came from. Donations through a platform (generic URL) carry that service’s fee: fill it in by hand."
+    ]
+  },
   "0.169.6": {
     "titulo": "🔒 Over the network, the update buttons disappear from the About page — only the “use localhost” notice remains",
     "itens": [

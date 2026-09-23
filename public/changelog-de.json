@@ -1,4 +1,12 @@
 {
+  "0.170.0": {
+    "titulo": "✓ „Gelesen“-Markierungen überleben den Neustart — und 💰 das Panel zeigt die Einnahmen des Streams (Super Chat + Pix), mit den Gebühren der Dienste",
+    "itens": [
+      "✓ Kommentare, die schon auf dem Bildschirm waren (abgedunkelt, mit dem Abzeichen „✓ gelesen HH:MM“), verloren die Markierung bei jedem Neustart von OBS Social: Die Datei mit den Markierungen wurde korrekt geschrieben, aber beim Start stolperte das Lesen über eine erst Zeilen später deklarierte Konstante, schluckte den Fehler und kam leer zurück. Behoben; und wenn ein Panel neu verbindet, folgt das Abzeichen der neuen Liste (kein veraltetes oder fehlendes Abzeichen). Die Synchronisierung zwischen Browsern und das Abzeichen „📥 in der Warteschlange“ (bei gespeicherten Kommentaren) gab es schon und sie gelten weiter in jedem offenen Panel.",
+      "💰 Neu in 🧪 Labs: „Einnahmen des Streams“. Eingeschaltet erscheint im Kopf des Panels ein 💰 mit dem Gesamtbetrag; per Klick zeigt die Karte die Summe der Super Chats, die der Pix/Unterstützungen, das Gesamt und „kommt wirklich an“ — den ungefähren Betrag nach Gebühren. Fremdwährung geht zum Tageskurs ein; 🧹 Testkommentare löschen zieht ab, was sie hinzugefügt hatten; „Logs löschen“ setzt ebenfalls zurück.",
+      "🔎 Die Gebühren stehen im selben Labs-Eintrag: von Hand eintippen (gespeichert beim Verlassen des Felds) oder auf „Gebühren bei den Diensten nachschlagen“ klicken — das Programm liest die YouTube-Hilfeseite („Creator erhalten 70 %“ → 30 %) und wendet die Zentralbank-Regel für Pix an (kostenlos für Privatpersonen; Firmen fragen bei der Bank), füllt sofort aus und speichert und sagt, woher jeder Wert stammt. Spenden über eine Plattform (generische URL) tragen die Gebühr des Dienstes: von Hand eintragen."
+    ]
+  },
   "0.169.6": {
     "titulo": "🔒 Über das Netzwerk verschwinden die Update-Buttons von der Seite „Über“ — nur der Hinweis, localhost zu nutzen, bleibt",
     "itens": [
