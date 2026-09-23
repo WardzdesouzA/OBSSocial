@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    "🔀 Ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (ficam só no log, para a revisão 📅). 🛡️ Se o site barrar o programa, a consulta passa sozinha por outros caminhos (curl, PowerShell) e a conexão insiste até voltar.": "🔀 When you connect a network to a different @, the comments from the previous @ leave the panel right away (they stay only in the log, for the day review 📅). 🛡️ If the site blocks the program, the lookup goes through other paths on its own (curl, PowerShell) and the connection keeps retrying until it is back.",
     "Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui": "Review a stream day: the calendar shows the days with a log; pick one and everything preserved that day shows up here",
     "Rever um dia de live": "Review a stream day",
     "Fecha a revisão e volta para a live de hoje": "Closes the review and goes back to today’s stream",
@@ -3242,6 +3243,13 @@ window.OBS_I18N_DICTS.en = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Tick only what you use. This changes the panel’s 🎛️ tool — the 🎛️ keys on the Soundboard keep working either way.",
   },
   padroes: [
+    [/^1 comentário de @(\S+) saiu do painel: agora a rede está conectada a @(\S+)$/, "1 comment from @$1 left the panel: the network is now connected to @$2"],
+    [/^(\d+) comentários de @(\S+) saíram do painel: agora a rede está conectada a @(\S+)$/, "$1 comments from @$2 left the panel: the network is now connected to @$3"],
+    [/^((?:YouTube|Twitch|Bilibili) respondeu com erro \d+\.) (.+)$/, "$1 $2"],
+    [/^(YouTube|Twitch|Bilibili) respondeu com erro (\d+)\.$/, "$1 responded with error $2."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) barrou as consultas automáticas deste computador \(todos os caminhos: Node, curl e PowerShell\)\. Costuma passar sozinho em alguns minutos — o programa continua tentando\.$/, "$1 blocked this computer’s automatic lookups (all paths: Node, curl and PowerShell). It usually clears on its own in a few minutes — the program keeps trying."],
+    [/^O YouTube respondeu com erro (\d+) ao abrir o canal "(.+)"\.$/, "YouTube responded with error $1 when opening channel \"$2\"."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) não respondeu\.$/, "$1 did not respond."],
     [/^≈ (.+) depois da taxa de (.+)%$/, "≈ $1 after the $2% fee"],
     [/^Lida agora da página de ajuda do YouTube \(os criadores recebem (\d+)% da receita dos Supers\)\.$/, "Read just now from YouTube’s help page (creators receive $1% of Supers revenue)."],
     [/^Super Chat (.+)%: (.+) Pix (.+)%: (.+)$/, "Super Chat $1%: $2 Pix $3%: $4"],

@@ -1,4 +1,13 @@
 {
+  "0.172.0": {
+    "titulo": "🔀 Cambiar de @ quita del panel lo que era de la @ anterior · 🛡️ los caminos de reserva del Kick ahora valen para YouTube, Twitch y Bilibili, con reintento automático",
+    "itens": [
+      "🔀 Cada comentario queda sellado con la @ (o link, sala, grupo) de donde vino. Al conectar una red a otra @ — por ejemplo, tras probar en la transmisión de otra persona y volver a la tuya — los comentarios de la @ anterior salen del panel al instante: columnas, cola, destacado, participantes del sorteo y totales del día. El panel avisa cuántos salieron. Nada desaparece del log (la revisión 📅 muestra el día entero) y, al reiniciar, solo vuelve lo de la @ actual. Los comentarios de prueba y los guardados (⭐) se quedan.",
+      "🛡️ YouTube, Twitch y Bilibili recibieron los mismos caminos de reserva del Kick: si el sitio bloquea el programa (error 403/429/503), la consulta pasa sola por Node con la firma de Chrome, por el curl del sistema y por PowerShell (Windows) — incluido el poll del chat de YouTube, el catálogo de insignias y el historial de Twitch, la sala y el historial de Bilibili, la audiencia y los avatares. El camino que funcionó queda recordado y, cada media hora, se vuelve a probar el normal. La dirección, las cabeceras y el cuerpo de cada petición nunca van en la línea de comandos de los programas (van por la entrada estándar).",
+      "🔁 YouTube y Bilibili insisten solos como el Kick: sitio bloqueado, red caída o el «control de riesgo» de Bilibili se convierten en «Nuevo intento solo en Ns» (espera creciente, hasta 5 minutos), sin pulsar 🔄. Un canal de YouTube que aún no está en vivo se revisa cada minuto — puedes conectar antes de empezar. Si la conexión con el chat de YouTube se cae a medias, también vuelve sola. Solo canal/sala inexistente es error definitivo.",
+      "🔒 Un conector cambiado o apagado, con una consulta aún en vuelo, ya no entrega nada — ningún comentario atrasado entra sellado con la @ nueva."
+    ]
+  },
   "0.171.0": {
     "titulo": "📅 Revisar un día de transmisión: calendario de días con log, el día entero de vuelta en el panel y «Volver a hoy» — logs guardados al menos un año",
     "itens": [

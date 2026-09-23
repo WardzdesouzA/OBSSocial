@@ -1,4 +1,13 @@
 {
+  "0.172.0": {
+    "titulo": "🔀 Switching @ removes what belonged to the previous @ · 🛡️ Kick’s fallback paths now cover YouTube, Twitch and Bilibili, with automatic retry",
+    "itens": [
+      "🔀 Every comment is now stamped with the @ (or link, room, group) it came from. When you connect a network to a different @ — e.g. after testing on someone else’s stream and going back to yours — the comments from the previous @ leave the panel right away: columns, queue, featured, raffle participants and the day’s totals. The panel says how many left. Nothing disappears from the log (the day review 📅 shows the whole day) and, after a restart, only what belongs to the current @ comes back. Test comments and saved (⭐) comments stay.",
+      "🛡️ YouTube, Twitch and Bilibili got the same fallback paths as Kick: if the site blocks the program (error 403/429/503), the lookup goes on its own through Node with Chrome’s signature, the system’s curl and PowerShell (Windows) — including the YouTube chat poll, Twitch’s badge catalog and history, Bilibili’s room and history, audience and avatars. The path that worked is remembered and, every half hour, the normal path is tested again. The address, headers and body of each request never go on the programs’ command line (they go through standard input).",
+      "🔁 YouTube and Bilibili now insist on their own like Kick: a blocked site, network down or Bilibili’s “risk control” become “Retrying on its own in Ns” (growing wait, up to 5 minutes), without clicking 🔄. A YouTube channel that isn’t live yet is checked again every minute — you can connect before going live. If the YouTube chat connection drops midway, it also comes back on its own. Only a non-existent channel/room is a final error.",
+      "🔒 A connector that was replaced or turned off, with a lookup still in flight, no longer delivers anything — no late comment gets stamped with the new @."
+    ]
+  },
   "0.171.0": {
     "titulo": "📅 Review a stream day: calendar of days with a log, the whole day back in the panel and “Back to today” — logs kept for at least a year",
     "itens": [

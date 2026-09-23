@@ -2,12 +2,33 @@
 // Le o chat da mesma forma que o navegador: abre a pagina publica do chat da live
 // e fica consultando as mensagens novas. Nao precisa de chave de API.
 
+const { criarCaminhos } = require('./caminhos');
+
 const BROWSER_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
   'Accept-Language': 'en-US,en;q=0.9',
   // Evita a tela de consentimento em algumas regioes
   Cookie: 'CONSENT=YES+cb; SOCS=CAI',
 };
+
+// 🛡️ v0.172: as consultas ao site do YouTube (página do canal, página do
+// chat, o poll das mensagens, audiência) passam pelos mesmos caminhos de
+// reserva do Kick — Node → Node com a assinatura do Chrome → curl →
+// PowerShell — quando o site barra o programa (403/429/503). Gancho de teste:
+// OBS_TESTE_YOUTUBE_BASE troca o www.youtube.com por um de mentira.
+const YT_BASE = (process.env.OBS_TESTE_YOUTUBE_BASE || 'https://www.youtube.com/').replace(/\/?$/, '/');
+const caminhos = criarCaminhos({ rede: 'youtube', rotulo: 'YouTube', headers: BROWSER_HEADERS, referer: 'https://www.youtube.com/', tempoMs: 15000 });
+// youtubePedir(caminho, { method, headers, body, extra, sinal }) → { status, ok, texto, json, via }
+function youtubePedir(caminho, opcoes = {}) {
+  const url = /^https?:\/\//.test(caminho) ? caminho : YT_BASE + caminho.replace(/^\//, '');
+  return caminhos.pedir(url, opcoes);
+}
+// Erro passageiro (barrado, rede fora, tempo esgotado)? Vale insistir sozinho.
+const erroPassageiro = (err) => !!(err && (err.barrado || err.redeFora || err.status === 0));
+// A espera entre as tentativas sozinhas começa em 15s e dobra até 5 minutos
+// (gancho de teste: OBS_TESTE_ESPERA_MS encurta a base)
+const ESPERA_BASE_MS = Number(process.env.OBS_TESTE_ESPERA_MS) || 15000;
+const ESPERA_MAX_MS = Math.max(ESPERA_BASE_MS * 4, 300000 * (ESPERA_BASE_MS / 15000));
 
 // Versao de reserva quando a pagina nao traz a versao do cliente.
 // O YouTube aceita versoes antigas sem problema.
@@ -68,14 +89,17 @@ async function resolveHandleToVideoId(input) {
   if (!handle.startsWith('@') && !handle.startsWith('c/') && !handle.startsWith('channel/')) {
     handle = '@' + handle;
   }
-  const res = await fetch(`https://www.youtube.com/${handle}/live`, { headers: BROWSER_HEADERS, redirect: 'follow', signal: AbortSignal.timeout(15000) });
-  if (!res.ok) throw new Error(`Não achei o canal "${handle}" no YouTube (erro ${res.status}).`);
-  const html = await res.text();
+  const res = await youtubePedir(`${handle}/live`);
+  if (res.status === 404) { const e = new Error(`Não achei o canal "${handle}" no YouTube (erro 404).`); e.definitivo = true; throw e; }
+  if (!res.ok) throw new Error(`O YouTube respondeu com erro ${res.status} ao abrir o canal "${handle}".`);
+  const html = res.texto;
   const canonical = html.match(/<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})"/);
   if (canonical) return canonical[1];
   const anyId = html.match(/"videoId":"([A-Za-z0-9_-]{11})"/);
   if (anyId) return anyId[1];
-  throw new Error(`O canal "${handle}" não parece estar ao vivo agora.`);
+  const e = new Error(`O canal "${handle}" não parece estar ao vivo agora.`);
+  e.semLive = true;
+  throw e;
 }
 
 function findFirstContinuation(obj) {
@@ -175,23 +199,9 @@ class YouTubeConnector {
     this.timer = null;
     this.seen = new Set();
     // 🔒 v0.127.1: o stop() aborta a consulta em andamento — um conector
-    // trocado não pode continuar consultando o YouTube
+    // trocado não pode continuar consultando o YouTube (o sinal viaja com
+    // cada pedido pelos caminhos, v0.172)
     this.abortCtl = new AbortController();
-  }
-
-  // Sinal que aborta por tempo (15s) OU quando o conector é parado
-  sinal(ms = 15000) {
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), ms);
-    if (timer.unref) timer.unref();
-    const parar = () => { clearTimeout(timer); ctl.abort(); };
-    if (this.abortCtl.signal.aborted) parar();
-    else this.abortCtl.signal.addEventListener('abort', parar, { once: true });
-    ctl.signal.addEventListener('abort', () => {
-      clearTimeout(timer);
-      this.abortCtl.signal.removeEventListener('abort', parar);
-    }, { once: true });
-    return ctl.signal;
   }
 
   async start() {
@@ -199,8 +209,23 @@ class YouTubeConnector {
     try {
       this.videoId = extractVideoId(this.input) || await resolveHandleToVideoId(this.input);
       await this.initChat();
+      this.connectRetryMs = 0; // conectou: zera a espera
     } catch (err) {
-      if (!this.stopped) this.handlers.onStatus('error', err.message);
+      if (this.stopped) return;
+      // 🛡️ v0.172: canal inexistente é definitivo; o resto (site barrado, rede
+      // fora, canal ainda fora do ar) é passageiro — insiste sozinho, com
+      // espera crescente, sem o apresentador precisar clicar em 🔄. «insiste»
+      // avisa o servidor para não desligar este conector.
+      if (err.definitivo) { this.handlers.onStatus('error', err.message); return; }
+      const semLive = !!err.semLive || /não tem chat ao vivo|não consegui ler os dados/i.test(String(err.message));
+      if (!erroPassageiro(err) && !semLive) { this.handlers.onStatus('error', err.message); return; }
+      // Sem live ainda: olha de novo a cada minuto (a live pode começar a
+      // qualquer momento); barrado: espera crescente até 5 minutos
+      this.connectRetryMs = semLive ? ESPERA_BASE_MS * 4 : Math.min((this.connectRetryMs || ESPERA_BASE_MS) * 2, ESPERA_MAX_MS);
+      const s = Math.round(this.connectRetryMs / 1000);
+      const explicacao = err.barrado ? ' ' + caminhos.explicacaoBarrado(err) : '';
+      this.handlers.onStatus('error', `${err.message}${explicacao} Nova tentativa sozinha em ${s}s.`, { insiste: true });
+      this.connectTimer = setTimeout(() => { this.connectTimer = null; if (!this.stopped) this.start(); }, this.connectRetryMs);
       return;
     }
     if (this.stopped) return;
@@ -209,9 +234,9 @@ class YouTubeConnector {
   }
 
   async initChat() {
-    const res = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${this.videoId}`, { headers: BROWSER_HEADERS, signal: this.sinal() });
+    const res = await youtubePedir(`live_chat?is_popout=1&v=${this.videoId}`, { sinal: this.abortCtl.signal });
     if (!res.ok) throw new Error(`O YouTube respondeu com erro ${res.status} ao abrir o chat.`);
-    const html = await res.text();
+    const html = res.texto;
 
     // A chave interna sumiu de algumas paginas do YouTube — os endpoints
     // internos funcionam sem ela, entao ela agora e opcional.
@@ -244,17 +269,19 @@ class YouTubeConnector {
     let timeoutMs = 2000;
     try {
       const keyParam = this.apiKey ? `key=${this.apiKey}&` : '';
-      const res = await fetch(`https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?${keyParam}prettyPrint=false`, {
+      const res = await youtubePedir(`youtubei/v1/live_chat/get_live_chat?${keyParam}prettyPrint=false`, {
         method: 'POST',
-        headers: { ...BROWSER_HEADERS, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           context: { client: { clientName: 'WEB', clientVersion: this.clientVersion, hl: 'en', gl: 'US' } },
           continuation: this.continuation,
         }),
-        signal: this.sinal(),
+        sinal: this.abortCtl.signal,
       });
+      if (this.stopped) return;
       if (!res.ok) throw new Error(`erro ${res.status}`);
-      const data = await res.json();
+      const data = res.json;
+      if (!data) throw new Error('resposta fora do padrão');
       const chat = data?.continuationContents?.liveChatContinuation;
       if (!chat) {
         this.handlers.onStatus('error', 'O chat ao vivo terminou (a live acabou?).');
@@ -276,7 +303,11 @@ class YouTubeConnector {
       try {
         await this.initChat();
       } catch (reinitErr) {
-        this.handlers.onStatus('error', `Perdi a conexão com o chat do YouTube: ${reinitErr.message}`);
+        if (this.stopped) return;
+        // 🛡️ v0.172: «insiste» — o conector continua vivo e tenta de novo
+        // sozinho (antes o servidor o desligava aqui e o poll seguinte nunca vinha)
+        const explicacao = reinitErr.barrado ? ' ' + caminhos.explicacaoBarrado(reinitErr) : '';
+        this.handlers.onStatus('error', `Perdi a conexão com o chat do YouTube: ${reinitErr.message}${explicacao} Nova tentativa sozinha em 15s.`, { insiste: true });
         timeoutMs = 15000;
       }
     }
@@ -425,11 +456,21 @@ class YouTubeConnector {
     this.handlers.onMessage(mensagem);
   }
 
+  // 🛡️ v0.172: apareceu um jeito novo de consultar (ou o apresentador clicou
+  // em 🔄): se está só esperando a próxima tentativa, tenta agora
+  acordar() {
+    if (this.stopped || !this.connectTimer) return;
+    clearTimeout(this.connectTimer);
+    this.connectTimer = null;
+    this.start();
+  }
+
   stop() {
     this.stopped = true;
     if (this.timer) clearTimeout(this.timer);
+    if (this.connectTimer) clearTimeout(this.connectTimer);
     try { this.abortCtl.abort(); } catch {}
   }
 }
 
-module.exports = { YouTubeConnector, mesesDeMembro, baixarFigurinha };
+module.exports = { YouTubeConnector, mesesDeMembro, baixarFigurinha, youtubePedir, youtubeCaminhos: caminhos, YT_BASE };

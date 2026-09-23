@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    "🔀 Ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (ficam só no log, para a revisão 📅). 🛡️ Se o site barrar o programa, a consulta passa sozinha por outros caminhos (curl, PowerShell) e a conexão insiste até voltar.": "🔀 ネットワークを別の@に接続すると、前の@のコメントはすぐにパネルから消えます（ログにだけ残り、振り返り📅で見られます）。🛡️ サイトがプログラムをブロックすると、問い合わせは自動で別のルート（curl、PowerShell）を通り、接続は戻るまで粘ります。",
     "Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui": "配信の日を振り返る：カレンダーにログのある日が表示されます。1日を選ぶと、その日に保存されたすべてがここに表示されます",
     "Rever um dia de live": "配信の日を振り返る",
     "Fecha a revisão e volta para a live de hoje": "振り返りを閉じて今日の配信に戻る",
@@ -3242,6 +3243,13 @@ window.OBS_I18N_DICTS.ja = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "使うものだけチェックしてください。パネルの 🎛️ ツールが変わります — サウンドボードの 🎛️ キーはどちらでも動きます。",
   },
   padroes: [
+    [/^1 comentário de @(\S+) saiu do painel: agora a rede está conectada a @(\S+)$/, "@$1 のコメント1件がパネルから消えました：ネットワークは今 @$2 に接続されています"],
+    [/^(\d+) comentários de @(\S+) saíram do painel: agora a rede está conectada a @(\S+)$/, "@$2 のコメント$1件がパネルから消えました：ネットワークは今 @$3 に接続されています"],
+    [/^((?:YouTube|Twitch|Bilibili) respondeu com erro \d+\.) (.+)$/, "$1 $2"],
+    [/^(YouTube|Twitch|Bilibili) respondeu com erro (\d+)\.$/, "$1 がエラー $2 を返しました。"],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) barrou as consultas automáticas deste computador \(todos os caminhos: Node, curl e PowerShell\)\. Costuma passar sozinho em alguns minutos — o programa continua tentando\.$/, "$1 がこのコンピューターの自動問い合わせをブロックしました（すべてのルート：Node、curl、PowerShell）。通常は数分で自然に解消します — プログラムは試行を続けます。"],
+    [/^O YouTube respondeu com erro (\d+) ao abrir o canal "(.+)"\.$/, "YouTube がチャンネル \"$2\" を開く際にエラー $1 を返しました。"],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) não respondeu\.$/, "$1 が応答しませんでした。"],
     [/^≈ (.+) depois da taxa de (.+)%$/, "≈ $1（手数料$2%控除後）"],
     [/^Lida agora da página de ajuda do YouTube \(os criadores recebem (\d+)% da receita dos Supers\)\.$/, "YouTubeのヘルプページから今読み取りました（クリエイターはSupers収益の$1%を受け取ります）。"],
     [/^Super Chat (.+)%: (.+) Pix (.+)%: (.+)$/, "Super Chat $1%：$2 Pix $3%：$4"],

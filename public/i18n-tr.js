@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "🔀 Ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (ficam só no log, para a revisão 📅). 🛡️ Se o site barrar o programa, a consulta passa sozinha por outros caminhos (curl, PowerShell) e a conexão insiste até voltar.": "🔀 Bir ağı başka bir @’ye bağladığınızda önceki @’nin yorumları panelden hemen çıkar (yalnızca logda kalır, gün incelemesi 📅 için). 🛡️ Site programı engellerse sorgu kendiliğinden başka yollardan geçer (curl, PowerShell) ve bağlantı geri gelene kadar ısrar eder.",
     "Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui": "Bir yayın gününü gözden geçir: takvim log olan günleri gösterir; birini seçin, o gün korunan her şey burada görünür",
     "Rever um dia de live": "Bir yayın gününü gözden geçir",
     "Fecha a revisão e volta para a live de hoje": "İncelemeyi kapatır ve bugünün yayınına döner",
@@ -3242,6 +3243,13 @@ window.OBS_I18N_DICTS.tr = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Sadece kullandıklarınızı işaretleyin. Bu, panelin 🎛️ aracını değiştirir — Ses Masası’ndaki 🎛️ tuşları her hâlükârda çalışır.",
   },
   padroes: [
+    [/^1 comentário de @(\S+) saiu do painel: agora a rede está conectada a @(\S+)$/, "@$1’den 1 yorum panelden çıktı: ağ artık @$2’ye bağlı"],
+    [/^(\d+) comentários de @(\S+) saíram do painel: agora a rede está conectada a @(\S+)$/, "@$2’den $1 yorum panelden çıktı: ağ artık @$3’e bağlı"],
+    [/^((?:YouTube|Twitch|Bilibili) respondeu com erro \d+\.) (.+)$/, "$1 $2"],
+    [/^(YouTube|Twitch|Bilibili) respondeu com erro (\d+)\.$/, "$1, $2 hatasıyla yanıt verdi."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) barrou as consultas automáticas deste computador \(todos os caminhos: Node, curl e PowerShell\)\. Costuma passar sozinho em alguns minutos — o programa continua tentando\.$/, "$1 bu bilgisayarın otomatik sorgularını engelledi (tüm yollar: Node, curl ve PowerShell). Genellikle birkaç dakikada kendiliğinden geçer — program denemeye devam ediyor."],
+    [/^O YouTube respondeu com erro (\d+) ao abrir o canal "(.+)"\.$/, "YouTube, \"$2\" kanalını açarken $1 hatasıyla yanıt verdi."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) não respondeu\.$/, "$1 yanıt vermedi."],
     [/^≈ (.+) depois da taxa de (.+)%$/, "≈ $1 (%$2 kesinti sonrası)"],
     [/^Lida agora da página de ajuda do YouTube \(os criadores recebem (\d+)% da receita dos Supers\)\.$/, "YouTube yardım sayfasından şimdi okundu (içerik üreticileri Supers gelirinin %$1’ini alır)."],
     [/^Super Chat (.+)%: (.+) Pix (.+)%: (.+)$/, "Super Chat %$1: $2 Pix %$3: $4"],

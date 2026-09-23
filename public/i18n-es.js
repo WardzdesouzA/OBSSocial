@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    "🔀 Ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (ficam só no log, para a revisão 📅). 🛡️ Se o site barrar o programa, a consulta passa sozinha por outros caminhos (curl, PowerShell) e a conexão insiste até voltar.": "🔀 Al conectar una red a otra @, los comentarios de la @ anterior salen del panel al instante (se quedan solo en el log, para la revisión 📅). 🛡️ Si el sitio bloquea el programa, la consulta pasa sola por otros caminos (curl, PowerShell) y la conexión insiste hasta volver.",
     "Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui": "Revisar un día de transmisión: el calendario muestra los días con log; elige uno y todo lo preservado ese día aparece aquí",
     "Rever um dia de live": "Revisar un día de transmisión",
     "Fecha a revisão e volta para a live de hoje": "Cierra la revisión y vuelve a la transmisión de hoy",
@@ -3242,6 +3243,13 @@ window.OBS_I18N_DICTS.es = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Marca solo lo que usas. Esto cambia la herramienta 🎛️ del panel — las teclas 🎛️ de la Mesa de pistas siguen funcionando igual.",
   },
   padroes: [
+    [/^1 comentário de @(\S+) saiu do painel: agora a rede está conectada a @(\S+)$/, "1 comentario de @$1 salió del panel: ahora la red está conectada a @$2"],
+    [/^(\d+) comentários de @(\S+) saíram do painel: agora a rede está conectada a @(\S+)$/, "$1 comentarios de @$2 salieron del panel: ahora la red está conectada a @$3"],
+    [/^((?:YouTube|Twitch|Bilibili) respondeu com erro \d+\.) (.+)$/, "$1 $2"],
+    [/^(YouTube|Twitch|Bilibili) respondeu com erro (\d+)\.$/, "$1 respondió con error $2."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) barrou as consultas automáticas deste computador \(todos os caminhos: Node, curl e PowerShell\)\. Costuma passar sozinho em alguns minutos — o programa continua tentando\.$/, "$1 bloqueó las consultas automáticas de este equipo (todos los caminos: Node, curl y PowerShell). Suele pasar solo en unos minutos — el programa sigue intentando."],
+    [/^O YouTube respondeu com erro (\d+) ao abrir o canal "(.+)"\.$/, "YouTube respondió con error $1 al abrir el canal \"$2\"."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) não respondeu\.$/, "$1 no respondió."],
     [/^≈ (.+) depois da taxa de (.+)%$/, "≈ $1 tras la tasa del $2%"],
     [/^Lida agora da página de ajuda do YouTube \(os criadores recebem (\d+)% da receita dos Supers\)\.$/, "Leída ahora de la página de ayuda de YouTube (los creadores reciben el $1% de los ingresos de Supers)."],
     [/^Super Chat (.+)%: (.+) Pix (.+)%: (.+)$/, "Super Chat $1%: $2 Pix $3%: $4"],

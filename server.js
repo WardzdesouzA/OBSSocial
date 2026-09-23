@@ -166,10 +166,10 @@ const { Clima: ClimaServico, sanitizeClima, sanitizeCidade: sanitizeCidadeClima,
 // num lugar só (nunca mais um botão novo sumindo da ordem salva)
 const PAINEL_ORDEM = require('./public/painel-ordem');
 
-const { TwitchConnector } = require('./connectors/twitch');
+const { TwitchConnector, twitchPedir, TWITCH_GQL } = require('./connectors/twitch');
 const { KickConnector, kickApi, kickApiConfigurar } = require('./connectors/kick');
-const { YouTubeConnector, baixarFigurinha: baixarFigurinhaYouTube } = require('./connectors/youtube');
-const { BilibiliConnector } = require('./connectors/bilibili');
+const { YouTubeConnector, baixarFigurinha: baixarFigurinhaYouTube, youtubePedir } = require('./connectors/youtube');
+const { BilibiliConnector, bilibiliPedir } = require('./connectors/bilibili');
 const { TelegramConnector } = require('./connectors/telegram');
 const { WhatsAppConnector } = require('./connectors/whatsapp');
 const { WhatsAppLocalConnector } = require('./connectors/whatsapp-local');
@@ -4607,8 +4607,10 @@ function lookupBiliAvatar(uid) {
   if (!uid || avatarJaTratado(biliAvatarCache, biliAvatarPending, uid)) return;
   biliAvatarPending.add(uid);
   const biliBase = process.env.OBS_SOCIAL_BILI_AVATAR_API || 'https://api.bilibili.com/x/web-interface/card?mid=';
-  fetch(biliBase + encodeURIComponent(uid), { headers: AVATAR_LOOKUP_HEADERS })
-    .then((res) => (res.ok ? res.json() : null))
+  // 🛡️ v0.172: pelos caminhos de reserva da Bilibili (extra: se tudo acabou
+  // de ser barrado, desiste na hora)
+  bilibiliPedir(biliBase + encodeURIComponent(uid), { headers: AVATAR_LOOKUP_HEADERS, extra: true })
+    .then((res) => (res.ok ? res.json : null))
     .then((data) => {
       let face = data?.data?.card?.face;
       if (typeof face === 'string') face = face.replace(/^http:\/\//, 'https://');
@@ -5433,6 +5435,11 @@ function restoreFromLog() {
       // 🧪 v0.158.2: comentário de teste não volta do log — nem na tela, nem
       // na conta do dia (senão o que foi apagado reapareceria ao reiniciar)
       if (ehMensagemDeTeste(message)) return;
+      // 🔀 v0.172: de outra @ (a rede foi trocada de conta)? Fica só no log
+      if (message.conta) {
+        const lembrada = state.connections[message.platform]?.channel;
+        if (lembrada && normalizarConta(message.platform, lembrada) !== message.conta) return;
+      }
       total += 1;
       trackParticipant(message, false);
       // Os contadores e o filtro de repetidas valem para o dia inteiro
@@ -5819,11 +5826,75 @@ function marcarRobo(message) {
   }
 }
 
+// 🔀 v0.172: a «conta» de uma conexão = a @ (ou link, sala, grupo) digitada
+// nas conexões, sem enfeite: minúsculas, sem @/#, sem o endereço do site.
+// É com ela que cada comentário é carimbado (message.conta) — para, ao trocar
+// de @ numa rede, o que era da @ anterior sair do painel sem misturar.
+function normalizarConta(platform, canal) {
+  let s = String(canal || '').trim().toLowerCase();
+  if (!s) return '';
+  s = s.replace(/^https?:\/\//, '').replace(/^(www\.|m\.)/, '');
+  s = s.replace(/^(youtube\.com|youtu\.be|twitch\.tv|kick\.com|live\.bilibili\.com|bilibili\.com|t\.me|web\.whatsapp\.com)\//, '');
+  const video = s.match(/(?:^|[?&])v=([a-z0-9_-]{11})/i);
+  if (video) s = video[1];
+  s = s.replace(/[?#].*$/, '').replace(/^(c|channel|user|live|shorts)\//, '')
+    .replace(/\/(live|videos|about|chat|featured|streams)$/, '').replace(/\/+$/, '');
+  return s.replace(/^[@#]+/, '');
+}
+
+// Ao trocar a @ de uma rede, os comentários que não são da @ nova saem do
+// painel (memória, colunas, fila do fluxo suave, destaque, participantes do
+// sorteio e os totais do dia). O log NÃO é mexido: o dia inteiro continua na
+// revisão (📅). Os comentários de teste e os salvos (⭐) ficam.
+function trocarDeConta(platform, contaNova, contaAntiga) {
+  const trocou = !!contaAntiga && contaAntiga !== contaNova;
+  const combina = (m) => m && m.platform === platform && !ehMensagemDeTeste(m)
+    && (m.conta ? m.conta !== contaNova : trocou);
+  const foram = new Map();
+  const limpar = (lista, contada) => {
+    for (let i = lista.length - 1; i >= 0; i--) {
+      if (!combina(lista[i])) continue;
+      const m = lista[i];
+      if (contada && !foram.has(String(m.id))) foram.set(String(m.id), m);
+      lista.splice(i, 1);
+    }
+  };
+  limpar(state.recent, true);
+  for (const lista of Object.values(state.recentByPlatform)) limpar(lista, true);
+  limpar(feedQueue, true);
+  limpar(feedReleasing, true);
+  if (!foram.size && !trocou) return 0;
+  for (const m of foram.values()) descontarDosTotais(m);
+  if (state.featured && combina(state.featured)) {
+    state.featured = null;
+    broadcast({ type: 'featured', featured: null });
+  }
+  if (trocou) {
+    // Os participantes do sorteio daquela rede eram da live anterior
+    let saiu = false;
+    for (const [chave, p] of state.participants) {
+      if (p.platform === platform) { state.participants.delete(chave); saiu = true; }
+    }
+    if (saiu) broadcastParticipantes();
+  }
+  const ids = [...foram.keys()];
+  if (ids.length) {
+    broadcast({ type: 'apagadas', platform, ids, autor: null, tudo: false, troca: { de: contaAntiga || null, para: contaNova } });
+    feedPendingBroadcast();
+  }
+  console.log(`  🔀 ${platform}: ${ids.length} comentário(s) de «${contaAntiga || '?'}» saíram do painel — agora conectado a «${contaNova}».`);
+  return ids.length;
+}
+
 function onChatMessage(message) {
   // 🛡️ Quem está de castigo (timeout/ban do Telegram ou WhatsApp) nem entra
   // no painel — a lista local vale mesmo se a rede não aplicou nada
   if ((message.platform === 'telegram' || message.platform === 'whatsapp')
       && autorModerado(message.platform, String(message.authorId || ''))) return;
+  // 🔀 v0.172: carimba a @ conectada (os de teste e o Pix não têm conexão)
+  if (!message.conta && !ehMensagemDeTeste(message) && state.connections[message.platform]?.channel) {
+    message.conta = normalizarConta(message.platform, state.connections[message.platform].channel);
+  }
   // Repetida (ex.: histórico recuperado que já tinha chegado ao vivo)? Ignora.
   if (message.id) {
     if (seenMessageIds.has(message.id)) return;
@@ -6047,8 +6118,8 @@ async function getYouTubeKey() {
   }
   if (ytKeyCache && Date.now() - ytKeyCache.at < 60 * 60 * 1000) return ytKeyCache;
   try {
-    const res = await fetch('https://www.youtube.com/?hl=en', { headers: YT_HEADERS });
-    const html = await res.text();
+    const res = await youtubePedir('?hl=en', { extra: true }); // 🛡️ v0.172: pelos caminhos de reserva
+    const html = res.texto;
     const key = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
     const version = html.match(/"INNERTUBE_CONTEXT_CLIENT_VERSION":"([^"]+)"/) || html.match(/"clientVersion":"(2\.[^"]+)"/);
     ytKeyCache = {
@@ -6072,13 +6143,11 @@ async function fetchYouTubeStats(videoId) {
   });
   const post = async (endpoint) => {
     const keyParam = apiKey ? `key=${apiKey}&` : '';
-    const res = await fetch(`https://www.youtube.com/youtubei/v1/${endpoint}?${keyParam}prettyPrint=false`, {
-      method: 'POST',
-      headers: { ...YT_HEADERS, 'Content-Type': 'application/json' },
-      body: body({ videoId }),
+    const res = await youtubePedir(`youtubei/v1/${endpoint}?${keyParam}prettyPrint=false`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body({ videoId }), extra: true,
     });
     if (!res.ok) throw new Error(`${endpoint}: erro ${res.status}`);
-    return res.text();
+    return res.texto;
   };
 
   let viewers = null;
@@ -6161,9 +6230,9 @@ let twitchClientIdCache = null;
 async function getTwitchClientId() {
   if (twitchClientIdCache) return twitchClientIdCache;
   try {
-    const res = await fetch('https://www.twitch.tv/', { headers: { 'User-Agent': YT_HEADERS['User-Agent'] } });
+    const res = await twitchPedir('https://www.twitch.tv/', { headers: { Accept: 'text/html' }, extra: true });
     if (res.ok) {
-      const m = (await res.text()).match(/clientId[":= ]+"?([a-z0-9]{25,35})"/i);
+      const m = res.texto.match(/clientId[":= ]+"?([a-z0-9]{25,35})"/i);
       if (m) { twitchClientIdCache = m[1]; return m[1]; }
     }
   } catch { /* fica na reserva */ }
@@ -6175,18 +6244,15 @@ async function fetchTwitchViewers(login) {
 
   // 1) Consulta anonima que o proprio site da Twitch usa
   try {
-    const res = await fetch('https://gql.twitch.tv/gql', {
+    // 🛡️ v0.172: pelos caminhos de reserva da Twitch
+    const res = await twitchPedir(TWITCH_GQL, {
       method: 'POST',
-      headers: {
-        'Client-ID': await getTwitchClientId(),
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': YT_HEADERS['User-Agent'],
-      },
+      headers: { 'Client-ID': await getTwitchClientId(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{ query: `query { user(login: "${safe}") { stream { viewersCount createdAt } } }`, variables: {} }]),
+      extra: true,
     });
-    if (res.ok) {
-      const data = await res.json();
+    if (res.ok && res.json) {
+      const data = res.json;
       const first = Array.isArray(data) ? data[0] : data;
       const user = first?.data?.user;
       if (first?.errors?.length) throw new Error(first.errors[0].message || 'consulta recusada');
@@ -6252,12 +6318,9 @@ function parseHoraSemFuso(s, fuso) {
 
 async function fetchBilibiliViewers(roomId) {
   if (!/^\d{1,12}$/.test(String(roomId))) return null;
-  const res = await fetch(`https://api.live.bilibili.com/room/v1/Room/get_info?room_id=${encodeURIComponent(roomId)}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0', 'Referer': 'https://live.bilibili.com/' },
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
+  const res = await bilibiliPedir(`room/v1/Room/get_info?room_id=${encodeURIComponent(roomId)}`, { extra: true });
+  if (!res.ok || !res.json) return null;
+  const data = res.json;
   const info = data?.data;
   if (!info) return null;
   const count = info.online;
@@ -6278,9 +6341,9 @@ async function fetchYouTubeLiveInfo(videoId) {
   const novo = { since: cached?.since ?? null, online: cached?.online ?? null, at: Date.now() };
   ytLiveCache.set(videoId, novo);
   try {
-    const res = await fetch(`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`, { headers: YT_HEADERS });
+    const res = await youtubePedir(`watch?v=${encodeURIComponent(videoId)}`, { extra: true });
     if (res.ok) {
-      const html = await res.text();
+      const html = res.texto;
       const inicio = html.match(/"startTimestamp":"([^"]+)"/);
       if (inicio) novo.since = Date.parse(inicio[1]) || null;
       const aoVivo = html.match(/"isLiveNow":(true|false)/);
@@ -6702,6 +6765,13 @@ function connect(platform, channel, options = {}) {
     setStatus('whatsapp', 'error', 'O WhatsApp é experimental — ative em Configurações → 🧪 Labs para usar.');
     return;
   }
+  // 🔀 v0.172: mudou a @? O que era da @ anterior sai do painel antes da nova
+  // conexão começar (o log fica; a revisão 📅 mostra o dia inteiro)
+  {
+    const contaNova = normalizarConta(platform, channel);
+    const contaAntiga = normalizarConta(platform, state.connections[platform]?.channel);
+    trocarDeConta(platform, contaNova, contaAntiga);
+  }
   disconnect(platform, true);
 
   // 🔒 v0.127.1: só as opções que o painel tem o direito de mandar. As
@@ -6717,7 +6787,9 @@ function connect(platform, channel, options = {}) {
   }
 
   const handlers = {
-    onMessage: onChatMessage,
+    // 🔀 v0.172: só o conector ATUAL entrega — um trocado/desligado, com uma
+    // consulta ainda no ar, não pode carimbar comentário com a @ nova
+    onMessage: (m) => { if (state.connectors[platform] === instance) onChatMessage(m); },
     // 🗑️ A plataforma avisou que uma mensagem (ou tudo de alguém) foi apagada
     onRemove: (aviso) => removerMensagens({ ...aviso, platform: aviso.platform || platform }),
     // A Twitch precisa do Client-ID público para buscar o catálogo de selos

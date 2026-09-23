@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    "🔀 Ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (ficam só no log, para a revisão 📅). 🛡️ Se o site barrar o programa, a consulta passa sozinha por outros caminhos (curl, PowerShell) e a conexão insiste até voltar.": "🔀 Verbindest du ein Netzwerk mit einem anderen @, verlassen die Kommentare des vorherigen @ sofort das Panel (sie bleiben nur im Log, für die Tagesansicht 📅). 🛡️ Blockiert die Seite das Programm, läuft die Abfrage von selbst über andere Wege (curl, PowerShell) und die Verbindung versucht es weiter, bis sie zurück ist.",
     "Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui": "Einen Stream-Tag ansehen: Der Kalender zeigt die Tage mit Log; wähle einen und alles, was an dem Tag gespeichert wurde, erscheint hier",
     "Rever um dia de live": "Einen Stream-Tag ansehen",
     "Fecha a revisão e volta para a live de hoje": "Schließt die Ansicht und geht zum heutigen Stream zurück",
@@ -3242,6 +3243,13 @@ window.OBS_I18N_DICTS.de = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Haken Sie nur an, was Sie nutzen. Das ändert das 🎛️-Werkzeug des Panels — die 🎛️-Tasten des Soundboards funktionieren so oder so.",
   },
   padroes: [
+    [/^1 comentário de @(\S+) saiu do painel: agora a rede está conectada a @(\S+)$/, "1 Kommentar von @$1 hat das Panel verlassen: das Netzwerk ist jetzt mit @$2 verbunden"],
+    [/^(\d+) comentários de @(\S+) saíram do painel: agora a rede está conectada a @(\S+)$/, "$1 Kommentare von @$2 haben das Panel verlassen: das Netzwerk ist jetzt mit @$3 verbunden"],
+    [/^((?:YouTube|Twitch|Bilibili) respondeu com erro \d+\.) (.+)$/, "$1 $2"],
+    [/^(YouTube|Twitch|Bilibili) respondeu com erro (\d+)\.$/, "$1 antwortete mit Fehler $2."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) barrou as consultas automáticas deste computador \(todos os caminhos: Node, curl e PowerShell\)\. Costuma passar sozinho em alguns minutos — o programa continua tentando\.$/, "$1 hat die automatischen Abfragen dieses Computers blockiert (alle Wege: Node, curl und PowerShell). Das geht meist in ein paar Minuten von selbst vorbei — das Programm versucht es weiter."],
+    [/^O YouTube respondeu com erro (\d+) ao abrir o canal "(.+)"\.$/, "YouTube antwortete mit Fehler $1 beim Öffnen des Kanals \"$2\"."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) não respondeu\.$/, "$1 hat nicht geantwortet."],
     [/^≈ (.+) depois da taxa de (.+)%$/, "≈ $1 nach der Gebühr von $2 %"],
     [/^Lida agora da página de ajuda do YouTube \(os criadores recebem (\d+)% da receita dos Supers\)\.$/, "Gerade von der YouTube-Hilfeseite gelesen (Creator erhalten $1 % der Supers-Einnahmen)."],
     [/^Super Chat (.+)%: (.+) Pix (.+)%: (.+)$/, "Super Chat $1 %: $2 Pix $3 %: $4"],

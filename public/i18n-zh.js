@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "🔀 Ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (ficam só no log, para a revisão 📅). 🛡️ Se o site barrar o programa, a consulta passa sozinha por outros caminhos (curl, PowerShell) e a conexão insiste até voltar.": "🔀 把某个网络连接到另一个 @ 时，上一个 @ 的评论会立刻离开面板（只保留在日志中，供回看 📅）。🛡️ 如果站点拦截程序，查询会自动改走其他路径（curl、PowerShell），连接会一直重试直到恢复。",
     "Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui": "回看某一天的直播：日历显示有日志的日子；选一天，那天保存的所有内容都会显示在这里",
     "Rever um dia de live": "回看某一天的直播",
     "Fecha a revisão e volta para a live de hoje": "关闭回看并返回今天的直播",
@@ -3242,6 +3243,13 @@ window.OBS_I18N_DICTS.zh = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "只勾选你会用的。这会改变面板的 🎛️ 工具 — 音板上的 🎛️ 按键无论如何都能用。",
   },
   padroes: [
+    [/^1 comentário de @(\S+) saiu do painel: agora a rede está conectada a @(\S+)$/, "来自 @$1 的 1 条评论已离开面板：网络现已连接到 @$2"],
+    [/^(\d+) comentários de @(\S+) saíram do painel: agora a rede está conectada a @(\S+)$/, "来自 @$2 的 $1 条评论已离开面板：网络现已连接到 @$3"],
+    [/^((?:YouTube|Twitch|Bilibili) respondeu com erro \d+\.) (.+)$/, "$1 $2"],
+    [/^(YouTube|Twitch|Bilibili) respondeu com erro (\d+)\.$/, "$1 返回错误 $2。"],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) barrou as consultas automáticas deste computador \(todos os caminhos: Node, curl e PowerShell\)\. Costuma passar sozinho em alguns minutos — o programa continua tentando\.$/, "$1 拦截了这台电脑的自动查询（所有路径：Node、curl 和 PowerShell）。通常几分钟后会自行恢复 —— 程序会继续尝试。"],
+    [/^O YouTube respondeu com erro (\d+) ao abrir o canal "(.+)"\.$/, "YouTube 在打开频道 \"$2\" 时返回错误 $1。"],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) não respondeu\.$/, "$1 没有响应。"],
     [/^≈ (.+) depois da taxa de (.+)%$/, "≈ $1（扣除 $2% 费用后）"],
     [/^Lida agora da página de ajuda do YouTube \(os criadores recebem (\d+)% da receita dos Supers\)\.$/, "刚从 YouTube 帮助页面读取（创作者获得 Supers 收入的 $1%）。"],
     [/^Super Chat (.+)%: (.+) Pix (.+)%: (.+)$/, "Super Chat $1%：$2 Pix $3%：$4"],

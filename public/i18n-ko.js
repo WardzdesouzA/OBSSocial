@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "🔀 Ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (ficam só no log, para a revisão 📅). 🛡️ Se o site barrar o programa, a consulta passa sozinha por outros caminhos (curl, PowerShell) e a conexão insiste até voltar.": "🔀 네트워크를 다른 @에 연결하면 이전 @의 댓글이 즉시 패널에서 빠집니다(로그에만 남아 하루 다시 보기 📅에서 볼 수 있음). 🛡️ 사이트가 프로그램을 차단하면 조회가 저절로 다른 경로(curl, PowerShell)를 거치고, 연결은 돌아올 때까지 계속 시도합니다.",
     "Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui": "방송 날짜 다시 보기: 달력에 로그가 있는 날이 표시됩니다. 하루를 고르면 그날 보존된 모든 것이 여기에 나타납니다",
     "Rever um dia de live": "방송 날짜 다시 보기",
     "Fecha a revisão e volta para a live de hoje": "다시 보기를 닫고 오늘 방송으로 돌아갑니다",
@@ -3242,6 +3243,13 @@ window.OBS_I18N_DICTS.ko = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "쓰는 것만 체크하세요. 패널의 🎛️ 도구가 달라집니다 — 사운드보드의 🎛️ 키는 어느 쪽이든 그대로 작동합니다.",
   },
   padroes: [
+    [/^1 comentário de @(\S+) saiu do painel: agora a rede está conectada a @(\S+)$/, "@$1의 댓글 1개가 패널에서 빠졌습니다: 네트워크가 이제 @$2에 연결됨"],
+    [/^(\d+) comentários de @(\S+) saíram do painel: agora a rede está conectada a @(\S+)$/, "@$2의 댓글 $1개가 패널에서 빠졌습니다: 네트워크가 이제 @$3에 연결됨"],
+    [/^((?:YouTube|Twitch|Bilibili) respondeu com erro \d+\.) (.+)$/, "$1 $2"],
+    [/^(YouTube|Twitch|Bilibili) respondeu com erro (\d+)\.$/, "$1이(가) 오류 $2로 응답했습니다."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) barrou as consultas automáticas deste computador \(todos os caminhos: Node, curl e PowerShell\)\. Costuma passar sozinho em alguns minutos — o programa continua tentando\.$/, "$1이(가) 이 컴퓨터의 자동 조회를 차단했습니다(모든 경로: Node, curl, PowerShell). 보통 몇 분 안에 저절로 풀립니다 — 프로그램이 계속 시도합니다."],
+    [/^O YouTube respondeu com erro (\d+) ao abrir o canal "(.+)"\.$/, "YouTube가 채널 \"$2\"을(를) 여는 중 오류 $1로 응답했습니다."],
+    [/^(?:O|A) (YouTube|Twitch|Bilibili) não respondeu\.$/, "$1이(가) 응답하지 않았습니다."],
     [/^≈ (.+) depois da taxa de (.+)%$/, "≈ $1 (수수료 $2% 공제 후)"],
     [/^Lida agora da página de ajuda do YouTube \(os criadores recebem (\d+)% da receita dos Supers\)\.$/, "YouTube 도움말 페이지에서 방금 읽음(크리에이터는 Supers 수익의 $1%를 받음)."],
     [/^Super Chat (.+)%: (.+) Pix (.+)%: (.+)$/, "Super Chat $1%: $2 Pix $3%: $4"],
