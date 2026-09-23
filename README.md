@@ -184,6 +184,10 @@ Everything is on the **🔗 URLs for OBS** page in the settings. The rules, in s
 
 **Kick gave an error when connecting (error 403).** Kick uses protection (Cloudflare) that blocks the program by the "signature" of its connection, not by the channel. OBS Social tries other paths on its own (the system's curl, PowerShell on Windows and, finally, a browser open on this computer): leave the settings page, the dashboard or the OBS screen open on the same computer and it retries by itself. If the message says even the browser was blocked, open kick.com in that browser, pass the "I'm human" check and click 🔄.
 
+**YouTube, Twitch or Bilibili said the site blocked the program (error 403/429).** Since v0.172 these networks have the same fallback paths as Kick (Node with Chrome's signature, the system's curl, PowerShell on Windows) and the connection keeps retrying on its own, with a growing wait, until the site lets it through. A YouTube channel that isn't live yet is checked again every minute, so you can connect before going live. Only a non-existent channel/room is a final error.
+
+**I connected to someone else's channel to test and then went back to mine, and the comments got mixed.** Since v0.172 every comment is stamped with the @ it came from: when you connect a network to a different @, the comments from the previous @ leave the dashboard right away (the day's totals are adjusted too). They stay in the log, so the day review (📅) still shows everything. Test comments and saved (⭐) comments are kept.
+
 **Port 3000 is already in use.** Start it on another port: `PORT=3500 node server.js` (Mac/Linux) or `set PORT=3500 && node server.js` (Windows).
 
 ---
@@ -374,5 +378,9 @@ Tudo fica na página **🔗 URLs para o OBS** das configurações. As regras, em
 **«Verificar se há versão nova» nunca responde, ou diz que o GitHub não respondeu a tempo.** Você abriu as configurações pelo endereço da rede (192.168…, ou de outro computador). Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra `http://localhost:3000` nele (o endereço que a janela preta mostra).
 
 **O Kick deu erro ao conectar (erro 403).** O Kick usa uma proteção (Cloudflare) que barra o programa pela «assinatura» da conexão dele, não pelo canal. O OBS Social tenta sozinho outros caminhos (o curl do sistema, o PowerShell no Windows e, por fim, um navegador aberto neste computador): deixe as configurações, o painel ou a tela do OBS abertos no mesmo computador que ele tenta de novo sozinho. Se a mensagem disser que até o navegador foi barrado, abra kick.com nesse navegador, passe pela verificação «sou humano» e clique em 🔄.
+
+**O YouTube, a Twitch ou a Bilibili disseram que o site barrou o programa (erro 403/429).** Desde a v0.172 essas redes têm os mesmos caminhos de reserva do Kick (Node com a assinatura do Chrome, o curl do sistema, o PowerShell no Windows) e a conexão continua tentando sozinha, com espera crescente, até o site liberar. Um canal do YouTube que ainda não está ao vivo é conferido de novo a cada minuto — dá para conectar antes de começar a live. Só canal/sala inexistente é erro definitivo.
+
+**Conectei no canal de outra pessoa para testar e, ao voltar para o meu, os comentários se misturaram.** Desde a v0.172 cada comentário é carimbado com a @ de onde veio: ao conectar uma rede a outra @, os comentários da @ anterior saem do painel na hora (os totais do dia também são ajustados). Eles continuam no log, então a revisão do dia (📅) mostra tudo. Os comentários de teste e os salvos (⭐) ficam.
 
 **A porta 3000 já está em uso.** Inicie com outra porta: `PORT=3500 node server.js` (Mac/Linux) ou `set PORT=3500 && node server.js` (Windows).

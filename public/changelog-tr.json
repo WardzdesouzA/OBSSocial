@@ -1,4 +1,13 @@
 {
+  "0.172.0": {
+    "titulo": "🔀 @ değiştirmek önceki @’ye ait olanları panelden çıkarır · 🛡️ Kick’in yedek yolları artık YouTube, Twitch ve Bilibili için de geçerli, otomatik yeniden deneme ile",
+    "itens": [
+      "🔀 Her yorum artık geldiği @ (veya bağlantı, oda, grup) ile damgalanır. Bir ağı başka bir @’ye bağladığınızda — örneğin başkasının yayınında test edip kendinize döndüğünüzde — önceki @’nin yorumları panelden hemen çıkar: sütunlar, kuyruk, öne çıkan, çekiliş katılımcıları ve günün toplamları. Panel kaç tanesinin çıktığını söyler. Logdan hiçbir şey kaybolmaz (gün incelemesi 📅 tüm günü gösterir) ve yeniden başlatınca yalnızca mevcut @’ye ait olanlar geri gelir. Test yorumları ve kaydedilenler (⭐) kalır.",
+      "🛡️ YouTube, Twitch ve Bilibili, Kick ile aynı yedek yolları aldı: site programı engellerse (403/429/503 hatası), sorgu kendiliğinden Chrome imzalı Node, sistemin curl’ü ve PowerShell (Windows) üzerinden geçer — YouTube sohbet yoklaması, Twitch rozet kataloğu ve geçmişi, Bilibili odası ve geçmişi, izleyici sayısı ve avatarlar dahil. Çalışan yol hatırlanır ve her yarım saatte normal yol yeniden denenir. Her isteğin adresi, başlıkları ve gövdesi asla programların komut satırına gitmez (standart giriş üzerinden gider).",
+      "🔁 YouTube ve Bilibili artık Kick gibi kendiliğinden ısrar eder: engellenen site, kopan ağ veya Bilibili’nin «risk kontrolü», «Ns içinde kendiliğinden yeniden deneme»ye dönüşür (artan bekleme, 5 dakikaya kadar), 🔄’ye tıklamadan. Henüz yayında olmayan bir YouTube kanalı her dakika yeniden kontrol edilir — yayına başlamadan bağlanabilirsiniz. YouTube sohbet bağlantısı ortada koparsa o da kendiliğinden geri gelir. Yalnızca var olmayan kanal/oda kesin hatadır.",
+      "🔒 Değiştirilen veya kapatılan bir bağlayıcı, havada bir sorgusu olsa bile artık hiçbir şey teslim etmez — geciken hiçbir yorum yeni @ ile damgalanmaz."
+    ]
+  },
   "0.171.0": {
     "titulo": "📅 Bir yayın gününü gözden geçir: log olan günlerin takvimi, günün tamamı panele geri ve «Bugüne dön» — loglar en az bir yıl saklanır",
     "itens": [

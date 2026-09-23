@@ -2169,6 +2169,13 @@ const hub = connectHub((event) => {
       break;
     case 'apagadas':
       apagarMensagens(event);
+      // 🔀 v0.172: a rede foi trocada de @ — os comentários da @ anterior saíram
+      if (event.troca && event.ids && event.ids.length) {
+        const n = event.ids.length;
+        // (a frase inteira é traduzida por padrão em i18n-*.js)
+        mostrarRecadoObs(true, n + (n === 1 ? ' comentário de @' : ' comentários de @') + (event.troca.de || '?')
+          + (n === 1 ? ' saiu do painel: agora a rede está conectada a @' : ' saíram do painel: agora a rede está conectada a @') + event.troca.para, '🔀 ');
+      }
       break;
     case 'status':
       updateStatus(event.platform, event.status);

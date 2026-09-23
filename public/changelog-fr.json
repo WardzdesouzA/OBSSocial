@@ -1,4 +1,13 @@
 {
+  "0.172.0": {
+    "titulo": "🔀 Changer de @ retire du panneau ce qui appartenait à l’@ précédente · 🛡️ les chemins de secours du Kick couvrent désormais YouTube, Twitch et Bilibili, avec nouvelle tentative automatique",
+    "itens": [
+      "🔀 Chaque commentaire est désormais estampillé de l’@ (ou lien, salle, groupe) d’où il vient. Quand vous connectez un réseau à une autre @ — par exemple après un test sur le live de quelqu’un d’autre puis le retour au vôtre — les commentaires de l’@ précédente quittent le panneau aussitôt : colonnes, file, mise en avant, participants au tirage et totaux du jour. Le panneau dit combien sont partis. Rien ne disparaît du log (la revue 📅 montre toute la journée) et, après un redémarrage, seul ce qui appartient à l’@ actuelle revient. Les commentaires de test et les enregistrés (⭐) restent.",
+      "🛡️ YouTube, Twitch et Bilibili ont reçu les mêmes chemins de secours que le Kick : si le site bloque le programme (erreur 403/429/503), la requête passe d’elle-même par Node avec la signature de Chrome, par le curl du système et par PowerShell (Windows) — y compris le poll du chat YouTube, le catalogue de badges et l’historique Twitch, la salle et l’historique Bilibili, l’audience et les avatars. Le chemin qui a marché est mémorisé et, toutes les demi-heures, le chemin normal est retesté. L’adresse, les en-têtes et le corps de chaque requête ne passent jamais par la ligne de commande des programmes (ils passent par l’entrée standard).",
+      "🔁 YouTube et Bilibili insistent désormais seuls comme le Kick : site bloqué, réseau coupé ou le « contrôle de risque » de Bilibili deviennent « Nouvelle tentative seule dans Ns » (attente croissante, jusqu’à 5 minutes), sans cliquer sur 🔄. Une chaîne YouTube pas encore en direct est revérifiée chaque minute — on peut se connecter avant de lancer le live. Si la connexion au chat YouTube tombe en cours de route, elle revient aussi seule. Seule une chaîne/salle inexistante est une erreur définitive.",
+      "🔒 Un connecteur remplacé ou éteint, avec une requête encore en vol, ne livre plus rien — aucun commentaire tardif n’entre estampillé de la nouvelle @."
+    ]
+  },
   "0.171.0": {
     "titulo": "📅 Revoir un jour de live : calendrier des jours avec log, la journée entière de retour dans le panneau et « Retour à aujourd’hui » — logs gardés au moins un an",
     "itens": [

@@ -4,6 +4,7 @@
 // opcional melhora o resultado.
 const WebSocket = require('ws');
 const zlib = require('zlib');
+const { criarCaminhos } = require('./caminhos');
 
 const BROWSER_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
@@ -14,6 +15,24 @@ const BROWSER_HEADERS = {
 // 🔒 v0.127.1: teto do pacote descompactado — um frame "bomba" não pode
 // estourar a memória (o chat real fica na casa dos KB)
 const LIMITE_INFLADO = 4 * 1024 * 1024;
+
+// 🛡️ v0.172: as consultas à API da Bilibili (sala, acesso ao chat, histórico,
+// audiência) passam pelos caminhos de reserva do Kick — Node → Node com a
+// assinatura do Chrome → curl → PowerShell — quando o site barra o programa
+// (a Bilibili já barrou o TLS de programas que não são navegador).
+// Gancho de teste: OBS_TESTE_BILIBILI_BASE troca a api.live.bilibili.com.
+const BILI_BASE = (process.env.OBS_TESTE_BILIBILI_BASE || 'https://api.live.bilibili.com/').replace(/\/?$/, '/');
+const caminhos = criarCaminhos({ rede: 'bilibili', rotulo: 'Bilibili', artigo: 'A', headers: BROWSER_HEADERS, referer: 'https://live.bilibili.com/', tempoMs: 15000 });
+// bilibiliPedir(caminho, { headers, extra }) → { status, ok, texto, json, via }
+function bilibiliPedir(caminho, opcoes = {}) {
+  const url = /^https?:\/\//.test(caminho) ? caminho : BILI_BASE + caminho.replace(/^\//, '');
+  return caminhos.pedir(url, opcoes);
+}
+const erroPassageiro = (err) => !!(err && (err.barrado || err.redeFora || err.status === 0));
+// A espera entre as tentativas sozinhas começa em 15s e dobra até 5 minutos
+// (gancho de teste: OBS_TESTE_ESPERA_MS encurta a base)
+const ESPERA_BASE_MS = Number(process.env.OBS_TESTE_ESPERA_MS) || 15000;
+const ESPERA_MAX_MS = Math.max(ESPERA_BASE_MS * 4, 300000 * (ESPERA_BASE_MS / 15000));
 
 const OP_HEARTBEAT = 2;
 const OP_MESSAGE = 5;
@@ -77,24 +96,42 @@ class BilibiliConnector {
     }
     try {
       await this.resolveRoom(Number(idMatch[1]));
+      this.connectRetryMs = 0;
     } catch (err) {
-      this.handlers.onStatus('error', err.message);
+      if (this.stopped) return;
+      // 🛡️ v0.172: sala inexistente é definitivo; site barrado, rede fora ou o
+      // «controle de risco» da Bilibili são passageiros — insiste sozinho
+      const passageiro = erroPassageiro(err) || err.controleDeRisco;
+      if (!passageiro) { this.handlers.onStatus('error', err.message); return; }
+      this.connectRetryMs = Math.min((this.connectRetryMs || ESPERA_BASE_MS) * 2, ESPERA_MAX_MS);
+      const s = Math.round(this.connectRetryMs / 1000);
+      const explicacao = err.barrado ? ' ' + caminhos.explicacaoBarrado(err) : '';
+      this.handlers.onStatus('error', `${err.message}${explicacao} Nova tentativa sozinha em ${s}s.`, { insiste: true });
+      this.connectTimer = setTimeout(() => { this.connectTimer = null; if (!this.stopped) this.start(); }, this.connectRetryMs);
       return;
     }
     if (this.stopped) return;
     this.open();
   }
 
+  acordar() {
+    if (this.stopped || !this.connectTimer) return;
+    clearTimeout(this.connectTimer);
+    this.connectTimer = null;
+    this.start();
+  }
+
+  // Só o cookie (os cabeçalhos de sempre já vão pelos caminhos)
   headers() {
-    const headers = { ...BROWSER_HEADERS };
+    const headers = {};
     if (this.cookie) headers.Cookie = this.cookie.includes('=') ? this.cookie : `SESSDATA=${this.cookie}`;
     return headers;
   }
 
   async resolveRoom(shortId) {
-    const initRes = await fetch(`https://api.live.bilibili.com/room/v1/Room/room_init?id=${shortId}`, { headers: this.headers(), signal: AbortSignal.timeout(15000) });
-    if (!initRes.ok) throw new Error(`A Bilibili respondeu com erro ${initRes.status} ao buscar a sala ${shortId}.`);
-    const init = await initRes.json();
+    const initRes = await bilibiliPedir(`room/v1/Room/room_init?id=${shortId}`, { headers: this.headers() });
+    if (!initRes.ok || !initRes.json) throw new Error(`A Bilibili respondeu com erro ${initRes.status} ao buscar a sala ${shortId}.`);
+    const init = initRes.json;
     if (init.code !== 0 || !init.data?.room_id) throw new Error(`Sala ${shortId} não encontrada na Bilibili.`);
     this.roomId = init.data.room_id;
 
@@ -103,17 +140,13 @@ class BilibiliConnector {
       if (uidMatch) this.uid = Number(uidMatch[1]);
     }
 
-    const danmuRes = await fetch(
-      `https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=${this.roomId}&type=0`,
-      { headers: this.headers(), signal: AbortSignal.timeout(15000) }
-    );
-    if (!danmuRes.ok) throw new Error(`A Bilibili respondeu com erro ${danmuRes.status} ao pedir o acesso ao chat da sala.`);
-    const danmu = await danmuRes.json();
+    const danmuRes = await bilibiliPedir(`xlive/web-room/v1/index/getDanmuInfo?id=${this.roomId}&type=0`, { headers: this.headers() });
+    if (!danmuRes.ok || !danmuRes.json) throw new Error(`A Bilibili respondeu com erro ${danmuRes.status} ao pedir o acesso ao chat da sala.`);
+    const danmu = danmuRes.json;
     if (danmu.code !== 0 || !danmu.data?.token) {
-      throw new Error(
-        'A Bilibili recusou a conexão anônima (controle de risco deles). ' +
-        'Espere alguns minutos e tente conectar de novo.'
-      );
+      const e = new Error('A Bilibili recusou a conexão anônima (controle de risco deles).');
+      e.controleDeRisco = true;
+      throw e;
     }
     this.token = danmu.data.token;
     const host = danmu.data.host_list?.[0];
@@ -218,12 +251,9 @@ class BilibiliConnector {
   async fetchHistory() {
     if (this.handlers.recoverEnabled && !this.handlers.recoverEnabled()) return;
     try {
-      const res = await fetch(
-        `https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory?roomid=${this.roomId}`,
-        { headers: this.headers(), signal: AbortSignal.timeout(15000) }
-      );
-      if (!res.ok) return;
-      const data = await res.json();
+      const res = await bilibiliPedir(`xlive/web-room/v1/dM/gethistory?roomid=${this.roomId}`, { headers: this.headers(), extra: true });
+      if (!res.ok || !res.json) return;
+      const data = res.json;
       const list = data?.data?.room || [];
       for (const item of list) {
         if (this.stopped) return;
@@ -248,9 +278,10 @@ class BilibiliConnector {
 
   stop() {
     this.stopped = true;
+    if (this.connectTimer) clearTimeout(this.connectTimer);
     if (this.heartbeat) clearInterval(this.heartbeat);
     if (this.ws) try { this.ws.close(); } catch {}
   }
 }
 
-module.exports = { BilibiliConnector };
+module.exports = { BilibiliConnector, bilibiliPedir, bilibiliCaminhos: caminhos };

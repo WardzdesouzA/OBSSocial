@@ -1,4 +1,13 @@
 {
+  "0.172.0": {
+    "titulo": "🔀 Ein @-Wechsel entfernt aus dem Panel, was zum vorherigen @ gehörte · 🛡️ Kicks Ausweichwege gelten jetzt für YouTube, Twitch und Bilibili, mit automatischem Neuversuch",
+    "itens": [
+      "🔀 Jeder Kommentar wird jetzt mit dem @ (oder Link, Raum, Gruppe) gestempelt, von dem er kam. Verbindest du ein Netzwerk mit einem anderen @ — z. B. nach einem Test im Stream von jemand anderem und der Rückkehr zu deinem — verlassen die Kommentare des vorherigen @ sofort das Panel: Spalten, Warteschlange, Hervorhebung, Verlosungsteilnehmer und Tagessummen. Das Panel sagt, wie viele gegangen sind. Nichts verschwindet aus dem Log (die Tagesansicht 📅 zeigt den ganzen Tag), und nach einem Neustart kommt nur zurück, was zum aktuellen @ gehört. Testkommentare und gespeicherte (⭐) bleiben.",
+      "🛡️ YouTube, Twitch und Bilibili haben dieselben Ausweichwege wie Kick bekommen: Blockiert die Seite das Programm (Fehler 403/429/503), läuft die Abfrage von selbst über Node mit Chrome-Signatur, das curl des Systems und PowerShell (Windows) — inklusive YouTube-Chat-Poll, Twitch-Abzeichenkatalog und -Verlauf, Bilibili-Raum und -Verlauf, Zuschauerzahlen und Avatare. Der Weg, der funktioniert hat, wird gemerkt, und jede halbe Stunde wird der normale Weg erneut getestet. Adresse, Header und Body jeder Anfrage stehen nie auf der Kommandozeile der Programme (sie gehen über die Standardeingabe).",
+      "🔁 YouTube und Bilibili versuchen es jetzt von selbst weiter wie Kick: blockierte Seite, Netz weg oder Bilibilis „Risikokontrolle“ werden zu „Neuer Versuch von selbst in Ns“ (wachsende Wartezeit, bis 5 Minuten), ohne Klick auf 🔄. Ein YouTube-Kanal, der noch nicht live ist, wird jede Minute erneut geprüft — du kannst dich vor dem Live-Start verbinden. Bricht die Verbindung zum YouTube-Chat mittendrin ab, kommt sie ebenfalls von selbst zurück. Nur ein nicht existierender Kanal/Raum ist ein endgültiger Fehler.",
+      "🔒 Ein ersetzter oder abgeschalteter Connector mit noch laufender Abfrage liefert nichts mehr — kein verspäteter Kommentar wird mit dem neuen @ gestempelt."
+    ]
+  },
   "0.171.0": {
     "titulo": "📅 Einen Stream-Tag ansehen: Kalender der Tage mit Log, der ganze Tag zurück im Panel und „Zurück zu heute“ — Logs mindestens ein Jahr aufbewahrt",
     "itens": [

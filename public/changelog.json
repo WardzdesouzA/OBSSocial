@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.172.0",
+    "titulo": "🔀 Trocar de @ tira do painel o que era da @ anterior · 🛡️ os caminhos de reserva do Kick agora valem para YouTube, Twitch e Bilibili, com nova tentativa sozinha",
+    "itens": [
+      "🔀 Cada comentário passa a ser carimbado com a @ (ou link, sala, grupo) de onde veio. Ao conectar uma rede a outra @ — por exemplo, depois de testar na live de outra pessoa e voltar para a sua — os comentários da @ anterior saem do painel na hora: das colunas, da fila, do destaque, dos participantes do sorteio e dos totais do dia. O painel avisa quantos saíram. Nada some do log (a revisão 📅 mostra o dia inteiro) e, ao reiniciar, só o que é da @ atual volta. Os comentários de teste e os salvos (⭐) ficam.",
+      "🛡️ YouTube, Twitch e Bilibili ganharam os mesmos caminhos de reserva do Kick: se o site barrar o programa (erro 403/429/503), a consulta passa sozinha pelo Node com a assinatura do Chrome, pelo curl do sistema e pelo PowerShell (Windows) — inclusive o poll do chat do YouTube, o catálogo de selos e o histórico da Twitch, a sala e o histórico da Bilibili, a audiência e os avatares. O caminho que funcionou fica lembrado e, de meia em meia hora, o caminho normal é testado de novo. O endereço, os cabeçalhos e o corpo de cada pedido nunca vão na linha de comando dos programas (vão pela entrada padrão).",
+      "🔁 YouTube e Bilibili passam a insistir sozinhos como o Kick: site barrado, rede fora ou o «controle de risco» da Bilibili viram «Nova tentativa sozinha em Ns» (espera crescente, até 5 minutos), sem clicar em 🔄. Um canal do YouTube que ainda não está ao vivo é conferido de novo a cada minuto — dá para conectar antes de começar a live. Se a conexão com o chat do YouTube cair no meio, ela também volta sozinha. Só canal/sala inexistente é erro definitivo.",
+      "🔒 Um conector trocado ou desligado, com uma consulta ainda no ar, não entrega mais nada — nenhum comentário atrasado entra carimbado com a @ nova."
+    ]
+  },
+  {
     "version": "0.171.0",
     "titulo": "📅 Rever um dia de live: calendário dos dias com log, o dia inteiro de volta no painel e «Voltar para hoje» — logs guardados por no mínimo um ano",
     "itens": [

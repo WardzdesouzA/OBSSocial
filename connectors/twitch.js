@@ -2,7 +2,18 @@
 // Usa a conexao IRC anonima (justinfan) via WebSocket — nao precisa de login nem API key.
 const WebSocket = require('ws');
 
-const IRC_URL = 'wss://irc-ws.chat.twitch.tv:443';
+const { criarCaminhos } = require('./caminhos');
+
+const IRC_URL = process.env.OBS_TESTE_TWITCH_IRC || 'wss://irc-ws.chat.twitch.tv:443';
+// 🛡️ v0.172: as consultas HTTP da Twitch (catálogo de selos, histórico,
+// audiência) passam pelos caminhos de reserva do Kick — Node → Node com a
+// assinatura do Chrome → curl → PowerShell — quando o site barra o programa.
+// Ganchos de teste: OBS_TESTE_TWITCH_GQL e OBS_TESTE_TWITCH_HISTORICO.
+const TWITCH_GQL = process.env.OBS_TESTE_TWITCH_GQL || 'https://gql.twitch.tv/gql';
+const TWITCH_HISTORICO = (process.env.OBS_TESTE_TWITCH_HISTORICO || 'https://recent-messages.robotty.de/api/v2/recent-messages/').replace(/\/?$/, '/');
+const caminhos = criarCaminhos({ rede: 'twitch', rotulo: 'Twitch', headers: { Accept: 'application/json' }, referer: 'https://www.twitch.tv/', tempoMs: 15000 });
+// twitchPedir(url, { method, headers, body, extra }) → { status, ok, texto, json, via }
+const twitchPedir = (url, opcoes) => caminhos.pedir(url, opcoes);
 
 // ---------------------------------------------------------------------------
 // 🏷️ Catálogo de distintivos da Twitch
@@ -30,18 +41,14 @@ async function catalogoDeSelos(canal, clientId) {
   const promessa = (async () => {
     const mapa = new Map();
     try {
-      const res = await fetch('https://gql.twitch.tv/gql', {
+      const res = await twitchPedir(TWITCH_GQL, {
         method: 'POST',
-        headers: {
-          'Client-ID': clientId || TWITCH_CLIENT_ID_PUBLICO,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: { 'Client-ID': clientId || TWITCH_CLIENT_ID_PUBLICO, 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: BADGES_QUERY, variables: { login: canal } }),
-        signal: AbortSignal.timeout(15000),
+        extra: true,
       });
-      if (res.ok) {
-        const data = await res.json();
+      if (res.ok && res.json) {
+        const data = res.json;
         const bloco = data?.data || {};
         // Os do canal entram DEPOIS para sobrescrever os globais do mesmo nível
         for (const lista of [bloco.badges, bloco.user?.broadcastBadges]) {
@@ -191,12 +198,12 @@ class TwitchConnector {
   async fetchHistory() {
     if (this.handlers.recoverEnabled && !this.handlers.recoverEnabled()) return;
     try {
-      const res = await fetch(
-        `https://recent-messages.robotty.de/api/v2/recent-messages/${encodeURIComponent(this.channel)}?limit=300&hide_moderation_messages=true`,
-        { signal: AbortSignal.timeout(15000) }
+      const res = await twitchPedir(
+        `${TWITCH_HISTORICO}${encodeURIComponent(this.channel)}?limit=300&hide_moderation_messages=true`,
+        { extra: true }
       );
-      if (!res.ok) return;
-      const data = await res.json();
+      if (!res.ok || !res.json) return;
+      const data = res.json;
       const lines = Array.isArray(data?.messages) ? data.messages : [];
       for (const line of lines) {
         if (this.stopped) return;
@@ -333,4 +340,4 @@ class TwitchConnector {
   }
 }
 
-module.exports = { TwitchConnector };
+module.exports = { TwitchConnector, twitchPedir, twitchCaminhos: caminhos, TWITCH_GQL };
