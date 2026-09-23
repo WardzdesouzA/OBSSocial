@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.170.0",
+    "titulo": "✓ As marcas de «lido» sobrevivem ao reinício — e 💰 o painel mostra o arrecadado na live (Super Chat + Pix), com as taxas dos serviços",
+    "itens": [
+      "✓ Os comentários que já foram para a tela (esmaecidos, com o selo «✓ lido HH:MM») perdiam a marca sempre que o OBS Social reiniciava: o arquivo com as marcas era gravado direitinho, mas ao abrir o programa a leitura tropeçava numa constante declarada linhas depois, engolia o erro e voltava vazia. Corrigido; e, quando um painel reconecta, o selo acompanha a lista nova (nada de selo velho nem faltando). A sincronia entre navegadores e o selo «📥 na fila» (nos comentários guardados) já existiam e seguem valendo em todo painel aberto.",
+      "💰 Novo no 🧪 Labs: «Arrecadação da live». Ligado, aparece um 💰 no cabeçalho do painel com o total arrecadado; clicando, o cartão mostra a soma dos Super Chats, a dos Pix/apoios, o total e o «chega de verdade» — o valor aproximado depois das taxas. Moeda estrangeira entra pela cotação do dia; 🧹 apagar os comentários de teste desconta o que eles somaram; «Apagar os logs» zera junto.",
+      "🔎 As taxas ficam no mesmo item do Labs: você digita à mão (salvas ao sair do campo) ou clica em «Buscar taxas nos serviços» — o programa lê a página de ajuda do YouTube («os criadores recebem 70%» → 30%) e aplica a regra do Banco Central para o Pix (gratuito para pessoa física; PJ confira no banco), preenchendo e salvando na hora e dizendo de onde veio cada valor. Doação por plataforma (URL genérica) tem a taxa do serviço: preencha à mão."
+    ]
+  },
+  {
     "version": "0.169.6",
     "titulo": "🔒 Pela rede, os botões de atualização somem da página Sobre — fica só o aviso de usar o localhost",
     "itens": [

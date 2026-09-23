@@ -1,4 +1,12 @@
 {
+  "0.170.0": {
+    "titulo": "✓ Les marques « lu » survivent au redémarrage — et 💰 le panneau affiche ce que le live a récolté (Super Chat + Pix), avec les frais des services",
+    "itens": [
+      "✓ Les commentaires déjà passés à l’écran (atténués, avec le badge « ✓ lu HH:MM ») perdaient la marque à chaque redémarrage d’OBS Social : le fichier des marques était bien écrit, mais au démarrage la lecture butait sur une constante déclarée quelques lignes plus bas, avalait l’erreur et revenait vide. Corrigé ; et quand un panneau se reconnecte, le badge suit la nouvelle liste (ni badge périmé ni manquant). La synchro entre navigateurs et le badge « 📥 en file » (sur les commentaires enregistrés) existaient déjà et continuent de valoir sur tout panneau ouvert.",
+      "💰 Nouveau dans 🧪 Labs : « Recettes du live ». Activé, un 💰 apparaît dans l’en-tête du panneau avec le total récolté ; en cliquant, la carte montre la somme des Super Chats, celle des Pix/soutiens, le total et « ce qui arrive vraiment » — le montant approximatif après frais. La devise étrangère entre au taux du jour ; 🧹 supprimer les commentaires de test retire ce qu’ils avaient ajouté ; « Supprimer les logs » remet aussi à zéro.",
+      "🔎 Les frais sont dans le même élément des Labs : saisissez-les à la main (enregistrés en quittant le champ) ou cliquez sur « Chercher les frais chez les services » — le programme lit la page d’aide de YouTube (« les créateurs reçoivent 70 % » → 30 %) et applique la règle de la Banque centrale pour le Pix (gratuit pour un particulier ; les pros vérifient auprès de la banque), remplit et enregistre aussitôt en indiquant d’où vient chaque valeur. Un don via une plateforme (URL générique) porte les frais du service : saisissez-les à la main."
+    ]
+  },
   "0.169.6": {
     "titulo": "🔒 Via le réseau, les boutons de mise à jour disparaissent de la page À propos — seul l’avis d’utiliser localhost reste",
     "itens": [

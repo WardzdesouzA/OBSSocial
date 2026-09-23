@@ -1,4 +1,12 @@
 {
+  "0.170.0": {
+    "titulo": "✓ «Okundu» işaretleri yeniden başlatmaya dayanıyor — ve 💰 panel yayında toplananı (Super Chat + Pix) servis kesintileriyle gösteriyor",
+    "itens": [
+      "✓ Ekrana çıkmış yorumlar (soluklaştırılmış, «✓ okundu SS:DD» rozetli) OBS Social her yeniden başladığında işareti kaybediyordu: işaret dosyası doğru yazılıyordu ama açılışta okuma, birkaç satır sonra tanımlanan bir sabite takılıyor, hatayı yutuyor ve boş dönüyordu. Düzeltildi; bir panel yeniden bağlandığında rozet yeni listeyi izliyor (eski ya da eksik rozet yok). Tarayıcılar arası eşitleme ve «📥 sırada» rozeti (kaydedilen yorumlarda) zaten vardı ve açık her panelde geçerli olmaya devam ediyor.",
+      "💰 🧪 Labs’te yeni: «Yayın geliri». Açıkken panel başlığında toplanan toplamla bir 💰 belirir; tıklayınca kart Super Chat toplamını, Pix/destek toplamını, genel toplamı ve «gerçekten gelen»i — kesintiler sonrası yaklaşık tutarı — gösterir. Yabancı para günün kuruyla girer; 🧹 test yorumlarını silmek ekledikleri tutarı düşer; «Logları sil» de sıfırlar.",
+      "🔎 Kesintiler aynı Labs öğesinde: elle yazın (alandan çıkınca kaydedilir) ya da «Kesintileri servislerden bul»a tıklayın — program YouTube yardım sayfasını okur («içerik üreticileri %70 alır» → %30) ve Pix için Merkez Bankası kuralını uygular (bireyler için ücretsiz; şirketler bankaya sorsun), hemen doldurup kaydeder ve her değerin nereden geldiğini söyler. Platform üzerinden bağış (genel URL) servisin kesintisini taşır: elle doldurun."
+    ]
+  },
   "0.169.6": {
     "titulo": "🔒 Ağ üzerinden, güncelleme düğmeleri Hakkında sayfasından kayboluyor — yalnızca localhost kullanma uyarısı kalıyor",
     "itens": [

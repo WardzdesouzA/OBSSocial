@@ -2764,6 +2764,25 @@
         </div>
       </div>
 
+      <div class="lab-item" id="lab-arrecadacao">
+        <label class="check lab-toggle">
+          <input type="checkbox" id="l-arrecadacao" class="sw">
+          <span><b>💰 Arrecadação da live</b> — o painel mostra a soma dos Super Chats, a dos Pix/apoios e o total, com o valor aproximado que chega depois das taxas</span>
+        </label>
+        <div class="lab-body">
+          <div class="hint">Aparece um 💰 no cabeçalho do painel com o total arrecadado na live; clique nele para ver Super Chat, Pix/apoios, a soma e o «chega de verdade» (descontando as taxas abaixo). Moeda estrangeira entra pela cotação do dia. É uma noção, não um extrato: impostos e arredondamentos dos serviços ficam de fora.</div>
+          <div class="settings-grid">
+            <div><label>Taxa do Super Chat (%)</label><input type="number" id="taxaSuperchatInput" min="0" max="100" step="0.01" placeholder="30"></div>
+            <div><label>Taxa do Pix / apoios (%)</label><input type="number" id="taxaPixInput" min="0" max="100" step="0.01" placeholder="0"></div>
+          </div>
+          <div class="row" style="margin-top:8px;align-items:center">
+            <button id="taxasBuscarBtn" class="icon-btn" style="width:auto;padding:0 10px;font-size:13px" title="Lê a taxa na página de ajuda do YouTube e usa a regra do Banco Central para o Pix — os campos são preenchidos e salvos na hora">🔎 Buscar taxas nos serviços</button>
+            <span id="taxasStatus" class="hint" style="margin:0">—</span>
+          </div>
+          <div class="hint" id="taxasFonte" style="margin-bottom:0">Você pode digitar as taxas à mão (elas são salvas ao sair do campo) ou clicar em 🔎 para o programa buscar: YouTube fica com 30% dos Supers; receber Pix direto no banco é gratuito para pessoa física. Doação por plataforma (URL genérica) tem a taxa do serviço que você usa.</div>
+        </div>
+      </div>
+
       <div class="lab-item" id="lab-telegram">
         <label class="check lab-toggle">
           <input type="checkbox" id="l-telegram" class="sw">
@@ -3648,6 +3667,10 @@ const hub = connectHub((event) => {
     case 'status':
       updateStatus(event.platform, event.status);
       break;
+    // 💰 v0.170: as taxas buscadas nos serviços
+    case 'taxas':
+      aplicarTaxasBuscadas(event);
+      break;
     // 🔒 v0.169.5: uma operação só do computador local, pedida pela rede
     case 'somenteLocal':
       obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒');
@@ -4513,7 +4536,7 @@ function fillSettingsForm() {
   fillTrilhasControles();
   renderTrilhasDeck();
   // 🎬 OBS e 🎵 Mesa de trilhas (Labs)
-  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
+  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
     const ligado = (settings.labs || {})[flag] === true;
     const chk = document.getElementById(chkId);
     if (chk && document.activeElement !== chk) chk.checked = ligado;
@@ -4522,6 +4545,7 @@ function fillSettingsForm() {
   }
   // 🎬🎵 v0.82: as páginas exclusivas aparecem/somem junto com os seletores
   atualizarPaginasLabs();
+  fillTaxas(); // 💰 v0.170
   // ♿ Acessibilidade: os 4 liga/desliga
   for (const chave of ['altoContraste', 'reduzirAnimacoes', 'focoVisivel', 'formasNoStatus']) {
     const chk = document.getElementById('a11y-' + chave);
@@ -6081,6 +6105,40 @@ document.getElementById('l-pix').addEventListener('input', (e) => {
   hub.send({ type: 'settings', settings: { labs: { pix: e.target.checked } } });
   setTimeout(() => { applyingSettings = false; }, 300);
 });
+// 💰 v0.170: arrecadação da live — o seletor, as taxas (à mão) e a busca nos serviços
+document.getElementById('l-arrecadacao').addEventListener('input', (e) => {
+  document.getElementById('lab-arrecadacao').classList.toggle('off', !e.target.checked);
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { labs: { arrecadacao: e.target.checked } } });
+  setTimeout(() => { applyingSettings = false; }, 300);
+});
+function fillTaxas() {
+  const t = (settings && settings.taxas) || {};
+  for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaPixInput', 'pix']]) {
+    const el = document.getElementById(id);
+    if (el && document.activeElement !== el && t[chave] !== undefined) el.value = String(t[chave]);
+  }
+}
+for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaPixInput', 'pix']]) {
+  document.getElementById(id).addEventListener('change', (e) => {
+    const v = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+    e.target.value = String(v);
+    hub.send({ type: 'settings', settings: { taxas: { [chave]: v } } });
+  });
+}
+document.getElementById('taxasBuscarBtn').addEventListener('click', () => {
+  document.getElementById('taxasStatus').textContent = '⏳ Buscando as taxas nos serviços...';
+  hub.send({ type: 'taxasBuscar' });
+});
+function aplicarTaxasBuscadas(event) {
+  const sc = event.superchat || {}; const px = event.pix || {};
+  const taxas = {};
+  if (Number.isFinite(Number(sc.valor))) { taxas.superchat = Number(sc.valor); document.getElementById('taxaSuperchatInput').value = String(sc.valor); }
+  if (Number.isFinite(Number(px.valor))) { taxas.pix = Number(px.valor); document.getElementById('taxaPixInput').value = String(px.valor); }
+  if (Object.keys(taxas).length) hub.send({ type: 'settings', settings: { taxas } });
+  document.getElementById('taxasStatus').textContent = sc.referencia ? '⚠️ Preenchido com o valor de referência' : '✅ Taxas preenchidas e salvas';
+  document.getElementById('taxasFonte').textContent = `Super Chat ${sc.valor}%: ${sc.fonte || ''} Pix ${px.valor}%: ${px.fonte || ''}`;
+}
 function fillPixLab() {
   const p = cfgPix || {};
   const st = document.getElementById('pixStatus');
