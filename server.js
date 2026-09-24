@@ -171,6 +171,7 @@ const { KickConnector, kickApi, kickApiConfigurar } = require('./connectors/kick
 const { YouTubeConnector, baixarFigurinha: baixarFigurinhaYouTube, youtubePedir } = require('./connectors/youtube');
 const { BilibiliConnector, bilibiliPedir } = require('./connectors/bilibili');
 const { LivePixConnector } = require('./connectors/livepix'); // 💜 v0.174
+const { PixGGConnector, extrairChave: pixggChave } = require('./connectors/pixgg'); // 💚 v0.175: Labs, NÃO oficial
 const { TelegramConnector } = require('./connectors/telegram');
 const { WhatsAppConnector } = require('./connectors/whatsapp');
 const { WhatsAppLocalConnector } = require('./connectors/whatsapp-local');
@@ -335,15 +336,21 @@ const DEFAULT_SETTINGS = {
   },
   // 💰 v0.170: taxas (%) que os serviços cobram — para o painel mostrar o
   // arrecadado e o valor aproximado que chega de verdade
-  taxas: { superchat: 30, pix: 0, livepix: 5 }, // 💜 v0.174: a LivePix cobra 5% (livepix.gg/taxas)
+  taxas: { superchat: 30, pix: 0, livepix: 5, pixgg: 3.9 }, // 💜 v0.174: a LivePix cobra 5% (livepix.gg/taxas); 💚 v0.175: PixGG 3,9% (pixgg.com/termos, valor de referência)
   // 💜 v0.174: de quanto em quanto tempo consultar a LivePix (segundos; 5 a 300)
   livepix: { intervalo: 15 },
+  // 💚 v0.175: os avisos de consciência da PixGG — os QUATRO precisam estar
+  // marcados (além do seletor do Labs) para o programa aceitar conectar
+  pixgg: { avisos: { naoOficial: false, termos: false, publico: false, permissao: false } },
   // Labs: funcoes experimentais que podem ser ligadas/desligadas
   // 🧪 Regra da casa: TUDO no Labs começa DESLIGADO — liga quem quiser usar
   labs: {
     // 💠 Pix direto do banco do streamer (API Pix do Bacen): cada Pix
     // recebido vira um apoio na aba Apoios, com a mensagem do pagador
     pix: false,
+    // 💚 v0.175: PixGG pelo canal do widget — NÃO oficial (engenharia
+    // reversa do widget de alertas); só liga com os quatro avisos aceitos
+    pixgg: false,
     // 💰 v0.170: arrecadação da live no painel (Super Chat + Pix/apoios) e taxas
     arrecadacao: false,
     // Ao (re)conectar, puxa as mensagens enviadas enquanto o programa estava
@@ -870,6 +877,18 @@ function sanitizeLivepix(src) {
   return { intervalo: Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : DEFAULT_SETTINGS.livepix.intervalo };
 }
 
+// 💚 v0.175: os avisos da PixGG — só booleanos, nada além dos quatro
+const PIXGG_AVISOS = ['naoOficial', 'termos', 'publico', 'permissao'];
+function sanitizePixgg(src) {
+  const t = src && typeof src === 'object' ? src : {};
+  const a = t.avisos && typeof t.avisos === 'object' ? t.avisos : {};
+  return { avisos: Object.fromEntries(PIXGG_AVISOS.map((k) => [k, a[k] === true])) };
+}
+function pixggAvisosOk() {
+  const a = (state.settings.pixgg || {}).avisos || {};
+  return PIXGG_AVISOS.every((k) => a[k] === true);
+}
+
 function mergeSettings(base) {
   const src = base || {};
   delete src.camadas; // 🧩 v0.173 → v0.174: as camadas de widget foram descontinuadas
@@ -910,6 +929,7 @@ function mergeSettings(base) {
     },
     panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}) },
     livepix: sanitizeLivepix(src.livepix), // 💜 v0.174
+    pixgg: sanitizePixgg(src.pixgg), // 💚 v0.175
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
     relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
     clima: sanitizeClima(src.clima, DEFAULT_SETTINGS.clima), // 🌤️ v0.167
@@ -1081,6 +1101,7 @@ const state = {
   clipboard: loadClipboard(), // 📋 v0.90: HISTÓRICO da área de transferência (lista de entradas)
   connections: loadConnections(), // memoria das conexoes: plataforma -> { channel, active }
   livepix: null, // 💜 v0.174: conta, controles, carteira, assinaturas e recompensas da LivePix
+  pixgg: null, // 💚 v0.175: o que o canal do widget da PixGG conta (pausa, pulos, limpezas)
   readIds: loadRead(),      // ids de comentarios que ja foram para a tela ("lidos")
   // 🎵 Mesa de trilhas (Labs): botões de som; quem toca são as telas (overlay/
   // painel). Carregada mais abaixo (loadTrilhas depende das regras de mídia,
@@ -2322,15 +2343,37 @@ const livepixVistos = loadLivepixVistos();
 function saveLivepixVistos() {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(LIVEPIX_VISTOS_FILE, JSON.stringify([...livepixVistos].slice(-2000))); } catch { /* sem disco, sem memória */ }
 }
-// Os dados extras que uma rede entrega (hoje só a LivePix): guardados e
-// espalhados aos painéis. A carteira (saldo) é do streamer: o modo restrito
+// 💚 v0.175: a mesma memória para a PixGG (id da transação de cada doação)
+const PIXGG_VISTOS_FILE = path.join(DATA_DIR, 'pixgg-vistos.json');
+function loadPixggVistos() {
+  try { const lista = JSON.parse(fs.readFileSync(PIXGG_VISTOS_FILE, 'utf8')); return new Set(Array.isArray(lista) ? lista.map(String).slice(-2000) : []); }
+  catch { return new Set(); }
+}
+const pixggVistos = loadPixggVistos();
+function savePixggVistos() {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(PIXGG_VISTOS_FILE, JSON.stringify([...pixggVistos].slice(-2000))); } catch { /* sem disco, sem memória */ }
+}
+// Os dados extras que uma rede entrega (LivePix; 💚 v0.175: PixGG): guardados
+// e espalhados aos painéis. A carteira (saldo) é do streamer: o modo restrito
 // da rede não a vê.
 function redeDados(rede, dados) {
+  if (rede === 'pixgg') {
+    state.pixgg = dados;
+    for (const client of wss.clients) {
+      if (client.readyState === WebSocket.OPEN) client.send(JSON.stringify({ type: 'pixgg', pixgg: pixggResumo() }));
+    }
+    return;
+  }
   if (rede !== 'livepix') return;
   state.livepix = dados;
   for (const client of wss.clients) {
     if (client.readyState === WebSocket.OPEN) client.send(JSON.stringify({ type: 'livepix', livepix: livepixResumo(client) }));
   }
+}
+function pixggResumo() {
+  const d = state.pixgg;
+  if (!d) return null;
+  return { ...d, conectada: !!state.connectors.pixgg };
 }
 function livepixResumo(ws) {
   const d = state.livepix;
@@ -4831,7 +4874,7 @@ function lerLogDoDia(dia) {
   const arquivo = path.join(LOGS_DIR, `chat-${dia}.jsonl`);
   const mensagens = [];
   const porRede = {};
-  const valores = { superchat: 0, livepix: 0, pix: 0 }; // 💜 v0.174
+  const valores = { superchat: 0, livepix: 0, pix: 0, pixgg: 0 }; // 💜 v0.174; 💚 v0.175
   let total = 0;
   let texto = '';
   try { texto = fs.readFileSync(arquivo, 'utf8'); } catch { return null; }
@@ -4845,6 +4888,7 @@ function lerLogDoDia(dia) {
     total += 1;
     porRede[m.platform] = (porRede[m.platform] || 0) + 1;
     if (m.platform === 'livepix') valores.livepix = Math.round(((valores.livepix || 0) + valorDaMensagem(m)) * 100) / 100;
+    else if (m.platform === 'pixgg') valores.pixgg = Math.round(((valores.pixgg || 0) + valorDaMensagem(m)) * 100) / 100;
     else if (m.platform === 'pix' || m.platform === 'doacao') valores.pix = Math.round((valores.pix + valorDaMensagem(m)) * 100) / 100;
     else if (ehSuperchat(m)) valores.superchat = Math.round((valores.superchat + valorDaMensagem(m)) * 100) / 100;
     if (mensagens.length < REVISAO_MAX) mensagens.push(m);
@@ -5522,10 +5566,10 @@ const platformTotals = {};
 // nenhum teto. Antes as abas mostravam só o que tinha passado pela memória do
 // painel (os últimos 300 comentários + o que chegou depois), então o número
 // da aba "Ao vivo" ficava muito abaixo do total verdadeiro da live.
-const categoryTotals = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0 }; // 💬📨 v0.124: uma aba para cada; 💜💠 v0.174: LivePix e Pix
+const categoryTotals = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0, pixgg: 0 }; // 💬📨 v0.124: uma aba para cada; 💜💠 v0.174: LivePix e Pix; 💚 v0.175: PixGG
 // 💰 v0.170: o arrecadado do dia, em reais — Super Chat (YouTube e afins,
 // moeda estrangeira convertida pela cotação do dia) e Pix/apoios (aba 💝)
-const valorTotais = { superchat: 0, livepix: 0, pix: 0 }; // 💜 v0.174: + LivePix
+const valorTotais = { superchat: 0, livepix: 0, pix: 0, pixgg: 0 }; // 💜 v0.174: + LivePix; 💚 v0.175: + PixGG
 function valorDaMensagem(message) {
   const sc = message && message.superchat;
   if (!sc || !sc.amount) return 0;
@@ -5558,7 +5602,7 @@ function taxaDoYouTube(html) {
 function sanitizeTaxas(src) {
   const t = src && typeof src === 'object' ? src : {};
   const pct = (v, padrao) => { const n = Number(v); return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : padrao; };
-  return { superchat: pct(t.superchat, DEFAULT_SETTINGS.taxas.superchat), pix: pct(t.pix, DEFAULT_SETTINGS.taxas.pix), livepix: pct(t.livepix, DEFAULT_SETTINGS.taxas.livepix) };
+  return { superchat: pct(t.superchat, DEFAULT_SETTINGS.taxas.superchat), pix: pct(t.pix, DEFAULT_SETTINGS.taxas.pix), livepix: pct(t.livepix, DEFAULT_SETTINGS.taxas.livepix), pixgg: pct(t.pixgg, DEFAULT_SETTINGS.taxas.pixgg) };
 }
 
 function ehSuperchat(message) {
@@ -5571,6 +5615,7 @@ function contarCategorias(message, sinal = 1) {
   // 💜💠 v0.174: LivePix e Pix têm as próprias abas e as próprias somas
   // («doacao» é o apelido do que ficou nos logs antigos da URL genérica)
   if (message.platform === 'livepix') { categoryTotals.livepix += sinal; somarValor('livepix', sinal * valorDaMensagem(message)); }
+  else if (message.platform === 'pixgg') { categoryTotals.pixgg += sinal; somarValor('pixgg', sinal * valorDaMensagem(message)); } // 💚 v0.175
   else if (message.platform === 'pix' || message.platform === 'doacao') { categoryTotals.pix += sinal; somarValor('pix', sinal * valorDaMensagem(message)); }
   else if (ehSuperchat(message)) { categoryTotals.superchat += sinal; somarValor('superchat', sinal * valorDaMensagem(message)); }
   if (ehMembro(message)) categoryTotals.member += sinal;
@@ -6757,7 +6802,15 @@ const CONNECTORS = {
   telegram: TelegramConnector,
   whatsapp: WhatsAppConnector,
   livepix: LivePixConnector, // 💜 v0.174: pela API oficial
+  pixgg: PixGGConnector, // 💚 v0.175: pelo canal do widget (Labs, NÃO oficial)
 };
+// 💚 v0.175: a PixGG só conecta com o seletor do Labs ligado E os quatro
+// avisos aceitos — devolve o texto do erro, ou null se pode
+function pixggBloqueio() {
+  if (state.settings.labs?.pixgg !== true) return 'A PixGG é experimental e não oficial — ative em Configurações → 🧪 Labs, leia e aceite os avisos para usar.';
+  if (!pixggAvisosOk()) return 'Antes de conectar a PixGG, marque os quatro avisos de consciência em Configurações → 🧪 Labs → PixGG.';
+  return null;
+}
 
 function connect(platform, channel, options = {}) {
   // hasOwnProperty: sem isso, "constructor"/"toString" passavam por conector
@@ -6781,6 +6834,13 @@ function connect(platform, channel, options = {}) {
   if (platform === 'whatsapp' && state.settings.labs?.whatsapp !== true) {
     setStatus('whatsapp', 'error', 'O WhatsApp é experimental — ative em Configurações → 🧪 Labs para usar.');
     return;
+  }
+  // 💚 v0.175: PixGG — Labs ligado + os quatro avisos aceitos; o «canal» é
+  // sempre «pixgg» (a chave da API é o segredo, e nunca aparece como canal)
+  if (platform === 'pixgg') {
+    const bloqueio = pixggBloqueio();
+    if (bloqueio) { setStatus('pixgg', 'error', bloqueio); return; }
+    channel = 'pixgg';
   }
   // 🔀 v0.172: mudou a @? O que era da @ anterior sai do painel antes da nova
   // conexão começar (o log fica; a revisão 📅 mostra o dia inteiro)
@@ -6845,7 +6905,7 @@ function connect(platform, channel, options = {}) {
   };
   // 🔑 v0.70.1: o token digitado da última vez fica guardado (data/) — se o
   // campo veio vazio, reusa o guardado em vez de falhar pedindo de novo
-  if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix') && !options.token && state.connections[platform]?.token) {
+  if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix' || platform === 'pixgg') && !options.token && state.connections[platform]?.token) {
     options = { ...options, token: state.connections[platform].token };
   }
 
@@ -6857,6 +6917,13 @@ function connect(platform, channel, options = {}) {
   if (platform === 'livepix') {
     if (!options.token) { setStatus('livepix', 'error', 'Cole o segredo do cliente da aplicação (criada em dashboard.livepix.gg).'); return; }
     opcoesFinal = { ...options, intervaloMs: (state.settings.livepix?.intervalo || 15) * 1000, vistos: livepixVistos, salvarVistos: saveLivepixVistos };
+  }
+  // 💚 v0.175: a PixGG precisa da chave do widget (aceita a URL inteira) e da memória
+  if (platform === 'pixgg') {
+    const chave = pixggChave(options.token);
+    if (!chave) { setStatus('pixgg', 'error', 'Cole a chave da API do widget da PixGG (ou a URL inteira do widget, api.pixgg.com/?apikey=...).'); return; }
+    options = { ...options, token: chave };
+    opcoesFinal = { ...options, vistos: pixggVistos, salvarVistos: savePixggVistos };
   }
   let waModo = null;
   if (platform === 'whatsapp') {
@@ -6872,7 +6939,7 @@ function connect(platform, channel, options = {}) {
   state.connections[platform] = { channel: String(channel), active: true };
   // 📨 O token do bot do Telegram fica lembrado (data/, só nesta máquina)
   // para reconectar sem redigitar — como o canal das outras redes
-  if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix') && options.token) state.connections[platform].token = String(options.token).slice(0, 200);
+  if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix' || platform === 'pixgg') && options.token) state.connections[platform].token = String(options.token).slice(0, 200);
   if (waModo) state.connections[platform].modo = waModo;
   persistConnections();
   state.status[platform] = { state: 'connecting', detail: '', channel: String(channel) };
@@ -6894,6 +6961,7 @@ function disconnect(platform, silent = false) {
     try { instance.stop(); } catch {}
   }
   if (platform === 'livepix' && state.livepix) redeDados('livepix', null); // 💜 v0.174
+  if (platform === 'pixgg' && state.pixgg) redeDados('pixgg', null); // 💚 v0.175
   if (state.audience.platforms[platform]) {
     delete state.audience.platforms[platform];
     broadcast({ type: 'audience', audience: state.audience });
@@ -7111,6 +7179,10 @@ const TEST_SAMPLES = [
     superchat: { amount: 'R$ 10,00', color: '#7c3aed', headerColor: '#5b21b6', textColor: '#ffffff' }, badges: ['livepix R$ 10,00'],
   },
   {
+    platform: 'pixgg', author: 'Apoiador PixGG', authorLogin: 'apoiador pixgg', text: 'Mandei pela PixGG, valeu pela live! 🎉',
+    superchat: { amount: 'R$ 7,50', color: '#10b981', headerColor: '#047857', textColor: '#ffffff' }, badges: ['pixgg R$ 7,50'],
+  },
+  {
     platform: 'pix', author: 'Apoiadora Pix', text: 'Pix enviado com carinho 💚',
     superchat: { amount: 'R$ 50,00', color: '#32bcad', headerColor: '#32bcad', textColor: '#000000' }, badges: ['Pix R$ 50,00'],
   },
@@ -7164,6 +7236,7 @@ function sendTestMessage(atrasMs = 0) {
   for (let i = 0; i < TEST_SAMPLES.length; i++) {
     const desligada = (sample.platform === 'pix' && state.settings.labs?.pix !== true)
       || (sample.platform === 'livepix' && !state.connections.livepix)
+      || (sample.platform === 'pixgg' && state.settings.labs?.pixgg !== true)
       || (sample.platform === 'bilibili' && state.settings.labs?.bilibili !== true)
       || (sample.platform === 'telegram' && state.settings.labs?.telegram !== true)
       || (sample.platform === 'whatsapp' && state.settings.labs?.whatsapp !== true);
@@ -10417,6 +10490,7 @@ wss.on('connection', (ws, req) => {
     controle: controleResumo(ws), // 🕹️ v0.126 (o token só para quem tem controle)
     pix: pixResumo(ws),
     livepix: livepixResumo(ws), // 💜 v0.174
+    pixgg: pixggResumo(), // 💚 v0.175
     // 🔒 v0.127.1: listas de banidos e as transcrições dos áudios dos
     // inscritos não vão para quem só assiste pela rede (modo restrito)
     moderacao: ws.role === 'viewer' ? {} : moderacao,
@@ -10624,6 +10698,10 @@ function tratarMensagem(ws, raw) {
           superchat: null,
           pix: { valor: DEFAULT_SETTINGS.taxas.pix, fonte: 'Regra do Banco Central: receber Pix é gratuito para pessoa física; conta PJ pode ter tarifa do banco (confira no seu banco).' },
           livepix: null,
+          // 💚 v0.175: a página de termos da PixGG é um aplicativo (SPA) que o
+          // programa não consegue ler sem navegador — fica o valor de
+          // referência que ela publica, e dizemos isso
+          pixgg: { valor: DEFAULT_SETTINGS.taxas.pixgg, referencia: true, fonte: 'Valor de referência publicado nos termos da PixGG (3,9% por doação); a página deles não pode ser lida pelo programa — confira em pixgg.com/termos.' },
         };
         // 💜 v0.174: a taxa da LivePix, lida da página pública de taxas
         try {
@@ -10926,6 +11004,10 @@ function tratarMensagem(ws, raw) {
       if ('logRetentionDays' in incoming) {
         incoming.logRetentionDays = sanitizeRetencaoLogs(incoming.logRetentionDays);
       }
+      // 💚 v0.175: os avisos da PixGG — só os quatro booleanos
+      if ('pixgg' in incoming) {
+        incoming.pixgg = sanitizePixgg({ avisos: { ...(state.settings.pixgg || {}).avisos, ...((incoming.pixgg || {}).avisos || {}) } });
+      }
       // 💜 v0.174: o intervalo da LivePix fica na faixa e vale na hora
       if ('livepix' in incoming) {
         incoming.livepix = sanitizeLivepix({ ...state.settings.livepix, ...(incoming.livepix || {}) });
@@ -10969,6 +11051,7 @@ function tratarMensagem(ws, raw) {
           colDrip: { ...state.settings.panel.colDrip, ...((incoming.panel || {}).colDrip || {}) },
         },
         labs: { ...state.settings.labs, ...(incoming.labs || {}) },
+        pixgg: 'pixgg' in incoming ? incoming.pixgg : state.settings.pixgg, // 💚 v0.175
         taxas: sanitizeTaxas({ ...state.settings.taxas, ...(incoming.taxas || {}) }), // 💰 v0.170
         acessibilidade: { ...state.settings.acessibilidade, ...(incoming.acessibilidade || {}) },
         trilhasTexto: { ...state.settings.trilhasTexto, ...(incoming.trilhasTexto || {}) },
@@ -11326,7 +11409,7 @@ function tratarMensagem(ws, raw) {
         {
           const bruto = (p.colDrip && typeof p.colDrip === 'object' && !Array.isArray(p.colDrip)) ? p.colDrip : {};
           const limpo = {};
-          for (const k of ['youtube', 'twitch', 'kick', 'bilibili', 'livepix', 'pix', 'telegram', 'whatsapp']) {
+          for (const k of ['youtube', 'twitch', 'kick', 'bilibili', 'livepix', 'pix', 'pixgg', 'telegram', 'whatsapp']) {
             const v = Number(bruto[k]);
             if (Number.isFinite(v) && v > 0) limpo[k] = Math.min(5, Math.round(v * 10) / 10);
           }
@@ -11418,6 +11501,18 @@ function tratarMensagem(ws, raw) {
         disconnect('bilibili');
         delete state.connections.bilibili;
         persistConnections();
+      }
+      // 💚 v0.175: desligou a PixGG no Labs ou desmarcou um dos avisos? A
+      // conexão cai na hora e a chave é esquecida (a memória de conexões
+      // não pode religá-la sozinha sem os avisos aceitos)
+      if ((incoming.labs && incoming.labs.pixgg === false) || ('pixgg' in incoming && !pixggAvisosOk())) {
+        if (state.connectors.pixgg || state.connections.pixgg) {
+          disconnect('pixgg');
+          delete state.connections.pixgg;
+          persistConnections();
+          if (incoming.labs && incoming.labs.pixgg === false) console.log('  💚 PixGG: desligada no Labs — conexão derrubada e chave esquecida.');
+          else console.log('  💚 PixGG: um aviso foi desmarcado — conexão derrubada e chave esquecida.');
+        }
       }
       saveSettings();
       broadcast({ type: 'settings', settings: state.settings });
@@ -12134,7 +12229,7 @@ function tratarMensagem(ws, raw) {
       // Simula a moderação apagando: usado pelos testes e pelo botão de
       // teste, para ver como o painel e a live reagem sem precisar de um
       // moderador de verdade apagando algo no meio da live.
-      const plataformas = ['youtube', 'twitch', 'kick', 'bilibili', 'livepix', 'pix', 'doacao', 'telegram', 'whatsapp'];
+      const plataformas = ['youtube', 'twitch', 'kick', 'bilibili', 'livepix', 'pix', 'pixgg', 'doacao', 'telegram', 'whatsapp'];
       const plataforma = plataformas.includes(msg.platform) ? msg.platform : null;
       removerMensagens({
         platform: plataforma,
@@ -13005,6 +13100,7 @@ function controleEstado() {
     likometro: !!(state.likemeter && state.likemeter.enabled), audiencia: !!(state.audience && state.audience.visible),
     aviso: { visivel: !!state.avisos[0].visible, texto: state.avisos[0].texto },
     livepix: state.livepix ? { conectada: !!state.connectors.livepix, conta: state.livepix.conta ? state.livepix.conta.username : null, autoPlay: state.livepix.controles ? state.livepix.controles.autoPlay : null } : { conectada: false }, // 💜 v0.174
+    pixgg: state.pixgg ? { conectada: !!state.connectors.pixgg, pausada: state.pixgg.pausado === true, naoOficial: true } : { conectada: false }, // 💚 v0.175
     avisos: state.avisos.map((a) => ({ id: a.id, nome: a.label, visivel: !!a.visible, texto: a.texto })), // 📢 v0.128
     relogio: relogioPublico(),
     clima: (() => {

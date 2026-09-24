@@ -166,6 +166,8 @@
   /* Rede desligada no Labs: some das Conexões mesmo quando o roteador de
      páginas reescreve o display dos cartões */
   .card.rede-off { display: none !important; }
+  /* 💚 v0.175: o card da PixGG fica apagado até os quatro avisos serem aceitos */
+  .card.pixgg-travado .row { opacity: 0.5; }
   .card h3 { font-size: 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   /* 🗂️ v0.117: todo card expande/recolhe pelo título (▸ recolhido / ▾ aberto);
      o estado fica neste navegador. v0.167.2: o padrão vale em TODA página com
@@ -2773,6 +2775,41 @@
         </div>
       </div>
 
+      <!-- 💚 v0.175: PixGG pelo canal do widget — NÃO oficial; só liga com os quatro avisos -->
+      <div class="lab-item" id="lab-pixgg">
+        <label class="check lab-toggle">
+          <input type="checkbox" id="l-pixgg" class="sw">
+          <span><b>💚 PixGG (experimental, NÃO oficial)</b> — cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG do painel (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver — lendo o mesmo canal que o widget de alertas dela usa</span>
+        </label>
+        <div class="lab-body">
+          <div class="hint">⚠️ <b>Leia antes de ligar. A PixGG não tem API pública.</b> O widget de alertas dela (a URL que você coloca na fonte de navegador do OBS) recebe cada doação por um canal público de tempo real, identificado pela sua chave da API. O OBS Social <b>assina esse mesmo canal e só lê</b>: uma conexão, só as suas doações, nada é enviado à PixGG, nenhum endereço dela é chamado e nada é marcado como lido — é o mesmo tráfego de um widget aberto. Isso foi descoberto <b>por engenharia reversa do widget</b>, não por documentação: a PixGG pode mudar o mecanismo a qualquer momento e a integração para de funcionar sem aviso. O OBS Social <b>pediu permissão à PixGG por e-mail</b> e, se ela pedir, esta integração é retirada.</div>
+          <div class="hint"><b>Marque os quatro avisos para liberar a conexão</b> (desmarcar qualquer um derruba a conexão e esquece a chave):</div>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoNaoOficial" class="sw pixgg-aviso" data-aviso="naoOficial"> <span>Entendo que esta integração <b>não é oficial nem apoiada pela PixGG</b>, foi feita por engenharia reversa do widget e <b>pode parar de funcionar a qualquer momento</b>, sem aviso.</span></label>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoTermos" class="sw pixgg-aviso" data-aviso="termos"> <span>Li os <a href="https://pixgg.com/termos" target="_blank" rel="noopener">termos de uso da PixGG</a> e entendo que <b>usar esta integração é responsabilidade minha</b> perante a PixGG — inclusive o risco de ela não gostar e agir sobre a minha conta.</span></label>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPublico" class="sw pixgg-aviso" data-aviso="publico"> <span>Vou <b>avisar o público</b> que as doações da PixGG aparecem na live por uma integração não oficial do OBS Social (o texto sugerido está abaixo — cole na descrição da live, num aviso 📢 ou diga ao vivo).</span></label>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPermissao" class="sw pixgg-aviso" data-aviso="permissao"> <span>Sei que o OBS Social <b>pediu permissão à PixGG</b> e que, se a PixGG não concordar, <b>esta função será removida</b> numa atualização — sem que nada mais no programa mude.</span></label>
+          <div class="row" style="margin-top:8px">
+            <input type="text" id="pixggAvisoPublicoTexto" readonly value="Aviso: as doações da PixGG aparecem nesta live por uma integração NÃO oficial do OBS Social (programa gratuito e aberto: github.com/WardzdesouzA/OBSSocial), que só lê o mesmo canal do widget de alertas da PixGG. A PixGG não tem relação com o programa e a integração pode parar a qualquer momento." style="flex:1;font-size:12px" title="O texto sugerido para avisar o público — copie com o 📋">
+            <button class="icon-btn copy-btn" data-copy="pixggAvisoPublicoTexto" title="Copiar o aviso ao público">📋</button>
+          </div>
+          <div class="card" data-platform="pixgg" style="margin-top:10px">
+            <h3><span class="icon-slot"></span> PixGG <span class="tag">não oficial</span></h3>
+            <div class="hint">Cole a <b>chave da API do widget</b> (ou a URL inteira do widget de alertas, <code>api.pixgg.com/?apikey=...</code>, que está no painel da PixGG → Widgets). A chave fica <b>cifrada só neste computador</b> (pasta data/), nunca vai para as telas nem para a rede, e o programa não a usa para nada além de escutar o canal.</div>
+            <div class="row">
+              <input type="password" class="secret-input" placeholder="chave da API do widget (apikey) ou a URL do widget" autocomplete="off" style="flex:1">
+              <input type="hidden" class="channel-input" value="pixgg">
+              <button class="connect-btn icon-btn" title="Conectar">🔌</button>
+              <button class="reconnect-btn icon-btn" title="Reiniciar esta conexão (derruba e conecta de novo — use se travar ou quebrar)">🔄</button>
+            </div>
+            <div class="row" style="align-items:center;gap:8px;font-size:12px">
+              <a class="icon-btn" href="https://pixgg.com" target="_blank" rel="noopener" style="width:auto;padding:0 10px;font-size:13px;text-decoration:none;display:inline-flex;align-items:center" title="Pausar, pular e limpar a fila de alertas, e bloquear quem doa, é no painel da PixGG">🔗 Painel da PixGG</a>
+              <span class="hint" style="margin:0">A PixGG cobra 3,9% por doação (valor de referência dos termos dela) — a taxa entra na 💰 Arrecadação da live.</span>
+            </div>
+            <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="lab-item" id="lab-arrecadacao">
         <label class="check lab-toggle">
           <input type="checkbox" id="l-arrecadacao" class="sw">
@@ -2783,6 +2820,7 @@
           <div class="settings-grid">
             <div><label>Taxa do Super Chat (%)</label><input type="number" id="taxaSuperchatInput" min="0" max="100" step="0.01" placeholder="30"></div>
             <div><label>Taxa da LivePix (%)</label><input type="number" id="taxaLivepixInput" min="0" max="100" step="0.01" placeholder="5"></div>
+            <div><label>Taxa da PixGG (%)</label><input type="number" id="taxaPixggInput" min="0" max="100" step="0.01" placeholder="3.9"></div>
             <div><label>Taxa do Pix direto do banco (%)</label><input type="number" id="taxaPixInput" min="0" max="100" step="0.01" placeholder="0"></div>
           </div>
           <div class="row" style="margin-top:8px;align-items:center">
@@ -3936,7 +3974,7 @@ for (const card of document.querySelectorAll('.card[data-platform]')) {
     const secretInput = card.querySelector('.secret-input');
     if (secretInput && secretInput.value.trim()) options.secret = secretInput.value.trim();
     // 📨💬 Telegram/WhatsApp: o segredo é o TOKEN (do bot / do canal)
-    if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix') && options.secret) { options.token = options.secret; delete options.secret; }
+    if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix' || platform === 'pixgg') && options.secret) { options.token = options.secret; delete options.secret; }
     // 💬 WhatsApp: leva junto o modo escolhido (gateway ou biblioteca local)
     if (platform === 'whatsapp') {
       const modoSel = card.querySelector('.wa-modo');
@@ -4554,7 +4592,7 @@ function fillSettingsForm() {
   fillTrilhasControles();
   renderTrilhasDeck();
   // 🎬 OBS e 🎵 Mesa de trilhas (Labs)
-  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
+  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp'], ['pixgg', 'l-pixgg', 'lab-pixgg']]) {
     const ligado = (settings.labs || {})[flag] === true;
     const chk = document.getElementById(chkId);
     if (chk && document.activeElement !== chk) chk.checked = ligado;
@@ -4568,6 +4606,7 @@ function fillSettingsForm() {
     const el = document.getElementById('livepixIntervaloInput');
     if (el && document.activeElement !== el) el.value = String((settings.livepix || {}).intervalo || 15);
   }
+  pixggPintarAvisos(); // 💚 v0.175
   // ♿ Acessibilidade: os 4 liga/desliga
   for (const chave of ['altoContraste', 'reduzirAnimacoes', 'focoVisivel', 'formasNoStatus']) {
     const chk = document.getElementById('a11y-' + chave);
@@ -6127,6 +6166,38 @@ document.getElementById('l-pix').addEventListener('input', (e) => {
   hub.send({ type: 'settings', settings: { labs: { pix: e.target.checked } } });
   setTimeout(() => { applyingSettings = false; }, 300);
 });
+// 💚 v0.175: PixGG (Labs, NÃO oficial) — o seletor, os quatro avisos e o botão de conectar
+function pixggAvisosOk() {
+  const a = ((settings || {}).pixgg || {}).avisos || {};
+  return ['naoOficial', 'termos', 'publico', 'permissao'].every((k) => a[k] === true);
+}
+function pixggPintarAvisos() {
+  const a = ((settings || {}).pixgg || {}).avisos || {};
+  for (const chk of document.querySelectorAll('.pixgg-aviso')) {
+    if (document.activeElement !== chk) chk.checked = a[chk.dataset.aviso] === true;
+  }
+  const card = document.querySelector('.card[data-platform="pixgg"]');
+  if (!card) return;
+  const liberado = (settings.labs || {}).pixgg === true && pixggAvisosOk();
+  card.classList.toggle('pixgg-travado', !liberado);
+  for (const el of card.querySelectorAll('.secret-input, .connect-btn, .reconnect-btn')) el.disabled = !liberado;
+  card.querySelector('.connect-btn').title = liberado ? 'Conectar' : 'Marque os quatro avisos acima para liberar a conexão';
+}
+document.getElementById('l-pixgg').addEventListener('input', (e) => {
+  document.getElementById('lab-pixgg').classList.toggle('off', !e.target.checked);
+  if (!e.target.checked) hub.send({ type: 'disconnect', platform: 'pixgg' });
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { labs: { pixgg: e.target.checked } } });
+  setTimeout(() => { applyingSettings = false; }, 300);
+});
+for (const chk of document.querySelectorAll('.pixgg-aviso')) {
+  chk.addEventListener('change', (e) => {
+    if (!settings.pixgg) settings.pixgg = { avisos: {} };
+    settings.pixgg.avisos = { ...(settings.pixgg.avisos || {}), [e.target.dataset.aviso]: e.target.checked };
+    pixggPintarAvisos();
+    hub.send({ type: 'settings', settings: { pixgg: { avisos: { [e.target.dataset.aviso]: e.target.checked } } } });
+  });
+}
 // 💰 v0.170: arrecadação da live — o seletor, as taxas (à mão) e a busca nos serviços
 document.getElementById('l-arrecadacao').addEventListener('input', (e) => {
   document.getElementById('lab-arrecadacao').classList.toggle('off', !e.target.checked);
@@ -6136,12 +6207,12 @@ document.getElementById('l-arrecadacao').addEventListener('input', (e) => {
 });
 function fillTaxas() {
   const t = (settings && settings.taxas) || {};
-  for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaLivepixInput', 'livepix'], ['taxaPixInput', 'pix']]) {
+  for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaLivepixInput', 'livepix'], ['taxaPixggInput', 'pixgg'], ['taxaPixInput', 'pix']]) {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el && t[chave] !== undefined) el.value = String(t[chave]);
   }
 }
-for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaLivepixInput', 'livepix'], ['taxaPixInput', 'pix']]) {
+for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaLivepixInput', 'livepix'], ['taxaPixggInput', 'pixgg'], ['taxaPixInput', 'pix']]) {
   document.getElementById(id).addEventListener('change', (e) => {
     const v = Math.max(0, Math.min(100, Number(e.target.value) || 0));
     e.target.value = String(v);
@@ -6154,13 +6225,15 @@ document.getElementById('taxasBuscarBtn').addEventListener('click', () => {
 });
 function aplicarTaxasBuscadas(event) {
   const sc = event.superchat || {}; const px = event.pix || {}; const lp = event.livepix || {}; // 💜 v0.174
+  const pg = event.pixgg || {}; // 💚 v0.175 (valor de referência: a página da PixGG não pode ser lida pelo programa)
   const taxas = {};
   if (Number.isFinite(Number(sc.valor))) { taxas.superchat = Number(sc.valor); document.getElementById('taxaSuperchatInput').value = String(sc.valor); }
   if (Number.isFinite(Number(lp.valor))) { taxas.livepix = Number(lp.valor); document.getElementById('taxaLivepixInput').value = String(lp.valor); }
   if (Number.isFinite(Number(px.valor))) { taxas.pix = Number(px.valor); document.getElementById('taxaPixInput').value = String(px.valor); }
+  if (Number.isFinite(Number(pg.valor))) { taxas.pixgg = Number(pg.valor); document.getElementById('taxaPixggInput').value = String(pg.valor); }
   if (Object.keys(taxas).length) hub.send({ type: 'settings', settings: { taxas } });
   document.getElementById('taxasStatus').textContent = sc.referencia ? '⚠️ Preenchido com o valor de referência' : '✅ Taxas preenchidas e salvas';
-  document.getElementById('taxasFonte').textContent = `Super Chat ${sc.valor}%: ${sc.fonte || ''} LivePix ${lp.valor}%: ${lp.fonte || ''} Pix ${px.valor}%: ${px.fonte || ''}`;
+  document.getElementById('taxasFonte').textContent = `Super Chat ${sc.valor}%: ${sc.fonte || ''} LivePix ${lp.valor}%: ${lp.fonte || ''} Pix ${px.valor}%: ${px.fonte || ''}` + (pg.valor !== undefined ? ` PixGG ${pg.valor}%: ${pg.fonte || ''}` : '');
 }
 function fillPixLab() {
   const p = cfgPix || {};
@@ -13670,7 +13743,7 @@ showCfgPage(location.hash.replace('#sec-', ''));
 
 // ---------- 🧲 Organizar o painel (arrastar ícones e abas) ----------
 const TOOL_META = { qr: '📱 QR Code', raffle: '🎁 Sorteio', likemeter: '📊 Likômetro', aud: '👥 Audiência', ws: '🏆 Winstreak', aviso: '📢 Avisos', midiaDireta: '🎞️ Mídia direta', trilhas: '🎵 Mesa de trilhas', obs: '🎬 OBS Studio', vmix: '🎛️ vMix', clip: '📋 Área de transf.' };
-const TAB_META = { live: '🔴 Ao vivo', saved: '📥 Fila', superchat: '💰 Super Chats', member: '👑 Membros', whatsapp: '💬 WhatsApp', telegram: '📨 Telegram', livepix: '💜 LivePix', pix: '💠 Pix' };
+const TAB_META = { live: '🔴 Ao vivo', saved: '📥 Fila', superchat: '💰 Super Chats', member: '👑 Membros', whatsapp: '💬 WhatsApp', telegram: '📨 Telegram', livepix: '💜 LivePix', pix: '💠 Pix', pixgg: '💚 PixGG' };
 
 // 🧲 v0.154: a ordem vem de /painel-ordem.js — a MESMA lista e a MESMA regra
 // («o 📋 fecha a fila») do servidor e do painel. TOOL_META/TAB_META são só os

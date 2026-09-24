@@ -1,4 +1,15 @@
 {
+  "0.175.0": {
+    "titulo": "💚 PixGG en el panel (🧪 Labs, NO oficial): pestaña y columna propias, nombre, valor, mensaje y audio de cada donación, por el canal del widget — con cuatro avisos de conciencia, clave cifrada y permiso pedido a PixGG",
+    "itens": [
+      "💚 PixGG entró en 🧪 Labs. PixGG no tiene API pública: su widget de alertas recibe cada donación por un canal público en tiempo real, identificado por la clave del widget del streamer. OBS Social se suscribe a ese MISMO canal y solo lee — una conexión, solo tus donaciones, nada se envía a PixGG, ninguna dirección suya es llamada y nada se marca como leído (el mismo tráfico de un widget abierto). Cada donación se vuelve un comentario en la pestaña 💚 PixGG y en una columna propia, con nombre, valor (también en moneda extranjera), mensaje, el enlace del vídeo pedido y el mensaje de voz (descargado a la cuarentena local de medios); nada entra dos veces, ni cuando el panel de PixGG manda «sonar de nuevo», ni tras reiniciar.",
+      "⚠️ Honestidad ante todo: esto se descubrió por ingeniería inversa del widget, puede dejar de funcionar sin aviso y los términos de PixGG te aplican. Por eso la función empieza apagada y solo conecta con el selector de Labs encendido Y los cuatro avisos marcados (no es oficial y puede romperse; el riesgo ante los términos es tuyo; avisarás al público — hay un texto sugerido con botón 📋; se pidió permiso a PixGG y la función se eliminará si no está de acuerdo). Desmarcar cualquier aviso, o apagar Labs, corta la conexión y olvida la clave. Enviamos un correo a PixGG pidiendo permiso, con la dirección del proyecto; si responde con una API oficial, se cambia el conector y nada más cambia.",
+      "🔒 La clave del widget (o su URL entera, que el programa entiende) queda cifrada solo en este ordenador (carpeta data/), nunca va a las pantallas ni a la red, y el «canal» recordado es siempre «pixgg» — la clave no aparece en ningún sitio.",
+      "🎛️ En la pestaña PixGG: el estado del canal, «⏸ alertas en pausa en PixGG» cuando su panel pausa (la donación sigue llegando aquí), ℹ️ con lo que el canal cuenta (eventos, saltos, limpiezas, último evento) y la explicación honesta de cómo funciona, y 🔗 al panel de PixGG — pausar, saltar, limpiar la cola y bloquear a quien dona es allí. ¿Se cae la conexión? Reconecta sola, con espera creciente. El 🕹️ Control externo muestra PixGG en el estado.",
+      "💰 La recaudación de la transmisión ganó la línea de PixGG, con su tasa (3,9%, valor de referencia de los términos — la página de PixGG es una aplicación que el programa no puede leer, y el 🔎 lo dice en vez de fingir).",
+      "📖 El README ganó la sección «Donaciones: LivePix, Pix y PixGG» (la de la URL genérica, descontinuada en la v0.174, salió) y el estudio en docs/ cuenta qué se hizo y por qué."
+    ]
+  },
   "0.174.0": {
     "titulo": "💜 LivePix por la API oficial: pestaña y columna propias, control de las alertas (retener, saltar, repetir), billetera, suscripciones y recompensas en el panel · 💠 pestaña Pix · fin de la URL genérica, de la pestaña Apoyos y de las capas de widget",
     "itens": [

@@ -1815,6 +1815,8 @@
     <!-- 💜💠 v0.174: a aba Apoios virou duas — LivePix (API oficial) e Pix (direto do banco) -->
     <button class="tab" data-tab="livepix" style="display:none">💜 LivePix <span class="count" id="count-livepix">0</span></button>
     <button class="tab" data-tab="pix" style="display:none">💠 Pix <span class="count" id="count-pix">0</span></button>
+    <!-- 💚 v0.175: PixGG pelo canal do widget (Labs, NÃO oficial) -->
+    <button class="tab" data-tab="pixgg" style="display:none">💚 PixGG <span class="count" id="count-pixgg">0</span></button>
     <input type="search" id="searchBox" placeholder="🔎 Buscar (nome ou palavra)"
       title="Busca comentários pelo nome de quem escreveu ou por palavras da mensagem — vale para todas as abas">
   </div>
@@ -1833,6 +1835,7 @@
     <label class="check"><input type="checkbox" checked data-filter="whatsapp" class="sw"> WhatsApp</label>
     <label class="check"><input type="checkbox" checked data-filter="livepix" class="sw"> LivePix</label>
     <label class="check"><input type="checkbox" checked data-filter="pix" class="sw"> Pix</label>
+    <label class="check"><input type="checkbox" checked data-filter="pixgg" class="sw"> PixGG</label>
     <span style="margin-left:auto"></span>
     <div id="pager" style="display:flex;align-items:center;gap:6px">
       <button id="pageNewest" class="icon-btn" title="Ir para os mais novos" style="width:28px;height:28px;font-size:12px">⏮</button>
@@ -1864,6 +1867,19 @@
   </div>
   <div class="list" id="list-livepix"><div class="placeholder">As doações recebidas pela LivePix vão aparecer aqui, com nome, valor e mensagem. Clique com o botão direito para mandar para a tela (destaque) ou para a fila.</div></div>
   <div class="list" id="list-pix"><div class="placeholder">Os Pix recebidos direto do seu banco (Labs → 💠 Pix) vão aparecer aqui, com a mensagem do pagador.</div></div>
+  <!-- 💚 v0.175: a barra da aba PixGG — o estado do canal do widget e o lembrete de que é NÃO oficial -->
+  <div id="pixggBarra" class="tab-barra" style="display:none">
+    <span id="pixggEstado" class="hint" style="margin:0;flex:1;min-width:120px">💚 PixGG</span>
+    <span id="pixggPausa" class="hint" style="margin:0;display:none" title="O painel da PixGG está com os alertas pausados (o widget dela não toca) — as doações continuam chegando aqui">⏸ alertas pausados na PixGG</span>
+    <button id="pixggInfoBtn" class="icon-btn pop-toggle tip-left" data-pop="pixggInfoPop" title="Como esta aba funciona (e por que ela é experimental e não oficial)">ℹ️</button>
+    <a id="pixggPainel" class="icon-btn" href="https://pixgg.com" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center" title="Abrir o painel da PixGG numa janela nova: pausar, pular e limpar os alertas, e bloquear quem doa, é feito lá">🔗</a>
+    <div class="popover" id="pixggInfoPop" style="right:0;left:auto;max-width:min(560px,92vw)">
+      <div class="pop-title">💚 PixGG — não oficial (Labs)</div>
+      <div id="pixggInfoLinhas" style="font-size:13px;line-height:1.7"></div>
+    </div>
+    <span id="pixggAviso" class="hint" style="margin:0;flex-basis:100%">⚠️ Integração NÃO oficial: o OBS Social só escuta o mesmo canal que o widget de alertas da PixGG usa. A PixGG pode mudar isso a qualquer momento — e você avisou o público que usa esta integração.</span>
+  </div>
+  <div class="list" id="list-pixgg"><div class="placeholder">As doações recebidas pela PixGG vão aparecer aqui, com nome, valor, mensagem e o áudio quando houver. Clique com o botão direito para mandar para a tela (destaque) ou para a fila.</div></div>
 </main>
 
 <div id="somBloqueado" title="O navegador só toca som depois de um clique na página">🔇 Clique aqui para liberar o som dos alertas</div>
@@ -1979,7 +1995,7 @@ document.getElementById('gearBtn').onclick = openConfig;
 
 // ---------- Chips de conexão no topo ----------
 const connChips = document.getElementById('connChips');
-for (const platform of ['youtube', 'twitch', 'kick', 'livepix', 'bilibili', 'telegram', 'whatsapp']) { // 💜 v0.174: + LivePix
+for (const platform of ['youtube', 'twitch', 'kick', 'livepix', 'pixgg', 'bilibili', 'telegram', 'whatsapp']) { // 💜 v0.174: + LivePix; 💚 v0.175: + PixGG
   const chip = document.createElement('div');
   chip.className = 'conn-chip';
   chip.dataset.platform = platform;
@@ -2040,9 +2056,10 @@ const lists = {
   telegram: document.getElementById('list-telegram'), // 📨 v0.124
   livepix: document.getElementById('list-livepix'), // 💜 v0.174
   pix: document.getElementById('list-pix'),         // 💠 v0.174
+  pixgg: document.getElementById('list-pixgg'),     // 💚 v0.175
 };
 const MAX_LIST_ITEMS = 300;
-const filters = { youtube: true, twitch: true, kick: true, bilibili: true, telegram: true, whatsapp: true, livepix: true, pix: true };
+const filters = { youtube: true, twitch: true, kick: true, bilibili: true, telegram: true, whatsapp: true, livepix: true, pix: true, pixgg: true };
 const savedIds = new Set();
 const readIds = new Map(); // id -> horario em que foi para a tela ("lido")
 let featuredId = null;
@@ -2075,7 +2092,7 @@ const hub = connectHub((event) => {
       if (event.updateAvailable) showUpdateBanner(event.updateAvailable);
       updateFeedPending(event.feedPending || 0);
       colTotals = event.feedTotals || {};
-      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0 };
+      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0, pixgg: 0 };
       if (event.valorTotais) valorTotais = event.valorTotais; // 💰 v0.170
       participantesPorRede = event.participantesPorRede || {};
       colPendingBy = event.feedPendingBy || {};
@@ -2107,6 +2124,7 @@ const hub = connectHub((event) => {
       lists.telegram.innerHTML = '';
       lists.livepix.innerHTML = '';
       lists.pix.innerHTML = '';
+      lists.pixgg.innerHTML = ''; // 💚 v0.175
       renderSaved(event.saved || []);
       // A janela geral MAIS a janela de cada rede: assim a coluna de uma rede
       // calma não fica vazia por causa do volume das outras
@@ -2119,6 +2137,7 @@ const hub = connectHub((event) => {
       pintarContadores(); // números reais do dia, vindos do servidor
       pintarArrecadado(); // 💰 v0.170
       livepixDados = event.livepix || null; pintarLivepix(); // 💜 v0.174
+      pixggDados = event.pixgg || null; pintarPixgg(); // 💚 v0.175
       renderLivePage();
       restorePlaceholders();
       setFeatured(event.featured);
@@ -2193,6 +2212,10 @@ const hub = connectHub((event) => {
     case 'livepix': // 💜 v0.174: conta, controles, carteira, assinaturas, recompensas
       livepixDados = event.livepix || null;
       pintarLivepix();
+      break;
+    case 'pixgg': // 💚 v0.175: o que o canal do widget da PixGG conta
+      pixggDados = event.pixgg || null;
+      pintarPixgg();
       break;
     case 'livepixControle': // resposta de um controle pedido por este painel
       if (event.ok === false) mostrarRecadoObs(false, event.erro || 'A LivePix não aceitou o comando.');
@@ -2434,8 +2457,8 @@ const hub = connectHub((event) => {
     case 'init-totais':
       // "Apagar os logs" zera a contagem do dia: os números acompanham
       colTotals = event.feedTotals || {};
-      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0 };
-      valorTotais = event.valorTotais || { superchat: 0, livepix: 0, pix: 0 }; pintarArrecadado(); // 💰 v0.170
+      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0, pixgg: 0 };
+      valorTotais = event.valorTotais || { superchat: 0, livepix: 0, pix: 0, pixgg: 0 }; pintarArrecadado(); // 💰 v0.170
       pintarContadores();
       break;
     case 'winstreak':
@@ -2521,6 +2544,7 @@ for (const tab of document.querySelectorAll('.tab')) {
     lists[tab.dataset.tab].classList.add('active');
     document.getElementById('liveFilters').style.display = tab.dataset.tab === 'live' ? '' : 'none';
     document.getElementById('livepixBarra').style.display = tab.dataset.tab === 'livepix' ? '' : 'none'; // 💜 v0.174
+    document.getElementById('pixggBarra').style.display = tab.dataset.tab === 'pixgg' ? '' : 'none'; // 💚 v0.175
     if (tab.dataset.tab === 'live') renderLivePage();
   };
 }
@@ -2530,9 +2554,9 @@ function updateCount(name, value) {
 
 // Totais REAIS do dia, contados pelo servidor (nenhum teto). A aba "Fila"
 // continua sendo o tamanho da própria lista, que é o número certo dela.
-let categoriaTotais = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0 };
+let categoriaTotais = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0, pixgg: 0 };
 // 💰 v0.170: o arrecadado do dia (reais) e o cartão do cabeçalho
-let valorTotais = { superchat: 0, livepix: 0, pix: 0 };
+let valorTotais = { superchat: 0, livepix: 0, pix: 0, pixgg: 0 };
 const reais = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 // 💜 v0.174: a barra da aba LivePix e o ℹ️ com tudo que a API entrega
 let livepixDados = null;
@@ -2588,6 +2612,30 @@ function pintarLivepix() {
   }
   if (d.atualizadoEm) nota('Atualizado ' + quando(d.atualizadoEm) + '. Bloquear ou desbloquear quem doa é no painel da LivePix (🔗).');
 }
+// 💚 v0.175: a barra da aba PixGG — só leitura: o que o canal do widget conta
+let pixggDados = null;
+function pintarPixgg() {
+  const barra = document.getElementById('pixggBarra');
+  if (!barra) return;
+  const d = pixggDados;
+  const conectada = !!(d && d.conectada !== false);
+  document.getElementById('pixggEstado').textContent = !d ? '💚 PixGG' : (conectada ? '💚 PixGG — escutando o canal do widget' : '💚 PixGG desconectada');
+  document.getElementById('pixggPausa').style.display = d && d.pausado === true ? '' : 'none';
+  const linhas = document.getElementById('pixggInfoLinhas');
+  linhas.textContent = '';
+  const nota = (t) => { const c = document.createElement('div'); c.style.cssText = 'margin:0 0 6px'; c.textContent = t; linhas.appendChild(c); };
+  const linha = (rotulo, valor) => { const el = document.createElement('div'); el.style.cssText = 'display:flex;justify-content:space-between;gap:16px'; const a = document.createElement('span'); a.textContent = rotulo; const b = document.createElement('b'); b.textContent = valor; el.append(a, b); linhas.appendChild(el); };
+  nota('A PixGG não tem API pública. O OBS Social escuta o mesmo canal público que o widget de alertas dela assina (uma conexão só, só leitura): cada doação chega aqui com nome, valor, mensagem e áudio, e nada é enviado de volta à PixGG.');
+  nota('Por ser um mecanismo interno deles, pode parar de funcionar sem aviso. A PixGG foi avisada e a permissão foi pedida; se ela pedir, esta integração é retirada.');
+  if (!d) { nota('Ligue em Configurações → 🧪 Labs → PixGG (com os quatro avisos aceitos) e cole a chave do widget.'); return; }
+  const quando = (ms) => (ms ? new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—');
+  linha('Alertas na PixGG', d.pausado === true ? '⏸ pausados' : (d.pausado === false ? '▶️ tocando' : '— (sem sinal ainda)'));
+  linha('Eventos recebidos', String(d.eventos || 0));
+  linha('Pulos pedidos no painel da PixGG', String(d.pulos || 0));
+  linha('Limpezas de fila na PixGG', String(d.limpezas || 0));
+  linha('Último evento', quando(d.ultimoEventoEm));
+  nota('Pausar, pular e limpar a fila de alertas — e bloquear quem doa — é no painel da PixGG (🔗). Aqui você escolhe quando mostrar cada doação pela tela do OBS Social (destaque ou fila).');
+}
 document.getElementById('livepixRepresar').addEventListener('change', (e) => {
   hub.send({ type: 'livepixControle', autoPlay: !e.target.checked });
 });
@@ -2604,11 +2652,13 @@ function pintarArrecadado() {
   const tSc = Number(taxas.superchat) || 0;
   const tPix = Number(taxas.pix) || 0;
   const tLp = Number(taxas.livepix) || 0; // 💜 v0.174
+  const tPg = Number(taxas.pixgg) || 0; // 💚 v0.175
   const sc = Number(valorTotais.superchat) || 0;
   const lp = Number(valorTotais.livepix) || 0;
   const pix = Number(valorTotais.pix) || 0;
-  const total = sc + lp + pix;
-  const liquido = sc * (1 - tSc / 100) + lp * (1 - tLp / 100) + pix * (1 - tPix / 100);
+  const pg = Number(valorTotais.pixgg) || 0;
+  const total = sc + lp + pix + pg;
+  const liquido = sc * (1 - tSc / 100) + lp * (1 - tLp / 100) + pix * (1 - tPix / 100) + pg * (1 - tPg / 100);
   document.getElementById('arrecadadoBtn').textContent = '💰 ' + reais(total);
   const linhas = document.getElementById('arrecadadoLinhas');
   linhas.innerHTML = '';
@@ -2624,6 +2674,7 @@ function pintarArrecadado() {
   linha('⭐ Super Chat', reais(sc), tSc ? `≈ ${reais(sc * (1 - tSc / 100))} depois da taxa de ${tSc}%` : '');
   linha('💜 LivePix', reais(lp), tLp ? `≈ ${reais(lp * (1 - tLp / 100))} depois da taxa de ${tLp}%` : '');
   linha('💠 Pix', reais(pix), tPix ? `≈ ${reais(pix * (1 - tPix / 100))} depois da taxa de ${tPix}%` : '');
+  if (pg || (settings.labs || {}).pixgg === true) linha('💚 PixGG', reais(pg), tPg ? `≈ ${reais(pg * (1 - tPg / 100))} depois da taxa de ${tPg}%` : '');
   linha('Σ Total arrecadado', reais(total));
   linha('≈ Chega de verdade', reais(liquido), 'aproximado: taxas configuradas, sem impostos');
 }
@@ -2635,6 +2686,7 @@ function pintarContadores() {
   updateCount('telegram', Number(categoriaTotais.telegram) || 0);
   updateCount('livepix', Number(categoriaTotais.livepix) || 0); // 💜 v0.174
   updateCount('pix', Number(categoriaTotais.pix) || 0);         // 💠 v0.174
+  updateCount('pixgg', Number(categoriaTotais.pixgg) || 0);     // 💚 v0.175
 }
 
 // ---------- Status das conexões (chips do topo; conexão fica em /config) ----------
@@ -2645,6 +2697,9 @@ function platformActive(platform) {
   // 💠 v0.174: o Pix do banco não tem «conexão» — está ativo com o seletor do Labs ligado
   if (platform === 'pix') return !!(settings && (settings.labs || {}).pix === true) || msgPlatforms.has('pix');
   const st = lastStatuses[platform]?.state;
+  // 💚 v0.175: a PixGG só existe no painel com o seletor do Labs ligado — e aí
+  // segue a conexão (ou os comentários já na memória), como as outras redes
+  if (platform === 'pixgg') return !!(settings && (settings.labs || {}).pixgg === true) && (st === 'connected' || st === 'connecting' || msgPlatforms.has('pixgg'));
   return st === 'connected' || st === 'connecting' || st === 'auth' || msgPlatforms.has(platform);
 }
 
@@ -2654,7 +2709,7 @@ function platformActive(platform) {
 // some (voltando para Ao vivo) quando não há mais motivo. Acompanha tanto
 // as settings quanto o status das conexões.
 function pintarAbasDinamicas() {
-  for (const [aba, ligada] of [['livepix', platformActive('livepix')], ['pix', platformActive('pix')]]) {
+  for (const [aba, ligada] of [['livepix', platformActive('livepix')], ['pix', platformActive('pix')], ['pixgg', platformActive('pixgg')]]) { // 💚 v0.175
     const el = document.querySelector(`.tab[data-tab="${aba}"]`);
     if (!el) continue;
     el.style.display = ligada ? '' : 'none';
@@ -3330,7 +3385,7 @@ function appendTo(listName, message, inSavedTab = false) {
   while (list.children.length > MAX_LIST_ITEMS) list.removeChild(list.firstChild);
 }
 
-const DONATION_PLATFORMS = new Set(['livepix', 'pix', 'doacao']); // 💜💠 v0.174
+const DONATION_PLATFORMS = new Set(['livepix', 'pix', 'doacao', 'pixgg']); // 💜💠 v0.174; 💚 v0.175
 
 // ---------- Feed ao vivo com paginação e sentido configuráveis ----------
 const liveMessages = [];
@@ -3364,7 +3419,7 @@ function updatePagerUI(totalPages) {
 // 🧲 v0.154: as redes que viram coluna vêm de /painel-ordem.js (a mesma lista
 // que o servidor aceita em columnsOrder); cópia, para ninguém mexer na fonte
 const COL_ORDER = OBS_PAINEL_ORDEM.COLUNAS.slice();
-const COL_NAMES = { youtube: 'YouTube', twitch: 'Twitch', kick: 'Kick', bilibili: 'Bilibili', telegram: 'Telegram', whatsapp: 'WhatsApp', livepix: 'LivePix', pix: 'Pix' };
+const COL_NAMES = { youtube: 'YouTube', twitch: 'Twitch', kick: 'Kick', bilibili: 'Bilibili', telegram: 'Telegram', whatsapp: 'WhatsApp', livepix: 'LivePix', pix: 'Pix', pixgg: 'PixGG' };
 
 // Contadores vindos do servidor: total real da live por rede e mensagens
 // represadas (aguardando na fila do fluxo suave) por rede
@@ -4017,6 +4072,8 @@ function addMessage(message, live) {
   // aqui deixava a aba "Ao vivo" bem abaixo do total verdadeiro da live.
   if (message.platform === 'livepix') {
     appendTo('livepix', message); // 💜 v0.174
+  } else if (message.platform === 'pixgg') {
+    appendTo('pixgg', message);   // 💚 v0.175
   } else if (DONATION_PLATFORMS.has(message.platform)) {
     appendTo('pix', message);     // 💠 v0.174 («doacao» antigo entra aqui)
   } else if (isSuperchat(message)) {
@@ -4071,7 +4128,7 @@ function repintarSelos() {
   // 🫧 Inclui a lista Ao vivo e as colunas: com a reconciliação (v0.45) os
   // nós vivos são reaproveitados, então os selos precisam ser repintados
   // aqui — antes o rebuild geral fazia isso por tabela.
-  for (const item of document.querySelectorAll('#list-live .chat-item, .live-col .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-whatsapp .chat-item, #list-telegram .chat-item, #list-livepix .chat-item, #list-pix .chat-item, #list-saved .chat-item')) {
+  for (const item of document.querySelectorAll('#list-live .chat-item, .live-col .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-whatsapp .chat-item, #list-telegram .chat-item, #list-livepix .chat-item, #list-pix .chat-item, #list-pixgg .chat-item, #list-saved .chat-item')) {
     const message = item.__mensagem;
     const meta = item.querySelector('.meta');
     if (!message || !meta) continue;
@@ -4140,7 +4197,7 @@ function renderSaved(saved) {
   }
   updateCount('saved', saved.length);
   // Atualiza a marcação "na fila" e os botões nas outras listas
-  for (const item of document.querySelectorAll('#list-live .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-livepix .chat-item, #list-pix .chat-item')) {
+  for (const item of document.querySelectorAll('#list-live .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-livepix .chat-item, #list-pix .chat-item, #list-pixgg .chat-item')) {
     const queued = savedIds.has(item.dataset.id);
     const mark = item.querySelector('.queue-mark');
     if (mark) mark.style.display = queued ? '' : 'none';
@@ -4219,7 +4276,7 @@ function revisaoMostrarDia(event) {
   if (rvCalendario) rvCalendario.marcar(event.dia);
 }
 function nomeRedeRv(r) {
-  return { youtube: '▶️', twitch: '🟣', kick: '🟢', bilibili: '💙', livepix: '💜', pix: '💠', doacao: '💠', telegram: '📨', whatsapp: '💬' }[r] || r;
+  return { youtube: '▶️', twitch: '🟣', kick: '🟢', bilibili: '💙', livepix: '💜', pix: '💠', pixgg: '💚', doacao: '💠', telegram: '📨', whatsapp: '💬' }[r] || r;
 }
 function revisaoFiltradas() {
   const q = normText(document.getElementById('rvBusca').value.trim());
@@ -4459,7 +4516,7 @@ function matchesSearch(message) {
 
 // Aplica a busca nas listas montadas em DOM (fila, superchats, membros, apoios)
 function applySearchToLists() {
-  for (const name of ['saved', 'superchat', 'member', 'whatsapp', 'telegram', 'livepix', 'pix']) {
+  for (const name of ['saved', 'superchat', 'member', 'whatsapp', 'telegram', 'livepix', 'pix', 'pixgg']) {
     for (const item of lists[name].querySelectorAll('.chat-item')) {
       item.style.display = !searchQuery || (item.dataset.search || '').includes(searchQuery) ? '' : 'none';
     }

@@ -27,11 +27,11 @@
 
   // Abas (data-tab de cada botão .tab do painel)
   // 💜💠 v0.174: a aba Apoios virou duas — LivePix e Pix, cada uma a sua
-  const ABAS = ['live', 'saved', 'superchat', 'member', 'whatsapp', 'telegram', 'livepix', 'pix'];
+  const ABAS = ['live', 'saved', 'superchat', 'member', 'whatsapp', 'telegram', 'livepix', 'pix', 'pixgg'];
 
   // Colunas do modo «por rede» (a coluna sintética «__all» é do painel e é
   // aceita à parte, porque não é uma rede)
-  const COLUNAS = ['youtube', 'twitch', 'kick', 'bilibili', 'telegram', 'whatsapp', 'livepix', 'pix'];
+  const COLUNAS = ['youtube', 'twitch', 'kick', 'bilibili', 'telegram', 'whatsapp', 'livepix', 'pix', 'pixgg'];
 
   // Mantém só chaves conhecidas, sem repetição, na ordem em que vieram
   function soConhecidas(lista, padrao) {

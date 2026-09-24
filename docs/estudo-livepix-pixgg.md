@@ -4,8 +4,12 @@ Levantamento feito em setembro de 2026. **Atualização (v0.174):** a fase 1 e
 a fase 2 da LivePix foram implementadas pela API oficial (`connectors/livepix.js`):
 mensagens e pagamentos viram comentários da aba 💜, com controles dos alertas
 (autoPlay/skip/replay), carteira, assinaturas e recompensas no painel. O que
-segue é o levantamento original. A PixGG continua sem API; o caminho pelo canal
-do widget (Pusher) ficou para depois, e só com o aviso ao público.
+segue é o levantamento original.
+
+**Atualização (v0.175):** a PixGG entrou pelo canal do widget (Pusher), como
+função do 🧪 Labs, **não oficial** — `connectors/pixgg.js`. O que foi feito e
+por quê está na seção «PixGG — o que a v0.175 fez» no fim deste documento,
+junto com o e-mail enviado à PixGG pedindo permissão.
 
 Contexto: o objetivo é que uma doação feita nessas plataformas vire um apoio 💝
 no painel, com **nome, valor e mensagem**, do mesmo jeito que o 💠 Pix direto do
@@ -129,3 +133,45 @@ Não foi encontrada API pública nem documentação para desenvolvedores.
 - **Fase 3** — carteira/metas e assinaturas.
 - **PixGG** — fase 0 barata: camada de widget no overlay; em paralelo, pedir a
   API a eles.
+
+---
+
+## PixGG — o que a v0.175 fez
+
+Sem API pública e sem resposta a um pedido de acesso (a página de contato é a
+única porta), a saída 3 foi implementada — com todos os cuidados que dá para
+ter quando se usa um mecanismo interno de outra empresa:
+
+**O que o conector faz.** O widget de alertas da PixGG (`api.pixgg.com/?apikey=…`)
+abre uma conexão com o Pusher (app público do widget, cluster `mt1`) e assina um
+canal **público** cujo nome é a própria chave do streamer — não há autenticação
+extra. Por esse canal chegam os eventos `messages` (a doação: id da transação,
+apelido, mensagem, valor, moeda, link do áudio, vídeo pedido…), `pause`,
+`skip-alert` e `clear-queue` (os comandos que o painel da PixGG manda ao
+widget). O conector do OBS Social assina o mesmo canal, com uma conexão só, e
+**apenas lê**: não chama nenhum endpoint HTTP da PixGG (nem o que marca a
+mensagem como lida), não dispara nada, não escreve nada. É o mesmo tráfego de
+um widget aberto numa fonte de navegador. O áudio da mensagem é baixado do link
+público que a própria PixGG entrega, para a quarentena local de mídia.
+
+**Por que Labs e quatro avisos.** Foi descoberto por engenharia reversa do
+bundle do widget, pode mudar sem aviso, e os termos da PixGG — que não falam de
+API nem de automação — reservam o direito de encerrar contas que «prejudiquem a
+integridade do serviço». O streamer precisa saber disso antes de ligar. Por
+isso a função começa desligada e o servidor só aceita conectar com o seletor do
+Labs ligado **e** os quatro avisos marcados (não oficial e pode quebrar; o risco
+perante os termos é do streamer; o público será avisado — há um texto sugerido;
+a permissão foi pedida e a função será removida se a PixGG discordar). Desmarcar
+qualquer aviso, ou desligar o Labs, derruba a conexão e esquece a chave.
+
+**Segurança.** A chave do widget é o segredo da conexão: fica cifrada em
+`data/connections.json` (AES-256-GCM, chave local), nunca vai para as telas nem
+para a rede (`conexoesPublicas` só diz `temToken`), e o «canal» lembrado é
+sempre o texto fixo `pixgg`.
+
+**O pedido de permissão.** Junto com a versão, foi enviado um e-mail a
+contato@pixgg.com explicando exatamente o que está acima, com o endereço do
+projeto (https://github.com/WardzdesouzA/OBSSocial), pedindo permissão ou uma
+API oficial, e se comprometendo a retirar a integração se a PixGG preferir. Se
+a resposta vier com uma API, `connectors/pixgg.js` é trocado e o painel não
+muda.
