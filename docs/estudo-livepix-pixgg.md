@@ -7,9 +7,16 @@ mensagens e pagamentos viram comentários da aba 💜, com controles dos alertas
 segue é o levantamento original.
 
 **Atualização (v0.175):** a PixGG entrou pelo canal do widget (Pusher), como
-função do 🧪 Labs, **não oficial** — `connectors/pixgg.js`. O que foi feito e
-por quê está na seção «PixGG — o que a v0.175 fez» no fim deste documento,
+função do 🧪 Labs, fora da API oficial — `connectors/pixgg.js`. O que foi feito
+e por quê está na seção «PixGG — o que a v0.175 fez» no fim deste documento,
 junto com o e-mail enviado à PixGG pedindo permissão.
+
+**Atualização (v0.175.2, 24/09/2026):** a PixGG respondeu ao e-mail
+**autorizando o uso** («por nossa parte pode ficar tranquilo em relação ao uso»)
+e apontou que os streamers agora podem criar **aplicações** no painel dela. A
+API oficial foi estudada e está descrita na seção «PixGG — a API oficial
+(Aplicações)» no fim: ela só entrega webhooks, então não substitui o canal do
+widget para um programa que roda no PC do streamer.
 
 Contexto: o objetivo é que uma doação feita nessas plataformas vire um apoio 💝
 no painel, com **nome, valor e mensagem**, do mesmo jeito que o 💠 Pix direto do
@@ -159,14 +166,15 @@ bundle do widget, pode mudar sem aviso, e os termos da PixGG — que não falam 
 API nem de automação — reservam o direito de encerrar contas que «prejudiquem a
 integridade do serviço». O streamer precisa saber disso antes de ligar. Por
 isso a função começa desligada e o servidor só aceita conectar com o seletor do
-Labs ligado **e** os quatro avisos marcados (não oficial e pode quebrar; o risco
+Labs ligado **e** os quatro avisos marcados (fora da API oficial e sem suporte da PixGG, pode quebrar; o risco
 perante os termos é do streamer; o público será avisado — há um texto sugerido;
-a permissão foi pedida e a função será removida se a PixGG discordar). Desmarcar
+a PixGG autorizou o uso por e-mail e a função será removida se ela mudar de ideia). Desmarcar
 qualquer aviso, ou desligar o Labs, derruba a conexão e esquece a chave.
 
 **Segurança.** A chave do widget é o segredo da conexão: fica cifrada em
 `data/connections.json` (AES-256-GCM, chave local), nunca vai para as telas nem
-para a rede (`conexoesPublicas` só diz `temToken`), e o «canal» lembrado é
+para os painéis abertos pela rede (`conexoesPublicas` só diz `temToken`); ela só
+sai do computador como nome do canal na conexão com o Pusher, como no widget, e o «canal» lembrado é
 sempre o texto fixo `pixgg`.
 
 **O pedido de permissão.** Junto com a versão, foi enviado um e-mail a
@@ -175,3 +183,95 @@ projeto (https://github.com/WardzdesouzA/OBSSocial), pedindo permissão ou uma
 API oficial, e se comprometendo a retirar a integração se a PixGG preferir. Se
 a resposta vier com uma API, `connectors/pixgg.js` é trocado e o painel não
 muda.
+
+---
+
+## PixGG — a API oficial (Aplicações)
+
+Levantada em 24/09/2026 a partir do painel da PixGG (`dashboard.pixgg.com` /
+`beta.pixgg.com`, aba **Aplicações → Documentação**; a documentação é embutida
+no próprio painel, não há página pública). Conferida por três leituras
+independentes do código do painel. Verbatim onde há aspas.
+
+### Como funciona
+
+- **Base:** `https://app.pixgg.com` — o mesmo backend que o painel usa (com o
+  token de login do streamer); durante o estudo, todas as chamadas feitas de um
+  IP dos EUA receberam HTTP 403 «Forbidden» (aparentemente um bloqueio geográfico).
+- **Credenciais:** cada aplicação tem `clientId` (`app_` + 32 hex) e
+  `clientSecret` (43 caracteres, mostrado **uma única vez** na criação ou ao
+  regerar; regerar invalida o anterior na hora, sem período de transição).
+  Vão em **dois cabeçalhos em toda requisição**: `X-Client-Id` e
+  `X-Client-Secret`. Não há OAuth nem token.
+- **Escopo:** existe um só — `webhook` («Receber notificações via webhook»).
+- **Único endpoint para a aplicação:**
+  `POST /Applications/set-webhook-url` com `{"webhookUrl": "https://sua-url.com/"}`;
+  devolve a aplicação (`publicId, name, description, clientId, clientSecret: null,
+  webhookUrl, scopes: ["webhook"], isActive, dateCreated, dateModified`). A URL
+  também pode ser cadastrada ao criar/editar a aplicação no painel; é opcional
+  para criar, mas sem ela a aplicação não faz nada.
+- **Postback (o que a PixGG envia):** um `POST` na sua URL, JSON:
+
+  ```json
+  {
+    "event": "donation.paid",
+    "timestamp": "2026-07-08T18:15:08Z",
+    "data": {
+      "transactionPublicId": "trn_3fca9dada3be4a5098f7a24b91c9cfe9",
+      "streamerUsername": "NomeDoStreamer",
+      "donatorUsername": "NomeDoDoador",
+      "message": "Doação de testes",
+      "audioLink": "https://pixgg-static-bucket.s3.us-east-1.amazonaws.com/audio-….mp3",
+      "totalAmount": 1,
+      "status": "paid"
+    }
+  }
+  ```
+
+  Eventos: `donation.created` («Quando uma transação é criada.») e
+  `donation.paid` («Quando uma transação se torna paga.»).
+- **Assinatura:** cabeçalho `x-pixgg-signature-256` = `sha256=` + HMAC-SHA256
+  do **corpo bruto** com o `clientSecret` (hex minúsculo). A documentação traz
+  exemplos em Node.js, Python, PHP e C#; todos comparam em tempo constante e
+  respondem 401/200. O mesmo segredo autentica a API e assina os postbacks.
+
+### O que a documentação NÃO diz
+
+Sem nenhuma menção a: consulta/histórico de doações (não existe endpoint de
+leitura para aplicações), controles dos alertas, moeda ou unidade de
+`totalAmount` (o exemplo é `1`, sem campo de moeda), valores possíveis de
+`status`, link do vídeo pedido, duração do áudio, limites de chamadas,
+reenvio em caso de falha, código de resposta esperado, ordem dos eventos,
+proteção contra repetição (não há id de entrega nem nonce — quem recebe precisa
+deduplicar por `transactionPublicId` + evento), exigência de HTTPS na URL, ou
+o que acontece com a aplicação desativada.
+
+### Comparação com o canal do widget
+
+| | canal do widget (Pusher) | API oficial (webhook) |
+|---|---|---|
+| chega a um programa no PC do streamer | sim (conexão de saída) | só com URL pública (túnel ou servidor) |
+| nome, valor, mensagem, áudio | sim | sim |
+| moeda e valor original, vídeo pedido, duração do áudio | sim | não |
+| pausa / pular / limpar fila do painel da PixGG | sim (eventos) | não |
+| id da transação | `TransactionId` (numérico) | `transactionPublicId` (`trn_…`) — **não é o mesmo id**, e não há mapeamento |
+| autenticação | nenhuma (canal público, nome = chave do widget) | credenciais + assinatura HMAC |
+| documentado pela PixGG | não (uso autorizado por e-mail) | sim |
+
+O painel da própria PixGG («Painel de donates») lê as doações em tempo real
+por esse mesmo canal público (`GET /users/api-key` devolve o nome do canal).
+
+### Conclusão
+
+Para o OBS Social, que roda no PC do streamer, **o canal do widget continua
+sendo o caminho**, agora com a autorização da PixGG por escrito. A API oficial
+cabe como **opção extra** para quem tiver uma URL pública (túnel como
+Cloudflare Tunnel/ngrok, ou um servidor próprio): um receptor `/pixgg/webhook`
+que valida a assinatura, registra a URL pela própria API e alimenta a mesma
+aba 💚, deduplicando por `transactionPublicId`. Como os ids dos dois caminhos
+não batem, os dois não devem ficar ligados ao mesmo tempo sem uma
+deduplicação por (doador, valor, mensagem, minuto).
+
+Há um teste prático para o PC do streamer (receptor local + validação da
+assinatura + sondagem do que as credenciais permitem) no scratchpad da sessão
+que fez este estudo; ele não está no repositório porque depende de credenciais.

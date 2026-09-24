@@ -171,7 +171,7 @@ const { KickConnector, kickApi, kickApiConfigurar } = require('./connectors/kick
 const { YouTubeConnector, baixarFigurinha: baixarFigurinhaYouTube, youtubePedir } = require('./connectors/youtube');
 const { BilibiliConnector, bilibiliPedir } = require('./connectors/bilibili');
 const { LivePixConnector } = require('./connectors/livepix'); // 💜 v0.174
-const { PixGGConnector, extrairChave: pixggChave } = require('./connectors/pixgg'); // 💚 v0.175: Labs, NÃO oficial
+const { PixGGConnector, extrairChave: pixggChave } = require('./connectors/pixgg'); // 💚 v0.175: Labs, pelo canal do widget (autorizado pela PixGG)
 const { TelegramConnector } = require('./connectors/telegram');
 const { WhatsAppConnector } = require('./connectors/whatsapp');
 const { WhatsAppLocalConnector } = require('./connectors/whatsapp-local');
@@ -348,8 +348,8 @@ const DEFAULT_SETTINGS = {
     // 💠 Pix direto do banco do streamer (API Pix do Bacen): cada Pix
     // recebido vira um apoio na aba Apoios, com a mensagem do pagador
     pix: false,
-    // 💚 v0.175: PixGG pelo canal do widget — NÃO oficial (engenharia
-    // reversa do widget de alertas); só liga com os quatro avisos aceitos
+    // 💚 v0.175: PixGG pelo canal do widget — fora da API oficial (engenharia
+    // reversa do widget; uso autorizado pela PixGG); só liga com os quatro avisos
     pixgg: false,
     // 💰 v0.170: arrecadação da live no painel (Super Chat + Pix/apoios) e taxas
     arrecadacao: false,
@@ -6802,12 +6802,12 @@ const CONNECTORS = {
   telegram: TelegramConnector,
   whatsapp: WhatsAppConnector,
   livepix: LivePixConnector, // 💜 v0.174: pela API oficial
-  pixgg: PixGGConnector, // 💚 v0.175: pelo canal do widget (Labs, NÃO oficial)
+  pixgg: PixGGConnector, // 💚 v0.175: pelo canal do widget (Labs; autorizado pela PixGG, fora da API oficial)
 };
 // 💚 v0.175: a PixGG só conecta com o seletor do Labs ligado E os quatro
 // avisos aceitos — devolve o texto do erro, ou null se pode
 function pixggBloqueio() {
-  if (state.settings.labs?.pixgg !== true) return 'A PixGG é experimental e não oficial — ative em Configurações → 🧪 Labs, leia e aceite os avisos para usar.';
+  if (state.settings.labs?.pixgg !== true) return 'A PixGG é experimental e fica fora da API oficial — ative em Configurações → 🧪 Labs, leia e aceite os avisos para usar.';
   if (!pixggAvisosOk()) return 'Antes de conectar a PixGG, marque os quatro avisos de consciência em Configurações → 🧪 Labs → PixGG.';
   return null;
 }

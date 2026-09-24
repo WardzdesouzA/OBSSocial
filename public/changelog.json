@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.175.2",
+    "titulo": "💚 PixGG respondeu e autorizou o uso: os avisos e os textos passam a dizer isso, e a API oficial dela (só webhook) fica documentada",
+    "itens": [
+      "💚 A PixGG respondeu ao e-mail em 24/09/2026 autorizando o uso do canal do widget («por nossa parte pode ficar tranquilo em relação ao uso»). Os textos do Labs, do painel e do README deixam de dizer «permissão pedida» e passam a dizer «autorizado pela PixGG», com a data; a integração continua fora da API oficial e sem suporte dela, por isso os quatro avisos ficam — o quarto agora fala em «se a PixGG mudar de ideia».",
+      "📖 A PixGG abriu uma API oficial (Aplicações): credenciais de cliente em dois cabeçalhos, um único escopo «webhook» e um único endpoint (registrar a URL do webhook). Ela só ENVIA doações para uma URL pública, assinadas com HMAC-SHA256 — não tem consulta, controles, moeda nem vídeo. Um programa no PC do streamer não tem URL pública, então o canal do widget continua sendo o caminho; a API está documentada em docs/estudo-livepix-pixgg.md, com o que ela não diz e a comparação entre os dois caminhos.",
+      "📝 O texto sugerido ao público diz que a integração é feita com o conhecimento e a autorização da PixGG."
+    ]
+  },
+  {
     "version": "0.175.1",
     "titulo": "🖱️ O clique esquerdo num comentário com áudio (PixGG, Telegram, WhatsApp) volta a abrir a janela em qualquer coluna",
     "itens": [
