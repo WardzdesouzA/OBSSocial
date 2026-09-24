@@ -1,4 +1,10 @@
 {
+  "0.176.0": {
+    "titulo": "💚 PixGG Labs’tan çıkıp LivePix’in yanına Bağlantılar’a geliyor — PixGG kullanıma izin verdiği için dört uyarı olmadan",
+    "itens": [
+      "💚 PixGG’nin e-postayla izniyle (24/09/2026) PixGG bağlantısı 🧪 Labs’tan çıkıp Ayarlar → Bağlantılar’da, LivePix’in hemen ardında yaşıyor: widget anahtarını yapıştırıp bağlanın, her ağda olduğu gibi. v0.175’in dört uyarısı kaldırıldı; kart tek satırda yolun widget kanalı olduğunu (PixGG’nin izniyle, yalnızca webhook teslim eden resmi API’nin dışında) ve anahtarın yalnızca bu bilgisayarda şifreli kaldığını açıklar. PixGG’yi Labs’ta zaten açık olanlar bağlı kalır — eski anahtar ve uyarı ayarları kendiliğinden atılır."
+    ]
+  },
   "0.175.2": {
     "titulo": "💚 PixGG yanıtladı ve kullanıma izin verdi: uyarılar ve metinler artık bunu söylüyor, resmi API’si (yalnızca webhook) belgelendi",
     "itens": [

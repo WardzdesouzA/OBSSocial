@@ -1815,7 +1815,7 @@
     <!-- 💜💠 v0.174: a aba Apoios virou duas — LivePix (API oficial) e Pix (direto do banco) -->
     <button class="tab" data-tab="livepix" style="display:none">💜 LivePix <span class="count" id="count-livepix">0</span></button>
     <button class="tab" data-tab="pix" style="display:none">💠 Pix <span class="count" id="count-pix">0</span></button>
-    <!-- 💚 v0.175: PixGG pelo canal do widget (Labs; autorizado pela PixGG, fora da API oficial) -->
+    <!-- 💚 v0.175: PixGG pelo canal do widget (autorizado pela PixGG, fora da API oficial); v0.176: nas Conexões -->
     <button class="tab" data-tab="pixgg" style="display:none">💚 PixGG <span class="count" id="count-pixgg">0</span></button>
     <input type="search" id="searchBox" placeholder="🔎 Buscar (nome ou palavra)"
       title="Busca comentários pelo nome de quem escreveu ou por palavras da mensagem — vale para todas as abas">
@@ -1874,10 +1874,10 @@
     <button id="pixggInfoBtn" class="icon-btn pop-toggle tip-left" data-pop="pixggInfoPop" title="Como esta aba funciona (e por que ela é experimental e fica fora da API oficial da PixGG)">ℹ️</button>
     <a id="pixggPainel" class="icon-btn" href="https://pixgg.com" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center" title="Abrir o painel da PixGG numa janela nova: pausar, pular e limpar os alertas, e bloquear quem doa, é feito lá">🔗</a>
     <div class="popover" id="pixggInfoPop" style="right:0;left:auto;max-width:min(560px,92vw)">
-      <div class="pop-title">💚 PixGG — canal do widget (Labs)</div>
+      <div class="pop-title">💚 PixGG — canal do widget</div>
       <div id="pixggInfoLinhas" style="font-size:13px;line-height:1.7"></div>
     </div>
-    <span id="pixggAviso" class="hint" style="margin:0;flex-basis:100%">⚠️ Integração fora da API oficial (autorizada pela PixGG por e-mail em 24/09/2026): o OBS Social só escuta o mesmo canal que o widget de alertas da PixGG usa. A PixGG pode mudar isso a qualquer momento — e você avisou o público que usa esta integração.</span>
+    <span id="pixggAviso" class="hint" style="margin:0;flex-basis:100%">ℹ️ Pelo canal do widget de alertas, com a autorização da PixGG (e-mail de 24/09/2026) — fora da API oficial dela, que só entrega webhooks. O OBS Social só escuta; a PixGG pode mudar o mecanismo a qualquer momento.</span>
   </div>
   <div class="list" id="list-pixgg"><div class="placeholder">As doações recebidas pela PixGG vão aparecer aqui, com nome, valor, mensagem e o áudio quando houver. Clique com o botão direito para mandar para a tela (destaque) ou para a fila.</div></div>
 </main>
@@ -2627,7 +2627,7 @@ function pintarPixgg() {
   const linha = (rotulo, valor) => { const el = document.createElement('div'); el.style.cssText = 'display:flex;justify-content:space-between;gap:16px'; const a = document.createElement('span'); a.textContent = rotulo; const b = document.createElement('b'); b.textContent = valor; el.append(a, b); linhas.appendChild(el); };
   nota('A API oficial da PixGG só envia webhooks para uma URL pública, que um programa no seu PC não tem. Por isso o OBS Social escuta o mesmo canal público que o widget de alertas e o painel da PixGG usam (uma conexão só, só leitura): cada doação chega aqui com nome, valor, mensagem e áudio, e nada é enviado de volta à PixGG.');
   nota('Por ser um mecanismo interno deles, pode parar de funcionar sem aviso. A PixGG foi consultada e autorizou o uso por e-mail em 24/09/2026; se ela mudar de ideia, esta integração é retirada.');
-  if (!d) { nota('Ligue em Configurações → 🧪 Labs → PixGG (com os quatro avisos aceitos) e cole a chave do widget.'); return; }
+  if (!d) { nota('Conecte a PixGG em Configurações → Conexões e cole a chave do widget.'); return; }
   const quando = (ms) => (ms ? new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—');
   linha('Alertas na PixGG', d.pausado === true ? '⏸ pausados' : (d.pausado === false ? '▶️ tocando' : '— (sem sinal ainda)'));
   linha('Eventos recebidos', String(d.eventos || 0));
@@ -2674,7 +2674,7 @@ function pintarArrecadado() {
   linha('⭐ Super Chat', reais(sc), tSc ? `≈ ${reais(sc * (1 - tSc / 100))} depois da taxa de ${tSc}%` : '');
   linha('💜 LivePix', reais(lp), tLp ? `≈ ${reais(lp * (1 - tLp / 100))} depois da taxa de ${tLp}%` : '');
   linha('💠 Pix', reais(pix), tPix ? `≈ ${reais(pix * (1 - tPix / 100))} depois da taxa de ${tPix}%` : '');
-  if (pg || (settings.labs || {}).pixgg === true) linha('💚 PixGG', reais(pg), tPg ? `≈ ${reais(pg * (1 - tPg / 100))} depois da taxa de ${tPg}%` : '');
+  if (pg || platformActive('pixgg')) linha('💚 PixGG', reais(pg), tPg ? `≈ ${reais(pg * (1 - tPg / 100))} depois da taxa de ${tPg}%` : '');
   linha('Σ Total arrecadado', reais(total));
   linha('≈ Chega de verdade', reais(liquido), 'aproximado: taxas configuradas, sem impostos');
 }
@@ -2697,9 +2697,6 @@ function platformActive(platform) {
   // 💠 v0.174: o Pix do banco não tem «conexão» — está ativo com o seletor do Labs ligado
   if (platform === 'pix') return !!(settings && (settings.labs || {}).pix === true) || msgPlatforms.has('pix');
   const st = lastStatuses[platform]?.state;
-  // 💚 v0.175: a PixGG só existe no painel com o seletor do Labs ligado — e aí
-  // segue a conexão (ou os comentários já na memória), como as outras redes
-  if (platform === 'pixgg') return !!(settings && (settings.labs || {}).pixgg === true) && (st === 'connected' || st === 'connecting' || msgPlatforms.has('pixgg'));
   return st === 'connected' || st === 'connecting' || st === 'auth' || msgPlatforms.has(platform);
 }
 

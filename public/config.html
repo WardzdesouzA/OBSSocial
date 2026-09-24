@@ -166,8 +166,6 @@
   /* Rede desligada no Labs: some das Conexões mesmo quando o roteador de
      páginas reescreve o display dos cartões */
   .card.rede-off { display: none !important; }
-  /* 💚 v0.175: o card da PixGG fica apagado até os quatro avisos serem aceitos */
-  .card.pixgg-travado .row { opacity: 0.5; }
   .card h3 { font-size: 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   /* 🗂️ v0.117: todo card expande/recolhe pelo título (▸ recolhido / ▾ aberto);
      o estado fica neste navegador. v0.167.2: o padrão vale em TODA página com
@@ -1095,6 +1093,24 @@
         <a class="icon-btn" href="https://dashboard.livepix.gg" target="_blank" rel="noopener" style="width:auto;padding:0 10px;font-size:13px;text-decoration:none;display:inline-flex;align-items:center" title="Bloquear e desbloquear quem doa, e o resto que a API não faz, é no painel da LivePix">🔗 Painel da LivePix</a>
       </div>
       <div class="hint">🔒 O segredo fica cifrado só neste computador (pasta data/) e nunca vai para as telas. Bloquear ou desbloquear quem doa é feito no painel da LivePix (🔗). A LivePix cobra 5% por doação — a taxa entra na 💰 Arrecadação da live.</div>
+      <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
+    </div>
+
+    <!-- 💚 v0.176: PixGG nas Conexões, ao lado da LivePix — pelo canal do widget, com a autorização da PixGG (e-mail de 24/09/2026) -->
+    <div class="card" data-platform="pixgg">
+      <h3><span class="icon-slot"></span> PixGG</h3>
+      <div class="hint">Cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver. Cole a <b>chave da API do widget</b> (ou a URL inteira do widget de alertas, <code>api.pixgg.com/?apikey=...</code>, que está no painel da PixGG → Widgets).</div>
+      <div class="row">
+        <input type="password" class="secret-input" placeholder="chave da API do widget (apikey) ou a URL do widget" autocomplete="off" style="flex:1">
+        <input type="hidden" class="channel-input" value="pixgg">
+        <button class="connect-btn icon-btn" title="Conectar">🔌</button>
+        <button class="reconnect-btn icon-btn" title="Reiniciar esta conexão (derruba e conecta de novo — use se travar ou quebrar)">🔄</button>
+      </div>
+      <div class="row" style="align-items:center;gap:8px;font-size:12px">
+        <a class="icon-btn" href="https://pixgg.com" target="_blank" rel="noopener" style="width:auto;padding:0 10px;font-size:13px;text-decoration:none;display:inline-flex;align-items:center" title="Pausar, pular e limpar a fila de alertas, e bloquear quem doa, é no painel da PixGG">🔗 Painel da PixGG</a>
+        <span class="hint" style="margin:0">A PixGG cobra 3,9% por doação (valor de referência dos termos dela) — a taxa entra na 💰 Arrecadação da live.</span>
+      </div>
+      <div class="hint">ℹ️ O OBS Social lê o mesmo canal de tempo real que o widget de alertas e o painel da PixGG usam — só leitura, uma conexão, nada é enviado à PixGG — <b>com a autorização da PixGG</b> (e-mail de 24/09/2026). A API oficial dela (Aplicações) só entrega webhooks numa URL pública, que um programa no seu PC não tem; por isso este caminho. 🔒 A chave fica cifrada só neste computador (pasta data/), nunca vai para as telas e só sai daqui como nome do canal na conexão com o Pusher, exatamente como o widget faz.</div>
       <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
     </div>
 
@@ -2772,41 +2788,6 @@
             <span id="pixStatus" class="hint" style="margin:0">—</span>
           </div>
           <div class="hint" style="margin-bottom:0">As credenciais e a senha ficam guardadas só neste computador (na pasta <code>data/</code>, cifradas com AES-256) e nunca são enviadas às telas. A primeira consulta boa apenas reconhece os Pix que já existiam — só os que chegarem DEPOIS viram apoio no painel. A mensagem do pagador é garantida nos Pix pagos por QR de cobrança; na transferência manual para a chave, depende do banco.</div>
-        </div>
-      </div>
-
-      <!-- 💚 v0.175: PixGG pelo canal do widget — fora da API oficial (uso autorizado pela PixGG); só liga com os quatro avisos -->
-      <div class="lab-item" id="lab-pixgg">
-        <label class="check lab-toggle">
-          <input type="checkbox" id="l-pixgg" class="sw">
-          <span><b>💚 PixGG (experimental, pelo canal do widget — autorizado pela PixGG)</b> — cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG do painel (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver — lendo o mesmo canal que o widget de alertas dela usa</span>
-        </label>
-        <div class="lab-body">
-          <div class="hint">⚠️ <b>Leia antes de ligar.</b> A API oficial da PixGG (Aplicações) só envia webhooks para uma URL pública — e um programa no seu PC não tem uma. Por isso o OBS Social usa o canal de tempo real do widget de alertas (a URL que você coloca na fonte de navegador do OBS): ele recebe cada doação por um canal público, identificado pela sua chave da API, e o painel da própria PixGG lê esse mesmo canal. O OBS Social <b>assina esse canal e só lê</b>: uma conexão, só as suas doações, nada é enviado à PixGG, nenhum endereço dela é chamado e nada é marcado como lido — é o mesmo tráfego de um widget aberto. Isso foi descoberto <b>por engenharia reversa do widget</b>, não por documentação: a PixGG pode mudar o mecanismo a qualquer momento e a integração para de funcionar sem aviso. O OBS Social <b>consultou a PixGG por e-mail e ela autorizou o uso</b> (24/09/2026); se ela mudar de ideia, esta integração é retirada.</div>
-          <div class="hint"><b>Marque os quatro avisos para liberar a conexão</b> (desmarcar qualquer um derruba a conexão e esquece a chave):</div>
-          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoNaoOficial" class="sw pixgg-aviso" data-aviso="naoOficial"> <span>Entendo que esta integração <b>não usa a API oficial da PixGG e não tem suporte dela</b> (a PixGG autorizou o uso, mas não dá suporte), foi feita por engenharia reversa do widget e <b>pode parar de funcionar a qualquer momento</b>, sem aviso.</span></label>
-          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoTermos" class="sw pixgg-aviso" data-aviso="termos"> <span>Li os <a href="https://pixgg.com/termos" target="_blank" rel="noopener">termos de uso da PixGG</a> e entendo que <b>usar esta integração é responsabilidade minha</b> perante a PixGG — inclusive o risco de ela não gostar e agir sobre a minha conta.</span></label>
-          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPublico" class="sw pixgg-aviso" data-aviso="publico"> <span>Vou <b>avisar o público</b> que as doações da PixGG aparecem na live por uma integração do OBS Social fora da API oficial da PixGG (autorizada por ela, mas não um produto dela) — o texto sugerido está abaixo: cole na descrição da live, num aviso 📢 ou diga ao vivo.</span></label>
-          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPermissao" class="sw pixgg-aviso" data-aviso="permissao"> <span>Sei que a PixGG <b>autorizou o uso por e-mail</b> (24/09/2026) e que, se ela mudar de ideia, <b>esta função será removida</b> numa atualização — sem que nada mais no programa mude.</span></label>
-          <div class="row" style="margin-top:8px">
-            <input type="text" id="pixggAvisoPublicoTexto" readonly value="Aviso: as doações da PixGG aparecem nesta live por uma integração do OBS Social (programa gratuito e aberto: github.com/WardzdesouzA/OBSSocial), que só lê o mesmo canal do widget de alertas da PixGG, com o conhecimento e a autorização da PixGG. A integração não é um produto da PixGG e pode parar a qualquer momento." style="flex:1;font-size:12px" title="O texto sugerido para avisar o público — copie com o 📋">
-            <button class="icon-btn copy-btn" data-copy="pixggAvisoPublicoTexto" title="Copiar o aviso ao público">📋</button>
-          </div>
-          <div class="card" data-platform="pixgg" style="margin-top:10px">
-            <h3><span class="icon-slot"></span> PixGG <span class="tag">canal do widget</span></h3>
-            <div class="hint">Cole a <b>chave da API do widget</b> (ou a URL inteira do widget de alertas, <code>api.pixgg.com/?apikey=...</code>, que está no painel da PixGG → Widgets). A chave fica <b>cifrada só neste computador</b> (pasta data/), nunca vai para as telas e só sai deste computador como nome do canal na conexão com o Pusher — exatamente o que o widget de alertas faz; o programa não a usa para nada além de escutar o canal.</div>
-            <div class="row">
-              <input type="password" class="secret-input" placeholder="chave da API do widget (apikey) ou a URL do widget" autocomplete="off" style="flex:1">
-              <input type="hidden" class="channel-input" value="pixgg">
-              <button class="connect-btn icon-btn" title="Conectar">🔌</button>
-              <button class="reconnect-btn icon-btn" title="Reiniciar esta conexão (derruba e conecta de novo — use se travar ou quebrar)">🔄</button>
-            </div>
-            <div class="row" style="align-items:center;gap:8px;font-size:12px">
-              <a class="icon-btn" href="https://pixgg.com" target="_blank" rel="noopener" style="width:auto;padding:0 10px;font-size:13px;text-decoration:none;display:inline-flex;align-items:center" title="Pausar, pular e limpar a fila de alertas, e bloquear quem doa, é no painel da PixGG">🔗 Painel da PixGG</a>
-              <span class="hint" style="margin:0">A PixGG cobra 3,9% por doação (valor de referência dos termos dela) — a taxa entra na 💰 Arrecadação da live.</span>
-            </div>
-            <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
-          </div>
         </div>
       </div>
 
@@ -4592,7 +4573,7 @@ function fillSettingsForm() {
   fillTrilhasControles();
   renderTrilhasDeck();
   // 🎬 OBS e 🎵 Mesa de trilhas (Labs)
-  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp'], ['pixgg', 'l-pixgg', 'lab-pixgg']]) {
+  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
     const ligado = (settings.labs || {})[flag] === true;
     const chk = document.getElementById(chkId);
     if (chk && document.activeElement !== chk) chk.checked = ligado;
@@ -4606,7 +4587,6 @@ function fillSettingsForm() {
     const el = document.getElementById('livepixIntervaloInput');
     if (el && document.activeElement !== el) el.value = String((settings.livepix || {}).intervalo || 15);
   }
-  pixggPintarAvisos(); // 💚 v0.175
   // ♿ Acessibilidade: os 4 liga/desliga
   for (const chave of ['altoContraste', 'reduzirAnimacoes', 'focoVisivel', 'formasNoStatus']) {
     const chk = document.getElementById('a11y-' + chave);
@@ -6166,38 +6146,6 @@ document.getElementById('l-pix').addEventListener('input', (e) => {
   hub.send({ type: 'settings', settings: { labs: { pix: e.target.checked } } });
   setTimeout(() => { applyingSettings = false; }, 300);
 });
-// 💚 v0.175: PixGG (Labs, canal do widget — autorizado pela PixGG) — o seletor, os quatro avisos e o botão de conectar
-function pixggAvisosOk() {
-  const a = ((settings || {}).pixgg || {}).avisos || {};
-  return ['naoOficial', 'termos', 'publico', 'permissao'].every((k) => a[k] === true);
-}
-function pixggPintarAvisos() {
-  const a = ((settings || {}).pixgg || {}).avisos || {};
-  for (const chk of document.querySelectorAll('.pixgg-aviso')) {
-    if (document.activeElement !== chk) chk.checked = a[chk.dataset.aviso] === true;
-  }
-  const card = document.querySelector('.card[data-platform="pixgg"]');
-  if (!card) return;
-  const liberado = (settings.labs || {}).pixgg === true && pixggAvisosOk();
-  card.classList.toggle('pixgg-travado', !liberado);
-  for (const el of card.querySelectorAll('.secret-input, .connect-btn, .reconnect-btn')) el.disabled = !liberado;
-  card.querySelector('.connect-btn').title = liberado ? 'Conectar' : 'Marque os quatro avisos acima para liberar a conexão';
-}
-document.getElementById('l-pixgg').addEventListener('input', (e) => {
-  document.getElementById('lab-pixgg').classList.toggle('off', !e.target.checked);
-  if (!e.target.checked) hub.send({ type: 'disconnect', platform: 'pixgg' });
-  applyingSettings = true;
-  hub.send({ type: 'settings', settings: { labs: { pixgg: e.target.checked } } });
-  setTimeout(() => { applyingSettings = false; }, 300);
-});
-for (const chk of document.querySelectorAll('.pixgg-aviso')) {
-  chk.addEventListener('change', (e) => {
-    if (!settings.pixgg) settings.pixgg = { avisos: {} };
-    settings.pixgg.avisos = { ...(settings.pixgg.avisos || {}), [e.target.dataset.aviso]: e.target.checked };
-    pixggPintarAvisos();
-    hub.send({ type: 'settings', settings: { pixgg: { avisos: { [e.target.dataset.aviso]: e.target.checked } } } });
-  });
-}
 // 💰 v0.170: arrecadação da live — o seletor, as taxas (à mão) e a busca nos serviços
 document.getElementById('l-arrecadacao').addEventListener('input', (e) => {
   document.getElementById('lab-arrecadacao').classList.toggle('off', !e.target.checked);
