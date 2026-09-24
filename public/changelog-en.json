@@ -1,4 +1,13 @@
 {
+  "0.173.0": {
+    "titulo": "🧩 Widget layers on the screen: LivePix, PixGG and any “browser source” alerts inside the OBS Social overlay, with on/off and 🔄 from the dashboard",
+    "itens": [
+      "🧩 In Settings → 🧪 Labs → 🧩 Widget layers, paste the URL that LivePix, PixGG or any other service gives you for the OBS browser source. Each URL becomes a layer of the OBS Social overlay, at the chosen position and size (% of the screen; 100 × 100 is the whole screen), on top of everything or behind the widgets, with autoplay audio allowed. The alert shows up on the stream with the service’s own art, in a single OBS source. Up to 8 layers.",
+      "🎛️ On the dashboard, the 🧩 button lists the layers: each has its own on/off (turning off removes the frame from the screen and the alert stops playing; it is saved) and a 🔄 that opens the URL again. The 🕹️ External control does the same with the “camada” operation ({id, ligada} or {id, recarregar}) and the state lists the layers.",
+      "🔒 The widget URL carries a key of the streamer’s account: the list is only editable on the computer running OBS Social (over the network the server refuses and says so); turning on/off and reloading work from any dashboard. Only https (or http on this computer). The screen editor preview opens no layer, and an ordinary settings change never reloads the alert midway — the URL is only reopened when it really changes or on 🔄.",
+      "ℹ️ The widget page is isolated by the browser: the dashboard does not learn the donor’s name, amount or message from it — that only comes through an official API (LivePix has one; PixGG does not)."
+    ]
+  },
   "0.172.0": {
     "titulo": "🔀 Switching @ removes what belonged to the previous @ · 🛡️ Kick’s fallback paths now cover YouTube, Twitch and Bilibili, with automatic retry",
     "itens": [

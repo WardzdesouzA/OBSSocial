@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.173.0",
+    "titulo": "🧩 Camadas de widget na tela: os alertas da LivePix, da PixGG e de qualquer «fonte de navegador» dentro do overlay do OBS Social, com liga/desliga e 🔄 pelo painel",
+    "itens": [
+      "🧩 Em Configurações → 🧪 Labs → 🧩 Camadas de widget, cole a URL que a LivePix, a PixGG ou qualquer outro serviço entrega para a fonte de navegador do OBS. Cada URL vira uma camada do overlay do OBS Social, na posição e no tamanho escolhidos (% da tela; 100 × 100 é a tela inteira), por cima de tudo ou atrás dos widgets, com o áudio automático liberado. O alerta sai na live com a arte do próprio serviço, numa fonte só no OBS. Até 8 camadas.",
+      "🎛️ No painel, o botão 🧩 lista as camadas: cada uma tem o seu liga/desliga (desligar tira o quadro da tela e o alerta para de tocar; fica salvo) e um 🔄 que abre a URL de novo. O 🕹️ Controle externo faz o mesmo pela operação «camada» ({id, ligada} ou {id, recarregar}) e o estado lista as camadas.",
+      "🔒 A URL do widget carrega uma chave da conta do streamer: a lista só é editada no computador onde o OBS Social roda (pela rede, o servidor recusa e avisa); ligar, desligar e recarregar funcionam de qualquer painel. Só https (ou http neste computador). A prévia do editor de tela não abre camada nenhuma, e um settings qualquer não recarrega o alerta no meio — a URL só é reaberta quando muda de verdade ou no 🔄.",
+      "ℹ️ A página do widget é isolada pelo navegador: o painel não fica sabendo do nome, do valor nem da mensagem por ela — isso só vem por API oficial (a LivePix tem; a PixGG não)."
+    ]
+  },
+  {
     "version": "0.172.0",
     "titulo": "🔀 Trocar de @ tira do painel o que era da @ anterior · 🛡️ os caminhos de reserva do Kick agora valem para YouTube, Twitch e Bilibili, com nova tentativa sozinha",
     "itens": [
