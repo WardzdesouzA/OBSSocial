@@ -1,4 +1,12 @@
 {
+  "0.175.2": {
+    "titulo": "💚 PixGG hat geantwortet und die Nutzung genehmigt: Hinweise und Texte sagen das jetzt, und die offizielle API (nur Webhook) ist dokumentiert",
+    "itens": [
+      "💚 PixGG hat die E-Mail am 24.09.2026 beantwortet und die Nutzung des Widget-Kanals genehmigt („unsererseits können Sie bezüglich der Nutzung beruhigt sein“). Die Texte in Labs, Panel und README sagen nicht mehr „Erlaubnis erbeten“, sondern „von PixGG genehmigt“, mit Datum; die Integration bleibt außerhalb der offiziellen API und ohne Support von PixGG, daher bleiben die vier Hinweise — der vierte heißt jetzt „falls PixGG es sich anders überlegt“.",
+      "📖 PixGG hat eine offizielle API (Anwendungen) eröffnet: Client-Zugangsdaten in zwei Headern, ein einziger Scope „webhook“ und ein einziger Endpunkt (Webhook-URL registrieren). Sie SENDET Spenden nur an eine öffentliche URL, signiert mit HMAC-SHA256 — keine Abfrage, keine Steuerung, keine Währung, kein Video. Ein Programm auf dem PC des Streamers hat keine öffentliche URL, also bleibt der Widget-Kanal der Weg; die API ist in docs/estudo-livepix-pixgg.md dokumentiert, mit dem, was sie nicht sagt, und dem Vergleich beider Wege.",
+      "📝 Der Textvorschlag für das Publikum sagt, dass die Integration mit Wissen und Genehmigung von PixGG erfolgt."
+    ]
+  },
   "0.175.1": {
     "titulo": "🖱️ Ein Linksklick auf einen Kommentar mit Audio (PixGG, Telegram, WhatsApp) öffnet das Fenster wieder in jeder Spalte",
     "itens": [

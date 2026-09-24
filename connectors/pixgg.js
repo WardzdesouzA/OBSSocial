@@ -1,18 +1,20 @@
-// 💚 v0.175: conector da PixGG — NÃO OFICIAL (Labs), pelo canal do widget.
+// 💚 v0.175: conector da PixGG pelo canal do widget (Labs) — fora da API
+// oficial, com a autorização da PixGG (e-mail de 24/09/2026).
 //
-// A PixGG não tem API pública. O widget de alertas dela (a URL que o
-// streamer coloca na fonte de navegador do OBS) assina um canal PÚBLICO no
-// Pusher — o nome do canal é a chave da API do streamer, sem autenticação
-// extra — e recebe por ele cada doação (evento «messages») e os comandos do
-// painel da PixGG («pause», «skip-alert», «clear-queue»). Este conector
-// assina o MESMO canal, com uma conexão só, e apenas lê: não chama endpoint
-// nenhum da PixGG, não marca nada como lido, não dispara nada. É o mesmo
-// tráfego de um widget aberto.
+// A API oficial da PixGG («Aplicações», v0.175.2: docs/estudo-livepix-pixgg.md)
+// só entrega webhooks numa URL pública — o que um programa no PC do streamer
+// não tem. O widget de alertas dela (a URL que o streamer coloca na fonte de
+// navegador do OBS) assina um canal PÚBLICO no Pusher — o nome do canal é a
+// chave da API do streamer, sem autenticação extra — e recebe por ele cada
+// doação (evento «messages») e os comandos do painel da PixGG («pause»,
+// «skip-alert», «clear-queue»); o painel da própria PixGG lê o mesmo canal.
+// Este conector assina o MESMO canal, com uma conexão só, e apenas lê: não
+// chama endpoint nenhum da PixGG, não marca nada como lido, não dispara nada.
+// É o mesmo tráfego de um widget aberto.
 //
 // Por ser mecanismo interno deles, pode mudar sem aviso — o streamer liga
-// isto no Labs depois de ler os avisos, e o OBS Social pediu permissão à
-// PixGG por e-mail (docs/estudo-livepix-pixgg.md). Se ela responder com uma
-// API, este arquivo é trocado e o painel não muda.
+// isto no Labs depois de ler os avisos. A PixGG foi consultada por e-mail e
+// autorizou o uso; se ela mudar de ideia, este arquivo sai e o painel não muda.
 const WebSocket = require('ws');
 const https = require('https');
 const http = require('http');
@@ -87,7 +89,7 @@ class PixGGConnector {
       this.handlers.onStatus('error', 'Cole a chave da API do widget da PixGG (ou a URL inteira do widget, api.pixgg.com/?apikey=...).');
       return;
     }
-    this.handlers.onStatus('connecting', 'Ligando no canal do widget da PixGG (não oficial)...');
+    this.handlers.onStatus('connecting', 'Ligando no canal do widget da PixGG (fora da API oficial)...');
     this.open();
   }
 
@@ -114,7 +116,7 @@ class PixGGConnector {
     }
     if (p.event === 'pusher_internal:subscription_succeeded') {
       this.retryMs = 2000;
-      this.handlers.onStatus('connected', 'Escutando o canal do widget da PixGG (não oficial)');
+      this.handlers.onStatus('connected', 'Escutando o canal do widget da PixGG (fora da API oficial)');
       this.emitirDados();
       return;
     }

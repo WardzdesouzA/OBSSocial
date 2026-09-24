@@ -1,4 +1,12 @@
 {
+  "0.175.2": {
+    "titulo": "💚 PixGG yanıtladı ve kullanıma izin verdi: uyarılar ve metinler artık bunu söylüyor, resmi API’si (yalnızca webhook) belgelendi",
+    "itens": [
+      "💚 PixGG e-postayı 24/09/2026’da yanıtlayarak widget kanalının kullanımına izin verdi («bizim tarafımızdan kullanım konusunda rahat olabilirsiniz»). Labs, panel ve README metinleri artık «izin istendi» yerine tarihle birlikte «PixGG tarafından izin verildi» diyor; entegrasyon hâlâ resmi API dışında ve PixGG desteği olmadan, bu yüzden dört uyarı kalıyor — dördüncüsü artık «PixGG fikir değiştirirse» diyor.",
+      "📖 PixGG resmi bir API (Uygulamalar) açtı: iki başlıkta istemci kimlik bilgileri, tek bir «webhook» kapsamı ve tek bir uç nokta (webhook URL’sini kaydetme). Yalnızca herkese açık bir URL’ye HMAC-SHA256 ile imzalı bağış GÖNDERİR — sorgulama, kontroller, para birimi veya video yok. Yayıncının PC’sindeki programın herkese açık URL’si yok, bu yüzden widget kanalı yol olmaya devam ediyor; API, söylemedikleri ve iki yolun karşılaştırmasıyla docs/estudo-livepix-pixgg.md içinde belgelendi.",
+      "📝 İzleyiciler için önerilen metin, entegrasyonun PixGG’nin bilgisi ve izniyle yapıldığını söylüyor."
+    ]
+  },
   "0.175.1": {
     "titulo": "🖱️ Sesli bir yoruma (PixGG, Telegram, WhatsApp) sol tıklama her sütunda pencereyi yeniden açıyor",
     "itens": [

@@ -2775,26 +2775,26 @@
         </div>
       </div>
 
-      <!-- 💚 v0.175: PixGG pelo canal do widget — NÃO oficial; só liga com os quatro avisos -->
+      <!-- 💚 v0.175: PixGG pelo canal do widget — fora da API oficial (uso autorizado pela PixGG); só liga com os quatro avisos -->
       <div class="lab-item" id="lab-pixgg">
         <label class="check lab-toggle">
           <input type="checkbox" id="l-pixgg" class="sw">
-          <span><b>💚 PixGG (experimental, NÃO oficial)</b> — cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG do painel (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver — lendo o mesmo canal que o widget de alertas dela usa</span>
+          <span><b>💚 PixGG (experimental, pelo canal do widget — autorizado pela PixGG)</b> — cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG do painel (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver — lendo o mesmo canal que o widget de alertas dela usa</span>
         </label>
         <div class="lab-body">
-          <div class="hint">⚠️ <b>Leia antes de ligar. A PixGG não tem API pública.</b> O widget de alertas dela (a URL que você coloca na fonte de navegador do OBS) recebe cada doação por um canal público de tempo real, identificado pela sua chave da API. O OBS Social <b>assina esse mesmo canal e só lê</b>: uma conexão, só as suas doações, nada é enviado à PixGG, nenhum endereço dela é chamado e nada é marcado como lido — é o mesmo tráfego de um widget aberto. Isso foi descoberto <b>por engenharia reversa do widget</b>, não por documentação: a PixGG pode mudar o mecanismo a qualquer momento e a integração para de funcionar sem aviso. O OBS Social <b>pediu permissão à PixGG por e-mail</b> e, se ela pedir, esta integração é retirada.</div>
+          <div class="hint">⚠️ <b>Leia antes de ligar.</b> A API oficial da PixGG (Aplicações) só envia webhooks para uma URL pública — e um programa no seu PC não tem uma. Por isso o OBS Social usa o canal de tempo real do widget de alertas (a URL que você coloca na fonte de navegador do OBS): ele recebe cada doação por um canal público, identificado pela sua chave da API, e o painel da própria PixGG lê esse mesmo canal. O OBS Social <b>assina esse canal e só lê</b>: uma conexão, só as suas doações, nada é enviado à PixGG, nenhum endereço dela é chamado e nada é marcado como lido — é o mesmo tráfego de um widget aberto. Isso foi descoberto <b>por engenharia reversa do widget</b>, não por documentação: a PixGG pode mudar o mecanismo a qualquer momento e a integração para de funcionar sem aviso. O OBS Social <b>consultou a PixGG por e-mail e ela autorizou o uso</b> (24/09/2026); se ela mudar de ideia, esta integração é retirada.</div>
           <div class="hint"><b>Marque os quatro avisos para liberar a conexão</b> (desmarcar qualquer um derruba a conexão e esquece a chave):</div>
-          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoNaoOficial" class="sw pixgg-aviso" data-aviso="naoOficial"> <span>Entendo que esta integração <b>não é oficial nem apoiada pela PixGG</b>, foi feita por engenharia reversa do widget e <b>pode parar de funcionar a qualquer momento</b>, sem aviso.</span></label>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoNaoOficial" class="sw pixgg-aviso" data-aviso="naoOficial"> <span>Entendo que esta integração <b>não usa a API oficial da PixGG e não tem suporte dela</b> (a PixGG autorizou o uso, mas não dá suporte), foi feita por engenharia reversa do widget e <b>pode parar de funcionar a qualquer momento</b>, sem aviso.</span></label>
           <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoTermos" class="sw pixgg-aviso" data-aviso="termos"> <span>Li os <a href="https://pixgg.com/termos" target="_blank" rel="noopener">termos de uso da PixGG</a> e entendo que <b>usar esta integração é responsabilidade minha</b> perante a PixGG — inclusive o risco de ela não gostar e agir sobre a minha conta.</span></label>
-          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPublico" class="sw pixgg-aviso" data-aviso="publico"> <span>Vou <b>avisar o público</b> que as doações da PixGG aparecem na live por uma integração não oficial do OBS Social (o texto sugerido está abaixo — cole na descrição da live, num aviso 📢 ou diga ao vivo).</span></label>
-          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPermissao" class="sw pixgg-aviso" data-aviso="permissao"> <span>Sei que o OBS Social <b>pediu permissão à PixGG</b> e que, se a PixGG não concordar, <b>esta função será removida</b> numa atualização — sem que nada mais no programa mude.</span></label>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPublico" class="sw pixgg-aviso" data-aviso="publico"> <span>Vou <b>avisar o público</b> que as doações da PixGG aparecem na live por uma integração do OBS Social fora da API oficial da PixGG (autorizada por ela, mas não um produto dela) — o texto sugerido está abaixo: cole na descrição da live, num aviso 📢 ou diga ao vivo.</span></label>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" id="pixggAvisoPermissao" class="sw pixgg-aviso" data-aviso="permissao"> <span>Sei que a PixGG <b>autorizou o uso por e-mail</b> (24/09/2026) e que, se ela mudar de ideia, <b>esta função será removida</b> numa atualização — sem que nada mais no programa mude.</span></label>
           <div class="row" style="margin-top:8px">
-            <input type="text" id="pixggAvisoPublicoTexto" readonly value="Aviso: as doações da PixGG aparecem nesta live por uma integração NÃO oficial do OBS Social (programa gratuito e aberto: github.com/WardzdesouzA/OBSSocial), que só lê o mesmo canal do widget de alertas da PixGG. A PixGG não tem relação com o programa e a integração pode parar a qualquer momento." style="flex:1;font-size:12px" title="O texto sugerido para avisar o público — copie com o 📋">
+            <input type="text" id="pixggAvisoPublicoTexto" readonly value="Aviso: as doações da PixGG aparecem nesta live por uma integração do OBS Social (programa gratuito e aberto: github.com/WardzdesouzA/OBSSocial), que só lê o mesmo canal do widget de alertas da PixGG, com o conhecimento e a autorização da PixGG. A integração não é um produto da PixGG e pode parar a qualquer momento." style="flex:1;font-size:12px" title="O texto sugerido para avisar o público — copie com o 📋">
             <button class="icon-btn copy-btn" data-copy="pixggAvisoPublicoTexto" title="Copiar o aviso ao público">📋</button>
           </div>
           <div class="card" data-platform="pixgg" style="margin-top:10px">
-            <h3><span class="icon-slot"></span> PixGG <span class="tag">não oficial</span></h3>
-            <div class="hint">Cole a <b>chave da API do widget</b> (ou a URL inteira do widget de alertas, <code>api.pixgg.com/?apikey=...</code>, que está no painel da PixGG → Widgets). A chave fica <b>cifrada só neste computador</b> (pasta data/), nunca vai para as telas nem para a rede, e o programa não a usa para nada além de escutar o canal.</div>
+            <h3><span class="icon-slot"></span> PixGG <span class="tag">canal do widget</span></h3>
+            <div class="hint">Cole a <b>chave da API do widget</b> (ou a URL inteira do widget de alertas, <code>api.pixgg.com/?apikey=...</code>, que está no painel da PixGG → Widgets). A chave fica <b>cifrada só neste computador</b> (pasta data/), nunca vai para as telas e só sai deste computador como nome do canal na conexão com o Pusher — exatamente o que o widget de alertas faz; o programa não a usa para nada além de escutar o canal.</div>
             <div class="row">
               <input type="password" class="secret-input" placeholder="chave da API do widget (apikey) ou a URL do widget" autocomplete="off" style="flex:1">
               <input type="hidden" class="channel-input" value="pixgg">
@@ -6166,7 +6166,7 @@ document.getElementById('l-pix').addEventListener('input', (e) => {
   hub.send({ type: 'settings', settings: { labs: { pix: e.target.checked } } });
   setTimeout(() => { applyingSettings = false; }, 300);
 });
-// 💚 v0.175: PixGG (Labs, NÃO oficial) — o seletor, os quatro avisos e o botão de conectar
+// 💚 v0.175: PixGG (Labs, canal do widget — autorizado pela PixGG) — o seletor, os quatro avisos e o botão de conectar
 function pixggAvisosOk() {
   const a = ((settings || {}).pixgg || {}).avisos || {};
   return ['naoOficial', 'termos', 'publico', 'permissao'].every((k) => a[k] === true);
