@@ -1,4 +1,15 @@
 {
+  "0.174.0": {
+    "titulo": "💜 LivePix via the official API: its own tab and column, alert control (hold, skip, replay), wallet, subscriptions and rewards on the dashboard · 💠 Pix tab · end of the generic URL, the Support tab and the widget layers",
+    "itens": [
+      "💜 LivePix joined the Connections, via the official API (free for every account): create an application in the LivePix panel and paste the client ID and secret. Every donation (with or without a message) becomes a comment in the 💜 LivePix tab and in its own column, with name, amount, text, ID and a “flagged” badge when LivePix flags the message; nothing comes in twice, even after a restart. You decide when to show each one through the OBS Social screen (featured or queue), replay any and preview everything first.",
+      "🎛️ In the LivePix tab: “⏸ Hold LivePix alerts” (the queue stays in its widget, without playing on its own), ⏭ skip the current one, 🔁 replay the last, ℹ️ with everything the API returns (wallet: balance, pending, in transit, receivables and latest transactions; active subscriptions and plans; rewards and grants) and 🔗 to the LivePix panel — blocking and unblocking donors is there. The 🕹️ External control does the same with the “livepixControle” operation and the state shows the account and autoPlay.",
+      "⏱️ The polling interval lives in Settings → Connections → LivePix: default 15 s, between 5 s (the minimum the API takes without complaining) and 300 s. One token per hour, reused; an exceeded limit (429) becomes a longer wait with a notice, and a wrong credential is a final error. Requests go through the same fallback paths as the other networks.",
+      "💰 The stream earnings got a LivePix line, with its fee (5%, read from LivePix’s fees page by 🔎 or typed by hand).",
+      "💠 Pix straight from the bank got the 💠 Pix tab and its own column (it was the Support tab). What old logs kept as “donation” shows as Pix.",
+      "🗑️ Discontinued: the generic donation URL (/doacao answers 410), the 💝 Support tab (now 💜 LivePix + 💠 Pix) and the 🧩 Widget layers from v0.173 (what they did LivePix now does through the API; the key disappears from settings on its own)."
+    ]
+  },
   "0.173.0": {
     "titulo": "🧩 Widget layers on the screen: LivePix, PixGG and any “browser source” alerts inside the OBS Social overlay, with on/off and 🔄 from the dashboard",
     "itens": [
