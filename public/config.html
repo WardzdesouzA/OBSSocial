@@ -3808,7 +3808,7 @@ const hub = connectHub((event) => {
         st.textContent = `🎉 Versão nova disponível: v${event.latest} (você está na v${event.current}). Quer atualizar?`;
         apl.style.display = '';
       } else {
-        st.textContent = `✅ Você já está na versão mais recente (v${event.current}).`;
+        st.textContent = `✅ Você já está na versão mais recente (v${event.current}).` + (event.podeAtrasar ? ' ' + OBS_I18N.t('Uma versão que acabou de sair pode levar alguns minutos para aparecer — se você espera uma, tente de novo daqui a pouco.') : '');
         apl.style.display = 'none';
       }
       break;
@@ -4089,11 +4089,13 @@ function updateStatus(platform, status) {
     const input = card.querySelector('.channel-input');
     dot.className = 'dot ' + (status.state === 'auth' ? 'connecting' : (status.state || ''));
     // 🚦 Verde só com a live NO AR; conectado sem live (ou ainda sem saber) = amarelo
-    if (status.state === 'connected' && status.aoVivo !== true) dot.classList.add('sem-live');
+    // 🟢 v0.176.1: LivePix, PixGG, Telegram e WhatsApp não têm «live no ar» — conectado é verde
+    const temLive = !['livepix', 'pixgg', 'telegram', 'whatsapp'].includes(platform);
+    if (status.state === 'connected' && temLive && status.aoVivo !== true) dot.classList.add('sem-live');
     // ♿ a bolinha também se apresenta para leitores de tela
     dot.setAttribute('role', 'img');
     dot.setAttribute('aria-label', status.state === 'connected'
-      ? (status.aoVivo === true ? 'Conectado — live no ar' : 'Conectado — sem live no ar')
+      ? (!temLive ? 'Conectado' : status.aoVivo === true ? 'Conectado — live no ar' : 'Conectado — sem live no ar')
       : (status.state === 'connecting' || status.state === 'auth') ? 'Conectando...'
         : status.state === 'error' ? 'A conexão falhou' : 'Desconectado');
     if (status.state === 'auth') {
@@ -4107,7 +4109,7 @@ function updateStatus(platform, status) {
       detail.appendChild(link);
     } else {
       detail.textContent = status.detail || (status.state === 'connected'
-        ? (status.aoVivo === true ? 'Conectado — live no ar' : 'Conectado — sem live no ar')
+        ? (!temLive ? 'Conectado' : status.aoVivo === true ? 'Conectado — live no ar' : 'Conectado — sem live no ar')
         : status.state === 'connecting' ? 'Conectando...' : 'Desconectado');
     }
     if (status.channel && !input.value) input.value = status.channel;

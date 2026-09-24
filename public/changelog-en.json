@@ -1,4 +1,11 @@
 {
+  "0.176.1": {
+    "titulo": "🔄 The version check reads the GitHub API first (the “raw” endpoint lagged 5 min) · 🟢 Connected LivePix, PixGG, Telegram and WhatsApp turn green",
+    "itens": [
+      "🔄 Right after a release, “Check for a new version” said “you are already on the latest version”: GitHub’s “raw” endpoint is cached for up to 5 minutes and still served the old package.json. The check now queries the GitHub API first (always current), with no-cache headers, and keeps “raw” as a fallback — when raw is what answers, the screen notes that a just-released version can take a few minutes to show up.",
+      "🟢 The LivePix, PixGG, Telegram and WhatsApp dots stayed yellow (“connected — no live on air”) because those networks have no notion of a live being on air. Connected is now green, labelled “Connected”, on the dashboard and in Settings."
+    ]
+  },
   "0.176.0": {
     "titulo": "💚 PixGG leaves Labs and joins Connections, next to LivePix — without the four acknowledgments, since PixGG authorized the use",
     "itens": [

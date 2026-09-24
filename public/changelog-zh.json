@@ -1,4 +1,11 @@
 {
+  "0.176.1": {
+    "titulo": "🔄 版本检查先读取 GitHub API（“raw”会滞后 5 分钟）· 🟢 已连接的 LivePix、PixGG、Telegram 和 WhatsApp 变为绿色",
+    "itens": [
+      "🔄 新版本刚发布时，“检查是否有新版本”说“你已是最新版本”：GitHub 的“raw”地址最多缓存 5 分钟，仍返回旧的 package.json。现在检查先查询 GitHub API（始终最新），带 no-cache 请求头，“raw”作为备用 —— 当由 raw 响应时，屏幕会提示刚发布的版本可能需要几分钟才会显示。",
+      "🟢 LivePix、PixGG、Telegram 和 WhatsApp 的圆点一直是黄色（“已连接 —— 未在直播”），因为这些网络没有“直播中”的概念。现在已连接为绿色，标签为“已连接”，面板和设置中均如此。"
+    ]
+  },
   "0.176.0": {
     "titulo": "💚 PixGG 离开 Labs，加入连接，与 LivePix 并列 —— 因 PixGG 已授权使用，不再有四项须知",
     "itens": [

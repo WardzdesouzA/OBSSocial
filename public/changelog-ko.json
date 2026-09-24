@@ -1,4 +1,11 @@
 {
+  "0.176.1": {
+    "titulo": "🔄 버전 확인이 GitHub API를 먼저 읽습니다(«raw»는 5분 뒤처졌음) · 🟢 연결된 LivePix, PixGG, Telegram, WhatsApp이 초록색으로",
+    "itens": [
+      "🔄 릴리스 직후 «새 버전 확인»이 «이미 최신 버전입니다»라고 했습니다: GitHub의 «raw» 주소는 최대 5분간 캐시되어 여전히 옛 package.json을 내주었습니다. 이제 확인은 GitHub API(항상 최신)를 no-cache 헤더와 함께 먼저 조회하고 «raw»는 예비로 둡니다 — raw가 응답하면 화면이 방금 나온 버전은 몇 분 걸릴 수 있다고 알립니다.",
+      "🟢 LivePix, PixGG, Telegram, WhatsApp의 점이 «연결됨 — 방송 없음»으로 노란색이었습니다. 이 네트워크들에는 방송 중이라는 개념이 없기 때문입니다. 연결됨은 이제 패널과 설정에서 «연결됨» 라벨과 함께 초록색입니다."
+    ]
+  },
   "0.176.0": {
     "titulo": "💚 PixGG가 Labs에서 나와 LivePix 옆 연결로 — PixGG가 사용을 허가했으므로 네 가지 고지 없이",
     "itens": [

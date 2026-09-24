@@ -1,4 +1,11 @@
 {
+  "0.176.1": {
+    "titulo": "🔄 Die Versionsprüfung liest zuerst die GitHub-API („raw“ hing 5 Min. hinterher) · 🟢 Verbundene LivePix, PixGG, Telegram und WhatsApp werden grün",
+    "itens": [
+      "🔄 Direkt nach einer Veröffentlichung sagte „Auf neue Version prüfen“ „du bist schon auf der neuesten Version“: GitHubs „raw“-Adresse wird bis zu 5 Minuten gecacht und lieferte noch die alte package.json. Die Prüfung fragt jetzt zuerst die GitHub-API (immer aktuell) mit No-Cache-Headern und behält „raw“ als Reserve — antwortet „raw“, weist der Bildschirm darauf hin, dass eine gerade erschienene Version einige Minuten brauchen kann.",
+      "🟢 Die Punkte von LivePix, PixGG, Telegram und WhatsApp blieben gelb („verbunden — kein Live auf Sendung“), weil diese Netzwerke kein „Live auf Sendung“ kennen. Verbunden ist jetzt grün, mit „Verbunden“ beschriftet, im Panel und in den Einstellungen."
+    ]
+  },
   "0.176.0": {
     "titulo": "💚 PixGG verlässt Labs und kommt zu den Verbindungen neben LivePix — ohne die vier Hinweise, da PixGG die Nutzung genehmigt hat",
     "itens": [

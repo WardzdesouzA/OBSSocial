@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    "Uma versão que acabou de sair pode levar alguns minutos para aparecer — se você espera uma, tente de novo daqui a pouco.": "방금 나온 버전은 나타나기까지 몇 분 걸릴 수 있습니다 — 기다리는 버전이 있다면 잠시 후 다시 시도하세요.",
     "Cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver. Cole a": "PixGG로 받은 각 후원이 💚 PixGG 탭(과 전용 컬럼)에 이름·금액·메시지·오디오(있을 때)가 있는 댓글이 됩니다. 붙여넣기:",
     ", que está no painel da PixGG → Widgets).": "(PixGG 패널 → 위젯에 있습니다).",
     "ℹ️ O OBS Social lê o mesmo canal de tempo real que o widget de alertas e o painel da PixGG usam — só leitura, uma conexão, nada é enviado à PixGG —": "ℹ️ OBS Social은 알림 위젯과 PixGG 패널이 사용하는 동일한 실시간 채널을 읽습니다 — 읽기 전용, 연결 하나, PixGG로 아무것도 보내지 않음 —",

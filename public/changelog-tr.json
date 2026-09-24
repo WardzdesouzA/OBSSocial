@@ -1,4 +1,11 @@
 {
+  "0.176.1": {
+    "titulo": "🔄 Sürüm denetimi önce GitHub API’sini okuyor («raw» 5 dk geride kalıyordu) · 🟢 Bağlı LivePix, PixGG, Telegram ve WhatsApp yeşile dönüyor",
+    "itens": [
+      "🔄 Bir sürüm çıktıktan hemen sonra «Yeni sürüm var mı kontrol et» «zaten en yeni sürümdesiniz» diyordu: GitHub’ın «raw» adresi 5 dakikaya kadar önbellekte kalıyor ve hâlâ eski package.json’u veriyordu. Denetim artık önce GitHub API’sine (her zaman güncel) önbellek-karşıtı başlıklarla soruyor ve «raw» yedek olarak kalıyor — yanıt veren «raw» olduğunda ekran, yeni çıkan bir sürümün görünmesinin birkaç dakika sürebileceğini belirtiyor.",
+      "🟢 LivePix, PixGG, Telegram ve WhatsApp noktaları sarı kalıyordu («bağlı — yayın yok») çünkü bu ağlarda yayında olma kavramı yok. Bağlı artık yeşil, «Bağlı» etiketiyle, panelde ve Ayarlar’da."
+    ]
+  },
   "0.176.0": {
     "titulo": "💚 PixGG Labs’tan çıkıp LivePix’in yanına Bağlantılar’a geliyor — PixGG kullanıma izin verdiği için dört uyarı olmadan",
     "itens": [

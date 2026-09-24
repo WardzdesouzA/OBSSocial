@@ -1,4 +1,11 @@
 {
+  "0.176.1": {
+    "titulo": "🔄 La vérification de version lit d’abord l’API GitHub (le « raw » avait 5 min de retard) · 🟢 LivePix, PixGG, Telegram et WhatsApp connectés passent au vert",
+    "itens": [
+      "🔄 Juste après une sortie, « Vérifier s’il y a une nouvelle version » disait « vous êtes déjà sur la version la plus récente » : l’adresse « raw » de GitHub est mise en cache jusqu’à 5 minutes et livrait encore l’ancien package.json. La vérification interroge désormais d’abord l’API GitHub (toujours à jour), avec des en-têtes anti-cache, et garde « raw » en secours — quand c’est lui qui répond, l’écran signale qu’une version tout juste sortie peut mettre quelques minutes à apparaître.",
+      "🟢 Les points LivePix, PixGG, Telegram et WhatsApp restaient jaunes (« connecté — pas de live à l’antenne ») car ces réseaux n’ont pas la notion de live à l’antenne. Connecté est désormais vert, avec l’étiquette « Connecté », dans le panneau et les Réglages."
+    ]
+  },
   "0.176.0": {
     "titulo": "💚 PixGG quitte les Labs et rejoint les Connexions, à côté de LivePix — sans les quatre avertissements, puisque PixGG a autorisé l’usage",
     "itens": [
