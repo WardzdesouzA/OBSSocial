@@ -1,4 +1,15 @@
 {
+  "0.175.0": {
+    "titulo": "💚 PixGG on the dashboard (🧪 Labs, UNOFFICIAL): its own tab and column, name, amount, message and audio of every donation, through the widget channel — with four acknowledgments, an encrypted key and permission requested from PixGG",
+    "itens": [
+      "💚 PixGG joined 🧪 Labs. PixGG has no public API: its alert widget receives every donation through a public real-time channel identified by the streamer’s widget key. OBS Social subscribes to that SAME channel and only reads — one connection, only your donations, nothing is sent to PixGG, none of its endpoints is called and nothing is marked as read (the same traffic as an open widget). Every donation becomes a comment in the 💚 PixGG tab and in its own column, with name, amount (foreign currency too), message, the requested video link and the voice message (downloaded to the local media quarantine); nothing comes in twice, not even when PixGG’s panel says “play again”, nor after a restart.",
+      "⚠️ Honesty first: this was found by reverse-engineering the widget, it can stop working without notice and PixGG’s terms apply to you. That is why the feature starts off and only connects with the Labs switch on AND the four acknowledgments checked (not official and may break; the terms risk is yours; you will tell your audience — a suggested text with a 📋 button is provided; permission was requested from PixGG and the feature will be removed if they object). Unchecking any acknowledgment, or turning Labs off, drops the connection and forgets the key. We emailed PixGG asking for permission, with the project’s address; if they answer with an official API, the connector is swapped and nothing else changes.",
+      "🔒 The widget key (or its whole URL, which the program understands) is kept encrypted on this computer only (data/ folder), never goes to the screens or the network, and the remembered “channel” is always “pixgg” — the key shows up nowhere.",
+      "🎛️ In the PixGG tab: the channel state, “⏸ alerts paused on PixGG” when its panel pauses (donations keep arriving here), ℹ️ with what the channel reports (events, skips, clears, last event) and the honest explanation of how it works, and 🔗 to PixGG’s panel — pausing, skipping, clearing the queue and blocking donors is there. Connection dropped? It reconnects on its own, with a growing wait. The 🕹️ External control shows PixGG in its state.",
+      "💰 The stream earnings got a PixGG line, with its fee (3.9%, a reference value from the terms — PixGG’s page is an app the program cannot read, and 🔎 says so instead of pretending).",
+      "📖 The README got the “Donations: LivePix, Pix and PixGG” section (the generic URL one, discontinued in v0.174, is gone) and the study in docs/ tells what was done and why."
+    ]
+  },
   "0.174.0": {
     "titulo": "💜 LivePix via the official API: its own tab and column, alert control (hold, skip, replay), wallet, subscriptions and rewards on the dashboard · 💠 Pix tab · end of the generic URL, the Support tab and the widget layers",
     "itens": [

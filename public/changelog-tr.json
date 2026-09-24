@@ -1,4 +1,15 @@
 {
+  "0.175.0": {
+    "titulo": "💚 Panelde PixGG (🧪 Labs, RESMİ DEĞİL): kendi sekmesi ve sütunu, her bağışın adı, tutarı, mesajı ve sesi, widget kanalı üzerinden — dört uyarı, şifreli anahtar ve PixGG’den istenen izinle",
+    "itens": [
+      "💚 PixGG 🧪 Labs’a girdi. PixGG’nin herkese açık API’si yok: uyarı widget’ı her bağışı yayıncının widget anahtarıyla tanımlanan herkese açık bir gerçek zamanlı kanaldan alır. OBS Social AYNI kanala abone olur ve yalnızca okur — tek bağlantı, yalnızca sizin bağışlarınız, PixGG’ye hiçbir şey gönderilmez, hiçbir adresi çağrılmaz ve hiçbir şey okundu olarak işaretlenmez (açık bir widget’ın trafiğinin aynısı). Her bağış 💚 PixGG sekmesinde ve kendi sütununda ad, tutar (yabancı para dahil), mesaj, istenen video bağlantısı ve sesli mesajla (yerel medya karantinasına indirilir) bir yoruma dönüşür; hiçbir şey iki kez girmez — PixGG paneli «yeniden çal» dese de, yeniden başlatmadan sonra da.",
+      "⚠️ Önce dürüstlük: bu, widget’ın tersine mühendisliğiyle bulundu, haber vermeden çalışmayı bırakabilir ve PixGG’nin koşulları sizin için geçerlidir. Bu yüzden özellik kapalı başlar ve yalnızca Labs anahtarı açık VE dört uyarı işaretliyken bağlanır (resmi değil ve bozulabilir; koşullar karşısındaki risk sizindir; izleyicileri bilgilendireceksiniz — 📋 düğmeli önerilen bir metin var; PixGG’den izin istendi ve itiraz ederlerse özellik kaldırılacak). Herhangi bir uyarının işaretini kaldırmak veya Labs’ı kapatmak bağlantıyı keser ve anahtarı unutur. PixGG’ye projenin adresiyle izin isteyen bir e-posta gönderdik; resmi bir API ile yanıt verirlerse bağlayıcı değiştirilir ve başka hiçbir şey değişmez.",
+      "🔒 Widget anahtarı (veya programın anladığı tam URL’si) yalnızca bu bilgisayarda şifreli kalır (data/ klasörü), asla ekranlara veya ağa gitmez ve hatırlanan «kanal» her zaman «pixgg»dir — anahtar hiçbir yerde görünmez.",
+      "🎛️ PixGG sekmesinde: kanal durumu, paneli duraklatınca «⏸ PixGG’de uyarılar duraklatıldı» (bağış buraya gelmeye devam eder), kanalın bildirdikleriyle ℹ️ (olaylar, atlamalar, temizlemeler, son olay) ve nasıl çalıştığının dürüst açıklaması, ve PixGG paneline 🔗 — duraklatma, atlama, kuyruğu temizleme ve bağışçı engelleme orada. Bağlantı koptu mu? Artan beklemeyle kendiliğinden yeniden bağlanır. 🕹️ Dış kontrol, PixGG’yi durumda gösterir.",
+      "💰 Yayın geliri PixGG satırını kazandı, ücretiyle birlikte (%3,9, koşullardaki referans değer — PixGG sayfası programın okuyamadığı bir uygulamadır ve 🔎 rol yapmak yerine bunu söyler).",
+      "📖 README «Bağışlar: LivePix, Pix ve PixGG» bölümünü kazandı (v0.174’te kaldırılan genel URL bölümü gitti) ve docs/ içindeki çalışma neyin neden yapıldığını anlatır."
+    ]
+  },
   "0.174.0": {
     "titulo": "💜 Resmi API ile LivePix: kendi sekmesi ve sütunu, uyarı kontrolü (tut, atla, tekrarla), cüzdan, abonelikler ve ödüller panelde · 💠 Pix sekmesi · genel URL, Destek sekmesi ve widget katmanlarının sonu",
     "itens": [

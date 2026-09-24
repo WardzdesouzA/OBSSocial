@@ -39,6 +39,12 @@ const PLATFORMS = {
     color: '#7c3aed',
     icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4.2 1.8 3.7 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6z',
   },
+  // 💚 v0.175: PixGG pelo canal do widget (Labs, não oficial)
+  pixgg: {
+    name: 'PixGG',
+    color: '#10b981',
+    icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 5h2.4c2 0 3.3 1.2 3.3 3s-1.3 3-3.3 3h-1.1V17h-1.3V7zm1.3 1.2v3.6h1c1.2 0 2-.6 2-1.8s-.8-1.8-2-1.8h-1z',
+  },
   pix: {
     name: 'Pix',
     color: '#32bcad',
