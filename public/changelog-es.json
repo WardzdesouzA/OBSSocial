@@ -1,4 +1,13 @@
 {
+  "0.173.0": {
+    "titulo": "🧩 Capas de widget en la pantalla: las alertas de LivePix, PixGG y cualquier «fuente de navegador» dentro del overlay de OBS Social, con encender/apagar y 🔄 desde el panel",
+    "itens": [
+      "🧩 En Configuración → 🧪 Labs → 🧩 Capas de widget, pega la URL que LivePix, PixGG o cualquier otro servicio entrega para la fuente de navegador de OBS. Cada URL se vuelve una capa del overlay de OBS Social, en la posición y el tamaño elegidos (% de la pantalla; 100 × 100 es la pantalla entera), por encima de todo o detrás de los widgets, con el audio automático permitido. La alerta sale en la transmisión con el arte del propio servicio, en una sola fuente de OBS. Hasta 8 capas.",
+      "🎛️ En el panel, el botón 🧩 lista las capas: cada una tiene su encender/apagar (apagar quita el cuadro de la pantalla y la alerta deja de sonar; queda guardado) y un 🔄 que abre la URL de nuevo. El 🕹️ Control externo hace lo mismo con la operación «camada» ({id, ligada} o {id, recarregar}) y el estado lista las capas.",
+      "🔒 La URL del widget lleva una clave de la cuenta del streamer: la lista solo se edita en el equipo donde corre OBS Social (por la red el servidor rechaza y avisa); encender, apagar y recargar funcionan desde cualquier panel. Solo https (o http en este equipo). La vista previa del editor de pantalla no abre ninguna capa, y un cambio de configuración cualquiera nunca recarga la alerta a medias — la URL solo se reabre cuando cambia de verdad o con 🔄.",
+      "ℹ️ La página del widget está aislada por el navegador: el panel no se entera del nombre, el valor ni el mensaje por ella — eso solo llega por API oficial (LivePix la tiene; PixGG no)."
+    ]
+  },
   "0.172.0": {
     "titulo": "🔀 Cambiar de @ quita del panel lo que era de la @ anterior · 🛡️ los caminos de reserva del Kick ahora valen para YouTube, Twitch y Bilibili, con reintento automático",
     "itens": [

@@ -293,6 +293,10 @@ const DEFAULT_SETTINGS = {
   // 📅 v0.171: os logs são o arquivo da live — no mínimo 366 dias (um ano
   // bissexto), para qualquer dia poder ser revisto; 0 = nunca apagar
   logRetentionDays: 366,
+  // 🧩 v0.173: camadas de widget na tela — a URL que a LivePix, a PixGG ou
+  // qualquer outro serviço entrega para a «fonte de navegador» do OBS entra
+  // como mais uma camada do overlay (ver sanitizeCamadas)
+  camadas: [],
   // Sorteio: fichas por nivel de sub/membro (lidas dos selos publicos do chat)
   raffle: {
     extraTokens: true,  // desligado = sorteio aberto: 1 ficha para todos
@@ -339,6 +343,8 @@ const DEFAULT_SETTINGS = {
   // 🧪 Regra da casa: TUDO no Labs começa DESLIGADO — liga quem quiser usar
   labs: {
     donations: false, // URL generica de doacoes (/doacao) e aba Apoios
+    // 🧩 v0.173: camadas de widget (LivePix, PixGG e qualquer fonte de navegador) na tela
+    camadas: false,
     // 💠 Pix direto do banco do streamer (API Pix do Bacen): cada Pix
     // recebido vira um apoio na aba Apoios, com a mensagem do pagador
     pix: false,
@@ -859,6 +865,36 @@ function sanitizeDeck(bruto) {
   };
 }
 
+// 🧩 v0.173: as camadas de widget da tela. Cada uma é a URL que um serviço
+// (LivePix, PixGG...) entrega para a fonte de navegador do OBS — o overlay a
+// abre num quadro, na posição e no tamanho pedidos (% da tela). Só https
+// (ou http neste computador), no máximo CAMADAS_MAX, textos com teto.
+const CAMADAS_MAX = 8;
+const CAMADA_URL_OK = /^(https:\/\/[^\s"'<>\\]{1,2000}|http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?(\/[^\s"'<>\\]{0,2000})?)$/i;
+function sanitizeCamadas(lista) {
+  const fora = [];
+  const ids = new Set();
+  const pct = (v, padrao, min) => { const n = Number(v); return Number.isFinite(n) ? Math.max(min, Math.min(100, Math.round(n * 10) / 10)) : padrao; };
+  for (const c of Array.isArray(lista) ? lista : []) {
+    if (!c || typeof c !== 'object') continue;
+    const url = String(c.url || '').trim();
+    if (!CAMADA_URL_OK.test(url)) continue;
+    let id = String(c.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
+    if (!id || ids.has(id)) id = 'c' + Math.random().toString(36).slice(2, 10);
+    ids.add(id);
+    fora.push({
+      id,
+      nome: String(c.nome || '').replace(/[\r\n]/g, ' ').trim().slice(0, 40) || 'Widget',
+      url,
+      x: pct(c.x, 0, 0), y: pct(c.y, 0, 0), largura: pct(c.largura, 100, 1), altura: pct(c.altura, 100, 1),
+      ligada: c.ligada !== false,
+      ordem: c.ordem === 'abaixo' ? 'abaixo' : 'acima',
+    });
+    if (fora.length >= CAMADAS_MAX) break;
+  }
+  return fora;
+}
+
 function mergeSettings(base) {
   const src = base || {};
   const widgets = {};
@@ -896,6 +932,7 @@ function mergeSettings(base) {
       platforms: { ...DEFAULT_SETTINGS.chat.platforms, ...((src.chat || {}).platforms || {}) },
     },
     panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}) },
+    camadas: sanitizeCamadas(src.camadas), // 🧩 v0.173
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
     relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
     clima: sanitizeClima(src.clima, DEFAULT_SETTINGS.clima), // 🌤️ v0.167
@@ -3833,6 +3870,7 @@ const OP_CATEGORY = {
   deleteMedia: 'media',
   clearLogs: 'logs',
   logsDias: 'logs', logDia: 'logs', // 📅 v0.171: rever um dia de live
+  camada: 'screen', // 🧩 v0.173: ligar/desligar/recarregar uma camada de widget
   // 🎵 A mesa de trilhas é uma ferramenta; 🎬 o OBS tem seletor próprio
   trilhasSet: 'tools', trilhaTocar: 'tools', trilhaParar: 'tools', pastaTocar: 'tools',
   trilhaTela: 'tools', trilhaTelaFim: 'tools', // 🖼️🎞️ v0.86: teclas de mídia
@@ -10561,6 +10599,22 @@ function tratarMensagem(ws, raw) {
       p.resolve({ status, texto: typeof msg.corpo === 'string' ? msg.corpo.slice(0, 512 * 1024) : '' });
       break;
     }
+    case 'camada': {
+      // 🧩 v0.173: {id, ligada?} liga/desliga a camada (fica salvo);
+      // {id, recarregar: true} manda a tela abrir a URL de novo
+      const id = String(msg.id || '');
+      const lista = Array.isArray(state.settings.camadas) ? state.settings.camadas : [];
+      const c = lista.find((x) => x.id === id);
+      if (!c) break;
+      if (typeof msg.ligada === 'boolean' && c.ligada !== msg.ligada) {
+        c.ligada = msg.ligada;
+        saveSettings();
+        broadcast({ type: 'settings', settings: state.settings });
+        console.log(`  🧩 Camada «${c.nome}» ${c.ligada ? 'ligada' : 'desligada'}.`);
+      }
+      if (msg.recarregar === true) broadcast({ type: 'camadaRecarregar', id });
+      break;
+    }
     case 'logsDias':
       // 📅 v0.171: os dias com log, para o calendário
       try { ws.send(JSON.stringify({ type: 'logsDias', dias: listarDiasDeLog(), hoje: todayLogPath().match(/chat-(\d{4}-\d{2}-\d{2})/)[1] })); } catch { /* já caiu */ }
@@ -10875,6 +10929,17 @@ function tratarMensagem(ws, raw) {
       if (ws.role !== 'local' && incoming.deck && typeof incoming.deck === 'object') delete incoming.deck.temaObs;
       if ('logRetentionDays' in incoming) {
         incoming.logRetentionDays = sanitizeRetencaoLogs(incoming.logRetentionDays);
+      }
+      // 🧩 v0.173: as URLs de widget carregam a chave da conta do streamer —
+      // só o computador local edita a lista (ligar/desligar/recarregar uma
+      // camada é a operação «camada», liberada para qualquer painel)
+      if ('camadas' in incoming) {
+        if (ws.role !== 'local') {
+          delete incoming.camadas;
+          responderLocal(ws, { type: 'somenteLocal', op: 'camadas', mensagem: 'As camadas de widget só podem ser editadas no computador onde o OBS Social roda (abra as configurações nele pelo localhost). Ligar, desligar e recarregar funcionam de qualquer painel.' });
+        } else {
+          incoming.camadas = sanitizeCamadas(incoming.camadas);
+        }
       }
       const widgets = { ...state.settings.widgets };
       for (const [key, value] of Object.entries(incoming.widgets || {})) {
@@ -12948,6 +13013,7 @@ function controleEstado() {
     sorteio: { visivel: !!(state.raffle && state.raffle.visible), participantes: state.participants.size, ganhadores: state.raffle ? (state.raffle.winners || []).map((w) => (w && (w.author || w.name || w.nome)) || '') : [] },
     likometro: !!(state.likemeter && state.likemeter.enabled), audiencia: !!(state.audience && state.audience.visible),
     aviso: { visivel: !!state.avisos[0].visible, texto: state.avisos[0].texto },
+    camadas: (state.settings.camadas || []).map((c) => ({ id: c.id, nome: c.nome, ligada: !!c.ligada })), // 🧩 v0.173
     avisos: state.avisos.map((a) => ({ id: a.id, nome: a.label, visivel: !!a.visible, texto: a.texto })), // 📢 v0.128
     relogio: relogioPublico(),
     clima: (() => {

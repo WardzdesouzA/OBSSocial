@@ -1,4 +1,13 @@
 {
+  "0.173.0": {
+    "titulo": "🧩 Ekranda widget katmanları: LivePix, PixGG ve herhangi bir «tarayıcı kaynağı» uyarısı OBS Social overlay’inin içinde, panelden aç/kapat ve 🔄 ile",
+    "itens": [
+      "🧩 Ayarlar → 🧪 Labs → 🧩 Widget katmanları’nda LivePix, PixGG veya başka bir hizmetin OBS tarayıcı kaynağı için verdiği URL’yi yapıştırın. Her URL, seçilen konum ve boyutta (ekranın %’si; 100 × 100 tüm ekran), her şeyin üstünde veya widget’ların arkasında, otomatik ses izinli bir OBS Social overlay katmanı olur. Uyarı yayında hizmetin kendi görseliyle, tek bir OBS kaynağında çıkar. En fazla 8 katman.",
+      "🎛️ Panelde 🧩 düğmesi katmanları listeler: her birinin kendi aç/kapat’ı (kapatmak çerçeveyi ekrandan kaldırır, uyarı durur; kaydedilir) ve URL’yi yeniden açan bir 🔄’sı vardır. 🕹️ Harici kontrol aynı işi «camada» işlemiyle yapar ({id, ligada} veya {id, recarregar}) ve durum katmanları listeler.",
+      "🔒 Widget URL’si yayıncının hesap anahtarını taşır: liste yalnızca OBS Social’ın çalıştığı bilgisayarda düzenlenir (ağdan sunucu reddeder ve uyarır); açma, kapatma ve yeniden yükleme her panelden çalışır. Yalnızca https (veya bu bilgisayarda http). Ekran düzenleyicisinin önizlemesi hiçbir katman açmaz ve sıradan bir ayar değişikliği uyarıyı ortasında asla yeniden yüklemez — URL yalnızca gerçekten değiştiğinde veya 🔄 ile yeniden açılır.",
+      "ℹ️ Widget sayfası tarayıcı tarafından yalıtılmıştır: panel oradan ad, tutar veya mesajı öğrenmez — bu yalnızca resmi API ile gelir (LivePix’te var; PixGG’de yok)."
+    ]
+  },
   "0.172.0": {
     "titulo": "🔀 @ değiştirmek önceki @’ye ait olanları panelden çıkarır · 🛡️ Kick’in yedek yolları artık YouTube, Twitch ve Bilibili için de geçerli, otomatik yeniden deneme ile",
     "itens": [

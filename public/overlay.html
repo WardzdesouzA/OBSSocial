@@ -793,6 +793,9 @@
      mostra ao público direto de um link (YouTube, TikTok, Instagram…) ou de
      um arquivo do computador. Camada própria (acima da mídia da tecla), fade
      padrão, sombra dos overlays na janela; a tela cheia escurece o fundo */
+  /* 🧩 v0.173: camadas de widget (LivePix, PixGG, qualquer fonte de navegador) */
+  #camadasWidget { position: fixed; inset: 0; pointer-events: none; }
+  #camadasWidget iframe.camada { position: absolute; border: 0; margin: 0; padding: 0; background: transparent; pointer-events: none; color-scheme: normal; }
   #midiaDireta { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%);
     z-index: 63; display: none; flex-direction: column; align-items: center; gap: 0.5em;
     pointer-events: none; }
@@ -858,6 +861,8 @@
 <div id="avisoWidget" class="widget" data-widget="aviso"></div>
 <div id="relogioWidget" class="widget" data-widget="relogio"></div>
 <div id="climaWidget" class="widget" data-widget="clima"></div>
+<!-- 🧩 v0.173: camadas de widget (a URL de fonte de navegador de cada serviço, num quadro) -->
+<div id="camadasWidget" data-no-i18n></div>
 <div id="climaCompleto" style="display:none" data-no-i18n></div>
 <div id="somBloqueadoOv" title="Toque uma vez para o navegador liberar o som">🔇 Toque aqui para liberar o som dos alertas</div>
 
@@ -1855,6 +1860,51 @@ window.perfilQueVestiria = () => {
     return p ? p.nome : null;
   } catch { return null; }
 };
+// 🧩 v0.173: as camadas de widget. Cada uma é um quadro com a URL que o
+// serviço (LivePix, PixGG...) entrega para a fonte de navegador do OBS, na
+// posição/tamanho escolhidos. Só as ligadas existem (desligar tira o quadro
+// — some o som e a conexão dela); a URL só é trocada quando muda de verdade
+// (um settings qualquer não pode recarregar o alerta no meio). A prévia do
+// editor não abre camada nenhuma.
+function aplicarCamadasDeWidget() {
+  const caixa = document.getElementById('camadasWidget');
+  if (!caixa || PREVIA) return;
+  const base = settingsBase || settings || {};
+  const ligadas = (base.labs && base.labs.camadas === true) ? (base.camadas || []).filter((c) => c && c.ligada !== false) : [];
+  const vivos = new Map([...caixa.querySelectorAll('iframe.camada')].map((el) => [el.dataset.id, el]));
+  for (const c of ligadas) {
+    if (!/^https?:\/\//i.test(String(c.url || ''))) continue;
+    let el = vivos.get(c.id);
+    if (!el) {
+      el = document.createElement('iframe');
+      el.className = 'camada';
+      el.dataset.id = c.id;
+      el.setAttribute('allow', 'autoplay; fullscreen');
+      el.setAttribute('allowtransparency', 'true');
+      el.setAttribute('title', c.nome || 'widget');
+      el.src = c.url;
+      caixa.appendChild(el);
+    } else {
+      vivos.delete(c.id);
+      if (el.dataset.url !== c.url) el.src = c.url;
+    }
+    el.dataset.url = c.url;
+    el.style.left = (Number(c.x) || 0) + '%';
+    el.style.top = (Number(c.y) || 0) + '%';
+    el.style.width = (Number(c.largura) || 100) + '%';
+    el.style.height = (Number(c.altura) || 100) + '%';
+    el.style.zIndex = c.ordem === 'abaixo' ? '5' : '200';
+  }
+  for (const el of vivos.values()) el.remove(); // desligadas ou apagadas
+}
+function recarregarCamada(id) {
+  const el = document.querySelector('#camadasWidget iframe.camada[data-id="' + String(id || '').replace(/[^a-z0-9]/gi, '') + '"]');
+  if (!el) return;
+  const url = el.dataset.url;
+  el.src = 'about:blank';
+  setTimeout(() => { el.src = url; }, 50);
+}
+
 function aplicarComPerfil(forcar) {
   if (!settingsBase) return;
   const perfil = PERFIL_URL
@@ -3813,6 +3863,7 @@ const hubOv = connectHub((event) => {
       else if (event.version && window.versaoDoPrograma !== event.version) { location.reload(); break; }
       KICK_NAVEGADOR.pronto(hubOv); // 🟢 v0.169.3: esta tela também atende consultas ao Kick
       settingsBase = event.settings;
+      aplicarCamadasDeWidget(); // 🧩 v0.173
       perfisOverlay = Array.isArray(event.perfisOverlay) ? event.perfisOverlay : [];
       destaqueReal = event.featured || null;
       // 🎙️ v0.140: a fala do que já está no ar chega junto (a tela pode ter
@@ -3846,9 +3897,13 @@ const hubOv = connectHub((event) => {
       renderMidiaDireta();
       aplicarMidiaDiretaPlayer();
       break;
+    case 'camadaRecarregar': // 🧩 v0.173
+      recarregarCamada(event.id);
+      break;
     case 'settings':
       settingsBase = event.settings;
       aplicarComPerfil(true);
+      aplicarCamadasDeWidget(); // 🧩 v0.173
       showAudience(null); // re-renderiza com o modo novo
       showAvisos(null);    // idem para os avisos (fonte, cores, tamanho)
       showRelogio(null);

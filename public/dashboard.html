@@ -991,6 +991,15 @@
       <div class="hint" style="margin:6px 0 0;font-size:11px">Valores em reais (moeda estrangeira pela cotação do dia). As taxas ficam em Configurações → 🧪 Labs → 💰 Arrecadação da live.</div>
     </div>
   </div>
+  <!-- 🧩 v0.173: camadas de widget na tela (LivePix, PixGG, qualquer fonte de navegador) -->
+  <div class="tool-wrap" id="camadasWrap" style="display:none">
+    <button id="camadasBtn" class="icon-btn pop-toggle" data-pop="camadasPop" title="Camadas de widget na tela (LivePix, PixGG e outros alertas): ligar, desligar e recarregar cada uma">🧩</button>
+    <div class="popover" id="camadasPop">
+      <div class="pop-title">🧩 Camadas de widget</div>
+      <div id="camadasLinhas" style="font-size:13px;line-height:1.9"></div>
+      <div class="hint" style="margin:6px 0 0;font-size:11px">Desligar tira o quadro da tela (o alerta para de tocar). 🔄 abre a URL de novo. A lista mora em Configurações → 🧪 Labs → 🧩 Camadas de widget.</div>
+    </div>
+  </div>
   <!-- 📅 v0.171: rever um dia de live (o log inteiro daquele dia) -->
   <button id="revisaoBtn" class="icon-btn" title="Rever um dia de live: o calendário mostra os dias com log; escolha um e tudo o que foi preservado naquele dia aparece aqui">📅</button>
   <button id="testBtn" class="icon-btn" title="Enviar comentário de teste">💬</button>
@@ -2096,6 +2105,7 @@ const hub = connectHub((event) => {
       }
       pintarContadores(); // números reais do dia, vindos do servidor
       pintarArrecadado(); // 💰 v0.170
+      pintarCamadas(); // 🧩 v0.173
       renderLivePage();
       restorePlaceholders();
       setFeatured(event.featured);
@@ -2295,6 +2305,7 @@ const hub = connectHub((event) => {
       settings = event.settings;
       applyPanel();
       pintarArrecadado(); // 💰 v0.170: o seletor e as taxas
+      pintarCamadas(); // 🧩 v0.173
       renderLivePage();
       repintarSelos();
       prepararSomDoTimer();
@@ -2501,6 +2512,45 @@ let categoriaTotais = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio
 // 💰 v0.170: o arrecadado do dia (reais) e o cartão do cabeçalho
 let valorTotais = { superchat: 0, pix: 0 };
 const reais = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+// 🧩 v0.173: o chip das camadas de widget — cada uma com o seu liga/desliga e 🔄
+function pintarCamadas() {
+  const wrap = document.getElementById('camadasWrap');
+  if (!wrap) return;
+  const lista = (settings && settings.labs && settings.labs.camadas === true && Array.isArray(settings.camadas)) ? settings.camadas : [];
+  wrap.style.display = lista.length ? '' : 'none';
+  if (!lista.length) return;
+  const ligadas = lista.filter((c) => c.ligada !== false).length;
+  document.getElementById('camadasBtn').textContent = '🧩' + (ligadas ? ' ' + ligadas : '');
+  const caixa = document.getElementById('camadasLinhas');
+  caixa.textContent = '';
+  for (const c of lista) {
+    const linha = document.createElement('div');
+    linha.style.cssText = 'display:flex;align-items:center;gap:8px';
+    const lab = document.createElement('label');
+    lab.className = 'check';
+    lab.style.cssText = 'flex:1;margin:0';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.className = 'sw'; chk.checked = c.ligada !== false; chk.dataset.camada = c.id;
+    chk.title = OBS_I18N.t('Ligar ou desligar esta camada na tela');
+    lab.appendChild(chk);
+    lab.appendChild(document.createTextNode(' ' + (c.nome || 'Widget')));
+    const rec = document.createElement('button');
+    rec.className = 'icon-btn'; rec.textContent = '🔄'; rec.dataset.recarregar = c.id;
+    rec.title = OBS_I18N.t('Recarregar: abre a URL do widget de novo na tela');
+    rec.style.cssText = 'width:28px;height:28px';
+    linha.appendChild(lab); linha.appendChild(rec);
+    caixa.appendChild(linha);
+  }
+}
+document.getElementById('camadasLinhas').addEventListener('change', (e) => {
+  const chk = e.target.closest('input[data-camada]');
+  if (chk) hub.send({ type: 'camada', id: chk.dataset.camada, ligada: chk.checked });
+});
+document.getElementById('camadasLinhas').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-recarregar]');
+  if (b) { hub.send({ type: 'camada', id: b.dataset.recarregar, recarregar: true }); b.textContent = '✅'; setTimeout(() => { b.textContent = '🔄'; }, 1200); }
+});
+
 function pintarArrecadado() {
   const wrap = document.getElementById('arrecadadoWrap');
   if (!wrap) return;

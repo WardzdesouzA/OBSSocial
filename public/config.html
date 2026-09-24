@@ -1691,7 +1691,7 @@
     </div>
       <div id="camadasPanel">
         <div class="camadas-titulo">🗂️ Selecionar elemento <span class="spacer"></span><button class="icon-btn" id="camadasReset" title="Ordem das camadas de volta ao padrão">↺</button></div>
-        <div id="camadasLista"></div>
+        <div id="camadasLista" style="display:block;width:100%"></div>
         <div class="hint" style="margin:2px 0 0">Clique num elemento para selecioná-lo no mapa. As setinhas ▲▼ mudam a <b>camada</b> dele (quem fica por cima — vale na live de verdade). O 👁 esconde só aqui no editor; o 🔒 trava contra esbarrões.</div>
       </div>
       <details class="midias-caixa" id="autoBloco">
@@ -2772,6 +2772,22 @@
         </div>
       </div>
 
+      <div class="lab-item" id="lab-camadas">
+        <label class="check lab-toggle">
+          <input type="checkbox" id="l-camadas" class="sw">
+          <span><b>🧩 Camadas de widget na tela (experimental)</b> — a URL que a LivePix, a PixGG ou qualquer outro serviço entrega para a «fonte de navegador» do OBS entra como uma camada do overlay do OBS Social: o alerta sai na live com a arte do próprio serviço, numa fonte só no OBS</span>
+        </label>
+        <div class="lab-body">
+          <div class="hint">Copie a URL do widget no painel do serviço (LivePix: Widgets → Alertas → URL do widget; PixGG: a URL do widget de alertas) e cole aqui. Posição e tamanho em % da tela — 100 × 100 é a tela inteira, que é como esses widgets são desenhados. No painel, o botão 🧩 liga, desliga e recarrega cada camada; o 🎛️ Controle externo faz o mesmo pela operação «camada».</div>
+          <div class="hint">🔒 A URL do widget carrega uma chave da sua conta: quem a tiver consegue exibir os seus alertas (não consegue disparar nem alterar nada). Por isso a lista só é editada neste computador (localhost) e vai apenas para a tela e para os painéis.</div>
+          <div id="wcSomenteLocal" class="hint" style="display:none">ℹ️ Esta página veio pela rede: a lista só pode ser editada no computador onde o OBS Social roda. Ligar, desligar e recarregar funcionam pelo painel.</div>
+          <div id="wcLista" style="display:block;width:100%"></div>
+          <div class="row" style="align-items:center;gap:8px">
+            <button id="wcAddBtn" class="icon-btn" title="Adicionar uma camada">➕</button>
+            <span class="hint" style="margin:0">Até 8 camadas. A camada só é salva quando a URL começa com https://.</span>
+          </div>
+        </div>
+      </div>
       <div class="lab-item" id="lab-arrecadacao">
         <label class="check lab-toggle">
           <input type="checkbox" id="l-arrecadacao" class="sw">
@@ -3431,6 +3447,7 @@ const hub = connectHub((event) => {
       // 🟢 v0.169.3: esta página atende consultas ao Kick quando o Cloudflare barra o programa
       KICK_NAVEGADOR.pronto(hub);
       hub.send({ type: 'logsDias' }); // 📅 v0.171: o calendário dos dias com log
+      cfgPapelLocal = !(event.security && event.security.role && event.security.role !== 'local'); // 🧩 v0.173
       // 🔒 v0.169.5: a atualização só se verifica/instala no computador do
       // OBS Social — quem abriu pela rede fica sabendo antes de clicar
       // 🔒 v0.169.6: os botões e o seletor SOMEM — fica só o aviso no lugar deles
@@ -4556,7 +4573,7 @@ function fillSettingsForm() {
   fillTrilhasControles();
   renderTrilhasDeck();
   // 🎬 OBS e 🎵 Mesa de trilhas (Labs)
-  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
+  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['camadas', 'l-camadas', 'lab-camadas'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
     const ligado = (settings.labs || {})[flag] === true;
     const chk = document.getElementById(chkId);
     if (chk && document.activeElement !== chk) chk.checked = ligado;
@@ -4566,6 +4583,7 @@ function fillSettingsForm() {
   // 🎬🎵 v0.82: as páginas exclusivas aparecem/somem junto com os seletores
   atualizarPaginasLabs();
   fillTaxas(); // 💰 v0.170
+  pintarWidgetCamadas(); // 🧩 v0.173
   // ♿ Acessibilidade: os 4 liga/desliga
   for (const chave of ['altoContraste', 'reduzirAnimacoes', 'focoVisivel', 'formasNoStatus']) {
     const chk = document.getElementById('a11y-' + chave);
@@ -6119,6 +6137,114 @@ document.getElementById('ydCookiesApagar').addEventListener('click', async () =>
 
 // ---------- 💠 Pix direto do banco (Labs) ----------
 let cfgPix = null;
+// 🧩 v0.173: camadas de widget — o seletor e o editor da lista
+let cfgPapelLocal = true;
+let wcLocal = []; // a lista como está no editor (inclui linhas ainda sem URL válida)
+const CAMADA_URL_OK_CFG = /^(https:\/\/\S{1,2000}|http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?(\/\S{0,2000})?)$/i;
+document.getElementById('l-camadas').addEventListener('input', (e) => {
+  document.getElementById('lab-camadas').classList.toggle('off', !e.target.checked);
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { labs: { camadas: e.target.checked } } });
+  setTimeout(() => { applyingSettings = false; }, 300);
+});
+function widgetCamadaNova() {
+  return { id: 'c' + Math.random().toString(36).slice(2, 10), nome: '', url: '', x: 0, y: 0, largura: 100, altura: 100, ligada: true, ordem: 'acima' };
+}
+function pintarWidgetCamadas() {
+  const caixa = document.getElementById('wcLista');
+  if (!caixa) return;
+  document.getElementById('wcSomenteLocal').style.display = cfgPapelLocal ? 'none' : '';
+  document.getElementById('wcAddBtn').disabled = !cfgPapelLocal;
+  // Alguém digitando? Não redesenha por cima (a lista volta do servidor a cada settings)
+  if (caixa.contains(document.activeElement)) return;
+  const doServidor = Array.isArray(settings && settings.camadas) ? settings.camadas : [];
+  const ids = new Set(doServidor.map((c) => c.id));
+  // Linhas locais ainda sem URL válida (rascunhos) continuam no editor
+  const rascunhos = wcLocal.filter((c) => !ids.has(c.id) && !CAMADA_URL_OK_CFG.test(String(c.url || '').trim()));
+  wcLocal = [...doServidor.map((c) => ({ ...c })), ...rascunhos];
+  caixa.textContent = '';
+  if (!wcLocal.length) {
+    const vazio = document.createElement('div'); vazio.className = 'hint'; vazio.textContent = 'Nenhuma camada ainda: clique em ➕ e cole a URL do widget.';
+    caixa.appendChild(vazio);
+  }
+  for (const c of wcLocal) {
+    const linha = document.createElement('div');
+    linha.className = 'camada-linha'; linha.dataset.id = c.id;
+    linha.style.cssText = 'border:1px solid var(--border, #444);border-radius:8px;padding:8px;margin:6px 0';
+    const r1 = document.createElement('div'); r1.className = 'row'; r1.style.cssText = 'gap:6px;align-items:center';
+    const nome = document.createElement('input'); nome.className = 'cm-nome'; nome.placeholder = 'Nome (ex.: LivePix)'; nome.value = c.nome || ''; nome.maxLength = 40; nome.style.width = '160px';
+    const url = document.createElement('input'); url.className = 'cm-url'; url.placeholder = 'https://... (a URL do widget)'; url.value = c.url || ''; url.style.flex = '1'; url.spellcheck = false;
+    const del = document.createElement('button'); del.className = 'icon-btn cm-del'; del.textContent = '🗑️'; del.title = 'Apagar esta camada';
+    r1.append(nome, url, del);
+    const r2 = document.createElement('div'); r2.className = 'row'; r2.style.cssText = 'gap:6px;align-items:center;font-size:12px;flex-wrap:wrap;margin-top:6px';
+    const num = (cls, rotulo, valor, min) => {
+      const l = document.createElement('label'); l.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin:0';
+      const i = document.createElement('input'); i.type = 'number'; i.className = cls; i.min = String(min); i.max = '100'; i.step = '0.5'; i.value = String(valor); i.style.width = '64px';
+      l.append(document.createTextNode(rotulo + ' '), i, document.createTextNode(' %')); return l;
+    };
+    r2.append(num('cm-x', 'X', c.x ?? 0, 0), num('cm-y', 'Y', c.y ?? 0, 0), num('cm-larg', 'Largura', c.largura ?? 100, 1), num('cm-alt', 'Altura', c.altura ?? 100, 1));
+    const ordem = document.createElement('select'); ordem.className = 'cm-ordem'; ordem.style.width = 'auto';
+    for (const [v, t] of [['acima', 'Por cima de tudo'], ['abaixo', 'Atrás dos widgets']]) { const o = document.createElement('option'); o.value = v; o.textContent = t; ordem.appendChild(o); }
+    ordem.value = c.ordem === 'abaixo' ? 'abaixo' : 'acima';
+    const lig = document.createElement('label'); lig.className = 'check'; lig.style.margin = '0';
+    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'sw cm-ligada'; chk.checked = c.ligada !== false;
+    lig.append(chk, document.createTextNode(' Ligada'));
+    r2.append(ordem, lig);
+    linha.append(r1, r2);
+    if (!cfgPapelLocal) for (const el of linha.querySelectorAll('input,select,button')) el.disabled = true;
+    caixa.appendChild(linha);
+  }
+}
+function lerWidgetCamadas() {
+  const fora = [];
+  for (const linha of document.querySelectorAll('#wcLista .camada-linha')) {
+    fora.push({
+      id: linha.dataset.id,
+      nome: linha.querySelector('.cm-nome').value.trim(),
+      url: linha.querySelector('.cm-url').value.trim(),
+      x: Number(linha.querySelector('.cm-x').value), y: Number(linha.querySelector('.cm-y').value),
+      largura: Number(linha.querySelector('.cm-larg').value), altura: Number(linha.querySelector('.cm-alt').value),
+      ligada: linha.querySelector('.cm-ligada').checked,
+      ordem: linha.querySelector('.cm-ordem').value,
+    });
+  }
+  return fora;
+}
+function salvarWidgetCamadas() {
+  if (!cfgPapelLocal) return;
+  wcLocal = lerWidgetCamadas();
+  const validas = wcLocal.filter((c) => CAMADA_URL_OK_CFG.test(c.url));
+  applyingSettings = true;
+  hub.send({ type: 'settings', settings: { camadas: validas } });
+  setTimeout(() => { applyingSettings = false; }, 300);
+}
+document.getElementById('wcLista').addEventListener('change', () => salvarWidgetCamadas());
+document.getElementById('wcLista').addEventListener('click', (e) => {
+  const del = e.target.closest('.cm-del');
+  if (!del) return;
+  const linha = del.closest('.camada-linha');
+  if (!linha || !confirm(OBS_I18N.t('Apagar esta camada da tela?'))) return;
+  linha.remove();
+  wcLocal = lerWidgetCamadas(); // a linha já saiu do editor; o servidor confirma em seguida
+  salvarWidgetCamadas();
+});
+document.getElementById('wcAddBtn').addEventListener('click', () => {
+  if (!cfgPapelLocal) return;
+  wcLocal = lerWidgetCamadas();
+  if (wcLocal.length >= 8) return;
+  wcLocal.push(widgetCamadaNova());
+  // Redesenha a partir das linhas atuais (sem esperar o servidor)
+  const caixa = document.getElementById('wcLista');
+  const foco = caixa.contains(document.activeElement);
+  if (foco) document.activeElement.blur();
+  const guardado = settings.camadas;
+  settings.camadas = wcLocal.filter((c) => CAMADA_URL_OK_CFG.test(String(c.url || '').trim()));
+  pintarWidgetCamadas();
+  settings.camadas = guardado;
+  const ultima = caixa.querySelector('.camada-linha:last-child .cm-url');
+  if (ultima) ultima.focus();
+});
+
 document.getElementById('l-pix').addEventListener('input', (e) => {
   document.getElementById('lab-pix').classList.toggle('off', !e.target.checked);
   applyingSettings = true;

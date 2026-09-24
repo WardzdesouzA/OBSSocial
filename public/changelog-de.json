@@ -1,4 +1,13 @@
 {
+  "0.173.0": {
+    "titulo": "🧩 Widget-Ebenen auf dem Bildschirm: Alerts von LivePix, PixGG und jeder „Browserquelle“ im OBS-Social-Overlay, mit Ein/Aus und 🔄 vom Panel",
+    "itens": [
+      "🧩 In Einstellungen → 🧪 Labs → 🧩 Widget-Ebenen fügst du die URL ein, die LivePix, PixGG oder ein anderer Dienst für die OBS-Browserquelle liefert. Jede URL wird zu einer Ebene des OBS-Social-Overlays, an gewählter Position und Größe (% des Bildschirms; 100 × 100 ist der ganze Bildschirm), über allem oder hinter den Widgets, mit erlaubtem Auto-Audio. Der Alert erscheint im Stream mit der Grafik des Dienstes, in einer einzigen OBS-Quelle. Bis zu 8 Ebenen.",
+      "🎛️ Im Panel listet der Button 🧩 die Ebenen: jede mit eigenem Ein/Aus (Ausschalten entfernt den Rahmen vom Bildschirm, der Alert hört auf; wird gespeichert) und einem 🔄, das die URL neu öffnet. Die 🕹️ Externe Steuerung macht dasselbe mit der Operation „camada“ ({id, ligada} oder {id, recarregar}), und der Status listet die Ebenen.",
+      "🔒 Die Widget-URL trägt einen Schlüssel des Streamer-Kontos: Die Liste wird nur am Computer bearbeitet, auf dem OBS Social läuft (über das Netzwerk lehnt der Server ab und sagt es); Ein/Aus und Neuladen funktionieren von jedem Panel aus. Nur https (oder http auf diesem Computer). Die Vorschau des Bildschirm-Editors öffnet keine Ebene, und eine gewöhnliche Einstellungsänderung lädt den Alert nie mittendrin neu — die URL wird nur neu geöffnet, wenn sie sich wirklich ändert oder bei 🔄.",
+      "ℹ️ Die Widget-Seite ist vom Browser isoliert: Das Panel erfährt daraus weder Name, Betrag noch Nachricht — das kommt nur über eine offizielle API (LivePix hat eine; PixGG nicht)."
+    ]
+  },
   "0.172.0": {
     "titulo": "🔀 Ein @-Wechsel entfernt aus dem Panel, was zum vorherigen @ gehörte · 🛡️ Kicks Ausweichwege gelten jetzt für YouTube, Twitch und Bilibili, mit automatischem Neuversuch",
     "itens": [
