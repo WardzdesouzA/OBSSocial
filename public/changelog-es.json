@@ -1,4 +1,10 @@
 {
+  "0.175.1": {
+    "titulo": "🖱️ El clic izquierdo en un comentario con audio (PixGG, Telegram, WhatsApp) vuelve a abrir la ventana en cualquier columna",
+    "itens": [
+      "🖱️ El bloque entero del medio ignoraba el clic izquierdo: en una donación de PixGG con audio, el reproductor ocupa casi toda la tarjeta y, en la columna ancha (En vivo / 💬 Unificado), el clic «no funcionaba». Ahora solo los controles ignoran el clic (▶, la barra, la imagen, el vídeo, la velocidad, la transcripción) — el reloj del reproductor y el espacio a su lado abren la ventana del comentario como el resto de la tarjeta. Vale para todas las tarjetas con medios."
+    ]
+  },
   "0.175.0": {
     "titulo": "💚 PixGG en el panel (🧪 Labs, NO oficial): pestaña y columna propias, nombre, valor, mensaje y audio de cada donación, por el canal del widget — con cuatro avisos de conciencia, clave cifrada y permiso pedido a PixGG",
     "itens": [

@@ -2860,8 +2860,12 @@ function buildItem(message, inSavedTab) {
   item.addEventListener('click', (e) => {
     // esta MESMA linha também é o miolo da janela: lá dentro ela não reabre
     if (e.currentTarget.closest('#comentarioModal')) return;
-    // clique nos botões da linha, na mídia ou num link não abre a janela
-    if (e.target.closest('button, a, input, select, textarea, audio, video, .audio-player, .msg-midia, .avatar')) return;
+    // clique nos botões da linha, num CONTROLE da mídia (play, régua, imagem,
+    // vídeo, velocidade, transcrição) ou num link não abre a janela.
+    // 💚 v0.175.1: o bloco da mídia inteiro era ignorado — numa doação com
+    // áudio (PixGG), o player toma quase o cartão todo e o clique «não
+    // funcionava» na coluna larga (unificado). Agora só os controles ignoram.
+    if (e.target.closest('button, a, input, select, textarea, audio, video, img, details, label, .ap-play, .ap-onda, .figurinha-animada, .avatar')) return;
     abrirComentarioModal(message, inSavedTab);
   });
   item.addEventListener('contextmenu', (e) => openCtxMenu(e, message, inSavedTab));
