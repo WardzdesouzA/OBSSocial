@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    "Uma versão que acabou de sair pode levar alguns minutos para aparecer — se você espera uma, tente de novo daqui a pouco.": "刚发布的版本可能需要几分钟才会显示 —— 如果你在等待新版本，请稍后再试。",
     "Cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver. Cole a": "通过 PixGG 收到的每笔捐赠成为 💚 PixGG 标签页（及专属列）中的一条评论，带名字、金额、留言和音频（如有）。粘贴",
     ", que está no painel da PixGG → Widgets).": "（在 PixGG 面板 → 小组件中）。",
     "ℹ️ O OBS Social lê o mesmo canal de tempo real que o widget de alertas e o painel da PixGG usam — só leitura, uma conexão, nada é enviado à PixGG —": "ℹ️ OBS Social 读取提醒小组件和 PixGG 面板使用的同一实时频道 —— 只读、单一连接、不向 PixGG 发送任何内容 ——",

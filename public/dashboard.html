@@ -2735,11 +2735,14 @@ function updateStatus(platform, status) {
   if (chip) {
     chip.className = 'dot ' + (status.state === 'auth' ? 'connecting' : (status.state || ''));
     // 🚦 Verde só com a live NO AR; conectado sem live = amarelo
-    if (status.state === 'connected' && status.aoVivo !== true) chip.classList.add('sem-live');
+    // 🟢 v0.176.1: LivePix, PixGG, Telegram e WhatsApp não têm «live no ar» —
+    // conectado é verde (o amarelo era só a ausência de um dado que não existe)
+    const temLive = !['livepix', 'pixgg', 'telegram', 'whatsapp'].includes(platform);
+    if (status.state === 'connected' && temLive && status.aoVivo !== true) chip.classList.add('sem-live');
     // ♿ a bolinha também se apresenta para leitores de tela
     chip.setAttribute('role', 'img');
     chip.setAttribute('aria-label', status.state === 'connected'
-      ? (status.aoVivo === true ? 'Conectado — live no ar' : 'Conectado — sem live no ar')
+      ? (!temLive ? 'Conectado' : status.aoVivo === true ? 'Conectado — live no ar' : 'Conectado — sem live no ar')
       : (status.state === 'connecting' || status.state === 'auth') ? 'Conectando...'
         : status.state === 'error' ? 'A conexão falhou' : 'Desconectado');
   }

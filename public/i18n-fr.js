@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    "Uma versão que acabou de sair pode levar alguns minutos para aparecer — se você espera uma, tente de novo daqui a pouco.": "Une version qui vient de sortir peut mettre quelques minutes à apparaître — si vous en attendez une, réessayez dans un instant.",
     "Cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver. Cole a": "Chaque don reçu via PixGG devient un commentaire dans l’onglet 💚 PixGG (et dans une colonne dédiée), avec nom, montant, message et l’audio s’il y en a. Collez la",
     ", que está no painel da PixGG → Widgets).": ", qui se trouve dans le panneau PixGG → Widgets).",
     "ℹ️ O OBS Social lê o mesmo canal de tempo real que o widget de alertas e o painel da PixGG usam — só leitura, uma conexão, nada é enviado à PixGG —": "ℹ️ OBS Social lit le même canal temps réel que le widget d’alertes et le panneau PixGG utilisent — lecture seule, une connexion, rien n’est envoyé à PixGG —",

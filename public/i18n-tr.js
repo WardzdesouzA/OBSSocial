@@ -10,6 +10,7 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    "Uma versão que acabou de sair pode levar alguns minutos para aparecer — se você espera uma, tente de novo daqui a pouco.": "Yeni çıkan bir sürümün görünmesi birkaç dakika sürebilir — bekliyorsanız birazdan tekrar deneyin.",
     "Cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver. Cole a": "PixGG ile alınan her bağış 💚 PixGG sekmesinde (ve kendi sütununda) ad, tutar, mesaj ve varsa sesle bir yoruma dönüşür. Şunu yapıştırın:",
     ", que está no painel da PixGG → Widgets).": " (PixGG paneli → Widget’lar’da bulunur).",
     "ℹ️ O OBS Social lê o mesmo canal de tempo real que o widget de alertas e o painel da PixGG usam — só leitura, uma conexão, nada é enviado à PixGG —": "ℹ️ OBS Social, uyarı widget’ının ve PixGG panelinin kullandığı aynı gerçek zamanlı kanalı okur — salt okunur, tek bağlantı, PixGG’ye hiçbir şey gönderilmez —",

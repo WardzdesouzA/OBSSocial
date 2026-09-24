@@ -4151,12 +4151,19 @@ const UPDATE_ZIP_URLS = process.env.OBS_SOCIAL_UPDATE_ZIP
 // versão, com até 8 tentativas de 60 s: em redes lentas ou com um caminho
 // bloqueado, o «Verificando no GitHub...» ficava minutos sem resposta. O
 // pacote só é baixado quando o streamer manda instalar.
+// 🔄 v0.176.1: a API do GitHub vem PRIMEIRO — o endereço «raw» fica em cache
+// por até 5 minutos e, logo depois de uma versão sair, ainda entregava o
+// package.json antigo: o programa dizia «já está na versão mais recente»
+// com uma versão nova no ar. Além da ordem, cada pedido leva um carimbo na
+// URL e cabeçalhos anti-cache, para nenhum cache no caminho responder velho.
 const UPDATE_VERSION_URLS = process.env.OBS_SOCIAL_UPDATE_VERSION
   ? [process.env.OBS_SOCIAL_UPDATE_VERSION]
   : [
-    `https://raw.githubusercontent.com/${UPDATE_REPO}/main/package.json`,
     `https://api.github.com/repos/${UPDATE_REPO}/contents/package.json?ref=main`,
+    `https://raw.githubusercontent.com/${UPDATE_REPO}/main/package.json`,
   ];
+const semCache = (url) => url + (url.includes('?') ? '&' : '?') + '_=' + Date.now();
+const CABECALHOS_SEM_CACHE = { 'Cache-Control': 'no-cache, no-store, max-age=0', Pragma: 'no-cache' };
 const UPDATE_VERSAO_TEMPO_MS = Number(process.env.OBS_TESTE_UPDATE_TEMPO_MS) || 15000;
 let updateCache = null; // { buffer (null = só a versão), latest, at }
 
@@ -4271,17 +4278,19 @@ function buscarVersaoNova(aoProgresso) {
   if (versaoEmCurso) return versaoEmCurso;
   const avisar = (n, total) => { for (const fn of versaoOuvintes) { try { fn(n, total); } catch { /* ouvinte quebrado não derruba a busca */ } } };
   versaoEmCurso = (async () => {
-    const tentativas = tentativasDe(UPDATE_VERSION_URLS, { timeoutMs: UPDATE_VERSAO_TEMPO_MS, prazoMs: UPDATE_VERSAO_TEMPO_MS * 3, maxBytes: 256 * 1024 });
+    const tentativas = tentativasDe(UPDATE_VERSION_URLS, { timeoutMs: UPDATE_VERSAO_TEMPO_MS, prazoMs: UPDATE_VERSAO_TEMPO_MS * 3, maxBytes: 256 * 1024, headers: CABECALHOS_SEM_CACHE });
     const totalZip = tentativasDe(UPDATE_ZIP_URLS, {}).length;
     const total = tentativas.length + totalZip; // a numeração segue pelo pacote inteiro
     let n = 0;
     for (const [url, opts] of tentativas) {
       n += 1;
       try {
-        const latest = versaoDoPacote(await baixar(url, opts));
+        const latest = versaoDoPacote(await baixar(semCache(url), opts));
         // O pacote guardado só continua valendo se é da mesma versão
         const buffer = updateCache && updateCache.buffer && updateCache.latest === latest ? updateCache.buffer : null;
-        updateCache = { buffer, latest, at: Date.now() };
+        // 🔄 v0.176.1: veio do «raw» (cache de até 5 min)? O painel avisa que
+        // uma versão recém-saída pode ainda não aparecer
+        updateCache = { buffer, latest, at: Date.now(), podeAtrasar: /raw\.githubusercontent\.com/.test(url) };
         return updateCache;
       } catch (err) {
         const causa = err?.cause?.code || err?.code || err.message;
@@ -10768,7 +10777,7 @@ function tratarMensagem(ws, raw) {
         const responder = (obj) => responderLocal(ws, { type: 'update', ...obj });
         try {
           const cache = await buscarVersaoNova((n, total) => responder({ progresso: `⏳ Verificando no GitHub... (tentando outro caminho, ${n} de ${total})` }));
-          responder({ current: APP_VERSION, latest: cache.latest, hasUpdate: cmpVersions(cache.latest, APP_VERSION) > 0 });
+          responder({ current: APP_VERSION, latest: cache.latest, hasUpdate: cmpVersions(cache.latest, APP_VERSION) > 0, podeAtrasar: cache.podeAtrasar === true });
         } catch (err) {
           responder({ error: `Não consegui verificar agora (${err.message}). Confira a internet e tente de novo.` });
         }
