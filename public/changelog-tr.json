@@ -1,4 +1,10 @@
 {
+  "0.175.1": {
+    "titulo": "🖱️ Sesli bir yoruma (PixGG, Telegram, WhatsApp) sol tıklama her sütunda pencereyi yeniden açıyor",
+    "itens": [
+      "🖱️ Medya bloğunun tamamı sol tıklamayı yok sayıyordu: sesli bir PixGG bağışında oynatıcı kartın neredeyse tamamını kaplar ve geniş sütunda (Canlı / 💬 Birleşik) tıklama «çalışmıyordu». Artık yalnızca kontroller tıklamayı yok sayar (▶, çubuk, görsel, video, hız, transkripsiyon) — oynatıcının saati ve yanındaki boşluk, kartın geri kalanı gibi yorum penceresini açar. Medya içeren tüm kartlar için geçerli."
+    ]
+  },
   "0.175.0": {
     "titulo": "💚 Panelde PixGG (🧪 Labs, RESMİ DEĞİL): kendi sekmesi ve sütunu, her bağışın adı, tutarı, mesajı ve sesi, widget kanalı üzerinden — dört uyarı, şifreli anahtar ve PixGG’den istenen izinle",
     "itens": [

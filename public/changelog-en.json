@@ -1,4 +1,10 @@
 {
+  "0.175.1": {
+    "titulo": "🖱️ Left-clicking a comment with audio (PixGG, Telegram, WhatsApp) opens the window again in every column",
+    "itens": [
+      "🖱️ The whole media block ignored the left click: in a PixGG donation with audio, the player takes almost the whole card and, in the wide column (Live / 💬 Unified), the click “did not work”. Now only the controls ignore the click (▶, the seek bar, the image, the video, the speed, the transcription) — the player clock and the space next to it open the comment window like the rest of the card. Applies to every card with media."
+    ]
+  },
   "0.175.0": {
     "titulo": "💚 PixGG on the dashboard (🧪 Labs, UNOFFICIAL): its own tab and column, name, amount, message and audio of every donation, through the widget channel — with four acknowledgments, an encrypted key and permission requested from PixGG",
     "itens": [

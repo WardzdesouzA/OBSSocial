@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.175.1",
+    "titulo": "🖱️ O clique esquerdo num comentário com áudio (PixGG, Telegram, WhatsApp) volta a abrir a janela em qualquer coluna",
+    "itens": [
+      "🖱️ O bloco inteiro da mídia era ignorado pelo clique esquerdo: numa doação da PixGG com áudio, o player toma quase o cartão todo e, na coluna larga (Ao vivo / 💬 Unificado), o clique «não funcionava». Agora só os controles ignoram o clique (▶, a régua, a imagem, o vídeo, a velocidade, a transcrição) — o relógio do player e o espaço ao lado dele abrem a janela do comentário como o resto do cartão. Vale para todos os cartões com mídia."
+    ]
+  },
+  {
     "version": "0.175.0",
     "titulo": "💚 PixGG no painel (🧪 Labs, NÃO oficial): aba e coluna próprias, nome, valor, mensagem e áudio de cada doação, pelo canal do widget — com quatro avisos de consciência, chave cifrada e permissão pedida à PixGG",
     "itens": [

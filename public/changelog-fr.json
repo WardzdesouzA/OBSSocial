@@ -1,4 +1,10 @@
 {
+  "0.175.1": {
+    "titulo": "🖱️ Le clic gauche sur un commentaire avec audio (PixGG, Telegram, WhatsApp) rouvre la fenêtre dans toutes les colonnes",
+    "itens": [
+      "🖱️ Tout le bloc média ignorait le clic gauche : sur un don PixGG avec audio, le lecteur occupe presque toute la carte et, dans la colonne large (En direct / 💬 Unifié), le clic « ne marchait pas ». Désormais seuls les contrôles ignorent le clic (▶, la barre, l’image, la vidéo, la vitesse, la transcription) — l’horloge du lecteur et l’espace à côté ouvrent la fenêtre du commentaire comme le reste de la carte. Vaut pour toutes les cartes avec média."
+    ]
+  },
   "0.175.0": {
     "titulo": "💚 PixGG dans le panneau (🧪 Labs, NON officiel) : onglet et colonne dédiés, nom, montant, message et audio de chaque don, via le canal du widget — avec quatre avertissements, clé chiffrée et permission demandée à PixGG",
     "itens": [

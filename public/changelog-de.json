@@ -1,4 +1,10 @@
 {
+  "0.175.1": {
+    "titulo": "🖱️ Ein Linksklick auf einen Kommentar mit Audio (PixGG, Telegram, WhatsApp) öffnet das Fenster wieder in jeder Spalte",
+    "itens": [
+      "🖱️ Der ganze Medienblock ignorierte den Linksklick: Bei einer PixGG-Spende mit Audio nimmt der Player fast die ganze Karte ein, und in der breiten Spalte (Live / 💬 Vereint) „ging“ der Klick nicht. Jetzt ignorieren nur die Bedienelemente den Klick (▶, die Leiste, das Bild, das Video, die Geschwindigkeit, die Transkription) — die Uhr des Players und der Platz daneben öffnen das Kommentarfenster wie der Rest der Karte. Gilt für jede Karte mit Medien."
+    ]
+  },
   "0.175.0": {
     "titulo": "💚 PixGG im Panel (🧪 Labs, INOFFIZIELL): eigener Tab und eigene Spalte, Name, Betrag, Nachricht und Audio jeder Spende über den Widget-Kanal — mit vier Hinweisen, verschlüsseltem Schlüssel und bei PixGG erbetener Erlaubnis",
     "itens": [
