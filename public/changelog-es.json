@@ -1,4 +1,15 @@
 {
+  "0.174.0": {
+    "titulo": "💜 LivePix por la API oficial: pestaña y columna propias, control de las alertas (retener, saltar, repetir), billetera, suscripciones y recompensas en el panel · 💠 pestaña Pix · fin de la URL genérica, de la pestaña Apoyos y de las capas de widget",
+    "itens": [
+      "💜 LivePix entró en Conexiones, por la API oficial (gratuita para toda cuenta): crea una aplicación en el panel de LivePix y pega el ID y el secreto del cliente. Cada donación (con o sin mensaje) se vuelve un comentario en la pestaña 💜 LivePix y en una columna propia, con nombre, valor, texto, ID y la insignia «marcada» cuando LivePix marca el mensaje; nada entra dos veces, ni tras reiniciar. Tú decides cuándo mostrar cada una por la pantalla de OBS Social (destacado o cola), repites la que quieras y lo ves todo antes.",
+      "🎛️ En la pestaña LivePix: «⏸ Retener las alertas de LivePix» (la cola se queda en su widget, sin sonar sola), ⏭ saltar la actual, 🔁 repetir la última, ℹ️ con todo lo que la API entrega (billetera: saldo, pendiente, en tránsito, por recibir y últimas transacciones; suscripciones activas y planes; recompensas y concesiones) y 🔗 al panel de LivePix — bloquear y desbloquear a quien dona es allí. El 🕹️ Control externo hace lo mismo con la operación «livepixControle» y el estado muestra la cuenta y el autoPlay.",
+      "⏱️ El intervalo de consulta está en Configuración → Conexiones → LivePix: por defecto 15 s, entre 5 s (el mínimo que la API acepta sin quejarse) y 300 s. Un token por hora, reutilizado; límite excedido (429) se vuelve una espera mayor con aviso, y credencial errada es error definitivo. Las consultas pasan por los mismos caminos de reserva de las otras redes.",
+      "💰 La recaudación de la transmisión ganó la línea de LivePix, con su tasa (5%, leída de la página de tasas de LivePix con 🔎 o escrita a mano).",
+      "💠 El Pix directo del banco ganó la pestaña 💠 Pix y la columna propia (era la pestaña Apoyos). Lo que quedó en los logs antiguos como «donación» aparece como Pix.",
+      "🗑️ Descontinuados: la URL genérica de donaciones (/doacao responde 410), la pestaña 💝 Apoyos (ahora 💜 LivePix + 💠 Pix) y las 🧩 Capas de widget de la v0.173 (lo que hacían, LivePix ahora lo hace por la API; la clave desaparece sola de la configuración)."
+    ]
+  },
   "0.173.0": {
     "titulo": "🧩 Capas de widget en la pantalla: las alertas de LivePix, PixGG y cualquier «fuente de navegador» dentro del overlay de OBS Social, con encender/apagar y 🔄 desde el panel",
     "itens": [

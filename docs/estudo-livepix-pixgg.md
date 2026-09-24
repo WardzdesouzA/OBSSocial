@@ -1,8 +1,11 @@
 # Estudo: LivePix e PixGG dentro do OBS Social
 
-Levantamento feito em setembro de 2026. **Nada disto foi implementado** — o
-estudo ficou guardado para quando a integração for retomada. Se for retomar,
-confira antes se a API do LivePix ainda está como descrito aqui.
+Levantamento feito em setembro de 2026. **Atualização (v0.174):** a fase 1 e
+a fase 2 da LivePix foram implementadas pela API oficial (`connectors/livepix.js`):
+mensagens e pagamentos viram comentários da aba 💜, com controles dos alertas
+(autoPlay/skip/replay), carteira, assinaturas e recompensas no painel. O que
+segue é o levantamento original. A PixGG continua sem API; o caminho pelo canal
+do widget (Pusher) ficou para depois, e só com o aviso ao público.
 
 Contexto: o objetivo é que uma doação feita nessas plataformas vire um apoio 💝
 no painel, com **nome, valor e mensagem**, do mesmo jeito que o 💠 Pix direto do

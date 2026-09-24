@@ -1,4 +1,15 @@
 {
+  "0.174.0": {
+    "titulo": "💜 Resmi API ile LivePix: kendi sekmesi ve sütunu, uyarı kontrolü (tut, atla, tekrarla), cüzdan, abonelikler ve ödüller panelde · 💠 Pix sekmesi · genel URL, Destek sekmesi ve widget katmanlarının sonu",
+    "itens": [
+      "💜 LivePix, resmi API ile (her hesap için ücretsiz) Bağlantılar’a girdi: LivePix panelinde bir uygulama oluşturup istemci kimliğini ve gizli anahtarını yapıştırın. Her bağış (mesajlı veya mesajsız) 💜 LivePix sekmesinde ve kendi sütununda ad, tutar, metin, kimlik ve LivePix mesajı işaretlediğinde «işaretli» rozetiyle bir yoruma dönüşür; hiçbir şey iki kez gelmez, yeniden başlatınca bile. Her birini OBS Social ekranından (öne çıkan veya kuyruk) ne zaman göstereceğinize siz karar verirsiniz, istediğinizi tekrarlar ve her şeyi önceden görürsünüz.",
+      "🎛️ LivePix sekmesinde: «⏸ LivePix uyarılarını tut» (kuyruk onların widget’ında kalır, kendiliğinden çalmaz), ⏭ mevcut olanı atla, 🔁 sonuncuyu tekrarla, API’nin verdiği her şeyle ℹ️ (cüzdan: bakiye, bekleyen, yolda, alacak ve son işlemler; aktif abonelikler ve planlar; ödüller ve verilenler) ve LivePix paneline 🔗 — bağış yapanları engelleme ve engeli kaldırma orada. 🕹️ Harici kontrol aynı işi «livepixControle» işlemiyle yapar ve durum hesabı ve autoPlay’i gösterir.",
+      "⏱️ Sorgu aralığı Ayarlar → Bağlantılar → LivePix’te: varsayılan 15 sn, 5 sn (API’nin şikâyet etmeden kabul ettiği en az) ile 300 sn arasında. Saatte bir token, yeniden kullanılır; aşılan limit (429) uyarıyla daha uzun beklemeye dönüşür, yanlış kimlik bilgisi kesin hatadır. Sorgular diğer ağlarla aynı yedek yollardan geçer.",
+      "💰 Yayın geliri, ücretiyle (🔎 ile LivePix ücret sayfasından okunan veya elle girilen %5) LivePix satırını kazandı.",
+      "💠 Doğrudan bankadan Pix, 💠 Pix sekmesini ve kendi sütununu kazandı (Destek sekmesiydi). Eski loglarda «bağış» olarak kalanlar Pix olarak görünür.",
+      "🗑️ Sonlandırıldı: genel bağış URL’si (/doacao 410 yanıtlar), 💝 Destek sekmesi (artık 💜 LivePix + 💠 Pix) ve v0.173’ün 🧩 Widget katmanları (yaptıklarını LivePix artık API ile yapıyor; anahtar ayarlardan kendiliğinden kaybolur)."
+    ]
+  },
   "0.173.0": {
     "titulo": "🧩 Ekranda widget katmanları: LivePix, PixGG ve herhangi bir «tarayıcı kaynağı» uyarısı OBS Social overlay’inin içinde, panelden aç/kapat ve 🔄 ile",
     "itens": [

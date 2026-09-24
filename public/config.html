@@ -1077,6 +1077,25 @@
       <div class="hint" style="margin-top:6px;margin-bottom:0">Se o Kick barrar o programa (proteção Cloudflare, erro 403), deixe esta página, o painel ou a tela do OBS abertos neste computador: o navegador faz a consulta pelo programa.</div>
     </div>
 
+    <div class="card" data-platform="livepix">
+      <h3><span class="icon-slot"></span> LivePix</h3>
+      <div class="hint">Pela <b>API oficial</b> da LivePix (gratuita para toda conta). Crie uma aplicação no painel da LivePix (<a href="https://dashboard.livepix.gg" target="_blank" rel="noopener">dashboard.livepix.gg</a> → Configurações → API) com as permissões de leitura e «controls», e cole aqui o <b>ID do cliente</b> e o <b>segredo do cliente</b>. Cada doação vira um comentário na aba 💜 LivePix (e numa coluna própria), com nome, valor e mensagem; a aba também traz os controles dos alertas do widget dela (represar, pular, repetir), a carteira, as assinaturas e as recompensas.</div>
+      <div class="row">
+        <input type="password" class="secret-input" placeholder="segredo do cliente (client secret)" autocomplete="off" style="flex:1">
+      </div>
+      <div class="row">
+        <input type="text" class="channel-input" placeholder="ID do cliente (client id)" autocomplete="off">
+        <button class="connect-btn icon-btn" title="Conectar">🔌</button>
+        <button class="reconnect-btn icon-btn" title="Reiniciar esta conexão (derruba e conecta de novo — use se travar ou quebrar)">🔄</button>
+      </div>
+      <div class="row" style="align-items:center;gap:8px;font-size:12px">
+        <label style="display:inline-flex;align-items:center;gap:6px;margin:0">⏱️ Consultar a cada <input type="number" id="livepixIntervaloInput" min="5" max="300" step="1" style="width:70px" title="De quanto em quanto tempo o programa consulta a LivePix (5 a 300 segundos; o limite da API é de 1000 chamadas por minuto, então 15 s é folgado)"> s</label>
+        <a class="icon-btn" href="https://dashboard.livepix.gg" target="_blank" rel="noopener" style="width:auto;padding:0 10px;font-size:13px;text-decoration:none;display:inline-flex;align-items:center" title="Bloquear e desbloquear quem doa, e o resto que a API não faz, é no painel da LivePix">🔗 Painel da LivePix</a>
+      </div>
+      <div class="hint">🔒 O segredo fica cifrado só neste computador (pasta data/) e nunca vai para as telas. Bloquear ou desbloquear quem doa é feito no painel da LivePix (🔗). A LivePix cobra 5% por doação — a taxa entra na 💰 Arrecadação da live.</div>
+      <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
+    </div>
+
     <div class="card" data-platform="bilibili">
       <h3><span class="icon-slot"></span> Bilibili <span class="tag">experimental</span></h3>
       <div class="hint">Número da sala ou link da live (tudo público, sem login).</div>
@@ -2716,28 +2735,10 @@
       <h3>🧪 Labs</h3>
       <div class="hint">Funções experimentais e de teste. Cada uma tem o seu seletor: ligue para usar, desligue para esconder do painel. Novas funções em teste vão chegar aqui primeiro.</div>
 
-      <div class="lab-item" id="lab-donations">
-        <label class="check lab-toggle">
-          <input type="checkbox" id="l-donations" class="sw">
-          <span><b>💝 Doações (URL genérica)</b> — aba Apoios no painel + URL para automações</span>
-        </label>
-        <div class="lab-body">
-          <div class="field">
-            <label>URL genérica de doações (para automações — não vai no OBS)</label>
-            <div class="row" style="margin-bottom:4px">
-              <input type="password" class="secret-url" id="donationUrlInput" readonly autocomplete="off">
-              <button class="url-eye icon-btn" data-eye="donationUrlInput" title="Mostrar/ocultar a URL"></button>
-              <button class="copy-btn icon-btn" data-copy="donationUrlInput" title="Copiar URL">📋</button>
-            </div>
-            <div class="hint" style="margin-bottom:0">Qualquer ferramenta que chame essa URL com <code>?nome=Fulano&amp;valor=10&amp;mensagem=Oi</code> faz a doação aparecer no painel (aba 💝 Apoios) e na tela como um Super Chat. Desligado, a URL responde com erro e a aba Apoios some do painel.</div>
-          </div>
-        </div>
-      </div>
-
       <div class="lab-item" id="lab-pix">
         <label class="check lab-toggle">
           <input type="checkbox" id="l-pix" class="sw">
-          <span><b>💠 Pix direto do banco (experimental)</b> — cada Pix recebido na sua conta vira um apoio na aba 💝 Apoios do painel, com a mensagem que a pessoa escreveu no app do banco</span>
+          <span><b>💠 Pix direto do banco (experimental)</b> — cada Pix recebido na sua conta vira um comentário na aba 💠 Pix do painel (e numa coluna própria), com a mensagem que a pessoa escreveu no app do banco</span>
         </label>
         <div class="lab-body">
           <div class="hint">Sem intermediário e sem taxa de plataforma: o programa consulta a <b>API Pix do SEU banco</b> (padrão do Banco Central) de tempos em tempos. Você precisa criar um aplicativo no portal do desenvolvedor do banco e colar aqui as credenciais e o certificado que ele fornecer. Perfis prontos: <b>Banco Inter</b> (conta PJ — MEI serve; certificado sai de graça no portal) e <b>Sicoob</b> (PJ e <b>pessoa física</b>; usa certificado ICP-Brasil no CPF/CNPJ). Outro banco que siga o padrão? Use o perfil personalizado.</div>
@@ -2765,29 +2766,13 @@
           </div>
           <div class="row" style="margin-top:8px;align-items:center">
             <button id="pixSalvarBtn" class="icon-btn" title="Salvar e conectar ao banco">💾</button>
-            <button id="pixTesteBtn" class="icon-btn" style="width:auto;padding:0 10px;font-size:13px" title="Manda um apoio Pix de mentira para o painel — para ver a aba Apoios e o visual na tela sem depender do banco">🧪 Pix de exemplo</button>
+            <button id="pixTesteBtn" class="icon-btn" style="width:auto;padding:0 10px;font-size:13px" title="Manda um Pix de mentira para o painel — para ver a aba 💠 Pix e o visual na tela sem depender do banco">🧪 Pix de exemplo</button>
             <span id="pixStatus" class="hint" style="margin:0">—</span>
           </div>
           <div class="hint" style="margin-bottom:0">As credenciais e a senha ficam guardadas só neste computador (na pasta <code>data/</code>, cifradas com AES-256) e nunca são enviadas às telas. A primeira consulta boa apenas reconhece os Pix que já existiam — só os que chegarem DEPOIS viram apoio no painel. A mensagem do pagador é garantida nos Pix pagos por QR de cobrança; na transferência manual para a chave, depende do banco.</div>
         </div>
       </div>
 
-      <div class="lab-item" id="lab-camadas">
-        <label class="check lab-toggle">
-          <input type="checkbox" id="l-camadas" class="sw">
-          <span><b>🧩 Camadas de widget na tela (experimental)</b> — a URL que a LivePix, a PixGG ou qualquer outro serviço entrega para a «fonte de navegador» do OBS entra como uma camada do overlay do OBS Social: o alerta sai na live com a arte do próprio serviço, numa fonte só no OBS</span>
-        </label>
-        <div class="lab-body">
-          <div class="hint">Copie a URL do widget no painel do serviço (LivePix: Widgets → Alertas → URL do widget; PixGG: a URL do widget de alertas) e cole aqui. Posição e tamanho em % da tela — 100 × 100 é a tela inteira, que é como esses widgets são desenhados. No painel, o botão 🧩 liga, desliga e recarrega cada camada; o 🎛️ Controle externo faz o mesmo pela operação «camada».</div>
-          <div class="hint">🔒 A URL do widget carrega uma chave da sua conta: quem a tiver consegue exibir os seus alertas (não consegue disparar nem alterar nada). Por isso a lista só é editada neste computador (localhost) e vai apenas para a tela e para os painéis.</div>
-          <div id="wcSomenteLocal" class="hint" style="display:none">ℹ️ Esta página veio pela rede: a lista só pode ser editada no computador onde o OBS Social roda. Ligar, desligar e recarregar funcionam pelo painel.</div>
-          <div id="wcLista" style="display:block;width:100%"></div>
-          <div class="row" style="align-items:center;gap:8px">
-            <button id="wcAddBtn" class="icon-btn" title="Adicionar uma camada">➕</button>
-            <span class="hint" style="margin:0">Até 8 camadas. A camada só é salva quando a URL começa com https://.</span>
-          </div>
-        </div>
-      </div>
       <div class="lab-item" id="lab-arrecadacao">
         <label class="check lab-toggle">
           <input type="checkbox" id="l-arrecadacao" class="sw">
@@ -2797,13 +2782,14 @@
           <div class="hint">Aparece um 💰 no cabeçalho do painel com o total arrecadado na live; clique nele para ver Super Chat, Pix/apoios, a soma e o «chega de verdade» (descontando as taxas abaixo). Moeda estrangeira entra pela cotação do dia. É uma noção, não um extrato: impostos e arredondamentos dos serviços ficam de fora.</div>
           <div class="settings-grid">
             <div><label>Taxa do Super Chat (%)</label><input type="number" id="taxaSuperchatInput" min="0" max="100" step="0.01" placeholder="30"></div>
-            <div><label>Taxa do Pix / apoios (%)</label><input type="number" id="taxaPixInput" min="0" max="100" step="0.01" placeholder="0"></div>
+            <div><label>Taxa da LivePix (%)</label><input type="number" id="taxaLivepixInput" min="0" max="100" step="0.01" placeholder="5"></div>
+            <div><label>Taxa do Pix direto do banco (%)</label><input type="number" id="taxaPixInput" min="0" max="100" step="0.01" placeholder="0"></div>
           </div>
           <div class="row" style="margin-top:8px;align-items:center">
-            <button id="taxasBuscarBtn" class="icon-btn" style="width:auto;padding:0 10px;font-size:13px" title="Lê a taxa na página de ajuda do YouTube e usa a regra do Banco Central para o Pix — os campos são preenchidos e salvos na hora">🔎 Buscar taxas nos serviços</button>
+            <button id="taxasBuscarBtn" class="icon-btn" style="width:auto;padding:0 10px;font-size:13px" title="Lê a taxa na página de ajuda do YouTube e na página de taxas da LivePix, e usa a regra do Banco Central para o Pix — os campos são preenchidos e salvos na hora">🔎 Buscar taxas nos serviços</button>
             <span id="taxasStatus" class="hint" style="margin:0">—</span>
           </div>
-          <div class="hint" id="taxasFonte" style="margin-bottom:0">Você pode digitar as taxas à mão (elas são salvas ao sair do campo) ou clicar em 🔎 para o programa buscar: YouTube fica com 30% dos Supers; receber Pix direto no banco é gratuito para pessoa física. Doação por plataforma (URL genérica) tem a taxa do serviço que você usa.</div>
+          <div class="hint" id="taxasFonte" style="margin-bottom:0">Você pode digitar as taxas à mão (elas são salvas ao sair do campo) ou clicar em 🔎 para o programa buscar: YouTube fica com 30% dos Supers; a LivePix cobra 5% por doação; receber Pix direto no banco é gratuito para pessoa física.</div>
         </div>
       </div>
 
@@ -3447,7 +3433,6 @@ const hub = connectHub((event) => {
       // 🟢 v0.169.3: esta página atende consultas ao Kick quando o Cloudflare barra o programa
       KICK_NAVEGADOR.pronto(hub);
       hub.send({ type: 'logsDias' }); // 📅 v0.171: o calendário dos dias com log
-      cfgPapelLocal = !(event.security && event.security.role && event.security.role !== 'local'); // 🧩 v0.173
       // 🔒 v0.169.5: a atualização só se verifica/instala no computador do
       // OBS Social — quem abriu pela rede fica sabendo antes de clicar
       // 🔒 v0.169.6: os botões e o seletor SOMEM — fica só o aviso no lugar deles
@@ -3821,7 +3806,6 @@ for (const card of document.querySelectorAll('.card[data-platform]')) {
 document.getElementById('overlayUrlInput').value = `${location.protocol}//${location.host}/overlay`;
 document.getElementById('overlayVUrlInput').value = `${location.protocol}//${location.host}/overlay?tela=vertical`;
 document.getElementById('chatUrlInput').value = `${location.protocol}//${location.host}/chat`;
-document.getElementById('donationUrlInput').value = `${location.protocol}//${location.host}/doacao`;
 for (const btn of document.querySelectorAll('.copy-btn')) {
   btn.onclick = async () => {
     const input = document.getElementById(btn.dataset.copy);
@@ -3952,7 +3936,7 @@ for (const card of document.querySelectorAll('.card[data-platform]')) {
     const secretInput = card.querySelector('.secret-input');
     if (secretInput && secretInput.value.trim()) options.secret = secretInput.value.trim();
     // 📨💬 Telegram/WhatsApp: o segredo é o TOKEN (do bot / do canal)
-    if ((platform === 'telegram' || platform === 'whatsapp') && options.secret) { options.token = options.secret; delete options.secret; }
+    if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix') && options.secret) { options.token = options.secret; delete options.secret; }
     // 💬 WhatsApp: leva junto o modo escolhido (gateway ou biblioteca local)
     if (platform === 'whatsapp') {
       const modoSel = card.querySelector('.wa-modo');
@@ -4549,9 +4533,6 @@ function fillSettingsForm() {
     const sel = document.getElementById('p-recarregarMin');
     if (sel && document.activeElement !== sel) sel.value = String(Number(panel.recarregarMin) || 0);
   }
-  const labsOn = (settings.labs || {}).donations === true;
-  document.getElementById('l-donations').checked = labsOn;
-  document.getElementById('lab-donations').classList.toggle('off', !labsOn);
   const modoTela = ['normal', 'horizontal', 'vertical', 'ambos'].includes(settings.screenMode) ? settings.screenMode : 'normal';
   const modoSel = document.getElementById('screenModeSel');
   if (document.activeElement !== modoSel) modoSel.value = modoTela;
@@ -4573,7 +4554,7 @@ function fillSettingsForm() {
   fillTrilhasControles();
   renderTrilhasDeck();
   // 🎬 OBS e 🎵 Mesa de trilhas (Labs)
-  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['camadas', 'l-camadas', 'lab-camadas'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
+  for (const [flag, chkId, cardId] of [['obs', 'l-obs', 'lab-obs'], ['vmix', 'l-vmix', 'lab-vmix'], ['trilhas', 'l-trilhas', 'lab-trilhas'], ['controle', 'l-controle', 'lab-controle'], ['pix', 'l-pix', 'lab-pix'], ['arrecadacao', 'l-arrecadacao', 'lab-arrecadacao'], ['telegram', 'l-telegram', 'lab-telegram'], ['transcricao', 'l-transcricao', 'lab-transcricao'], ['ytdlp', 'l-ytdlp', 'lab-ytdlp'], ['whatsapp', 'l-whatsapp', 'lab-whatsapp']]) {
     const ligado = (settings.labs || {})[flag] === true;
     const chk = document.getElementById(chkId);
     if (chk && document.activeElement !== chk) chk.checked = ligado;
@@ -4583,7 +4564,10 @@ function fillSettingsForm() {
   // 🎬🎵 v0.82: as páginas exclusivas aparecem/somem junto com os seletores
   atualizarPaginasLabs();
   fillTaxas(); // 💰 v0.170
-  pintarWidgetCamadas(); // 🧩 v0.173
+  { // 💜 v0.174: o intervalo de consulta à LivePix
+    const el = document.getElementById('livepixIntervaloInput');
+    if (el && document.activeElement !== el) el.value = String((settings.livepix || {}).intervalo || 15);
+  }
   // ♿ Acessibilidade: os 4 liga/desliga
   for (const chave of ['altoContraste', 'reduzirAnimacoes', 'focoVisivel', 'formasNoStatus']) {
     const chk = document.getElementById('a11y-' + chave);
@@ -4795,12 +4779,6 @@ document.getElementById('sel-apagarRemovidas').addEventListener('input', (e) => 
 });
 
 // ---------- Labs: liga/desliga funcoes experimentais ----------
-document.getElementById('l-donations').addEventListener('input', (e) => {
-  document.getElementById('lab-donations').classList.toggle('off', !e.target.checked);
-  applyingSettings = true;
-  hub.send({ type: 'settings', settings: { labs: { donations: e.target.checked } } });
-  setTimeout(() => { applyingSettings = false; }, 300);
-});
 document.getElementById('screenModeSel').addEventListener('input', (e) => {
   // Atualiza a URL vertical na hora (sem esperar a volta do servidor)
   document.getElementById('overlayVWrap').style.display = (e.target.value === 'vertical' || e.target.value === 'ambos') ? '' : 'none';
@@ -6137,114 +6115,12 @@ document.getElementById('ydCookiesApagar').addEventListener('click', async () =>
 
 // ---------- 💠 Pix direto do banco (Labs) ----------
 let cfgPix = null;
-// 🧩 v0.173: camadas de widget — o seletor e o editor da lista
-let cfgPapelLocal = true;
-let wcLocal = []; // a lista como está no editor (inclui linhas ainda sem URL válida)
-const CAMADA_URL_OK_CFG = /^(https:\/\/\S{1,2000}|http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?(\/\S{0,2000})?)$/i;
-document.getElementById('l-camadas').addEventListener('input', (e) => {
-  document.getElementById('lab-camadas').classList.toggle('off', !e.target.checked);
-  applyingSettings = true;
-  hub.send({ type: 'settings', settings: { labs: { camadas: e.target.checked } } });
-  setTimeout(() => { applyingSettings = false; }, 300);
+// 💜 v0.174: o intervalo da LivePix (5 a 300 s), salvo ao sair do campo
+document.getElementById('livepixIntervaloInput').addEventListener('change', (e) => {
+  const v = Math.max(5, Math.min(300, Math.round(Number(e.target.value) || 15)));
+  e.target.value = String(v);
+  hub.send({ type: 'settings', settings: { livepix: { intervalo: v } } });
 });
-function widgetCamadaNova() {
-  return { id: 'c' + Math.random().toString(36).slice(2, 10), nome: '', url: '', x: 0, y: 0, largura: 100, altura: 100, ligada: true, ordem: 'acima' };
-}
-function pintarWidgetCamadas() {
-  const caixa = document.getElementById('wcLista');
-  if (!caixa) return;
-  document.getElementById('wcSomenteLocal').style.display = cfgPapelLocal ? 'none' : '';
-  document.getElementById('wcAddBtn').disabled = !cfgPapelLocal;
-  // Alguém digitando? Não redesenha por cima (a lista volta do servidor a cada settings)
-  if (caixa.contains(document.activeElement)) return;
-  const doServidor = Array.isArray(settings && settings.camadas) ? settings.camadas : [];
-  const ids = new Set(doServidor.map((c) => c.id));
-  // Linhas locais ainda sem URL válida (rascunhos) continuam no editor
-  const rascunhos = wcLocal.filter((c) => !ids.has(c.id) && !CAMADA_URL_OK_CFG.test(String(c.url || '').trim()));
-  wcLocal = [...doServidor.map((c) => ({ ...c })), ...rascunhos];
-  caixa.textContent = '';
-  if (!wcLocal.length) {
-    const vazio = document.createElement('div'); vazio.className = 'hint'; vazio.textContent = 'Nenhuma camada ainda: clique em ➕ e cole a URL do widget.';
-    caixa.appendChild(vazio);
-  }
-  for (const c of wcLocal) {
-    const linha = document.createElement('div');
-    linha.className = 'camada-linha'; linha.dataset.id = c.id;
-    linha.style.cssText = 'border:1px solid var(--border, #444);border-radius:8px;padding:8px;margin:6px 0';
-    const r1 = document.createElement('div'); r1.className = 'row'; r1.style.cssText = 'gap:6px;align-items:center';
-    const nome = document.createElement('input'); nome.className = 'cm-nome'; nome.placeholder = 'Nome (ex.: LivePix)'; nome.value = c.nome || ''; nome.maxLength = 40; nome.style.width = '160px';
-    const url = document.createElement('input'); url.className = 'cm-url'; url.placeholder = 'https://... (a URL do widget)'; url.value = c.url || ''; url.style.flex = '1'; url.spellcheck = false;
-    const del = document.createElement('button'); del.className = 'icon-btn cm-del'; del.textContent = '🗑️'; del.title = 'Apagar esta camada';
-    r1.append(nome, url, del);
-    const r2 = document.createElement('div'); r2.className = 'row'; r2.style.cssText = 'gap:6px;align-items:center;font-size:12px;flex-wrap:wrap;margin-top:6px';
-    const num = (cls, rotulo, valor, min) => {
-      const l = document.createElement('label'); l.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin:0';
-      const i = document.createElement('input'); i.type = 'number'; i.className = cls; i.min = String(min); i.max = '100'; i.step = '0.5'; i.value = String(valor); i.style.width = '64px';
-      l.append(document.createTextNode(rotulo + ' '), i, document.createTextNode(' %')); return l;
-    };
-    r2.append(num('cm-x', 'X', c.x ?? 0, 0), num('cm-y', 'Y', c.y ?? 0, 0), num('cm-larg', 'Largura', c.largura ?? 100, 1), num('cm-alt', 'Altura', c.altura ?? 100, 1));
-    const ordem = document.createElement('select'); ordem.className = 'cm-ordem'; ordem.style.width = 'auto';
-    for (const [v, t] of [['acima', 'Por cima de tudo'], ['abaixo', 'Atrás dos widgets']]) { const o = document.createElement('option'); o.value = v; o.textContent = t; ordem.appendChild(o); }
-    ordem.value = c.ordem === 'abaixo' ? 'abaixo' : 'acima';
-    const lig = document.createElement('label'); lig.className = 'check'; lig.style.margin = '0';
-    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'sw cm-ligada'; chk.checked = c.ligada !== false;
-    lig.append(chk, document.createTextNode(' Ligada'));
-    r2.append(ordem, lig);
-    linha.append(r1, r2);
-    if (!cfgPapelLocal) for (const el of linha.querySelectorAll('input,select,button')) el.disabled = true;
-    caixa.appendChild(linha);
-  }
-}
-function lerWidgetCamadas() {
-  const fora = [];
-  for (const linha of document.querySelectorAll('#wcLista .camada-linha')) {
-    fora.push({
-      id: linha.dataset.id,
-      nome: linha.querySelector('.cm-nome').value.trim(),
-      url: linha.querySelector('.cm-url').value.trim(),
-      x: Number(linha.querySelector('.cm-x').value), y: Number(linha.querySelector('.cm-y').value),
-      largura: Number(linha.querySelector('.cm-larg').value), altura: Number(linha.querySelector('.cm-alt').value),
-      ligada: linha.querySelector('.cm-ligada').checked,
-      ordem: linha.querySelector('.cm-ordem').value,
-    });
-  }
-  return fora;
-}
-function salvarWidgetCamadas() {
-  if (!cfgPapelLocal) return;
-  wcLocal = lerWidgetCamadas();
-  const validas = wcLocal.filter((c) => CAMADA_URL_OK_CFG.test(c.url));
-  applyingSettings = true;
-  hub.send({ type: 'settings', settings: { camadas: validas } });
-  setTimeout(() => { applyingSettings = false; }, 300);
-}
-document.getElementById('wcLista').addEventListener('change', () => salvarWidgetCamadas());
-document.getElementById('wcLista').addEventListener('click', (e) => {
-  const del = e.target.closest('.cm-del');
-  if (!del) return;
-  const linha = del.closest('.camada-linha');
-  if (!linha || !confirm(OBS_I18N.t('Apagar esta camada da tela?'))) return;
-  linha.remove();
-  wcLocal = lerWidgetCamadas(); // a linha já saiu do editor; o servidor confirma em seguida
-  salvarWidgetCamadas();
-});
-document.getElementById('wcAddBtn').addEventListener('click', () => {
-  if (!cfgPapelLocal) return;
-  wcLocal = lerWidgetCamadas();
-  if (wcLocal.length >= 8) return;
-  wcLocal.push(widgetCamadaNova());
-  // Redesenha a partir das linhas atuais (sem esperar o servidor)
-  const caixa = document.getElementById('wcLista');
-  const foco = caixa.contains(document.activeElement);
-  if (foco) document.activeElement.blur();
-  const guardado = settings.camadas;
-  settings.camadas = wcLocal.filter((c) => CAMADA_URL_OK_CFG.test(String(c.url || '').trim()));
-  pintarWidgetCamadas();
-  settings.camadas = guardado;
-  const ultima = caixa.querySelector('.camada-linha:last-child .cm-url');
-  if (ultima) ultima.focus();
-});
-
 document.getElementById('l-pix').addEventListener('input', (e) => {
   document.getElementById('lab-pix').classList.toggle('off', !e.target.checked);
   applyingSettings = true;
@@ -6260,12 +6136,12 @@ document.getElementById('l-arrecadacao').addEventListener('input', (e) => {
 });
 function fillTaxas() {
   const t = (settings && settings.taxas) || {};
-  for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaPixInput', 'pix']]) {
+  for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaLivepixInput', 'livepix'], ['taxaPixInput', 'pix']]) {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el && t[chave] !== undefined) el.value = String(t[chave]);
   }
 }
-for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaPixInput', 'pix']]) {
+for (const [id, chave] of [['taxaSuperchatInput', 'superchat'], ['taxaLivepixInput', 'livepix'], ['taxaPixInput', 'pix']]) {
   document.getElementById(id).addEventListener('change', (e) => {
     const v = Math.max(0, Math.min(100, Number(e.target.value) || 0));
     e.target.value = String(v);
@@ -6277,13 +6153,14 @@ document.getElementById('taxasBuscarBtn').addEventListener('click', () => {
   hub.send({ type: 'taxasBuscar' });
 });
 function aplicarTaxasBuscadas(event) {
-  const sc = event.superchat || {}; const px = event.pix || {};
+  const sc = event.superchat || {}; const px = event.pix || {}; const lp = event.livepix || {}; // 💜 v0.174
   const taxas = {};
   if (Number.isFinite(Number(sc.valor))) { taxas.superchat = Number(sc.valor); document.getElementById('taxaSuperchatInput').value = String(sc.valor); }
+  if (Number.isFinite(Number(lp.valor))) { taxas.livepix = Number(lp.valor); document.getElementById('taxaLivepixInput').value = String(lp.valor); }
   if (Number.isFinite(Number(px.valor))) { taxas.pix = Number(px.valor); document.getElementById('taxaPixInput').value = String(px.valor); }
   if (Object.keys(taxas).length) hub.send({ type: 'settings', settings: { taxas } });
   document.getElementById('taxasStatus').textContent = sc.referencia ? '⚠️ Preenchido com o valor de referência' : '✅ Taxas preenchidas e salvas';
-  document.getElementById('taxasFonte').textContent = `Super Chat ${sc.valor}%: ${sc.fonte || ''} Pix ${px.valor}%: ${px.fonte || ''}`;
+  document.getElementById('taxasFonte').textContent = `Super Chat ${sc.valor}%: ${sc.fonte || ''} LivePix ${lp.valor}%: ${lp.fonte || ''} Pix ${px.valor}%: ${px.fonte || ''}`;
 }
 function fillPixLab() {
   const p = cfgPix || {};
@@ -13793,7 +13670,7 @@ showCfgPage(location.hash.replace('#sec-', ''));
 
 // ---------- 🧲 Organizar o painel (arrastar ícones e abas) ----------
 const TOOL_META = { qr: '📱 QR Code', raffle: '🎁 Sorteio', likemeter: '📊 Likômetro', aud: '👥 Audiência', ws: '🏆 Winstreak', aviso: '📢 Avisos', midiaDireta: '🎞️ Mídia direta', trilhas: '🎵 Mesa de trilhas', obs: '🎬 OBS Studio', vmix: '🎛️ vMix', clip: '📋 Área de transf.' };
-const TAB_META = { live: '🔴 Ao vivo', saved: '📥 Fila', superchat: '💰 Super Chats', member: '👑 Membros', whatsapp: '💬 WhatsApp', telegram: '📨 Telegram', apoio: '💝 Apoios' };
+const TAB_META = { live: '🔴 Ao vivo', saved: '📥 Fila', superchat: '💰 Super Chats', member: '👑 Membros', whatsapp: '💬 WhatsApp', telegram: '📨 Telegram', livepix: '💜 LivePix', pix: '💠 Pix' };
 
 // 🧲 v0.154: a ordem vem de /painel-ordem.js — a MESMA lista e a MESMA regra
 // («o 📋 fecha a fila») do servidor e do painel. TOOL_META/TAB_META são só os

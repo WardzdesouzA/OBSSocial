@@ -1,4 +1,15 @@
 {
+  "0.174.0": {
+    "titulo": "💜 LivePix über die offizielle API: eigener Tab und eigene Spalte, Alert-Steuerung (anhalten, überspringen, wiederholen), Wallet, Abos und Belohnungen im Panel · 💠 Pix-Tab · Ende der generischen URL, des Support-Tabs und der Widget-Ebenen",
+    "itens": [
+      "💜 LivePix ist in den Verbindungen, über die offizielle API (für jedes Konto kostenlos): Erstelle eine Anwendung im LivePix-Panel und füge Client-ID und -Secret ein. Jede Spende (mit oder ohne Nachricht) wird zum Kommentar im Tab 💜 LivePix und in einer eigenen Spalte, mit Name, Betrag, Text, ID und dem Abzeichen „markiert“, wenn LivePix die Nachricht markiert; nichts kommt doppelt, auch nach einem Neustart nicht. Du entscheidest, wann jede über den OBS-Social-Bildschirm gezeigt wird (Hervorhebung oder Warteschlange), wiederholst jede beliebige und siehst alles vorher.",
+      "🎛️ Im LivePix-Tab: „⏸ LivePix-Alerts anhalten“ (die Warteschlange bleibt im Widget, ohne von selbst zu spielen), ⏭ aktuellen überspringen, 🔁 letzten wiederholen, ℹ️ mit allem, was die API liefert (Wallet: Guthaben, ausstehend, unterwegs, Forderungen und letzte Transaktionen; aktive Abos und Pläne; Belohnungen und Vergaben) und 🔗 zum LivePix-Panel — Spender sperren und entsperren geht dort. Die 🕹️ Externe Steuerung macht dasselbe mit der Operation „livepixControle“, und der Status zeigt Konto und autoPlay.",
+      "⏱️ Das Abfrageintervall steht in Einstellungen → Verbindungen → LivePix: Standard 15 s, zwischen 5 s (das Minimum, das die API ohne Beschwerde nimmt) und 300 s. Ein Token pro Stunde, wiederverwendet; ein überschrittenes Limit (429) wird zu längerem Warten mit Hinweis, und falsche Zugangsdaten sind ein endgültiger Fehler. Anfragen laufen über dieselben Ausweichwege wie die anderen Netzwerke.",
+      "💰 Die Stream-Einnahmen haben eine LivePix-Zeile mit deren Gebühr (5 %, per 🔎 von der LivePix-Gebührenseite gelesen oder von Hand eingetragen).",
+      "💠 Pix direkt von der Bank bekam den Tab 💠 Pix und eine eigene Spalte (vorher der Support-Tab). Was alte Logs als „Spende“ führten, erscheint als Pix.",
+      "🗑️ Eingestellt: die generische Spenden-URL (/doacao antwortet 410), der Tab 💝 Support (jetzt 💜 LivePix + 💠 Pix) und die 🧩 Widget-Ebenen aus v0.173 (was sie taten, macht LivePix jetzt über die API; der Schlüssel verschwindet von selbst aus den Einstellungen)."
+    ]
+  },
   "0.173.0": {
     "titulo": "🧩 Widget-Ebenen auf dem Bildschirm: Alerts von LivePix, PixGG und jeder „Browserquelle“ im OBS-Social-Overlay, mit Ein/Aus und 🔄 vom Panel",
     "itens": [

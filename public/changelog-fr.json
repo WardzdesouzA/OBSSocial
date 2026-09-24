@@ -1,4 +1,15 @@
 {
+  "0.174.0": {
+    "titulo": "💜 LivePix via l’API officielle : onglet et colonne dédiés, contrôle des alertes (retenir, passer, rejouer), portefeuille, abonnements et récompenses dans le panneau · 💠 onglet Pix · fin de l’URL générique, de l’onglet Soutiens et des calques de widget",
+    "itens": [
+      "💜 LivePix rejoint les Connexions, via l’API officielle (gratuite pour tout compte) : créez une application dans le panneau LivePix et collez l’ID et le secret du client. Chaque don (avec ou sans message) devient un commentaire dans l’onglet 💜 LivePix et dans une colonne dédiée, avec nom, montant, texte, ID et le badge « signalé » quand LivePix marque le message ; rien n’entre deux fois, même après un redémarrage. Vous décidez quand montrer chacun via l’écran OBS Social (mise en avant ou file), rejouez celui que vous voulez et prévisualisez tout avant.",
+      "🎛️ Dans l’onglet LivePix : « ⏸ Retenir les alertes LivePix » (la file reste dans leur widget, sans jouer toute seule), ⏭ passer l’actuelle, 🔁 rejouer la dernière, ℹ️ avec tout ce que l’API fournit (portefeuille : solde, en attente, en transit, à recevoir et dernières transactions ; abonnements actifs et plans ; récompenses et attributions) et 🔗 vers le panneau LivePix — bloquer et débloquer les donateurs se fait là-bas. Le 🕹️ Contrôle externe fait pareil avec l’opération « livepixControle » et l’état montre le compte et l’autoPlay.",
+      "⏱️ L’intervalle de consultation est dans Réglages → Connexions → LivePix : 15 s par défaut, entre 5 s (le minimum que l’API accepte sans se plaindre) et 300 s. Un jeton par heure, réutilisé ; limite dépassée (429) devient une attente plus longue avec avis, et un identifiant erroné est une erreur définitive. Les requêtes passent par les mêmes chemins de secours que les autres réseaux.",
+      "💰 Les recettes du live ont gagné la ligne LivePix, avec ses frais (5 %, lus sur la page des frais LivePix par 🔎 ou saisis à la main).",
+      "💠 Le Pix direct de la banque a gagné l’onglet 💠 Pix et sa colonne (c’était l’onglet Soutiens). Ce que les anciens logs gardaient comme « don » apparaît comme Pix.",
+      "🗑️ Abandonnés : l’URL générique de dons (/doacao répond 410), l’onglet 💝 Soutiens (devenu 💜 LivePix + 💠 Pix) et les 🧩 Calques de widget de la v0.173 (ce qu’ils faisaient, LivePix le fait désormais via l’API ; la clé disparaît d’elle-même des réglages)."
+    ]
+  },
   "0.173.0": {
     "titulo": "🧩 Calques de widget à l’écran : les alertes LivePix, PixGG et toute « source navigateur » dans l’overlay OBS Social, avec marche/arrêt et 🔄 depuis le panneau",
     "itens": [

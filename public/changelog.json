@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.174.0",
+    "titulo": "💜 LivePix pela API oficial: aba e coluna próprias, controle dos alertas (represar, pular, repetir), carteira, assinaturas e recompensas no painel · 💠 aba Pix · fim da URL genérica, da aba Apoios e das camadas de widget",
+    "itens": [
+      "💜 LivePix entrou nas Conexões, pela API oficial (gratuita para toda conta): crie uma aplicação no painel da LivePix e cole o ID e o segredo do cliente. Cada doação (com ou sem mensagem) vira um comentário na aba 💜 LivePix e numa coluna própria, com nome, valor, texto, ID e o selo «sinalizada» quando a LivePix marca a mensagem; nada entra duas vezes, nem depois de reiniciar. Você decide quando mostrar cada uma pela tela do OBS Social (destaque ou fila), repete a que quiser e vê tudo antes.",
+      "🎛️ Na aba LivePix: «⏸ Represar os alertas da LivePix» (a fila fica no widget dela, sem tocar sozinha), ⏭ pular o atual, 🔁 repetir o último, ℹ️ com tudo que a API entrega (carteira: saldo, pendente, em trânsito, a receber e as últimas transações; assinaturas ativas e planos; recompensas e concessões) e 🔗 para o painel da LivePix — bloquear e desbloquear quem doa é lá. O 🕹️ Controle externo faz o mesmo pela operação «livepixControle» e o estado mostra a conta e o autoPlay.",
+      "⏱️ O intervalo de consulta fica em Configurações → Conexões → LivePix: padrão 15 s, entre 5 s (o mínimo que a API aceita sem reclamar) e 300 s. Um token por hora, reaproveitado; limite estourado (429) vira espera maior com aviso, e credencial errada é erro definitivo. As consultas passam pelos mesmos caminhos de reserva das outras redes.",
+      "💰 A arrecadação da live ganhou a linha da LivePix, com a taxa dela (5%, lida da página de taxas da LivePix pelo 🔎 ou digitada à mão).",
+      "💠 O Pix direto do banco ganhou a aba 💠 Pix e a coluna própria (era a aba Apoios). O que ficou nos logs antigos como «doação» aparece como Pix.",
+      "🗑️ Descontinuados: a URL genérica de doações (/doacao responde 410), a aba 💝 Apoios (virou 💜 LivePix + 💠 Pix) e as 🧩 Camadas de widget na tela da v0.173 (o que elas faziam a LivePix agora faz pela API; a chave some das configurações sozinha)."
+    ]
+  },
+  {
     "version": "0.173.0",
     "titulo": "🧩 Camadas de widget na tela: os alertas da LivePix, da PixGG e de qualquer «fonte de navegador» dentro do overlay do OBS Social, com liga/desliga e 🔄 pelo painel",
     "itens": [

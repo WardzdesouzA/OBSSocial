@@ -487,6 +487,8 @@
     display: flex; gap: 10px; padding: 8px 20px; background: var(--panel);
     border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap;
   }
+  /* 💜 v0.174: a barra da aba LivePix */
+  .tab-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--border, #333); position: relative; }
   .tool-wrap { position: relative; }
   .pop-toggle { position: relative; }
   #feedJumpBtn { position: relative; }
@@ -989,15 +991,6 @@
       <div class="pop-title">💰 Arrecadado na live</div>
       <div id="arrecadadoLinhas" style="font-size:13px;line-height:1.7"></div>
       <div class="hint" style="margin:6px 0 0;font-size:11px">Valores em reais (moeda estrangeira pela cotação do dia). As taxas ficam em Configurações → 🧪 Labs → 💰 Arrecadação da live.</div>
-    </div>
-  </div>
-  <!-- 🧩 v0.173: camadas de widget na tela (LivePix, PixGG, qualquer fonte de navegador) -->
-  <div class="tool-wrap" id="camadasWrap" style="display:none">
-    <button id="camadasBtn" class="icon-btn pop-toggle" data-pop="camadasPop" title="Camadas de widget na tela (LivePix, PixGG e outros alertas): ligar, desligar e recarregar cada uma">🧩</button>
-    <div class="popover" id="camadasPop">
-      <div class="pop-title">🧩 Camadas de widget</div>
-      <div id="camadasLinhas" style="font-size:13px;line-height:1.9"></div>
-      <div class="hint" style="margin:6px 0 0;font-size:11px">Desligar tira o quadro da tela (o alerta para de tocar). 🔄 abre a URL de novo. A lista mora em Configurações → 🧪 Labs → 🧩 Camadas de widget.</div>
     </div>
   </div>
   <!-- 📅 v0.171: rever um dia de live (o log inteiro daquele dia) -->
@@ -1819,7 +1812,9 @@
     <!-- 💬📨 v0.124: WhatsApp e Telegram têm UMA ABA CADA (cada uma com o seu seletor do Labs) -->
     <button class="tab" data-tab="whatsapp" style="display:none">💬 WhatsApp <span class="count" id="count-whatsapp">0</span></button>
     <button class="tab" data-tab="telegram" style="display:none">📨 Telegram <span class="count" id="count-telegram">0</span></button>
-    <button class="tab" data-tab="apoio">💝 Apoios <span class="count" id="count-apoio">0</span></button>
+    <!-- 💜💠 v0.174: a aba Apoios virou duas — LivePix (API oficial) e Pix (direto do banco) -->
+    <button class="tab" data-tab="livepix" style="display:none">💜 LivePix <span class="count" id="count-livepix">0</span></button>
+    <button class="tab" data-tab="pix" style="display:none">💠 Pix <span class="count" id="count-pix">0</span></button>
     <input type="search" id="searchBox" placeholder="🔎 Buscar (nome ou palavra)"
       title="Busca comentários pelo nome de quem escreveu ou por palavras da mensagem — vale para todas as abas">
   </div>
@@ -1836,7 +1831,8 @@
     <label class="check"><input type="checkbox" checked data-filter="bilibili" class="sw"> Bilibili</label>
     <label class="check"><input type="checkbox" checked data-filter="telegram" class="sw"> Telegram</label>
     <label class="check"><input type="checkbox" checked data-filter="whatsapp" class="sw"> WhatsApp</label>
-    <label class="check"><input type="checkbox" checked data-filter="doacao" class="sw"> Doações</label>
+    <label class="check"><input type="checkbox" checked data-filter="livepix" class="sw"> LivePix</label>
+    <label class="check"><input type="checkbox" checked data-filter="pix" class="sw"> Pix</label>
     <span style="margin-left:auto"></span>
     <div id="pager" style="display:flex;align-items:center;gap:6px">
       <button id="pageNewest" class="icon-btn" title="Ir para os mais novos" style="width:28px;height:28px;font-size:12px">⏮</button>
@@ -1852,7 +1848,22 @@
   <div class="list" id="list-member"><div class="placeholder">Os comentários de membros do canal (YouTube) vão aparecer aqui.</div></div>
   <div class="list" id="list-whatsapp"><div class="placeholder">As mensagens do WhatsApp vão aparecer aqui — com a mídia, a resposta e a moderação de cada uma.</div></div>
   <div class="list" id="list-telegram"><div class="placeholder">As mensagens do Telegram vão aparecer aqui — com a mídia, a resposta e a moderação de cada uma.</div></div>
-  <div class="list" id="list-apoio"><div class="placeholder">As doações recebidas pela URL genérica de doações vão aparecer aqui, com valor e cor.</div></div>
+  <!-- 💜 v0.174: a barra da aba LivePix — conta, controles dos alertas e o resto que a API entrega -->
+  <div id="livepixBarra" class="tab-barra" style="display:none">
+    <span id="livepixConta" class="hint" style="margin:0;flex:1;min-width:120px">💜 LivePix</span>
+    <label class="check" style="margin:0" title="Represar: os alertas do widget da LivePix ficam na fila deles em vez de tocar sozinhos — você decide quando mostrar a doação pela tela do OBS Social (destaque / fila)"><input type="checkbox" id="livepixRepresar" class="sw"> ⏸ Represar os alertas da LivePix</label>
+    <button id="livepixSkip" class="icon-btn" title="Pular o alerta atual do widget da LivePix">⏭</button>
+    <button id="livepixReplay" class="icon-btn" title="Repetir o último alerta do widget da LivePix">🔁</button>
+    <button id="livepixInfoBtn" class="icon-btn pop-toggle tip-left" data-pop="livepixInfoPop" title="Carteira, assinaturas e recompensas (tudo que a API da LivePix entrega)">ℹ️</button>
+    <a id="livepixPainel" class="icon-btn" href="https://dashboard.livepix.gg" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center" title="Abrir o painel da LivePix numa janela nova: bloquear e desbloquear quem doa é feito lá">🔗</a>
+    <div class="popover" id="livepixInfoPop" style="right:0;left:auto;max-width:min(560px,92vw)">
+      <div class="pop-title">💜 LivePix — o que a API entrega</div>
+      <div id="livepixInfoLinhas" style="font-size:13px;line-height:1.7"></div>
+    </div>
+    <span id="livepixAviso" class="hint" style="margin:0;flex-basis:100%;display:none"></span>
+  </div>
+  <div class="list" id="list-livepix"><div class="placeholder">As doações recebidas pela LivePix vão aparecer aqui, com nome, valor e mensagem. Clique com o botão direito para mandar para a tela (destaque) ou para a fila.</div></div>
+  <div class="list" id="list-pix"><div class="placeholder">Os Pix recebidos direto do seu banco (Labs → 💠 Pix) vão aparecer aqui, com a mensagem do pagador.</div></div>
 </main>
 
 <div id="somBloqueado" title="O navegador só toca som depois de um clique na página">🔇 Clique aqui para liberar o som dos alertas</div>
@@ -1968,7 +1979,7 @@ document.getElementById('gearBtn').onclick = openConfig;
 
 // ---------- Chips de conexão no topo ----------
 const connChips = document.getElementById('connChips');
-for (const platform of ['youtube', 'twitch', 'kick', 'bilibili', 'telegram', 'whatsapp']) {
+for (const platform of ['youtube', 'twitch', 'kick', 'livepix', 'bilibili', 'telegram', 'whatsapp']) { // 💜 v0.174: + LivePix
   const chip = document.createElement('div');
   chip.className = 'conn-chip';
   chip.dataset.platform = platform;
@@ -2027,10 +2038,11 @@ const lists = {
   member: document.getElementById('list-member'),
   whatsapp: document.getElementById('list-whatsapp'), // 💬 v0.124
   telegram: document.getElementById('list-telegram'), // 📨 v0.124
-  apoio: document.getElementById('list-apoio'),
+  livepix: document.getElementById('list-livepix'), // 💜 v0.174
+  pix: document.getElementById('list-pix'),         // 💠 v0.174
 };
 const MAX_LIST_ITEMS = 300;
-const filters = { youtube: true, twitch: true, kick: true, bilibili: true, telegram: true, whatsapp: true, doacao: true };
+const filters = { youtube: true, twitch: true, kick: true, bilibili: true, telegram: true, whatsapp: true, livepix: true, pix: true };
 const savedIds = new Set();
 const readIds = new Map(); // id -> horario em que foi para a tela ("lido")
 let featuredId = null;
@@ -2063,7 +2075,7 @@ const hub = connectHub((event) => {
       if (event.updateAvailable) showUpdateBanner(event.updateAvailable);
       updateFeedPending(event.feedPending || 0);
       colTotals = event.feedTotals || {};
-      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio: 0 };
+      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0 };
       if (event.valorTotais) valorTotais = event.valorTotais; // 💰 v0.170
       participantesPorRede = event.participantesPorRede || {};
       colPendingBy = event.feedPendingBy || {};
@@ -2093,7 +2105,8 @@ const hub = connectHub((event) => {
       lists.member.innerHTML = '';
       lists.whatsapp.innerHTML = ''; // 💬📨 v0.124
       lists.telegram.innerHTML = '';
-      lists.apoio.innerHTML = '';
+      lists.livepix.innerHTML = '';
+      lists.pix.innerHTML = '';
       renderSaved(event.saved || []);
       // A janela geral MAIS a janela de cada rede: assim a coluna de uma rede
       // calma não fica vazia por causa do volume das outras
@@ -2105,7 +2118,7 @@ const hub = connectHub((event) => {
       }
       pintarContadores(); // números reais do dia, vindos do servidor
       pintarArrecadado(); // 💰 v0.170
-      pintarCamadas(); // 🧩 v0.173
+      livepixDados = event.livepix || null; pintarLivepix(); // 💜 v0.174
       renderLivePage();
       restorePlaceholders();
       setFeatured(event.featured);
@@ -2176,6 +2189,14 @@ const hub = connectHub((event) => {
     case 'chat':
       lastArrivedId = event.message?.id || null;
       addMessage(event.message, true);
+      break;
+    case 'livepix': // 💜 v0.174: conta, controles, carteira, assinaturas, recompensas
+      livepixDados = event.livepix || null;
+      pintarLivepix();
+      break;
+    case 'livepixControle': // resposta de um controle pedido por este painel
+      if (event.ok === false) mostrarRecadoObs(false, event.erro || 'A LivePix não aceitou o comando.');
+      else if (event.controles) { livepixDados = { ...(livepixDados || {}), controles: event.controles }; pintarLivepix(); }
       break;
     case 'apagadas':
       apagarMensagens(event);
@@ -2305,7 +2326,7 @@ const hub = connectHub((event) => {
       settings = event.settings;
       applyPanel();
       pintarArrecadado(); // 💰 v0.170: o seletor e as taxas
-      pintarCamadas(); // 🧩 v0.173
+      pintarLivepix(); // 💜 v0.174: taxa, intervalo e a barra da aba
       renderLivePage();
       repintarSelos();
       prepararSomDoTimer();
@@ -2413,8 +2434,8 @@ const hub = connectHub((event) => {
     case 'init-totais':
       // "Apagar os logs" zera a contagem do dia: os números acompanham
       colTotals = event.feedTotals || {};
-      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio: 0 };
-      valorTotais = event.valorTotais || { superchat: 0, pix: 0 }; pintarArrecadado(); // 💰 v0.170
+      categoriaTotais = event.categoryTotals || { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0 };
+      valorTotais = event.valorTotais || { superchat: 0, livepix: 0, pix: 0 }; pintarArrecadado(); // 💰 v0.170
       pintarContadores();
       break;
     case 'winstreak':
@@ -2499,6 +2520,7 @@ for (const tab of document.querySelectorAll('.tab')) {
     for (const list of Object.values(lists)) list.classList.remove('active');
     lists[tab.dataset.tab].classList.add('active');
     document.getElementById('liveFilters').style.display = tab.dataset.tab === 'live' ? '' : 'none';
+    document.getElementById('livepixBarra').style.display = tab.dataset.tab === 'livepix' ? '' : 'none'; // 💜 v0.174
     if (tab.dataset.tab === 'live') renderLivePage();
   };
 }
@@ -2508,48 +2530,69 @@ function updateCount(name, value) {
 
 // Totais REAIS do dia, contados pelo servidor (nenhum teto). A aba "Fila"
 // continua sendo o tamanho da própria lista, que é o número certo dela.
-let categoriaTotais = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, apoio: 0 };
+let categoriaTotais = { superchat: 0, member: 0, whatsapp: 0, telegram: 0, livepix: 0, pix: 0 };
 // 💰 v0.170: o arrecadado do dia (reais) e o cartão do cabeçalho
-let valorTotais = { superchat: 0, pix: 0 };
+let valorTotais = { superchat: 0, livepix: 0, pix: 0 };
 const reais = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-// 🧩 v0.173: o chip das camadas de widget — cada uma com o seu liga/desliga e 🔄
-function pintarCamadas() {
-  const wrap = document.getElementById('camadasWrap');
-  if (!wrap) return;
-  const lista = (settings && settings.labs && settings.labs.camadas === true && Array.isArray(settings.camadas)) ? settings.camadas : [];
-  wrap.style.display = lista.length ? '' : 'none';
-  if (!lista.length) return;
-  const ligadas = lista.filter((c) => c.ligada !== false).length;
-  document.getElementById('camadasBtn').textContent = '🧩' + (ligadas ? ' ' + ligadas : '');
-  const caixa = document.getElementById('camadasLinhas');
-  caixa.textContent = '';
-  for (const c of lista) {
-    const linha = document.createElement('div');
-    linha.style.cssText = 'display:flex;align-items:center;gap:8px';
-    const lab = document.createElement('label');
-    lab.className = 'check';
-    lab.style.cssText = 'flex:1;margin:0';
-    const chk = document.createElement('input');
-    chk.type = 'checkbox'; chk.className = 'sw'; chk.checked = c.ligada !== false; chk.dataset.camada = c.id;
-    chk.title = OBS_I18N.t('Ligar ou desligar esta camada na tela');
-    lab.appendChild(chk);
-    lab.appendChild(document.createTextNode(' ' + (c.nome || 'Widget')));
-    const rec = document.createElement('button');
-    rec.className = 'icon-btn'; rec.textContent = '🔄'; rec.dataset.recarregar = c.id;
-    rec.title = OBS_I18N.t('Recarregar: abre a URL do widget de novo na tela');
-    rec.style.cssText = 'width:28px;height:28px';
-    linha.appendChild(lab); linha.appendChild(rec);
-    caixa.appendChild(linha);
+// 💜 v0.174: a barra da aba LivePix e o ℹ️ com tudo que a API entrega
+let livepixDados = null;
+function pintarLivepix() {
+  const barra = document.getElementById('livepixBarra');
+  if (!barra) return;
+  const d = livepixDados;
+  const conta = d && d.conta;
+  document.getElementById('livepixConta').textContent = conta
+    ? `💜 ${conta.displayName || conta.username} (@${conta.username})`
+    : (d && d.conectada === false ? '💜 LivePix desconectada' : '💜 LivePix');
+  const chk = document.getElementById('livepixRepresar');
+  const ctl = d && d.controles;
+  if (document.activeElement !== chk) chk.checked = !!(ctl && ctl.autoPlay === false);
+  chk.disabled = !ctl;
+  document.getElementById('livepixSkip').disabled = !ctl;
+  document.getElementById('livepixReplay').disabled = !ctl;
+  const aviso = document.getElementById('livepixAviso');
+  aviso.style.display = ctl && ctl.autoPlay === false ? '' : 'none';
+  aviso.textContent = '⏸ Os alertas do widget da LivePix estão represados na fila dela: mostre cada doação pela tela do OBS Social (destaque ou fila) quando quiser. Desmarque para o widget voltar a tocar sozinho.';
+  const linhas = document.getElementById('livepixInfoLinhas');
+  linhas.textContent = '';
+  const bloco = (titulo) => { const h = document.createElement('div'); h.style.cssText = 'font-weight:700;margin:8px 0 2px'; h.textContent = titulo; linhas.appendChild(h); };
+  const linha = (rotulo, valor) => { const el = document.createElement('div'); el.style.cssText = 'display:flex;justify-content:space-between;gap:16px'; const a = document.createElement('span'); a.textContent = rotulo; const b = document.createElement('b'); b.textContent = valor; el.append(a, b); linhas.appendChild(el); };
+  const nota = (t) => { const c = document.createElement('div'); c.className = 'hint'; c.style.cssText = 'margin:0;font-size:11px'; c.textContent = t; linhas.appendChild(c); };
+  if (!d) { nota('Conecte a LivePix em Configurações → Conexões para ver a conta, a carteira, as assinaturas e as recompensas.'); return; }
+  const cent = (v) => reais((Number(v) || 0) / 100);
+  const quando = (ms) => (ms ? new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—');
+  if (Array.isArray(d.carteira)) {
+    bloco('👛 Carteira');
+    for (const c of d.carteira) {
+      linha(`Saldo disponível (${c.moeda})`, cent(c.saldo));
+      if (c.pendente) linha('Pendente de liberação', cent(c.pendente));
+      if (c.emTransito) linha('Em trânsito (saque)', cent(c.emTransito));
+      linha('A receber', cent(c.aReceber));
+      for (const r of (c.recebiveis || []).slice(0, 5)) linha(`  libera em ${quando(r.liberaEm)}`, cent(r.valor));
+      if ((c.transacoes || []).length) { nota('Últimas transações:'); for (const t of c.transacoes.slice(0, 8)) linha(`  ${quando(t.em)}`, (t.valor < 0 ? '− ' : '+ ') + cent(Math.abs(t.valor))); }
+    }
+    if (!d.carteira.length) nota('Nenhuma carteira ainda.');
+  } else if (d.conectada !== false) { bloco('👛 Carteira'); nota('Só o painel do computador do streamer (ou com senha) vê o saldo.'); }
+  if (d.assinaturas) {
+    bloco('🔁 Assinaturas');
+    const ativas = (d.assinaturas.assinaturas || []).filter((a) => !a.status || /active|ativa/i.test(a.status));
+    linha('Assinantes ativos', String(ativas.length));
+    for (const a of ativas.slice(0, 10)) linha(`  ${a.assinante} (${a.meses} mês${a.meses === 1 ? '' : 'es'})`, cent(a.valor) + (a.renovaEm ? ` · renova ${quando(a.renovaEm)}` : ''));
+    for (const p of d.assinaturas.planos || []) linha(`Plano «${p.nome}»`, reais(p.valor));
+    if (!(d.assinaturas.planos || []).length) nota('Nenhum plano de assinatura criado na LivePix.');
   }
+  if (Array.isArray(d.recompensas)) {
+    bloco('🎁 Recompensas');
+    for (const r of d.recompensas) linha(`${r.titulo}${r.tipo ? ' · ' + r.tipo : ''}`, `${cent(r.valor)} · ${(r.concessoes || []).length} concedida(s)`);
+    if (!d.recompensas.length) nota('Nenhuma recompensa configurada na LivePix.');
+  }
+  if (d.atualizadoEm) nota('Atualizado ' + quando(d.atualizadoEm) + '. Bloquear ou desbloquear quem doa é no painel da LivePix (🔗).');
 }
-document.getElementById('camadasLinhas').addEventListener('change', (e) => {
-  const chk = e.target.closest('input[data-camada]');
-  if (chk) hub.send({ type: 'camada', id: chk.dataset.camada, ligada: chk.checked });
+document.getElementById('livepixRepresar').addEventListener('change', (e) => {
+  hub.send({ type: 'livepixControle', autoPlay: !e.target.checked });
 });
-document.getElementById('camadasLinhas').addEventListener('click', (e) => {
-  const b = e.target.closest('button[data-recarregar]');
-  if (b) { hub.send({ type: 'camada', id: b.dataset.recarregar, recarregar: true }); b.textContent = '✅'; setTimeout(() => { b.textContent = '🔄'; }, 1200); }
-});
+document.getElementById('livepixSkip').addEventListener('click', () => hub.send({ type: 'livepixControle', skip: true }));
+document.getElementById('livepixReplay').addEventListener('click', () => hub.send({ type: 'livepixControle', replay: true }));
 
 function pintarArrecadado() {
   const wrap = document.getElementById('arrecadadoWrap');
@@ -2560,10 +2603,12 @@ function pintarArrecadado() {
   const taxas = (settings && settings.taxas) || {};
   const tSc = Number(taxas.superchat) || 0;
   const tPix = Number(taxas.pix) || 0;
+  const tLp = Number(taxas.livepix) || 0; // 💜 v0.174
   const sc = Number(valorTotais.superchat) || 0;
+  const lp = Number(valorTotais.livepix) || 0;
   const pix = Number(valorTotais.pix) || 0;
-  const total = sc + pix;
-  const liquido = sc * (1 - tSc / 100) + pix * (1 - tPix / 100);
+  const total = sc + lp + pix;
+  const liquido = sc * (1 - tSc / 100) + lp * (1 - tLp / 100) + pix * (1 - tPix / 100);
   document.getElementById('arrecadadoBtn').textContent = '💰 ' + reais(total);
   const linhas = document.getElementById('arrecadadoLinhas');
   linhas.innerHTML = '';
@@ -2577,7 +2622,8 @@ function pintarArrecadado() {
     if (extra) { const c = document.createElement('div'); c.className = 'hint'; c.style.cssText = 'margin:0;font-size:11px;text-align:right'; c.textContent = extra; linhas.appendChild(c); }
   };
   linha('⭐ Super Chat', reais(sc), tSc ? `≈ ${reais(sc * (1 - tSc / 100))} depois da taxa de ${tSc}%` : '');
-  linha('💠 Pix / apoios', reais(pix), tPix ? `≈ ${reais(pix * (1 - tPix / 100))} depois da taxa de ${tPix}%` : '');
+  linha('💜 LivePix', reais(lp), tLp ? `≈ ${reais(lp * (1 - tLp / 100))} depois da taxa de ${tLp}%` : '');
+  linha('💠 Pix', reais(pix), tPix ? `≈ ${reais(pix * (1 - tPix / 100))} depois da taxa de ${tPix}%` : '');
   linha('Σ Total arrecadado', reais(total));
   linha('≈ Chega de verdade', reais(liquido), 'aproximado: taxas configuradas, sem impostos');
 }
@@ -2587,7 +2633,8 @@ function pintarContadores() {
   updateCount('member', Number(categoriaTotais.member) || 0);
   updateCount('whatsapp', Number(categoriaTotais.whatsapp) || 0); // 💬📨 v0.124
   updateCount('telegram', Number(categoriaTotais.telegram) || 0);
-  updateCount('apoio', Number(categoriaTotais.apoio) || 0);
+  updateCount('livepix', Number(categoriaTotais.livepix) || 0); // 💜 v0.174
+  updateCount('pix', Number(categoriaTotais.pix) || 0);         // 💠 v0.174
 }
 
 // ---------- Status das conexões (chips do topo; conexão fica em /config) ----------
@@ -2595,13 +2642,27 @@ const lastStatuses = {};   // plataforma -> estado da conexão
 const msgPlatforms = new Set(); // plataformas que já mandaram mensagem
 
 function platformActive(platform) {
-  if (platform === 'doacao' && !(settings && (settings.labs || {}).donations === true)) return false;
+  // 💠 v0.174: o Pix do banco não tem «conexão» — está ativo com o seletor do Labs ligado
+  if (platform === 'pix') return !!(settings && (settings.labs || {}).pix === true) || msgPlatforms.has('pix');
   const st = lastStatuses[platform]?.state;
   return st === 'connected' || st === 'connecting' || st === 'auth' || msgPlatforms.has(platform);
 }
 
 // Redes inativas ficam ocultas em todo o painel (chips e filtros).
+// 💜💠 v0.174: a aba LivePix aparece com a conexão viva (ou com comentário
+// dela na memória); a aba Pix, com o seletor do Labs ligado — e cada uma
+// some (voltando para Ao vivo) quando não há mais motivo. Acompanha tanto
+// as settings quanto o status das conexões.
+function pintarAbasDinamicas() {
+  for (const [aba, ligada] of [['livepix', platformActive('livepix')], ['pix', platformActive('pix')]]) {
+    const el = document.querySelector(`.tab[data-tab="${aba}"]`);
+    if (!el) continue;
+    el.style.display = ligada ? '' : 'none';
+    if (!ligada && el.classList.contains('active')) document.querySelector('.tab[data-tab="live"]').click();
+  }
+}
 function refreshPlatformVisibility() {
+  pintarAbasDinamicas();
   for (const chip of connChips.querySelectorAll('.conn-chip')) {
     chip.style.display = platformActive(chip.dataset.platform) ? '' : 'none';
   }
@@ -2617,6 +2678,7 @@ function updateStatus(platform, status) {
   // desenha o cabeçalho das conexões precisa do aoVivo e do canal, não só
   // da cor da bolinha
   lastStatuses[platform] = status && typeof status === 'object' ? status : { state: status };
+  pintarAbasDinamicas(); // 💜 v0.174: a aba LivePix segue a conexão
   const chip = connChips.querySelector(`.conn-chip[data-platform="${platform}"] .dot`);
   if (chip) {
     chip.className = 'dot ' + (status.state === 'auth' ? 'connecting' : (status.state || ''));
@@ -3268,7 +3330,7 @@ function appendTo(listName, message, inSavedTab = false) {
   while (list.children.length > MAX_LIST_ITEMS) list.removeChild(list.firstChild);
 }
 
-const DONATION_PLATFORMS = new Set(['doacao']);
+const DONATION_PLATFORMS = new Set(['livepix', 'pix', 'doacao']); // 💜💠 v0.174
 
 // ---------- Feed ao vivo com paginação e sentido configuráveis ----------
 const liveMessages = [];
@@ -3302,7 +3364,7 @@ function updatePagerUI(totalPages) {
 // 🧲 v0.154: as redes que viram coluna vêm de /painel-ordem.js (a mesma lista
 // que o servidor aceita em columnsOrder); cópia, para ninguém mexer na fonte
 const COL_ORDER = OBS_PAINEL_ORDEM.COLUNAS.slice();
-const COL_NAMES = { youtube: 'YouTube', twitch: 'Twitch', kick: 'Kick', bilibili: 'Bilibili', telegram: 'Telegram', whatsapp: 'WhatsApp', doacao: 'Doações' };
+const COL_NAMES = { youtube: 'YouTube', twitch: 'Twitch', kick: 'Kick', bilibili: 'Bilibili', telegram: 'Telegram', whatsapp: 'WhatsApp', livepix: 'LivePix', pix: 'Pix' };
 
 // Contadores vindos do servidor: total real da live por rede e mensagens
 // represadas (aguardando na fila do fluxo suave) por rede
@@ -3925,6 +3987,7 @@ document.getElementById('pageNewer').onclick = () => { livePage = Math.max(0, li
 document.getElementById('pageOlder').onclick = () => { livePage++; renderLivePage(); };
 
 function addMessage(message, live) {
+  if (message.platform === 'doacao') message.platform = 'pix'; // 💝→💠 v0.174: apelido dos logs antigos
   const existente = liveIndex.get(message.id);
   if (existente) {
     // Já está na memória (chegou pelo tempo real das colunas); agora o fluxo
@@ -3952,8 +4015,10 @@ function addMessage(message, live) {
   // Os números das abas vêm do SERVIDOR (contagem real do dia inteiro, sem
   // teto). O painel só guarda os últimos comentários na memória, então contar
   // aqui deixava a aba "Ao vivo" bem abaixo do total verdadeiro da live.
-  if (DONATION_PLATFORMS.has(message.platform)) {
-    appendTo('apoio', message);
+  if (message.platform === 'livepix') {
+    appendTo('livepix', message); // 💜 v0.174
+  } else if (DONATION_PLATFORMS.has(message.platform)) {
+    appendTo('pix', message);     // 💠 v0.174 («doacao» antigo entra aqui)
   } else if (isSuperchat(message)) {
     appendTo('superchat', message);
   }
@@ -4006,7 +4071,7 @@ function repintarSelos() {
   // 🫧 Inclui a lista Ao vivo e as colunas: com a reconciliação (v0.45) os
   // nós vivos são reaproveitados, então os selos precisam ser repintados
   // aqui — antes o rebuild geral fazia isso por tabela.
-  for (const item of document.querySelectorAll('#list-live .chat-item, .live-col .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-whatsapp .chat-item, #list-telegram .chat-item, #list-apoio .chat-item, #list-saved .chat-item')) {
+  for (const item of document.querySelectorAll('#list-live .chat-item, .live-col .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-whatsapp .chat-item, #list-telegram .chat-item, #list-livepix .chat-item, #list-pix .chat-item, #list-saved .chat-item')) {
     const message = item.__mensagem;
     const meta = item.querySelector('.meta');
     if (!message || !meta) continue;
@@ -4075,7 +4140,7 @@ function renderSaved(saved) {
   }
   updateCount('saved', saved.length);
   // Atualiza a marcação "na fila" e os botões nas outras listas
-  for (const item of document.querySelectorAll('#list-live .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-apoio .chat-item')) {
+  for (const item of document.querySelectorAll('#list-live .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-livepix .chat-item, #list-pix .chat-item')) {
     const queued = savedIds.has(item.dataset.id);
     const mark = item.querySelector('.queue-mark');
     if (mark) mark.style.display = queued ? '' : 'none';
@@ -4154,7 +4219,7 @@ function revisaoMostrarDia(event) {
   if (rvCalendario) rvCalendario.marcar(event.dia);
 }
 function nomeRedeRv(r) {
-  return { youtube: '▶️', twitch: '💜', kick: '🟢', bilibili: '💙', doacao: '💝', telegram: '📨', whatsapp: '💬' }[r] || r;
+  return { youtube: '▶️', twitch: '🟣', kick: '🟢', bilibili: '💙', livepix: '💜', pix: '💠', doacao: '💠', telegram: '📨', whatsapp: '💬' }[r] || r;
 }
 function revisaoFiltradas() {
   const q = normText(document.getElementById('rvBusca').value.trim());
@@ -4394,7 +4459,7 @@ function matchesSearch(message) {
 
 // Aplica a busca nas listas montadas em DOM (fila, superchats, membros, apoios)
 function applySearchToLists() {
-  for (const name of ['saved', 'superchat', 'member', 'whatsapp', 'telegram', 'apoio']) {
+  for (const name of ['saved', 'superchat', 'member', 'whatsapp', 'telegram', 'livepix', 'pix']) {
     for (const item of lists[name].querySelectorAll('.chat-item')) {
       item.style.display = !searchQuery || (item.dataset.search || '').includes(searchQuery) ? '' : 'none';
     }
@@ -7552,17 +7617,7 @@ function applyPanel() {
   document.getElementById('colEmptyWrap').style.display = colunas ? '' : 'none';
   if (document.activeElement !== colEmptyChk) colEmptyChk.checked = panel.columnsShowEmpty === true;
   document.getElementById('filtersLabel').textContent = colunas ? 'Colunas:' : 'Mostrar:';
-  // Labs: a aba Apoios aparece com as doações OU o 💠 Pix ligados —
-  // e some do painel quando os dois estão desligados
-  const donationsOn = !!settings
-    && ((settings.labs || {}).donations === true || (settings.labs || {}).pix === true);
-  const apoioTab = document.querySelector('.tab[data-tab="apoio"]');
-  if (apoioTab) {
-    apoioTab.style.display = donationsOn ? '' : 'none';
-    if (!donationsOn && apoioTab.classList.contains('active')) {
-      document.querySelector('.tab[data-tab="live"]').click();
-    }
-  }
+  pintarAbasDinamicas(); // 💜💠 v0.174
   // 💬📨 v0.124: cada aba segue o SEU seletor do Labs — e some (voltando
   // para Ao vivo) quando ele desliga
   for (const rede of ['whatsapp', 'telegram']) {
