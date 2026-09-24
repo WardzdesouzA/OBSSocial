@@ -1,4 +1,10 @@
 {
+  "0.176.0": {
+    "titulo": "💚 PixGG quitte les Labs et rejoint les Connexions, à côté de LivePix — sans les quatre avertissements, puisque PixGG a autorisé l’usage",
+    "itens": [
+      "💚 Avec l’autorisation de PixGG par e-mail (24/09/2026), la connexion PixGG quitte 🧪 Labs et vit dans Réglages → Connexions, juste après LivePix : collez la clé du widget et connectez, comme n’importe quel réseau. Les quatre avertissements de la v0.175 ont été retirés ; la carte explique en une ligne que la voie est le canal du widget (avec l’autorisation de PixGG, hors API officielle, qui ne livre que des webhooks) et que la clé reste chiffrée sur cet ordinateur seulement. Ceux qui avaient déjà PixGG activé dans Labs restent connectés — les anciens réglages du sélecteur et des avertissements sont abandonnés d’eux-mêmes."
+    ]
+  },
   "0.175.2": {
     "titulo": "💚 PixGG a répondu et autorisé l’usage : les avertissements et les textes le disent désormais, et son API officielle (webhook seulement) est documentée",
     "itens": [

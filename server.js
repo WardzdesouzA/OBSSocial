@@ -171,7 +171,7 @@ const { KickConnector, kickApi, kickApiConfigurar } = require('./connectors/kick
 const { YouTubeConnector, baixarFigurinha: baixarFigurinhaYouTube, youtubePedir } = require('./connectors/youtube');
 const { BilibiliConnector, bilibiliPedir } = require('./connectors/bilibili');
 const { LivePixConnector } = require('./connectors/livepix'); // 💜 v0.174
-const { PixGGConnector, extrairChave: pixggChave } = require('./connectors/pixgg'); // 💚 v0.175: Labs, pelo canal do widget (autorizado pela PixGG)
+const { PixGGConnector, extrairChave: pixggChave } = require('./connectors/pixgg'); // 💚 v0.175: pelo canal do widget (autorizado pela PixGG); v0.176: nas Conexões
 const { TelegramConnector } = require('./connectors/telegram');
 const { WhatsAppConnector } = require('./connectors/whatsapp');
 const { WhatsAppLocalConnector } = require('./connectors/whatsapp-local');
@@ -339,18 +339,12 @@ const DEFAULT_SETTINGS = {
   taxas: { superchat: 30, pix: 0, livepix: 5, pixgg: 3.9 }, // 💜 v0.174: a LivePix cobra 5% (livepix.gg/taxas); 💚 v0.175: PixGG 3,9% (pixgg.com/termos, valor de referência)
   // 💜 v0.174: de quanto em quanto tempo consultar a LivePix (segundos; 5 a 300)
   livepix: { intervalo: 15 },
-  // 💚 v0.175: os avisos de consciência da PixGG — os QUATRO precisam estar
-  // marcados (além do seletor do Labs) para o programa aceitar conectar
-  pixgg: { avisos: { naoOficial: false, termos: false, publico: false, permissao: false } },
   // Labs: funcoes experimentais que podem ser ligadas/desligadas
   // 🧪 Regra da casa: TUDO no Labs começa DESLIGADO — liga quem quiser usar
   labs: {
     // 💠 Pix direto do banco do streamer (API Pix do Bacen): cada Pix
     // recebido vira um apoio na aba Apoios, com a mensagem do pagador
     pix: false,
-    // 💚 v0.175: PixGG pelo canal do widget — fora da API oficial (engenharia
-    // reversa do widget; uso autorizado pela PixGG); só liga com os quatro avisos
-    pixgg: false,
     // 💰 v0.170: arrecadação da live no painel (Super Chat + Pix/apoios) e taxas
     arrecadacao: false,
     // Ao (re)conectar, puxa as mensagens enviadas enquanto o programa estava
@@ -877,22 +871,11 @@ function sanitizeLivepix(src) {
   return { intervalo: Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : DEFAULT_SETTINGS.livepix.intervalo };
 }
 
-// 💚 v0.175: os avisos da PixGG — só booleanos, nada além dos quatro
-const PIXGG_AVISOS = ['naoOficial', 'termos', 'publico', 'permissao'];
-function sanitizePixgg(src) {
-  const t = src && typeof src === 'object' ? src : {};
-  const a = t.avisos && typeof t.avisos === 'object' ? t.avisos : {};
-  return { avisos: Object.fromEntries(PIXGG_AVISOS.map((k) => [k, a[k] === true])) };
-}
-function pixggAvisosOk() {
-  const a = (state.settings.pixgg || {}).avisos || {};
-  return PIXGG_AVISOS.every((k) => a[k] === true);
-}
-
 function mergeSettings(base) {
   const src = base || {};
   delete src.camadas; // 🧩 v0.173 → v0.174: as camadas de widget foram descontinuadas
-  if (src.labs && typeof src.labs === 'object') { delete src.labs.camadas; delete src.labs.donations; }
+  delete src.pixgg; // 💚 v0.176: os avisos da PixGG saíram (a PixGG autorizou o uso)
+  if (src.labs && typeof src.labs === 'object') { delete src.labs.camadas; delete src.labs.donations; delete src.labs.pixgg; }
   const widgets = {};
   for (const key of Object.keys(DEFAULT_SETTINGS.widgets)) {
     widgets[key] = { ...DEFAULT_SETTINGS.widgets[key], ...((src.widgets || {})[key] || {}) };
@@ -929,7 +912,6 @@ function mergeSettings(base) {
     },
     panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}) },
     livepix: sanitizeLivepix(src.livepix), // 💜 v0.174
-    pixgg: sanitizePixgg(src.pixgg), // 💚 v0.175
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
     relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
     clima: sanitizeClima(src.clima, DEFAULT_SETTINGS.clima), // 🌤️ v0.167
@@ -6802,16 +6784,8 @@ const CONNECTORS = {
   telegram: TelegramConnector,
   whatsapp: WhatsAppConnector,
   livepix: LivePixConnector, // 💜 v0.174: pela API oficial
-  pixgg: PixGGConnector, // 💚 v0.175: pelo canal do widget (Labs; autorizado pela PixGG, fora da API oficial)
+  pixgg: PixGGConnector, // 💚 v0.175: pelo canal do widget (autorizado pela PixGG, fora da API oficial)
 };
-// 💚 v0.175: a PixGG só conecta com o seletor do Labs ligado E os quatro
-// avisos aceitos — devolve o texto do erro, ou null se pode
-function pixggBloqueio() {
-  if (state.settings.labs?.pixgg !== true) return 'A PixGG é experimental e fica fora da API oficial — ative em Configurações → 🧪 Labs, leia e aceite os avisos para usar.';
-  if (!pixggAvisosOk()) return 'Antes de conectar a PixGG, marque os quatro avisos de consciência em Configurações → 🧪 Labs → PixGG.';
-  return null;
-}
-
 function connect(platform, channel, options = {}) {
   // hasOwnProperty: sem isso, "constructor"/"toString" passavam por conector
   // válido e a tentativa de usá-los derrubava o programa.
@@ -6835,13 +6809,10 @@ function connect(platform, channel, options = {}) {
     setStatus('whatsapp', 'error', 'O WhatsApp é experimental — ative em Configurações → 🧪 Labs para usar.');
     return;
   }
-  // 💚 v0.175: PixGG — Labs ligado + os quatro avisos aceitos; o «canal» é
-  // sempre «pixgg» (a chave da API é o segredo, e nunca aparece como canal)
-  if (platform === 'pixgg') {
-    const bloqueio = pixggBloqueio();
-    if (bloqueio) { setStatus('pixgg', 'error', bloqueio); return; }
-    channel = 'pixgg';
-  }
+  // 💚 v0.175: PixGG — o «canal» é sempre «pixgg» (a chave da API é o segredo,
+  // e nunca aparece como canal). v0.176: sem Labs e sem avisos — a PixGG
+  // autorizou o uso por e-mail (24/09/2026), então ela mora nas Conexões
+  if (platform === 'pixgg') channel = 'pixgg';
   // 🔀 v0.172: mudou a @? O que era da @ anterior sai do painel antes da nova
   // conexão começar (o log fica; a revisão 📅 mostra o dia inteiro)
   {
@@ -7236,7 +7207,7 @@ function sendTestMessage(atrasMs = 0) {
   for (let i = 0; i < TEST_SAMPLES.length; i++) {
     const desligada = (sample.platform === 'pix' && state.settings.labs?.pix !== true)
       || (sample.platform === 'livepix' && !state.connections.livepix)
-      || (sample.platform === 'pixgg' && state.settings.labs?.pixgg !== true)
+      || (sample.platform === 'pixgg' && !state.connections.pixgg)
       || (sample.platform === 'bilibili' && state.settings.labs?.bilibili !== true)
       || (sample.platform === 'telegram' && state.settings.labs?.telegram !== true)
       || (sample.platform === 'whatsapp' && state.settings.labs?.whatsapp !== true);
@@ -11004,10 +10975,6 @@ function tratarMensagem(ws, raw) {
       if ('logRetentionDays' in incoming) {
         incoming.logRetentionDays = sanitizeRetencaoLogs(incoming.logRetentionDays);
       }
-      // 💚 v0.175: os avisos da PixGG — só os quatro booleanos
-      if ('pixgg' in incoming) {
-        incoming.pixgg = sanitizePixgg({ avisos: { ...(state.settings.pixgg || {}).avisos, ...((incoming.pixgg || {}).avisos || {}) } });
-      }
       // 💜 v0.174: o intervalo da LivePix fica na faixa e vale na hora
       if ('livepix' in incoming) {
         incoming.livepix = sanitizeLivepix({ ...state.settings.livepix, ...(incoming.livepix || {}) });
@@ -11051,7 +11018,6 @@ function tratarMensagem(ws, raw) {
           colDrip: { ...state.settings.panel.colDrip, ...((incoming.panel || {}).colDrip || {}) },
         },
         labs: { ...state.settings.labs, ...(incoming.labs || {}) },
-        pixgg: 'pixgg' in incoming ? incoming.pixgg : state.settings.pixgg, // 💚 v0.175
         taxas: sanitizeTaxas({ ...state.settings.taxas, ...(incoming.taxas || {}) }), // 💰 v0.170
         acessibilidade: { ...state.settings.acessibilidade, ...(incoming.acessibilidade || {}) },
         trilhasTexto: { ...state.settings.trilhasTexto, ...(incoming.trilhasTexto || {}) },
@@ -11501,18 +11467,6 @@ function tratarMensagem(ws, raw) {
         disconnect('bilibili');
         delete state.connections.bilibili;
         persistConnections();
-      }
-      // 💚 v0.175: desligou a PixGG no Labs ou desmarcou um dos avisos? A
-      // conexão cai na hora e a chave é esquecida (a memória de conexões
-      // não pode religá-la sozinha sem os avisos aceitos)
-      if ((incoming.labs && incoming.labs.pixgg === false) || ('pixgg' in incoming && !pixggAvisosOk())) {
-        if (state.connectors.pixgg || state.connections.pixgg) {
-          disconnect('pixgg');
-          delete state.connections.pixgg;
-          persistConnections();
-          if (incoming.labs && incoming.labs.pixgg === false) console.log('  💚 PixGG: desligada no Labs — conexão derrubada e chave esquecida.');
-          else console.log('  💚 PixGG: um aviso foi desmarcado — conexão derrubada e chave esquecida.');
-        }
       }
       saveSettings();
       broadcast({ type: 'settings', settings: state.settings });

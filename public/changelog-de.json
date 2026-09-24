@@ -1,4 +1,10 @@
 {
+  "0.176.0": {
+    "titulo": "💚 PixGG verlässt Labs und kommt zu den Verbindungen neben LivePix — ohne die vier Hinweise, da PixGG die Nutzung genehmigt hat",
+    "itens": [
+      "💚 Mit der Genehmigung von PixGG per E-Mail (24.09.2026) verlässt die PixGG-Verbindung 🧪 Labs und lebt in Einstellungen → Verbindungen, direkt nach LivePix: Widget-Schlüssel einfügen und verbinden, wie bei jedem Netzwerk. Die vier Hinweise aus v0.175 sind weg; die Karte erklärt in einer Zeile, dass der Weg der Widget-Kanal ist (mit Genehmigung von PixGG, außerhalb der offiziellen API, die nur Webhooks liefert) und dass der Schlüssel nur auf diesem Computer verschlüsselt bleibt. Wer PixGG schon in Labs eingeschaltet hatte, bleibt verbunden — die alten Schalter- und Hinweis-Einstellungen werden von selbst verworfen."
+    ]
+  },
   "0.175.2": {
     "titulo": "💚 PixGG hat geantwortet und die Nutzung genehmigt: Hinweise und Texte sagen das jetzt, und die offizielle API (nur Webhook) ist dokumentiert",
     "itens": [

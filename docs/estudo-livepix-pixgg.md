@@ -18,6 +18,11 @@ API oficial foi estudada e está descrita na seção «PixGG — a API oficial
 (Aplicações)» no fim: ela só entrega webhooks, então não substitui o canal do
 widget para um programa que roda no PC do streamer.
 
+**Atualização (v0.176):** com a autorização por escrito, a PixGG saiu do 🧪 Labs
+e passou a morar em Configurações → Conexões, ao lado da LivePix, sem os quatro
+avisos. O card explica em uma linha que o caminho é o canal do widget, com a
+autorização da PixGG, porque a API oficial só entrega webhooks.
+
 Contexto: o objetivo é que uma doação feita nessas plataformas vire um apoio 💝
 no painel, com **nome, valor e mensagem**, do mesmo jeito que o 💠 Pix direto do
 banco já faz. O programa roda no PC do streamer, então **webhook não serve** —
@@ -161,7 +166,7 @@ mensagem como lida), não dispara nada, não escreve nada. É o mesmo tráfego d
 um widget aberto numa fonte de navegador. O áudio da mensagem é baixado do link
 público que a própria PixGG entrega, para a quarentena local de mídia.
 
-**Por que Labs e quatro avisos.** Foi descoberto por engenharia reversa do
+**Por que Labs e quatro avisos (v0.175; retirados na v0.176 depois da autorização).** Foi descoberto por engenharia reversa do
 bundle do widget, pode mudar sem aviso, e os termos da PixGG — que não falam de
 API nem de automação — reservam o direito de encerrar contas que «prejudiquem a
 integridade do serviço». O streamer precisa saber disso antes de ligar. Por

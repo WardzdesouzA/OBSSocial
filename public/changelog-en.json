@@ -1,4 +1,10 @@
 {
+  "0.176.0": {
+    "titulo": "💚 PixGG leaves Labs and joins Connections, next to LivePix — without the four acknowledgments, since PixGG authorized the use",
+    "itens": [
+      "💚 With PixGG’s authorization by e-mail (2026-09-24), the PixGG connection leaves 🧪 Labs and lives in Settings → Connections, right after LivePix: paste the widget key and connect, like any network. The four acknowledgments from v0.175 are gone; the card explains in one line that the path is the widget channel (with PixGG’s authorization, outside the official API, which only delivers webhooks) and that the key is kept encrypted on this computer only. Anyone who already had PixGG on in Labs stays connected — the old switch and acknowledgment settings are discarded on their own."
+    ]
+  },
   "0.175.2": {
     "titulo": "💚 PixGG answered and authorized the use: the acknowledgments and texts now say so, and its official API (webhook only) is documented",
     "itens": [
