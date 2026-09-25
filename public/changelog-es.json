@@ -1,4 +1,12 @@
 {
+  "0.176.2": {
+    "titulo": "🎞️ Los GIFs del chat de Twitch (GIPHY) aparecen grandes y animados en el panel, el destacado y el chat fijo",
+    "itens": [
+      "🎞️ Twitch habilitó GIFs en el chat (GIPHY, para suscriptores Tier 2 y 3) y envía cada uno en una etiqueta nueva, «gifs». Antes OBS Social mostraba solo la leyenda entre corchetes, como «[Y A Y Yes GIF by …]». Ahora el GIF aparece en lugar de la leyenda, grande y animado, en el panel, en la tarjeta destacada de la transmisión y en el chat fijo — mezclado con texto y emotes en el orden correcto. La imagen viene de la URL completa que entrega Twitch, sin modificar (como exige la documentación), y solo si es https; la leyenda queda como texto alternativo, en la pista al pasar el ratón y en la búsqueda.",
+      "🖱️ Hacer clic sobre un GIF o emote abre la ventana del comentario, como el resto de la tarjeta (solo la foto enviada por un suscriptor sigue abriendo el zoom).",
+      "🧪 El botón 💬 de mensajes de prueba ganó una muestra de GIF de Twitch (un GIF animado del propio programa, sin depender de internet)."
+    ]
+  },
   "0.176.1": {
     "titulo": "🔄 La verificación de versión lee primero la API de GitHub (el «raw» quedaba 5 min desactualizado) · 🟢 LivePix, PixGG, Telegram y WhatsApp conectados quedan en verde",
     "itens": [

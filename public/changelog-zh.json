@@ -1,4 +1,12 @@
 {
+  "0.176.2": {
+    "titulo": "🎞️ Twitch 聊天 GIF（GIPHY）在面板、精选和固定聊天中以大尺寸动态显示",
+    "itens": [
+      "🎞️ Twitch 在聊天中开放了 GIF（GIPHY，面向 Tier 2 和 Tier 3 订阅者），每个 GIF 通过新标签“gifs”发送。以前 OBS Social 只显示方括号中的说明，例如“[Y A Y Yes GIF by …]”。现在 GIF 取代说明，以大尺寸动态显示在面板、直播精选卡片和固定聊天中 —— 与文字和表情按正确顺序混排。图片直接使用 Twitch 提供的完整 URL，不做修改（按文档要求），且仅限 https；说明文字作为替代文本、悬停提示和搜索内容。",
+      "🖱️ 点击 GIF 或表情会像卡片其他部分一样打开评论窗口（只有订阅者发送的照片仍会打开放大）。",
+      "🧪 💬 测试消息按钮新增了 Twitch GIF 示例（程序自带的动态 GIF，无需联网）。"
+    ]
+  },
   "0.176.1": {
     "titulo": "🔄 版本检查先读取 GitHub API（“raw”会滞后 5 分钟）· 🟢 已连接的 LivePix、PixGG、Telegram 和 WhatsApp 变为绿色",
     "itens": [

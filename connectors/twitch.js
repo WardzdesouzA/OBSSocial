@@ -94,12 +94,32 @@ function parseTags(raw) {
   return tags;
 }
 
+// 🎞️ v0.176.2: GIFs no chat (GIPHY, set/2026). A Twitch manda a tag «gifs»:
+// lista separada por vírgula de «início-fim|idDoGif|urlDoGif», com as posições
+// (baseadas em zero, como as dos emotes) do trecho do texto que o GIF substitui
+// — o texto vem como a legenda entre colchetes, ex.: «[Y A Y Yes GIF by ...]».
+// A documentação exige usar a URL COMPLETA, sem modificar: ela vai como veio
+// (só https). A vírgula separa GIFs, mas uma URL também pode ter vírgula — o
+// próximo GIF só começa onde aparece «,número-número|».
+function parseGifs(gifsTag) {
+  const lista = [];
+  if (!gifsTag) return lista;
+  for (const item of String(gifsTag).split(/,(?=\d+-\d+\|)/)) {
+    const m = item.match(/^(\d+)-(\d+)\|([^|]*)\|(.+)$/);
+    if (!m) continue;
+    let url = null;
+    try { const u = new URL(m[4]); if (u.protocol === 'https:') url = m[4]; } catch { /* URL inválida: fica a legenda */ }
+    if (!url) continue;
+    lista.push({ start: Number(m[1]), end: Number(m[2]), gifId: m[3], url });
+  }
+  return lista;
+}
+
 // A tag "emotes" da Twitch usa offsets em code points, nao em unidades UTF-16.
-function buildRuns(text, emotesTag) {
+function buildRuns(text, emotesTag, gifsTag) {
   const chars = Array.from(text);
-  if (!emotesTag) return [{ type: 'text', text }];
   const spots = [];
-  for (const group of emotesTag.split('/')) {
+  for (const group of (emotesTag || '').split('/')) {
     const [id, ranges] = group.split(':');
     if (!id || !ranges) continue;
     for (const range of ranges.split(',')) {
@@ -107,18 +127,25 @@ function buildRuns(text, emotesTag) {
       if (Number.isFinite(start) && Number.isFinite(end)) spots.push({ id, start, end });
     }
   }
+  for (const g of parseGifs(gifsTag)) spots.push({ ...g, gif: true });
   if (!spots.length) return [{ type: 'text', text }];
   spots.sort((a, b) => a.start - b.start);
   const runs = [];
   let cursor = 0;
   for (const spot of spots) {
+    if (spot.start < cursor || spot.end < spot.start || spot.start >= chars.length) continue; // sobreposto ou fora do texto
     if (spot.start > cursor) runs.push({ type: 'text', text: chars.slice(cursor, spot.start).join('') });
     const name = chars.slice(spot.start, spot.end + 1).join('');
-    runs.push({
-      type: 'emote',
-      alt: name,
-      url: `https://static-cdn.jtvnw.net/emoticons/v2/${spot.id}/default/dark/2.0`,
-    });
+    if (spot.gif) {
+      // A legenda (sem os colchetes) é o texto alternativo e o que a busca acha
+      runs.push({ type: 'emote', gif: true, gifId: spot.gifId, alt: name.replace(/^\[|\]$/g, '').trim() || 'GIF', url: spot.url });
+    } else {
+      runs.push({
+        type: 'emote',
+        alt: name,
+        url: `https://static-cdn.jtvnw.net/emoticons/v2/${spot.id}/default/dark/2.0`,
+      });
+    }
     cursor = spot.end + 1;
   }
   if (cursor < chars.length) runs.push({ type: 'text', text: chars.slice(cursor).join('') });
@@ -328,7 +355,7 @@ class TwitchConnector {
       badges,
       selos,
       subTier,
-      runs: buildRuns(text, tags.emotes),
+      runs: buildRuns(text, tags.emotes, tags.gifs), // 🎞️ v0.176.2: + GIFs do chat
       timestamp: sentTs,
       ...(fromHistory ? { fromHistory: true } : {}),
     });
@@ -340,4 +367,4 @@ class TwitchConnector {
   }
 }
 
-module.exports = { TwitchConnector, twitchPedir, twitchCaminhos: caminhos, TWITCH_GQL };
+module.exports = { TwitchConnector, twitchPedir, twitchCaminhos: caminhos, TWITCH_GQL, buildRuns, parseGifs };
