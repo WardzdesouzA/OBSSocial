@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.176.3",
+    "titulo": "✓ Comentário que saiu da tela esmaece em todas as colunas e abas — inclusive o último a chegar",
+    "itens": [
+      "✓ Achado de vocês: um comentário mandado para a tela e depois tirado às vezes não esmaecia numa das cópias — quase sempre a da coluna unificada. A causa era a animação de chegada: o último comentário a chegar em cada lista ficava preso em 100% de opacidade até a próxima mensagem daquela lista. Agora a animação termina na opacidade de verdade do cartão e sai dele assim que acaba, em todos os estilos de chegada (🎨 Temas). Conferido na lista Ao vivo, nas colunas (a unificada e a de cada rede), nas abas (Super Chats, LivePix, PixGG, Pix, WhatsApp, Telegram) e na fila.",
+      "🟢 Doações no ar (Super Chat, Pix, LivePix, PixGG…) agora ficam verdes como os outros comentários: antes o fundo e a faixa da doação cobriam o verde, e nas abas de doação mal dava para ver qual estava na tela. Na janela do comentário, passar o mouse em cima de um comentário no ar também não apaga mais a borda verde.",
+      "📱 No celular ou tablet (painel pela rede), o último cartão tocado também esmaece ao sair da tela — o toque deixava o cartão como se o mouse estivesse em cima e ele ficava em 100%.",
+      "🔄 Painéis abertos acompanham tudo sem recarregar: se a rede cair enquanto um comentário vai e sai da tela, ele esmaece ao reconectar (mesmo no meio de um arrastar de coluna); apagar ou restaurar as marcas de leitura (Configurações → Logs e dados) vale na hora; e mandar para a tela um comentário que já foi uma vez acerta o «✓ lido» em qualquer painel que tenha perdido o aviso.",
+      "✓ O limite de 2000 marcas de leitura agora descarta as que foram para a tela há mais tempo — um comentário da fila que volta para a tela não perde mais o «✓ lido» logo depois.",
+      "📥 Nas abas WhatsApp e Telegram, o selo «📥 na fila» e o botão ✖/📥 acompanham a fila na hora (antes só mudavam ao recarregar). E com a janela do comentário aberta, o «✓ Já foi para a tela» aparece se ele for para a tela por outro caminho (outro painel, Stream Deck, controle remoto)."
+    ]
+  },
+  {
     "version": "0.176.2",
     "titulo": "🎞️ GIFs do chat da Twitch (GIPHY) aparecem grandes e animados no painel, no destaque e no chat fixo",
     "itens": [

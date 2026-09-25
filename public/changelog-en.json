@@ -1,4 +1,15 @@
 {
+  "0.176.3": {
+    "titulo": "✓ A comment taken off the screen fades in every column and tab — including the newest one",
+    "itens": [
+      "✓ Reported by you: a comment sent to the screen and then taken off sometimes did not fade in one of its copies — almost always the one in the unified column. The cause was the arrival animation: the newest comment in each list stayed stuck at 100% opacity until the next message in that list. Now the animation ends at the card’s real opacity and is removed as soon as it finishes, in every arrival style (🎨 Themes). Checked in the Live list, the columns (unified and per network), the tabs (Super Chats, LivePix, PixGG, Pix, WhatsApp, Telegram) and the queue.",
+      "🟢 Donations on air (Super Chat, Pix, LivePix, PixGG…) now turn green like other comments: before, the donation background and stripe covered the green, and in the donation tabs you could barely tell which one was on screen. In the comment window, hovering a comment that is on air no longer removes its green border either.",
+      "📱 On a phone or tablet (dashboard over the network), the last card you tapped also fades when it leaves the screen — the tap left the card as if the mouse were over it, so it stayed at 100%.",
+      "🔄 Open dashboards keep up without reloading: if the network drops while a comment goes on and off the screen, it fades on reconnect (even in the middle of dragging a column); clearing or restoring the read marks (Settings → Logs and data) applies right away; and sending a comment that was already shown fixes the “✓ read” on any dashboard that missed the notice.",
+      "✓ The 2000 read-mark limit now drops the ones shown longest ago — a queued comment that goes back on screen no longer loses its “✓ read” soon after.",
+      "📥 In the WhatsApp and Telegram tabs, the “📥 queued” badge and the ✖/📥 button follow the queue right away (before, they changed only after a reload). And with the comment window open, “✓ Already shown on screen” appears if it goes on screen another way (another dashboard, Stream Deck, remote control)."
+    ]
+  },
   "0.176.2": {
     "titulo": "🎞️ Twitch chat GIFs (GIPHY) show up large and animated on the dashboard, the featured card and the fixed chat",
     "itens": [

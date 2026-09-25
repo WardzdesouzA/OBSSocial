@@ -1,4 +1,15 @@
 {
+  "0.176.3": {
+    "titulo": "✓ Ekrandan kaldırılan yorum tüm sütunlarda ve sekmelerde soluklaşır — en son gelen dahil",
+    "itens": [
+      "✓ Sizin bulgunuz: ekrana gönderilip sonra kaldırılan bir yorum, kopyalarından birinde bazen soluklaşmıyordu — neredeyse her zaman birleşik sütundakinde. Sebep geliş animasyonuydu: her listede en son gelen yorum, o listenin bir sonraki mesajına kadar %100 opaklıkta takılı kalıyordu. Artık animasyon kartın gerçek opaklığında bitiyor ve biter bitmez kaldırılıyor — tüm geliş stillerinde (🎨 Temalar). Canlı listesinde, sütunlarda (birleşik ve her ağınki), sekmelerde (Super Chats, LivePix, PixGG, Pix, WhatsApp, Telegram) ve kuyrukta kontrol edildi.",
+      "🟢 Ekrandaki bağışlar (Super Chat, Pix, LivePix, PixGG…) artık diğer yorumlar gibi yeşil oluyor: önceden bağışın arka planı ve şeridi yeşili örtüyordu ve bağış sekmelerinde hangisinin ekranda olduğu zor seçiliyordu. Yorum penceresinde ekrandaki bir yorumun üzerine fareyle gelmek de artık yeşil kenarlığı silmiyor.",
+      "📱 Telefonda veya tablette (ağ üzerinden panel) son dokunulan kart da ekrandan çıkınca soluklaşır — dokunuş kartı fare üzerindeymiş gibi bırakıyordu ve kart %100’de kalıyordu.",
+      "🔄 Açık paneller yeniden yüklemeden her şeyi takip eder: bir yorum ekrana girip çıkarken ağ koparsa, yeniden bağlanınca soluklaşır (bir sütunu sürüklerken bile); okundu işaretlerini silmek veya geri yüklemek (Ayarlar → Kayıtlar ve veriler) hemen geçerli olur; ve daha önce gösterilmiş bir yorumu yeniden ekrana göndermek, bildirimi kaçıran her paneldeki «✓ okundu» işaretini düzeltir.",
+      "✓ 2000 okundu işareti sınırı artık en uzun süre önce gösterilenleri atıyor — kuyruktan ekrana geri dönen bir yorum kısa süre sonra «✓ okundu» işaretini kaybetmiyor.",
+      "📥 WhatsApp ve Telegram sekmelerinde «📥 kuyrukta» rozeti ve ✖/📥 düğmesi kuyruğu anında izler (önceden yalnızca yeniden yüklemede değişiyordu). Yorum penceresi açıkken de, yorum başka bir yoldan (başka panel, Stream Deck, uzaktan kumanda) ekrana giderse «✓ Zaten ekrana çıktı» görünür."
+    ]
+  },
   "0.176.2": {
     "titulo": "🎞️ Twitch sohbet GIF’leri (GIPHY) panelde, öne çıkanda ve sabit sohbette büyük ve hareketli görünüyor",
     "itens": [

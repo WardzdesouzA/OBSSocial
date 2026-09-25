@@ -1,4 +1,15 @@
 {
+  "0.176.3": {
+    "titulo": "✓ Un comentario que sale de la pantalla se atenúa en todas las columnas y pestañas — incluso el último en llegar",
+    "itens": [
+      "✓ Lo encontraron ustedes: un comentario enviado a la pantalla y luego retirado a veces no se atenuaba en una de sus copias — casi siempre la de la columna unificada. La causa era la animación de llegada: el último comentario en llegar a cada lista se quedaba fijo en 100% de opacidad hasta el siguiente mensaje de esa lista. Ahora la animación termina en la opacidad real de la tarjeta y se retira apenas acaba, en todos los estilos de llegada (🎨 Temas). Comprobado en la lista En vivo, en las columnas (la unificada y la de cada red), en las pestañas (Super Chats, LivePix, PixGG, Pix, WhatsApp, Telegram) y en la cola.",
+      "🟢 Las donaciones en pantalla (Super Chat, Pix, LivePix, PixGG…) ahora se ponen verdes como los demás comentarios: antes el fondo y la franja de la donación tapaban el verde, y en las pestañas de donaciones apenas se veía cuál estaba en pantalla. En la ventana del comentario, pasar el ratón sobre un comentario en pantalla tampoco borra ya el borde verde.",
+      "📱 En el móvil o la tableta (panel por la red), la última tarjeta tocada también se atenúa al salir de la pantalla — el toque dejaba la tarjeta como si el ratón estuviera encima y se quedaba al 100%.",
+      "🔄 Los paneles abiertos se mantienen al día sin recargar: si la red se cae mientras un comentario entra y sale de la pantalla, se atenúa al reconectar (incluso en medio de arrastrar una columna); borrar o restaurar las marcas de lectura (Configuración → Registros y datos) se aplica al momento; y enviar a la pantalla un comentario que ya salió corrige el «✓ leído» en cualquier panel que se haya perdido el aviso.",
+      "✓ El límite de 2000 marcas de lectura ahora descarta las que salieron en pantalla hace más tiempo — un comentario de la cola que vuelve a la pantalla ya no pierde el «✓ leído» poco después.",
+      "📥 En las pestañas WhatsApp y Telegram, la etiqueta «📥 en la cola» y el botón ✖/📥 siguen la cola al instante (antes solo cambiaban al recargar). Y con la ventana del comentario abierta, aparece «✓ Ya salió en pantalla» si se envía por otro camino (otro panel, Stream Deck, control remoto)."
+    ]
+  },
   "0.176.2": {
     "titulo": "🎞️ Los GIFs del chat de Twitch (GIPHY) aparecen grandes y animados en el panel, el destacado y el chat fijo",
     "itens": [

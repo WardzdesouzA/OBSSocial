@@ -1157,16 +1157,28 @@ function persistRead() {
   } catch {}
 }
 
-// Marca um comentario como "lido" (ja foi para a tela), com o horario
+// Marca um comentario como "lido" (ja foi para a tela), com o horario.
+// ✓ v0.176.3: avisa os paineis SEMPRE, mesmo quando o servidor ja sabia —
+// um painel que perdeu o aviso (backup de marcas restaurado, rede caiu)
+// acerta o cartao na proxima vez que ele for para a tela
 function markRead(id) {
-  if (!id || state.readIds.has(id)) return;
-  const at = Date.now();
+  if (!id) return;
+  // O horario continua o da PRIMEIRA vez; a posicao vai para o fim — o limite
+  // corta o que foi para a tela ha mais tempo, nunca o que acabou de voltar
+  const at = state.readIds.get(id) ?? Date.now();
+  state.readIds.delete(id);
   state.readIds.set(id, at);
   if (state.readIds.size > MAX_READ_IDS) {
     state.readIds = new Map([...state.readIds].slice(-MAX_READ_IDS));
   }
   persistRead();
   broadcast({ type: 'read', id, at });
+}
+
+// ✓ v0.176.3: a lista inteira de "lidos" para os paineis abertos (depois de
+// restaurar ou apagar as marcas — antes eles so viam a mudanca ao recarregar)
+function broadcastReadSync() {
+  broadcast({ type: 'readSync', readIds: Object.fromEntries([...state.readIds].slice(-MAX_READ_IDS)) });
 }
 
 // 📋 v0.90: a Área de transferência virou um HISTÓRICO compartilhado: cada
@@ -5012,6 +5024,7 @@ function limparDados(escopo) {
     persistRead();
     persistSaved();
     broadcast({ type: 'saved', saved: state.saved });
+    broadcastReadSync();
     feito.push('marcas');
   }
   if (tudo || escopo === 'participantes') {
@@ -5283,6 +5296,7 @@ function restaurarBackup(item, marcaBruta) {
       state.readIds = loadRead();
       state.saved = loadSaved();
       broadcast({ type: 'saved', saved: state.saved });
+      broadcastReadSync();
     } else if (item === 'conexoes') {
       // 🔑 v0.90.1: a chave do backup entra ANTES de reler os arquivos —
       // é ela que abre a senha do OBS e os tokens que acabaram de voltar

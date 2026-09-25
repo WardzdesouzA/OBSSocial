@@ -1,4 +1,15 @@
 {
+  "0.176.3": {
+    "titulo": "✓ Ein vom Bildschirm genommener Kommentar wird in allen Spalten und Tabs blasser — auch der zuletzt angekommene",
+    "itens": [
+      "✓ Von euch gemeldet: Ein Kommentar, der auf den Bildschirm geschickt und wieder heruntergenommen wurde, wurde in einer seiner Kopien manchmal nicht blasser — fast immer in der gemeinsamen Spalte. Ursache war die Ankunftsanimation: Der zuletzt angekommene Kommentar jeder Liste blieb bis zur nächsten Nachricht dieser Liste auf 100 % Deckkraft hängen. Jetzt endet die Animation bei der echten Deckkraft der Karte und wird entfernt, sobald sie fertig ist — in allen Ankunftsstilen (🎨 Themes). Geprüft in der Live-Liste, den Spalten (gemeinsam und pro Netzwerk), den Tabs (Super Chats, LivePix, PixGG, Pix, WhatsApp, Telegram) und der Warteschlange.",
+      "🟢 Spenden auf dem Bildschirm (Super Chat, Pix, LivePix, PixGG…) werden jetzt grün wie andere Kommentare: Vorher überdeckten Hintergrund und Streifen der Spende das Grün, und in den Spenden-Tabs war kaum zu erkennen, welche gerade lief. Im Kommentarfenster entfernt das Überfahren eines laufenden Kommentars mit der Maus auch nicht mehr seinen grünen Rand.",
+      "📱 Auf Handy oder Tablet (Dashboard über das Netzwerk) wird auch die zuletzt angetippte Karte blasser, wenn sie den Bildschirm verlässt — das Antippen ließ die Karte wie mit der Maus darüber zurück, und sie blieb bei 100 %.",
+      "🔄 Offene Dashboards bleiben ohne Neuladen aktuell: Fällt das Netzwerk aus, während ein Kommentar auf den Bildschirm geht und wieder herunter, wird er beim Wiederverbinden blasser (sogar mitten im Ziehen einer Spalte); Löschen oder Wiederherstellen der Lesemarken (Einstellungen → Logs und Daten) gilt sofort; und einen schon gezeigten Kommentar erneut zu senden, korrigiert das „✓ gelesen“ auf jedem Dashboard, das die Meldung verpasst hat.",
+      "✓ Das Limit von 2000 Lesemarken verwirft jetzt die am längsten zurückliegend gezeigten — ein Kommentar aus der Warteschlange, der wieder auf den Bildschirm kommt, verliert sein „✓ gelesen“ nicht mehr kurz danach.",
+      "📥 In den Tabs WhatsApp und Telegram folgen das Abzeichen „📥 in der Warteschlange“ und der ✖/📥-Knopf der Warteschlange sofort (vorher erst nach dem Neuladen). Und bei geöffnetem Kommentarfenster erscheint „✓ Schon auf dem Bildschirm gewesen“, wenn er auf anderem Weg auf den Bildschirm kommt (anderes Dashboard, Stream Deck, Fernsteuerung)."
+    ]
+  },
   "0.176.2": {
     "titulo": "🎞️ GIFs aus dem Twitch-Chat (GIPHY) erscheinen groß und animiert im Panel, in der Hervorhebung und im festen Chat",
     "itens": [

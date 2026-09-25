@@ -382,14 +382,18 @@
   .live-col-head .col-reload:hover { opacity: 1; color: var(--accent); }
   .live-col-head .col-reload.girando { opacity: 1; color: var(--accent); animation: colGira 1s linear infinite; }
   @keyframes colGira { to { transform: rotate(360deg); } }
+  /* A opacidade final NÃO é fixada (sem "to { opacity: 1 }" e sem fill-mode
+     "both"): a chegada termina na opacidade que o cartão tem de verdade —
+     0,6 quando já foi lido. Antes o último a chegar ficava preso em 1 e não
+     esmaecia ao sair da tela (v0.176.3). */
   @keyframes msgIn {
     from { opacity: 0; transform: translateY(16px) scale(0.97); filter: blur(2px); }
     60% { filter: blur(0); }
-    to { opacity: 1; transform: none; }
+    to { transform: none; }
   }
   /* 🫧 Chegada dos comentários: estilo e duração personalizáveis
      (Configurações → 🎨 Temas, na parte do Painel) */
-  .msg-new { animation: msgIn var(--cheg-dur, 0.5s) cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .msg-new { animation: msgIn var(--cheg-dur, 0.5s) cubic-bezier(0.16, 1, 0.3, 1) backwards; }
   body.cheg-surgir .msg-new { animation-name: chegSurgir; animation-timing-function: ease-out; }
   body.cheg-pop .msg-new { animation-name: chegPop; animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1); }
   body.cheg-zoom .msg-new { animation-name: chegZoom; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
@@ -576,6 +580,9 @@
     background: color-mix(in srgb, var(--sc-color, #ffb300) 18%, var(--panel2));
     border-left-color: var(--sc-color, #ffb300);
   }
+  /* 🟢 v0.176.3: "no ar" manda também nas doações (Super Chat, Pix, LivePix,
+     PixGG…): antes o fundo e a faixa da doação cobriam o verde */
+  .chat-item.superchat.on-air { border-color: var(--green); background: color-mix(in srgb, var(--green) 12%, var(--panel2)); }
   .chat-item .avatar {
     width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; object-fit: cover;
   }
@@ -684,7 +691,10 @@
   .badge.queued { background: var(--accent); color: #fff; }
   .badge.read-mark { background: var(--green); color: #fff; }
   .chat-item.read { opacity: 0.6; }
-  .chat-item.read:hover, .chat-item.read.on-air { opacity: 1; }
+  .chat-item.read.on-air { opacity: 1; }
+  /* Só com mouse de verdade: na tela de toque o :hover gruda no último
+     cartão tocado e ele não esmaecia ao sair da tela (v0.176.3) */
+  @media (hover: hover) { .chat-item.read:hover { opacity: 1; } }
 
   /* ---------- 🔍 Avatar ampliado (botão direito no avatar) ---------- */
   /* 🗕 v0.52: as telinhas viraram janelas FLUTUANTES — nada de véu escuro,
@@ -942,7 +952,7 @@
      linha .chat-item): faixa da rede, avatar, ícone, distintivos e texto —
      só sem os botões da linha, que a janela já oferece embaixo */
   #comentarioModal .chat-item { cursor: default; }
-  #comentarioModal .chat-item:hover { border-color: var(--border); }
+  #comentarioModal .chat-item:not(.on-air):hover { border-color: var(--border); }
   #comentarioModal .chat-item .actions { display: none; }
   #comentarioModal .cmt-meta {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -2142,6 +2152,7 @@ const hub = connectHub((event) => {
       renderLivePage();
       restorePlaceholders();
       setFeatured(event.featured);
+      sincronizarLidos(); // ✓ v0.176.3: mesmo se o render acima ficou adiado
       renderAvatarZoom(event.avatarZoom);
       renderAvatarExtras(event.avatarZooms || []); // 🔍✚ v0.79
       updateQrTool(event.qrs);
@@ -2329,6 +2340,12 @@ const hub = connectHub((event) => {
     case 'read':
       readIds.set(event.id, event.at || Date.now());
       markReadLocal(event.id, event.at);
+      break;
+    case 'readSync':
+      // ✓ v0.176.3: marcas restauradas do backup ou apagadas — a lista inteira
+      readIds.clear();
+      for (const [id, at] of Object.entries(event.readIds || {})) readIds.set(id, at);
+      sincronizarLidos();
       break;
     case 'searchResults':
       // Ignora respostas de buscas antigas (o usuário já digitou outra coisa)
@@ -3655,6 +3672,20 @@ function mkColGapSelect(key) {
 // de cada coluna, cada mensagem mantém o SEU nó pelo data-id — só o que é
 // novo nasce (com a animação de chegada), só o que saiu morre, e o resto
 // fica parado (nada de avatares recarregando nem animações renascendo).
+// 🫧 A animação de chegada sai do cartão assim que termina: nada de um
+// "msg-new" esquecido segurando o estado visual até o próximo render.
+function marcarChegada(el) {
+  el.classList.add('msg-new');
+  const fim = (e) => {
+    if (e.target !== el || !/^(msgIn|cheg(Surgir|Pop|Zoom|Quicar))$/.test(e.animationName)) return;
+    el.classList.remove('msg-new');
+    el.removeEventListener('animationend', fim);
+    el.removeEventListener('animationcancel', fim);
+  };
+  el.addEventListener('animationend', fim);
+  el.addEventListener('animationcancel', fim);
+}
+
 function reconciliarMensagens(corpo, ordenadas) {
   const porId = new Map();
   for (const el of [...corpo.children]) {
@@ -3669,7 +3700,7 @@ function reconciliarMensagens(corpo, ordenadas) {
       el.classList.remove('msg-new'); // já chegou; não repisca
     } else {
       el = buildItem(m, false);
-      if (lastArrivedId && m.id === lastArrivedId) el.classList.add('msg-new');
+      if (lastArrivedId && m.id === lastArrivedId) marcarChegada(el);
     }
     // Os dois estados que o nó "assa" no build ficam sempre em dia
     el.classList.toggle('read', readIds.has(m.id));
@@ -4201,8 +4232,10 @@ function renderSaved(saved) {
     for (const message of saved) appendTo('saved', message, true);
   }
   updateCount('saved', saved.length);
-  // Atualiza a marcação "na fila" e os botões nas outras listas
-  for (const item of document.querySelectorAll('#list-live .chat-item, #list-superchat .chat-item, #list-member .chat-item, #list-livepix .chat-item, #list-pix .chat-item, #list-pixgg .chat-item')) {
+  // Atualiza a marcação "na fila" e os botões nas outras listas.
+  // 📥 v0.176.3: em TODAS as cópias (as abas WhatsApp e Telegram ficavam de fora)
+  for (const item of document.querySelectorAll('.chat-item')) {
+    if (item.closest('#list-saved')) continue;
     const queued = savedIds.has(item.dataset.id);
     const mark = item.querySelector('.queue-mark');
     if (mark) mark.style.display = queued ? '' : 'none';
@@ -4230,6 +4263,37 @@ function markReadLocal(id, at) {
     const mark = item.querySelector('.read-mark');
     if (mark) { mark.textContent = readLabel(at || readIds.get(id)); mark.style.display = ''; }
   }
+  pintarNoarDoModal();
+}
+
+// ✓ v0.176.3: repinta o «lido» de TODAS as cópias a partir do readIds — na
+// reconexão (o render da lista pode ficar adiado com um seletor aberto) e
+// quando o servidor manda a lista inteira de novo (marcas restauradas/apagadas)
+function sincronizarLidos() {
+  for (const item of document.querySelectorAll('.chat-item')) {
+    const id = item.dataset.id;
+    const tem = !!id && readIds.has(id);
+    item.classList.toggle('read', tem);
+    const mark = item.querySelector('.read-mark');
+    if (mark) { mark.style.display = tem ? '' : 'none'; if (tem) mark.textContent = readLabel(readIds.get(id)); }
+  }
+  pintarNoarDoModal();
+}
+
+// A linha «✓ Já foi para a tela» da janela do comentário acompanha também
+// quando o comentário vai para a tela por outro caminho com a janela aberta
+function pintarNoarDoModal() {
+  if (!comentarioModalMsg) return;
+  const meta = comentarioModal.querySelector('.cmt-meta');
+  if (!meta) return;
+  const velho = meta.querySelector('.cmt-noar');
+  const tem = readIds.has(comentarioModalMsg.id);
+  if (tem && !velho) {
+    const noar = document.createElement('span');
+    noar.className = 'cmt-noar';
+    noar.textContent = '✓ ' + OBS_I18N.t('Já foi para a tela');
+    meta.appendChild(noar);
+  } else if (!tem && velho) velho.remove();
 }
 
 // ---------- 📅 v0.171: rever um dia de live ----------
