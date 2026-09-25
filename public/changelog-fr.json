@@ -1,4 +1,15 @@
 {
+  "0.176.3": {
+    "titulo": "✓ Un commentaire retiré de l’écran s’estompe dans toutes les colonnes et tous les onglets — même le dernier arrivé",
+    "itens": [
+      "✓ Signalé par vous : un commentaire envoyé à l’écran puis retiré ne s’estompait parfois pas dans l’une de ses copies — presque toujours celle de la colonne unifiée. La cause était l’animation d’arrivée : le dernier commentaire arrivé dans chaque liste restait bloqué à 100 % d’opacité jusqu’au message suivant de cette liste. Désormais, l’animation se termine à l’opacité réelle de la carte et disparaît dès qu’elle finit, dans tous les styles d’arrivée (🎨 Thèmes). Vérifié dans la liste En direct, les colonnes (unifiée et par réseau), les onglets (Super Chats, LivePix, PixGG, Pix, WhatsApp, Telegram) et la file.",
+      "🟢 Les dons à l’écran (Super Chat, Pix, LivePix, PixGG…) passent maintenant au vert comme les autres commentaires : avant, le fond et la bande du don couvraient le vert, et dans les onglets de dons on voyait à peine lequel était à l’écran. Dans la fenêtre du commentaire, survoler un commentaire à l’écran n’efface plus non plus sa bordure verte.",
+      "📱 Sur téléphone ou tablette (tableau de bord via le réseau), la dernière carte touchée s’estompe aussi en quittant l’écran — le toucher laissait la carte comme survolée par la souris, et elle restait à 100 %.",
+      "🔄 Les tableaux de bord ouverts suivent tout sans recharger : si le réseau tombe pendant qu’un commentaire passe à l’écran puis en sort, il s’estompe à la reconnexion (même en plein glisser d’une colonne) ; effacer ou restaurer les marques de lecture (Paramètres → Journaux et données) s’applique aussitôt ; et renvoyer à l’écran un commentaire déjà montré corrige le « ✓ lu » sur tout tableau de bord qui avait manqué l’avis.",
+      "✓ La limite de 2000 marques de lecture écarte désormais celles montrées il y a le plus longtemps — un commentaire de la file qui revient à l’écran ne perd plus son « ✓ lu » juste après.",
+      "📥 Dans les onglets WhatsApp et Telegram, le badge « 📥 en file » et le bouton ✖/📥 suivent la file immédiatement (avant, ils ne changeaient qu’après un rechargement). Et avec la fenêtre du commentaire ouverte, « ✓ Déjà passé à l’écran » apparaît s’il passe à l’écran par un autre chemin (autre tableau de bord, Stream Deck, télécommande)."
+    ]
+  },
   "0.176.2": {
     "titulo": "🎞️ Les GIFs du chat Twitch (GIPHY) s’affichent grands et animés dans le panneau, la mise en avant et le chat fixe",
     "itens": [
