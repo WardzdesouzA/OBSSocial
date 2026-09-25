@@ -974,6 +974,7 @@
   .ctx-item.danger:hover { background: #b62324; }
   .emote { height: 1.4em; vertical-align: middle; }
   .emote.figurinha { height: 2.6em; max-height: 72px; width: auto; display: inline-block; } /* 🎟️ v0.118 Super Sticker */
+  .emote.gif { height: 5em; max-height: 120px; width: auto; max-width: 100%; display: inline-block; border-radius: 6px; } /* 🎞️ v0.176.2 GIF do chat da Twitch */
   .platform-icon { flex-shrink: 0; }
   ::-webkit-scrollbar { width: 10px; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
@@ -2865,7 +2866,7 @@ function buildItem(message, inSavedTab) {
     // 💚 v0.175.1: o bloco da mídia inteiro era ignorado — numa doação com
     // áudio (PixGG), o player toma quase o cartão todo e o clique «não
     // funcionava» na coluna larga (unificado). Agora só os controles ignoram.
-    if (e.target.closest('button, a, input, select, textarea, audio, video, img, details, label, .ap-play, .ap-onda, .figurinha-animada, .avatar')) return;
+    if (e.target.closest('button, a, input, select, textarea, audio, video, .msg-midia img, details, label, .ap-play, .ap-onda, .figurinha-animada, .avatar')) return;
     abrirComentarioModal(message, inSavedTab);
   });
   item.addEventListener('contextmenu', (e) => openCtxMenu(e, message, inSavedTab));

@@ -571,7 +571,10 @@ function renderRuns(runs) {
       img.src = run.url;
       img.alt = run.alt || '';
       // 🎟️ v0.118: Super Sticker do YouTube — a figurinha é grande, não emote
-      img.className = run.figurinha === true ? 'emote figurinha' : 'emote';
+      // 🎞️ v0.176.2: GIF do chat da Twitch (GIPHY) — grande e animado (o <img>
+      // toca o GIF sozinho, em loop); a legenda vai no alt e no title
+      img.className = run.gif === true ? 'emote gif' : run.figurinha === true ? 'emote figurinha' : 'emote';
+      if (run.gif === true && run.alt) img.title = run.alt;
       img.loading = 'lazy';
       fragment.appendChild(img);
     } else if (run.type === 'text' || typeof run.text === 'string') {

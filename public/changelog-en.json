@@ -1,4 +1,12 @@
 {
+  "0.176.2": {
+    "titulo": "🎞️ Twitch chat GIFs (GIPHY) show up large and animated on the dashboard, the featured card and the fixed chat",
+    "itens": [
+      "🎞️ Twitch enabled GIFs in chat (GIPHY, for Tier 2 and 3 subscribers) and sends each one in a new “gifs” tag. Before, OBS Social showed only the caption in brackets, like “[Y A Y Yes GIF by …]”. Now the GIF replaces the caption, large and animated, on the dashboard, the stream’s featured card and the fixed chat — mixed with text and emotes in the right order. The image comes from the full URL Twitch provides, unmodified (as the documentation requires), and only if it is https; the caption becomes the alt text, the hover tooltip and what search finds.",
+      "🖱️ Clicking on a GIF or emote opens the comment window, like the rest of the card (only a photo sent by a subscriber still opens the zoom).",
+      "🧪 The 💬 test messages button gained a Twitch GIF sample (an animated GIF bundled with the program, no internet needed)."
+    ]
+  },
   "0.176.1": {
     "titulo": "🔄 The version check reads the GitHub API first (the “raw” endpoint lagged 5 min) · 🟢 Connected LivePix, PixGG, Telegram and WhatsApp turn green",
     "itens": [

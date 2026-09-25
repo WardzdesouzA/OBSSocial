@@ -7147,6 +7147,8 @@ const TEST_SAMPLES = [
     badges: ['dono'], selos: [{ id: 'kick:broadcaster', cargo: 'dono', nome: 'Transmissor', img: null }],
   },
   { platform: 'kick', author: 'BotRix', authorLogin: 'botrix', text: 'Comandos: !discord !redes', badges: ['bot'] },
+  // 🎞️ v0.176.2: GIF do chat da Twitch (na live real vem da GIPHY; a amostra usa um GIF do programa)
+  { platform: 'twitch', author: 'AssinanteT3', authorLogin: 'assinantet3', authorColor: '#00e5a0', badges: ['sub'], subTier: 't3', runs: [{ type: 'emote', gif: true, alt: 'Yay GIF', url: '/amostras/gif-twitch.gif' }] },
   // ---------------- 🩵 Bilibili ----------------
   { platform: 'bilibili', author: '小明', authorLogin: '4521', text: '主播好棒！' },
   {

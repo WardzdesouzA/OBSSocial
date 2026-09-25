@@ -1,4 +1,12 @@
 {
+  "0.176.2": {
+    "titulo": "🎞️ Twitch sohbet GIF’leri (GIPHY) panelde, öne çıkanda ve sabit sohbette büyük ve hareketli görünüyor",
+    "itens": [
+      "🎞️ Twitch sohbette GIF’leri açtı (GIPHY, Tier 2 ve 3 aboneler için) ve her birini yeni bir «gifs» etiketiyle gönderiyor. Önceden OBS Social yalnızca köşeli parantez içindeki başlığı gösteriyordu, örneğin «[Y A Y Yes GIF by …]». Artık GIF başlığın yerini alıyor, büyük ve hareketli; panelde, yayının öne çıkan kartında ve sabit sohbette — metin ve emote’larla doğru sırada. Görsel, Twitch’in verdiği tam URL’den değiştirilmeden gelir (belgelerin istediği gibi) ve yalnızca https ise; başlık alternatif metin, fareyle üzerine gelince ipucu ve aramanın bulduğu şey olur.",
+      "🖱️ Bir GIF’e veya emote’a tıklamak, kartın geri kalanı gibi yorum penceresini açar (yalnızca abonenin gönderdiği fotoğraf yakınlaştırmayı açmaya devam eder).",
+      "🧪 💬 test mesajları düğmesine bir Twitch GIF örneği eklendi (programla gelen hareketli bir GIF, internet gerekmez)."
+    ]
+  },
   "0.176.1": {
     "titulo": "🔄 Sürüm denetimi önce GitHub API’sini okuyor («raw» 5 dk geride kalıyordu) · 🟢 Bağlı LivePix, PixGG, Telegram ve WhatsApp yeşile dönüyor",
     "itens": [
