@@ -2464,7 +2464,11 @@ function renderMidiaDireta() {
       ifr.setAttribute('allowfullscreen', '');
       ifr.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       ifr.setAttribute('scrolling', 'no'); // sem barra de rolagem no embed
-      // (sem sandbox: YouTube/TikTok precisam de scripts)
+      // (sem sandbox nos provedores conhecidos: YouTube/TikTok precisam de scripts)
+      // 🔒 v0.177: um site desconhecido entra sem a MESMA origem desta tela —
+      // assim uma página do próprio programa não abre dentro do quadro com os
+      // poderes do computador do streamer
+      if (item.embed.provedor === 'outro') ifr.setAttribute('sandbox', 'allow-scripts allow-popups allow-forms allow-presentation');
       if (item.embed.provedor === 'youtube') {
         ifr.dataset.yt = '1';
         ifr.addEventListener('load', () => {

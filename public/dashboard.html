@@ -3335,7 +3335,9 @@ function openCtxMenu(event, message, inFila) {
   const addOption = (icon, label, danger, action) => {
     const option = document.createElement('div');
     option.className = 'ctx-item' + (danger ? ' danger' : '');
-    option.textContent = `${icon}  ${label}`;
+    // 🌐 v0.177: o rótulo fica num nó próprio — o motor de idiomas traduz o texto
+    // pela chave sem emoji (com emoji+texto juntos, 4 itens ficavam em português)
+    option.append(`${icon}  `, Object.assign(document.createElement('span'), { textContent: label }));
     option.onclick = (e) => { e.stopPropagation(); closeCtxMenu(); action(); };
     ctxMenu.appendChild(option);
   };
@@ -3395,7 +3397,21 @@ function removePlaceholder(list) {
   const placeholder = list.querySelector('.placeholder');
   if (placeholder) placeholder.remove();
 }
-function restorePlaceholders() { /* placeholders sao restaurados apenas via renderSaved */ }
+// 🗒️ v0.177: o texto de vazio de cada aba (guardado na carga) volta quando a
+// lista fica sem cartão — antes o init o apagava e, depois do 🧹 ou da
+// moderação, as abas ficavam em branco (só a Fila repunha o seu)
+const PLACEHOLDERS = {};
+for (const [nome, el] of Object.entries(lists)) { const ph = el && el.querySelector('.placeholder'); if (ph) PLACEHOLDERS[nome] = ph.innerHTML; }
+function restorePlaceholders() {
+  for (const [nome, el] of Object.entries(lists)) {
+    if (nome === 'live' || nome === 'saved' || !el || !PLACEHOLDERS[nome]) continue;
+    if (el.querySelector('.chat-item') || el.querySelector('.placeholder')) continue;
+    const ph = document.createElement('div');
+    ph.className = 'placeholder';
+    ph.innerHTML = PLACEHOLDERS[nome];
+    el.appendChild(ph); // (o motor de idiomas traduz o nó novo sozinho, pelo observador do DOM)
+  }
+}
 
 function appendTo(listName, message, inSavedTab = false) {
   const list = lists[listName];
@@ -3484,21 +3500,28 @@ function colGapMsFor(platform) {
   const tamanho = (colHoldQueues[platform] || []).length;
   return Math.max(35, Math.min(150, 2500 / Math.max(1, tamanho)));
 }
+const colUltimaLiberacao = {}; // plataforma -> quando a última mensagem entrou na coluna
 function armColHold(platform) {
   if (colHoldTimers[platform]) return;
   if (!(colHoldQueues[platform] || []).length) return;
-  colHoldTimers[platform] = setTimeout(() => {
-    colHoldTimers[platform] = null;
+  const gap = colGapMsFor(platform);
+  const liberar = () => {
     const fila = colHoldQueues[platform] || [];
     const id = fila.shift();
     if (id) {
       const m = liveIndex.get(id);
       if (m) { m.colHold = false; lastArrivedId = id; }
+      colUltimaLiberacao[platform] = Date.now();
       if (settings?.panel?.liveView === 'colunas' && !searchQuery) agendarRenderLive();
       updateColBadges(); // ⏳ das colunas e o balão do ⏭️ acompanham
     }
     if (fila.length) armColHold(platform);
-  }, colGapMsFor(platform));
+  };
+  // 🌊 v0.177: o ritmo é o ESPAÇO entre mensagens — quem chega com a coluna
+  // parada há mais tempo que o ritmo entra na hora (antes uma mensagem sozinha
+  // esperava o ritmo inteiro, como o fluxo geral nunca fez)
+  if (Date.now() - (colUltimaLiberacao[platform] || 0) >= gap) { liberar(); return; }
+  colHoldTimers[platform] = setTimeout(() => { colHoldTimers[platform] = null; liberar(); }, gap - (Date.now() - colUltimaLiberacao[platform]));
 }
 function releaseColHolds(platform) {
   const alvo = platform ? [platform] : Object.keys(colHoldQueues);
@@ -3609,9 +3632,11 @@ function restoreScroll(container, st, direction) {
 }
 
 // 🔄 Botão de recarregar de cada coluna
-const REDES_COM_CONEXAO = new Set(['youtube', 'twitch', 'kick', 'bilibili', 'telegram', 'whatsapp']);
+// 💜💚 v0.177: LivePix e PixGG são conexões de verdade (Configurações → Conexões) e também
+// ganham o 🔄; só o 💠 Pix do banco fica de fora (o Labs cuida da consulta ao banco)
+const REDES_COM_CONEXAO = new Set(['youtube', 'twitch', 'kick', 'bilibili', 'telegram', 'whatsapp', 'livepix', 'pixgg']);
 function mkColReloadBtn(key) {
-  // Doações não têm conexão para reiniciar (chegam por URL), então não ganham botão
+  // Quem não é conexão (o Pix do banco e as colunas de logs antigos) não ganha botão
   if (key !== '__all' && !REDES_COM_CONEXAO.has(key)) return null;
   const btn = document.createElement('button');
   btn.className = 'col-reload';
@@ -4213,6 +4238,7 @@ function apagarMensagens(aviso) {
   for (const item of document.querySelectorAll('.chat-item')) {
     if (foram.has(String(item.dataset.id))) item.remove();
   }
+  restorePlaceholders(); // v0.177: aba que ficou vazia volta a explicar o que entra nela
   updateColBadges();
   agendarRenderLive();
 }
@@ -4320,7 +4346,9 @@ function revisaoDias(event) {
   const dias = new Set((event.dias || []).map((d) => d.dia));
   const alvo = document.getElementById('rvCalendario');
   rvCalendario = montarCalendarioLogs(alvo, { dias, hoje: event.hoje, escolhido: rvDia, aoEscolher: revisaoEscolher });
-  if (!dias.size) document.getElementById('rvResumo').textContent = OBS_I18N.t('Ainda não há nenhum dia com log.');
+  // 📅 v0.177: pela rede sem o seletor 🗄️, o aviso diz o motivo (o calendário vazio parecia «sem log»)
+  if (event.semPermissao) document.getElementById('rvResumo').textContent = '🔒 ' + OBS_I18N.t('O streamer não liberou os logs para quem entra pela rede (Configurações → 🔗 URLs para o OBS → seletor 🗄️ Mexer nos logs).');
+  else if (!dias.size) document.getElementById('rvResumo').textContent = OBS_I18N.t('Ainda não há nenhum dia com log.');
 }
 function revisaoEscolher(dia) {
   rvDia = dia;
