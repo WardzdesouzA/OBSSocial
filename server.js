@@ -197,6 +197,7 @@ const MAX_RECENT = 300;
 // mostrando o total certo. Agora cada rede tem a SUA janela.
 const MAX_RECENT_REDE = 300;
 const MAX_SAVED = 500;
+const SAVED_MAX_BYTES = 3 * 1024 * 1024; // 🔒 v0.177: teto de bytes da fila (vai inteira ao disco e às telas a cada mudança)
 const MAX_UPLOAD_BYTES = 300 * 1024 * 1024;
 
 // Uma peça (do destaque ou de um widget desmontado): posição em % da caixa
@@ -789,7 +790,7 @@ const DEFAULT_SETTINGS = {
     fadeAfterSeconds: 0,   // tempo de tela de cada mensagem (0 = fica; max 3600)
     textShadow: true,
     superchatColors: true,
-    platforms: { youtube: true, twitch: true, kick: true, bilibili: true, doacao: true, telegram: true, whatsapp: true },
+    platforms: { youtube: true, twitch: true, kick: true, bilibili: true, telegram: true, whatsapp: true, livepix: true, pix: true, pixgg: true },
     customCSS: '',
   },
 };
@@ -876,6 +877,9 @@ function mergeSettings(base) {
   delete src.camadas; // 🧩 v0.173 → v0.174: as camadas de widget foram descontinuadas
   delete src.pixgg; // 💚 v0.176: os avisos da PixGG saíram (a PixGG autorizou o uso)
   if (src.labs && typeof src.labs === 'object') { delete src.labs.camadas; delete src.labs.donations; delete src.labs.pixgg; }
+  // 📺 v0.177: o filtro «Doações» do chat fixo era da URL genérica (descontinuada na v0.174);
+  // entram LivePix, Pix e PixGG no lugar
+  if (src.chat && src.chat.platforms && typeof src.chat.platforms === 'object') delete src.chat.platforms.doacao;
   const widgets = {};
   for (const key of Object.keys(DEFAULT_SETTINGS.widgets)) {
     widgets[key] = { ...DEFAULT_SETTINGS.widgets[key], ...((src.widgets || {})[key] || {}) };
@@ -1314,11 +1318,20 @@ function clipApagarArquivoFisico(e) {
   }
 }
 
+// 🔒 v0.177: teto de bytes do histórico de TEXTOS (o disco e a memória guardam
+// o texto inteiro) — 200 entradas de 500 KB pela rede eram ~100 MB regravados
+// a cada mensagem
+const CLIP_MAX_BYTES_TEXTO = 20 * 1024 * 1024;
 function clipboardJuntar(entrada) {
   state.clipboard.unshift(entrada);
   // Rotação: as entradas mais velhas saem — e arquivo que sai do histórico
   // sai do disco junto
   for (const velha of state.clipboard.splice(CLIP_MAX_ITENS)) clipApagarArquivoFisico(velha);
+  let bytes = 0;
+  for (let i = 0; i < state.clipboard.length; i++) {
+    bytes += (state.clipboard[i].texto || '').length;
+    if (bytes > CLIP_MAX_BYTES_TEXTO && i > 0) { for (const velha of state.clipboard.splice(i)) clipApagarArquivoFisico(velha); break; }
+  }
   persistClipboard();
   clipboardAvisar();
 }
@@ -1513,14 +1526,21 @@ function semSonsLegados(secao) {
   return secao;
 }
 
-function sanitizeStyle(raw) {
+// 🔒 v0.177: o estilo próprio de um QR/aviso/winstreak adicional só aceita as
+// chaves que o widget-família conhece (DEFAULT_SETTINGS.widgets[tipo]) — antes
+// qualquer chave entrava (crescimento sem teto em qrcodes.json e no broadcast)
+// e uma mediaUrl externa furava a regra «arte só de /uploads/» do overlay.
+function sanitizeStyle(raw, tipo) {
   const out = {};
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  const molde = (tipo && DEFAULT_SETTINGS.widgets[tipo]) || null;
   for (const [key, value] of Object.entries(raw)) {
-    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
-    if (['string', 'number', 'boolean'].includes(typeof value)) {
-      out[key] = typeof value === 'string' ? value.slice(0, 4000) : value;
-    }
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype' || key === 'pecas') continue;
+    if (molde && !Object.prototype.hasOwnProperty.call(molde, key)) continue;
+    if (!['string', 'number', 'boolean'].includes(typeof value)) continue;
+    if (typeof value !== 'string') { out[key] = value; continue; }
+    if (/url$/i.test(key)) out[key] = urlLocalDeArquivo(value, PASTAS_MIDIA);
+    else out[key] = value.slice(0, key === 'customCSS' ? 4000 : 300);
   }
   return out;
 }
@@ -2711,6 +2731,13 @@ const transcritor = new Transcritor({
       const { type, url, ...resto } = ev;
       transcricoes[url] = { ...resto, em: Date.now() };
       if (resto.estado === 'ok' || resto.estado === 'erro') salvarTranscricoes();
+      // 🔒 v0.177: o texto do áudio do inscrito é do painel; quem só assiste (e a
+      // tela pública) só recebe a transcrição do DESTAQUE, junto do 'featured'
+      broadcastSemEspectador(ev);
+      if (state.featured && state.featured.midia && state.featured.midia.url === url && (resto.estado === 'ok' || resto.estado === 'erro')) {
+        broadcast({ type: 'featured', featured: state.featured, transcricaoDestaque: transcricaoDoDestaque() });
+      }
+      return;
     }
     broadcast(ev);
   },
@@ -2742,7 +2769,7 @@ function transcreverMidia(midia, forca = false) {
   if (!midia.url.startsWith('/midia-inscritos/') || !/^[A-Za-z0-9.-]+$/.test(nome)) return;
   const antiga = transcricoes[midia.url];
   if (!forca && antiga && (antiga.estado === 'ok' || antiga.estado === 'erro')) {
-    broadcast({ type: 'transcricao', url: midia.url, ...antiga });
+    broadcastSemEspectador({ type: 'transcricao', url: midia.url, ...antiga }); // 🔒 v0.177
     return;
   }
   transcritor.transcrever(midia.url, path.join(MIDIA_INSCRITOS_DIR, nome), state.settings.transcricao || {});
@@ -2794,7 +2821,17 @@ function saveModeracao() {
     fs.writeFileSync(MODERACAO_FILE, JSON.stringify(moderacao, null, 2));
   } catch { /* o proximo save tenta de novo */ }
 }
-function broadcastModeracao() { broadcast({ type: 'moderacao', moderacao }); }
+// 🔒 v0.177: a lista de castigados/banidos (no WhatsApp o identificador É o
+// telefone) só vai para quem controla o painel — nunca para quem só assiste
+// nem para as telas públicas (o init já escondia; o broadcast furava).
+function broadcastSemEspectador(payload) {
+  const raw = JSON.stringify(payload);
+  for (const client of wss.clients) {
+    if (client.readyState !== 1 || client.role === 'viewer') continue;
+    try { client.send(raw); } catch {}
+  }
+}
+function broadcastModeracao() { broadcastSemEspectador({ type: 'moderacao', moderacao }); }
 // Está de castigo AGORA? (timeouts vencidos são varridos na passada)
 function autorModerado(rede, autorId) {
   const bloco = moderacao[rede];
@@ -3595,7 +3632,7 @@ const NET_PERM_DEFAULTS = {
   search: true,      // 🔎 busca de comentários
   screen: false,     // 🖥️ mandar/tirar comentários da tela
   connections: false, // 🔌 conectar/desconectar redes
-  tools: false,      // 🧰 ferramentas (QR, sorteio, likômetro, winstreak, audiência, doações)
+  tools: false,      // 🧰 ferramentas (QR, sorteio, likômetro, winstreak, audiência, avisos, relógio, clima)
   settings: false,   // ⚙️ mudar configurações e organizar a tela
   media: false,      // 🖼️ enviar/apagar mídias
   logs: false,       // 🗄️ mexer nos logs
@@ -3989,7 +4026,11 @@ function isLocalHostname(host) {
   if (h === 'localhost') return true;
   // Nomes de rede caseira que não existem na internet (o roteador costuma
   // usar um destes): pc.local, pc.lan, pc.home, pc.internal...
-  if (/\.(local|lan|home|internal|intranet|localdomain|home\.arpa|fritz\.box|homenet|box)$/.test(h)) return true;
+  // 🔒 v0.177: «.box» saiu da lista — é um domínio público de verdade (qualquer
+  // um registra «alguem.box» e, com um DNS rebinding, viraria «rede local»).
+  // O roteador da AVM continua entrando pelo nome exato «fritz.box».
+  if (h === 'fritz.box') return true;
+  if (/\.(local|lan|home|internal|intranet|localdomain|home\.arpa|homenet)$/.test(h)) return true;
   // 🔒 v0.127.1: as faixas de IP privado só valem para um IP DE VERDADE.
   // Antes as expressões (^10\., ^192\.168\., ^127\., ^f[cd]...) eram
   // aplicadas ao NOME do host, então um site chamado 192.168.evil.com ou
@@ -4520,6 +4561,7 @@ if (autoUpdateTimer.unref) autoUpdateTimer.unref();
 
 const lastStatusLog = new Map();
 function setStatus(platform, statusState, detail) {
+  if (/^(__proto__|constructor|prototype)$/.test(String(platform))) return; // 🔒 v0.177
   state.status[platform] = { ...(state.status[platform] || {}), state: statusState, detail };
   broadcast({ type: 'status', platform, status: state.status[platform] });
   // Erros de conexao tambem aparecem na janela preta (uma vez por causa),
@@ -5013,7 +5055,8 @@ function limparDados(escopo) {
     // 📚 v0.88: a biblioteca da Mesa (uploads/trilhas/) sai junto
     try { fs.rmSync(TRILHAS_UP_DIR, { recursive: true, force: true }); } catch {}
     // 🖥️ v0.159: os prints passageiros do monitor do vMix (data/tmp) também
-    try { fs.rmSync(VMIX_MONITOR_DIR, { recursive: true, force: true }); } catch {}
+    // (v0.177: só os prints — data/tmp também é a pasta de trabalho da transcrição em andamento)
+    try { vmixMonitorApagarPrints(); } catch {}
     broadcast({ type: 'media', media: listMedia() });
     feito.push('midias');
   }
@@ -5091,7 +5134,7 @@ function limparDados(escopo) {
     // Grava JÁ, como as configurações: o programa vai reiniciar em seguida
     persistClipboardAgora();
     clipboardAvisar();
-    broadcast({ type: 'settings', settings: state.settings });
+    broadcastSettings();
     feito.push('configuracoes');
   }
 
@@ -5120,7 +5163,7 @@ const BACKUP_ITENS = {
   // numa instalação nova traz os arquivos cifrados e nada mais — a senha do
   // OBS e os tokens voltariam vazios, sem avisar. A chave é o que abre o
   // backup do próprio streamer; ela mora na pasta de backup dele.
-  conexoes: { files: () => [CONNECTIONS_FILE, OBS_FILE, CHAVE_LOCAL_FILE, VMIX_FILE, CONTROLE_FILE, CLIMA_FILE] }, // 🌤️ v0.167: as chaves do clima vão junto
+  conexoes: { files: () => [CONNECTIONS_FILE, OBS_FILE, CHAVE_LOCAL_FILE, VMIX_FILE, CONTROLE_FILE, CLIMA_FILE, PIX_FILE] }, // 🌤️ v0.167: as chaves do clima vão junto; 💠 v0.177: o Pix também (a restauração o relia)
   ferramentas: { files: () => [QRS_FILE, WINSTREAK_FILE, TRILHAS_FILE, AVISOS_FILE] },
   // O arquivo pode estar "atrasado" pelo debounce: grava antes de copiar.
   // A assinatura é o CONTEÚDO (não o relógio do arquivo): salvar sem mudar
@@ -5135,6 +5178,36 @@ const BACKUP_ITENS = {
 const BACKUP_FREQ_RE = /^(manual|temporeal|([1-9]|[1-5][0-9]|60)s|([1-9]|[1-5][0-9]|60)min|6h|12h|24h)$/;
 // 🔒 v0.127.1: teto para os textos das configurações (20 mil caracteres;
 // o CSS personalizado pode ter 100 mil). Corta no lugar, sem mudar o resto.
+// 🔒 v0.177: chaves que uma seção das configurações NÃO conhece (nem no padrão,
+// nem no que está gravado) saem antes da fusão. Mapas de chave livre (peças,
+// ritmo por coluna, redes do chat fixo, itens do backup, cores do mini Mesa e
+// os próprios widgets) são pulados: neles a chave é o nome de algo.
+const SECOES_LIVRES = new Set(['pecas', 'layoutV', 'perfilAuto', 'layers', 'janelas']);
+const FILHOS_LIVRES = { panel: ['colDrip', 'columnsOrder', 'ordem'], chat: ['platforms', 'pecas'], backup: ['itens'], deck: ['cores'], widgets: ['pecas'], raffle: ['weights', 'memberLevels'], selos: ['ocultos'], clima: ['cidades', 'fontes', 'chaves'] };
+function podarSecoesDesconhecidas(incoming) {
+  const hasOwn = (o, k) => !!o && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
+  const podar = (obj, molde, atual, livres) => {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
+    for (const k of Object.keys(obj)) {
+      if (livres.includes(k)) continue;
+      if (!hasOwn(molde, k) && !hasOwn(atual, k)) delete obj[k];
+    }
+  };
+  for (const secao of Object.keys(incoming)) {
+    if (SECOES_LIVRES.has(secao)) continue;
+    const molde = DEFAULT_SETTINGS[secao];
+    if (!molde || typeof molde !== 'object' || Array.isArray(molde)) continue;
+    if (secao === 'widgets') {
+      for (const [tipo, w] of Object.entries(incoming.widgets || {})) {
+        if (!hasOwn(DEFAULT_SETTINGS.widgets, tipo) && !hasOwn(state.settings.widgets, tipo)) { delete incoming.widgets[tipo]; continue; }
+        podar(w, DEFAULT_SETTINGS.widgets[tipo], (state.settings.widgets || {})[tipo], FILHOS_LIVRES.widgets);
+      }
+      continue;
+    }
+    podar(incoming[secao], molde, state.settings[secao], FILHOS_LIVRES[secao] || []);
+  }
+}
+
 function limitarTextos(obj, prof = 0) {
   if (!obj || typeof obj !== 'object' || prof > 8) return;
   for (const k of Object.keys(obj)) {
@@ -5159,14 +5232,33 @@ function backupBase() {
   // pela rede (public/, uploads/) — senão as cópias das conexões (com a chave
   // que protege as senhas) viravam arquivos baixáveis por qualquer um da rede.
   // Caminhos de rede (\\servidor\pasta) também não: o backup é local.
-  const proibidas = [PUBLIC_DIR, UPLOADS_DIR, __dirname];
-  const dentro = (p, dir) => p === dir || p.startsWith(dir + path.sep);
-  if (/^\\\\/.test(escolhida) || dentro(base, PUBLIC_DIR) || dentro(base, UPLOADS_DIR)
-    || (dentro(base, __dirname) && !dentro(base, DATA_DIR))) {
+  // 🔒 v0.177: a comparação é pelo caminho REAL (links simbólicos resolvidos;
+  // no Windows/macOS sem diferença de maiúsculas) — «c:\...\PUBLIC» ou um
+  // atalho para public/ passavam pela conferência de texto e o backup das
+  // conexões (com a chave) ia parar numa pasta servida pela rede.
+  const dentro = (p, dir) => { const d = caminhoCanonico(dir); return p === d || p.startsWith(d + path.sep); };
+  const canon = caminhoCanonico(base);
+  if (/^\\\\/.test(escolhida) || dentro(canon, PUBLIC_DIR) || dentro(canon, UPLOADS_DIR)
+    || (dentro(canon, __dirname) && !dentro(canon, DATA_DIR))) {
     return path.join(DATA_DIR, 'obs-social-backup');
   }
-  void proibidas;
   return path.join(base, 'obs-social-backup');
+}
+// Caminho real (links resolvidos até o ancestral que existe) e, onde o sistema
+// de arquivos ignora maiúsculas, tudo em minúsculas
+function caminhoCanonico(p) {
+  let alvo = path.resolve(p);
+  let resto = '';
+  for (let i = 0; i < 64; i++) {
+    try { alvo = fs.realpathSync.native(alvo); break; } catch {
+      const pai = path.dirname(alvo);
+      if (pai === alvo) break;
+      resto = path.join(path.basename(alvo), resto);
+      alvo = pai;
+    }
+  }
+  const cheio = resto ? path.join(alvo, resto) : alvo;
+  return (process.platform === 'win32' || process.platform === 'darwin') ? cheio.toLowerCase() : cheio;
 }
 
 // O que existe agora, em (nome, tamanho, mtime) — muda a assinatura, muda o dado
@@ -5311,9 +5403,14 @@ function restaurarBackup(item, marcaBruta) {
       Object.assign(vmixConfig, loadVmixConfig());
       desligarVmix(null);
       if (state.settings.labs?.vmix === true) conectarVmix(); else broadcastVmix();
-      // 💠 E a do Pix também: rearranca a consulta com o que voltou
-      Object.assign(pixConfig, loadPixConfig());
-      arrancarPix();
+      // 💠 E a do Pix também: rearranca a consulta com o que voltou.
+      // 🔒 v0.177: só se o backup TROUXE o pix-config.json — um backup antigo
+      // (sem ele) trocava a chave local e o arquivo daqui deixava de abrir,
+      // apagando em silêncio o segredo e a senha do certificado do banco
+      if (fs.existsSync(path.join(origem, path.basename(PIX_FILE)))) {
+        Object.assign(pixConfig, loadPixConfig());
+        arrancarPix();
+      }
     } else if (item === 'ferramentas') {
       state.qrs = loadQrs();
       state.winstreaks = loadWinstreaks();
@@ -5337,7 +5434,7 @@ function restaurarBackup(item, marcaBruta) {
       const bruto = JSON.parse(fs.readFileSync(path.join(origem, path.basename(SETTINGS_FILE)), 'utf8'));
       state.settings = mergeSettings(bruto);
       saveSettingsAgora();
-      broadcast({ type: 'settings', settings: state.settings });
+      broadcastSettings();
       // 🌤️ o Clima segue a lista de cidades restaurada (não a de antes)
       state.clima.indice = 0; state.clima.desde = Date.now();
       sincronizarClima(); broadcastClima();
@@ -5451,8 +5548,9 @@ function searchLogs(query) {
       if (!line) continue;
       try {
         const entry = JSON.parse(line);
+        // (v0.177: comentários de TESTE não voltam pela busca — o 🧹 os tirou de tudo)
         if (entry.t === 'chat' && entry.m && entry.m.id && !seen.has(entry.m.id)
-            && messageSearchText(entry.m).includes(q)) {
+            && !ehMensagemDeTeste(entry.m) && messageSearchText(entry.m).includes(q)) {
           seen.add(entry.m.id);
           dayMatches.push(entry.m);
         }
@@ -5708,7 +5806,10 @@ function removerMensagens({ platform, ids, autor, tudo, teste }) {
         const m = lista[i];
         saíram.push(String(m.id));
         // (só o que entrou na conta do dia desconta — um salvo de outro dia, não)
-        if (teste && contada && !descontadas.has(String(m.id))) descontadas.set(String(m.id), m);
+        // 🧹 v0.177: um teste que sai por QUALQUER caminho (moderação num autor de
+        // amostra, «limpar o chat») também desconta — senão o contador ficava
+        // com fantasmas que o 🧹 não achava mais
+        if ((teste || ehMensagemDeTeste(m)) && contada && !descontadas.has(String(m.id))) descontadas.set(String(m.id), m);
         lista.splice(i, 1);
       }
     }
@@ -5729,7 +5830,8 @@ function removerMensagens({ platform, ids, autor, tudo, teste }) {
   }
   persistSaved();
   broadcast({ type: 'saved', saved: state.saved });
-  broadcast({ type: 'apagadas', platform: platform || null, ids: idsFora, autor: quem, tudo: !!tudo });
+  // ☎️ v0.177: no WhatsApp o «autor» é o telefone — as telas removem pelos ids
+  broadcast({ type: 'apagadas', platform: platform || null, ids: idsFora, autor: platform === 'whatsapp' ? null : quem, tudo: !!tudo });
   feedPendingBroadcast();
   const motivo = teste ? 'comentários de teste apagados' : tudo ? 'o chat foi limpo' : quem ? `alguém foi banido/silenciado` : 'apagada pela moderação';
   console.log(`  🗑️ ${platform || 'chat'}: ${idsFora.length} mensagem(ns) fora da tela (${motivo}).`);
@@ -6949,6 +7051,7 @@ function connect(platform, channel, options = {}) {
 }
 
 function disconnect(platform, silent = false) {
+  if (!Object.prototype.hasOwnProperty.call(CONNECTORS, platform)) return; // 🔒 v0.177
   const instance = state.connectors[platform];
   if (instance) {
     delete state.connectors[platform];
@@ -7696,6 +7799,13 @@ function classificarUrlMidiaDireta(bruta, dica) {
   let u;
   try { u = new URL(texto); } catch { return { erro: 'Essa URL não parece válida. Cole o endereço completo, começando com https://' }; }
   if (!/^https?:$/.test(u.protocol)) return { erro: 'Só endereços http(s) podem ir para a tela.' };
+  // 🔒 v0.177: nada da própria máquina nem da rede interna vai para a tela — o
+  // overlay roda no PC do streamer e um endereço como http://127.0.0.1:3000/config
+  // ou http://192.168.0.1/ (o roteador) abriria dentro do quadro, na transmissão
+  const hn = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (hn === 'localhost' || hn.endsWith('.localhost') || !hn.includes('.') || (net.isIP(hn) && classifyAddress(hn) !== 'remote')) {
+    return { erro: 'Endereços da própria máquina ou da rede local não vão para a tela — use um endereço público (https://...).' };
+  }
   const host = u.hostname.toLowerCase().replace(/^(www|m|mobile)\./, '');
   let nomeArq = '';
   try { nomeArq = decodeURIComponent(path.posix.basename(u.pathname)); } catch { nomeArq = path.posix.basename(u.pathname); }
@@ -10380,6 +10490,15 @@ function settingsParaCliente(ws) {
     transcricao: { ...(s.transcricao || {}), comando: '' },
   };
 }
+// 🔒 v0.177: toda mudança de configuração sai com o MESMO filtro do init —
+// antes o broadcast entregava a quem só assiste a pasta do backup e o comando
+// do transcritor (caminhos da máquina do streamer) que o init escondia
+function broadcastSettings() {
+  for (const client of wss.clients) {
+    if (client.readyState !== 1) continue;
+    try { client.send(JSON.stringify({ type: 'settings', settings: settingsParaCliente(client) })); } catch {}
+  }
+}
 
 // 🔒 v0.127.1: quem está na rede e some sem avisar (cabo, Wi-Fi) ficava
 // preso na lista de conexões e o servidor seguia mandando tudo para um
@@ -10504,6 +10623,16 @@ wss.on('connection', (ws, req) => {
   }));
 
   ws.on('message', (raw) => {
+    // 🔒 v0.177: pela rede, um balde de fichas por conexão (rajada de 60, ~30
+    // mensagens/s sustentadas) — uma rajada de 'settings' de 90 KB fazia o
+    // servidor gravar e retransmitir as configurações inteiras milhares de vezes
+    if (ws.role !== 'local') {
+      const agora = Date.now();
+      ws.fichas = Math.min(60, (ws.fichas ?? 60) + (agora - (ws.fichasEm || agora)) * 0.03);
+      ws.fichasEm = agora;
+      if (ws.fichas < 1) return;
+      ws.fichas -= 1;
+    }
     // Rede de proteção: um erro tratando UMA mensagem não pode fechar o
     // programa inteiro (era o que acontecia — o processo morria e a live ia junto).
     try {
@@ -10608,15 +10737,27 @@ function tratarMensagem(ws, raw) {
     return;
   }
   // Modo restrito (rede sem senha): só o que os seletores liberarem.
-  if (ws.role === 'viewer' && !viewerOpAllowed(msg.type, security.permissions)) return;
+  if (ws.role === 'viewer' && !viewerOpAllowed(msg.type, security.permissions)) {
+    // 📅 v0.177: a revisão de um dia avisa que os logs não foram liberados para a
+    // rede (o calendário vazio parecia «não há log»)
+    if (msg.type === 'logsDias') { try { ws.send(JSON.stringify({ type: 'logsDias', dias: [], semPermissao: true })); } catch {} }
+    else if (msg.type === 'logDia') { try { ws.send(JSON.stringify({ type: 'logDia', dia: String(msg.dia || ''), erro: 'O streamer não liberou os logs para quem entra pela rede.', semPermissao: true })); } catch {} }
+    return;
+  }
 
   switch (msg.type) {
     case 'connect':
-      connect(String(msg.platform || ''), String(msg.channel || ''), msg.options || {});
+      // 🔒 v0.177: o nome do canal tem teto (ia inteiro para connections.json e
+      // para o broadcast de status)
+      connect(String(msg.platform || ''), String(msg.channel || '').slice(0, 200), (msg.options && typeof msg.options === 'object') ? msg.options : {});
       break;
-    case 'disconnect':
-      disconnect(String(msg.platform || ''));
+    case 'disconnect': {
+      // 🔒 v0.177: só redes de verdade — «__proto__» chegava a state.connections
+      // e gravava active=false no protótipo de TODOS os objetos do processo
+      const plat = String(msg.platform || '');
+      if (Object.prototype.hasOwnProperty.call(CONNECTORS, plat)) disconnect(plat);
       break;
+    }
     case 'recarregarColuna': {
       // O 🔄 de uma coluna: devolve ao painel a janela guardada daquela rede.
       // Sem isto, o painel que já tinha perdido os comentários antigos não os
@@ -10722,8 +10863,8 @@ function tratarMensagem(ws, raw) {
       // Reinicia uma conexao (se algo travou ou quebrou): derruba e conecta
       // de novo com o canal informado ou com o lembrado da ultima vez
       const platform = String(msg.platform || '');
-      const channel = String(msg.channel || '').trim() || state.connections[platform]?.channel;
-      if (CONNECTORS[platform] && channel) {
+      const channel = String(msg.channel || '').trim().slice(0, 200) || state.connections[platform]?.channel;
+      if (Object.prototype.hasOwnProperty.call(CONNECTORS, platform) && channel) {
         console.log(`  🔄 Reiniciando a conexão ${platform} (${channel})...`);
         connect(platform, channel, state.connections[platform]?.token ? { token: state.connections[platform].token } : {});
       }
@@ -10840,7 +10981,23 @@ function tratarMensagem(ws, raw) {
       {
         const agora = Date.now();
         const respiro = ws.role === 'local' ? 300 : 2000;
-        if (ws.ultimaBusca && agora - ws.ultimaBusca < respiro) break;
+        if (ws.ultimaBusca && agora - ws.ultimaBusca < respiro) {
+          // 🔎 v0.177: a consulta que chega dentro do respiro não é mais descartada
+          // (o painel ficava em «Procurando…» para sempre): vale a ÚLTIMA digitada,
+          // respondida assim que o respiro passa
+          ws.buscaPendente = query;
+          if (!ws.buscaTimer) {
+            ws.buscaTimer = setTimeout(() => {
+              ws.buscaTimer = null;
+              const q = ws.buscaPendente; ws.buscaPendente = null;
+              if (typeof q !== 'string' || ws.readyState !== 1) return;
+              ws.ultimaBusca = Date.now();
+              const r = searchLogs(q);
+              try { ws.send(JSON.stringify({ type: 'searchResults', query: q, results: r.results, truncated: r.truncated })); } catch {}
+            }, Math.max(20, respiro - (agora - ws.ultimaBusca)));
+          }
+          break;
+        }
         ws.ultimaBusca = agora;
       }
       const { results, truncated } = searchLogs(query);
@@ -10850,7 +11007,11 @@ function tratarMensagem(ws, raw) {
     case 'feature': {
       // O comentário em destaque vai para todas as telas: só entra se for do
       // tamanho de um comentário mesmo.
-      const cabe = msg.message && JSON.stringify(msg.message).length <= 64 * 1024;
+      // 🔒 v0.177: um comentário de verdade tem objeto e id de texto curto (o id vai
+      // para read.json e para o init de todos)
+      const cabe = msg.message && typeof msg.message === 'object' && !Array.isArray(msg.message)
+        && JSON.stringify(msg.message).length <= 64 * 1024
+        && (msg.message.id === undefined || (typeof msg.message.id === 'string' && msg.message.id.length <= 300));
       state.featured = cabe ? msg.message : null;
       // Robôs conhecidos ganham o 🤖 BOT também quando o destaque chega pronto
       if (state.featured) marcarRobo(state.featured);
@@ -10992,7 +11153,20 @@ function tratarMensagem(ws, raw) {
         if (!Object.prototype.hasOwnProperty.call(DEFAULT_SETTINGS, k) && !Object.prototype.hasOwnProperty.call(state.settings, k)) delete incoming[k];
       }
       limitarTextos(incoming);
+      // 🔒 v0.177: a poda de chaves desconhecidas desce um nível — dentro de cada
+      // seção (tema, panel, labs, chat, widgets[x]…) só entra o que o padrão ou a
+      // configuração atual já conhece; antes uma mensagem plantava chaves novas
+      // aninhadas e settings.json + o broadcast a todas as telas cresciam sem fim
+      podarSecoesDesconhecidas(incoming);
       if (ws.role !== 'local' && incoming.backup && typeof incoming.backup === 'object') delete incoming.backup.pasta;
+      // 🔒 v0.177: quem só assiste (modo restrito) com o seletor ⚙️ liberado muda o
+      // visual — não apaga logs pela retenção, não mexe no relógio do backup e não
+      // liga/desliga módulos (OBS, Pix, WhatsApp, controle externo…): isso é do
+      // streamer (local) ou de quem entrou com a senha (full)
+      if (ws.role === 'viewer') {
+        delete incoming.labs;
+        if (!security.permissions.logs) { delete incoming.logRetentionDays; delete incoming.backup; }
+      }
       // 📱 v0.163: a cópia do tema que o mini Mesa veste é a do STREAMER — só
       // o computador local grava (um co-apresentador na rede não troca a cara
       // do celular pelo tema do navegador dele)
@@ -11059,6 +11233,8 @@ function tratarMensagem(ws, raw) {
           ...state.settings.transcricao,
           ...(incoming.transcricao || {}),
           ...(ws.role !== 'local' ? { comando: (state.settings.transcricao || {}).comando || '' } : {}),
+          // 🔒 v0.177: o nome do modelo vira nome de arquivo/chave — só os conhecidos
+          ...(incoming.transcricao && 'modelo' in incoming.transcricao && !/^[a-z0-9][a-z0-9.-]{0,39}$/.test(String(incoming.transcricao.modelo)) ? { modelo: (state.settings.transcricao || {}).modelo || 'base' } : {}),
         },
         // 🍪 v0.166: o navegador dos cookies faz o yt-dlp ler o perfil do
         // navegador desta máquina — só o computador local escolhe
@@ -11362,7 +11538,8 @@ function tratarMensagem(ws, raw) {
 
         // 🎙️ transcrição: só valores conhecidos
         const tr = state.settings.transcricao;
-        tr.modelo = MODELOS_TRANSCRICAO[tr.modelo] ? tr.modelo : 'base';
+        // 🔒 v0.177: hasOwnProperty — «constructor»/«__proto__» passavam como modelo
+        tr.modelo = Object.prototype.hasOwnProperty.call(MODELOS_TRANSCRICAO, tr.modelo) ? tr.modelo : 'base';
         tr.idioma = /^([a-z]{2,5}|auto)$/.test(String(tr.idioma || '')) ? String(tr.idioma) : 'auto';
         tr.comando = typeof tr.comando === 'string' ? tr.comando.slice(0, 500) : '';
       }
@@ -11494,7 +11671,7 @@ function tratarMensagem(ws, raw) {
         persistConnections();
       }
       saveSettings();
-      broadcast({ type: 'settings', settings: state.settings });
+      broadcastSettings();
       // Mudou algo do backup (pasta/frequências)? O resumo (pasta em uso,
       // lista de backups) acompanha na hora
       if (incoming.backup) broadcastBackup();
@@ -11878,14 +12055,14 @@ function tratarMensagem(ws, raw) {
         moderacao[rede].timeouts[autorId] = { nome, em: Date.now(), ate: Date.now() + prazoS * 1000 };
         const con = state.connectors[rede];
         if (con?.silenciar) con.silenciar(autorId, Math.floor(Date.now() / 1000) + prazoS).catch((err) => {
-          broadcast({ type: 'moderacaoAviso', texto: `⏳ Castigo salvo no OBS Social, mas o grupo não aplicou: ${String(err.message).slice(0, 120)}` });
+          broadcastSemEspectador({ type: 'moderacaoAviso', texto: `⏳ Castigo salvo no OBS Social, mas o grupo não aplicou: ${String(err.message).slice(0, 120)}` });
         });
       } else if (modo === 'ban') {
         moderacao[rede].bans[autorId] = { nome, em: Date.now() };
         delete moderacao[rede].timeouts[autorId];
         const con = state.connectors[rede];
         if (con?.banir) con.banir(autorId).catch((err) => {
-          broadcast({ type: 'moderacaoAviso', texto: `🚫 Banimento salvo no OBS Social, mas o grupo não aplicou: ${String(err.message).slice(0, 120)}` });
+          broadcastSemEspectador({ type: 'moderacaoAviso', texto: `🚫 Banimento salvo no OBS Social, mas o grupo não aplicou: ${String(err.message).slice(0, 120)}` });
         });
       } else if (modo === 'liberar') {
         delete moderacao[rede].timeouts[autorId];
@@ -12090,7 +12267,15 @@ function tratarMensagem(ws, raw) {
       // 📋 v0.90: mandar texto ADICIONA uma entrada ao histórico (sem
       // limite de tamanho — o texto inteiro fica no servidor e as telas
       // recebem a prévia). O formato antigo ({text}) continua entrando.
-      const texto = String(msg.text ?? '');
+      let texto = String(msg.text ?? '');
+      // 🔒 v0.177: pela rede, um respiro entre envios e 64 KB por texto — o
+      // texto inteiro sem teto continua valendo para o computador do streamer
+      if (ws.role !== 'local') {
+        const agora = Date.now();
+        if (ws.ultimoClip && agora - ws.ultimoClip < 500) break;
+        ws.ultimoClip = agora;
+        texto = texto.slice(0, 64 * 1024);
+      }
       if (texto.trim()) {
         clipboardJuntar({ id: newInstanceId('clip'), tipo: 'texto', texto, nome: '', arquivo: '', tamanho: texto.length, em: Date.now() });
       }
@@ -12150,7 +12335,7 @@ function tratarMensagem(ws, raw) {
         }
         if (changed) {
           saveSettings();
-          broadcast({ type: 'settings', settings: state.settings });
+          broadcastSettings();
         }
         broadcast({ type: 'media', media: listMedia() });
       }
@@ -12159,10 +12344,23 @@ function tratarMensagem(ws, raw) {
     case 'save':
       // 🔒 v0.127.1: do tamanho de um comentário, como no destaque — a fila
       // inteira vai para o disco e para todas as telas a cada mudança
+      // 🔒 v0.177: pela rede, um respiro entre salvamentos; e a fila inteira tem
+      // um teto de bytes (500 × 64 KB regravados e retransmitidos a cada 'save'
+      // eram gigabytes de tráfego a partir do seletor 🖥️)
+      if (ws.role !== 'local') {
+        const agora = Date.now();
+        if (ws.ultimoSave && agora - ws.ultimoSave < 300) break;
+        ws.ultimoSave = agora;
+      }
       if (msg.message && typeof msg.message === 'object' && msg.message.id && JSON.stringify(msg.message).length <= 64 * 1024
           && !state.saved.some((m) => m.id === msg.message.id)) {
         state.saved.push(msg.message);
         if (state.saved.length > MAX_SAVED) state.saved.splice(0, state.saved.length - MAX_SAVED);
+        let bytes = 0;
+        for (let i = state.saved.length - 1; i >= 0; i--) {
+          bytes += JSON.stringify(state.saved[i]).length;
+          if (bytes > SAVED_MAX_BYTES && i > 0) { state.saved.splice(0, i); break; }
+        }
         persistSaved();
         broadcast({ type: 'saved', saved: state.saved });
       }
@@ -12258,7 +12456,7 @@ function tratarMensagem(ws, raw) {
       // Estilo proprio de um QR adicional: independente do principal
       const inst = state.qrs.find((q) => q.id === msg.id);
       if (inst) {
-        inst.style = { ...(inst.style || {}), ...sanitizeStyle(msg.style) };
+        inst.style = { ...(inst.style || {}), ...sanitizeStyle(msg.style, 'qr') };
         broadcastQrs();
       }
       break;
@@ -12381,7 +12579,7 @@ function tratarMensagem(ws, raw) {
     case 'avisoStyle': {
       const inst = findAviso(msg.id);
       if (!inst) break;
-      inst.style = { ...(inst.style || {}), ...sanitizeStyle(msg.style) };
+      inst.style = { ...(inst.style || {}), ...sanitizeStyle(msg.style, 'aviso') };
       persistAvisos();
       broadcastAvisos();
       break;
@@ -12639,7 +12837,7 @@ function tratarMensagem(ws, raw) {
       // Estilo proprio de um winstreak adicional: independente do principal
       const inst = state.winstreaks.find((w) => w.id === msg.id);
       if (inst) {
-        inst.style = { ...(inst.style || {}), ...sanitizeStyle(msg.style) };
+        inst.style = { ...(inst.style || {}), ...sanitizeStyle(msg.style, 'winstreak') };
         persistWinstreaks();
         broadcast({ type: 'winstreak', winstreaks: state.winstreaks });
       }
@@ -12671,7 +12869,8 @@ function tratarMensagem(ws, raw) {
       // Usado pelos testes automatizados para simular contagens.
       if (msg.platforms && typeof msg.platforms === 'object') {
         for (const [platform, count] of Object.entries(msg.platforms)) {
-          if (/^(__proto__|constructor|prototype)$/.test(platform)) continue;
+          // 🔒 v0.177: só redes que existem — nomes inventados cresciam sem teto
+          if (!Object.prototype.hasOwnProperty.call(CONNECTORS, platform)) continue;
           state.audience.platforms[platform] = { count: Number(count) || 0, updatedAt: Date.now() };
         }
         broadcast({ type: 'audience', audience: state.audience });
@@ -12756,6 +12955,12 @@ function loadControleConfig() {
   return null;
 }
 let controleConfig = loadControleConfig();
+// 🔒 v0.177: um token gravado em claro por versões antigas (v0.126/0.127.0) é
+// recifrado já na subida — antes só ao gerar um token novo
+try {
+  const bruto = JSON.parse(fs.readFileSync(CONTROLE_FILE, 'utf8'));
+  if (controleConfig && typeof bruto.token === 'string' && bruto.token && !bruto.token.startsWith('enc-v1:')) setTimeout(() => { try { saveControleConfig(); } catch {} }, 0);
+} catch {}
 function saveControleConfig() {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -12876,7 +13081,7 @@ const CONTROLE_GRUPOS = {
   obs: '🎬 OBS Studio', vmix: '🎛️ vMix', outros: '🧰 Outros',
 };
 const CP = {
-  rede: { nome: 'rede', desc: 'youtube, twitch, kick, bilibili, telegram, whatsapp ou doacao (vazio = qualquer rede)', ex: '' },
+  rede: { nome: 'rede', desc: 'youtube, twitch, kick, bilibili, telegram, whatsapp, livepix, pix ou pixgg (vazio = qualquer rede)', ex: '' },
   texto: { nome: 'texto', desc: 'o texto', ex: 'Olá, chat!' },
   id: { nome: 'id', desc: 'qual instância (vazio = a principal)', ex: '' },
   passo: { nome: 'passo', desc: 'quanto somar (padrão 1)', ex: '1' },

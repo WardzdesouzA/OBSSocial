@@ -336,10 +336,14 @@ function addMessage(message, animate) {
   const item = document.createElement('div');
   item.className = 'msg';
   item.dataset.plataforma = message.platform;
-  item.dataset.autor = String(message.authorLogin || message.author || '').toLowerCase();
-  item.dataset.autorNome = String(message.author || '').toLowerCase();
+  // ☎️ v0.177: no WhatsApp o identificador É o telefone — ele não vai para a
+  // tela pública nem escondido num atributo (a moderação casa pelo comentário
+  // guardado em memória, item.__msg, e pelo id)
+  const semRastro = message.platform === 'whatsapp' || (typeof pareceTelefone === 'function' && (pareceTelefone(message.author) || pareceTelefone(message.authorLogin)));
+  item.dataset.autor = semRastro ? '' : String(message.authorLogin || message.author || '').toLowerCase();
+  item.dataset.autorNome = semRastro ? '' : String(message.author || '').toLowerCase();
   item.dataset.id = String(message.id || '');
-  if (message.authorId) item.dataset.autorId = String(message.authorId).toLowerCase();
+  if (message.authorId && !semRastro) item.dataset.autorId = String(message.authorId).toLowerCase();
   // Guarda o comentário junto do elemento: e assim que mudar um liga/desliga
   // dos distintivos, da para redesenhar o que ja esta na tela
   item.__msg = message;
@@ -484,9 +488,10 @@ function apagarMensagens(aviso) {
   const quem = aviso.autor ? String(aviso.autor).toLowerCase() : null;
   for (const item of [...box.children]) {
     if (rede && item.dataset.plataforma !== rede) continue;
+    const m = item.__msg || {};
     const combina = aviso.tudo
       || ids.has(String(item.dataset.id))
-      || (quem && (item.dataset.autor === quem || item.dataset.autorNome === quem || item.dataset.autorId === quem));
+      || (quem && [m.authorLogin, m.author, m.authorId, item.dataset.autor, item.dataset.autorNome, item.dataset.autorId].some((v) => v && String(v).toLowerCase() === quem));
     if (combina) item.remove();
   }
 }
