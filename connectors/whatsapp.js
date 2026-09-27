@@ -258,11 +258,12 @@ class WhatsAppConnector {
       for (const v of this.vistos) { this.vistos.delete(v); if (this.vistos.size <= 1500) break; }
     }
     if (!this.aceitaChat(m)) return;
+    // 🔒 v0.179: o texto recebido tem o mesmo teto do texto enviado
     let texto = String(
       m.text?.body
       || m.image?.caption || m.video?.caption || m.gif?.caption || m.document?.caption
       || '',
-    );
+    ).slice(0, LIMITE_TEXTO_MSG);
     // 📍 v0.70: localização vira texto no cartão
     if (!texto && m.location && Number.isFinite(Number(m.location.latitude))) {
       const partes = [m.location.name, m.location.address].filter(Boolean);

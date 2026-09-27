@@ -409,12 +409,13 @@ class WhatsAppLocalConnector {
 
   textoDe(msg) {
     const c = this.conteudoDe(msg);
+    // 🔒 v0.179: o texto recebido tem o mesmo teto do texto enviado
     const texto = String(
       c.conversation
       || c.extendedTextMessage?.text
       || c.imageMessage?.caption || c.videoMessage?.caption || c.documentMessage?.caption
       || '',
-    );
+    ).slice(0, LIMITE_TEXTO_MSG);
     if (texto) return texto;
     // 📍 v0.70: localização vira texto no cartão
     const loc = c.locationMessage;

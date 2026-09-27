@@ -2411,7 +2411,7 @@ const hub = connectHub((event) => {
       // Ignora respostas de buscas antigas (o usuário já digitou outra coisa)
       if (normText(String(event.query || '').trim()) === searchQuery && searchQuery) {
         searchResults = (event.results || []).slice().reverse(); // cronológico
-        searchTruncated = !!event.truncated;
+        searchTruncated = !!event.truncated || !!event.cortado; // (v0.179: cortado = orçamento da busca estourou)
         livePage = 0;
         renderLivePage();
       }

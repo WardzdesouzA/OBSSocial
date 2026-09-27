@@ -33,16 +33,37 @@ function podeAbrir(texto, i, marca) {
   return antes === '' || /[\s(["'‘“]/.test(antes);
 }
 
-function acharFecho(texto, inicio, marca) {
-  for (let j = inicio; j <= texto.length - marca.fecha.length; j++) {
-    if (texto.slice(j, j + marca.fecha.length) !== marca.fecha) continue;
-    const antes = texto[j - 1];
-    if (antes === undefined || /\s/.test(antes)) continue;
-    const depois = texto[j + marca.fecha.length];
-    // fechar no fim, ou antes de espaço/pontuação — nunca no meio de palavra
-    if (depois === undefined || /[\s)\].,;:!?"'’”]/.test(depois)) return j;
+// Um marcador fecha aqui? Não pode vir depois de espaço, e tem de fechar no
+// fim ou antes de espaço/pontuação — nunca no meio de palavra.
+function podeFechar(texto, j, marca) {
+  if (texto.slice(j, j + marca.fecha.length) !== marca.fecha) return false;
+  const antes = texto[j - 1];
+  if (antes === undefined || /\s/.test(antes)) return false;
+  const depois = texto[j + marca.fecha.length];
+  return depois === undefined || /[\s)\].,;:!?"'’”]/.test(depois);
+}
+
+// 🔒 v0.179: as posições onde cada marcador pode fechar, levantadas UMA vez
+// por texto (em ordem). Antes, cada marcador que abria varria o texto até o
+// fim atrás do fecho — em «*a *a *a …» nenhum fecha, e uma mensagem de 65 mil
+// caracteres travava o programa inteiro por ~9 s (o WhatsApp aceita esse
+// tamanho de qualquer pessoa que tenha o número). Agora a passada é linear.
+function mapaDeFechos(texto) {
+  const mapa = new Map();
+  for (const marca of MARCADORES) {
+    const posicoes = [];
+    for (let j = 1; j <= texto.length - marca.fecha.length; j++) if (podeFechar(texto, j, marca)) posicoes.push(j);
+    mapa.set(marca, { posicoes, cursor: 0 });
   }
-  return -1;
+  return mapa;
+}
+
+// O primeiro fecho a partir de `inicio`. O cursor só anda para a frente:
+// `inicio` só cresce ao longo do texto.
+function acharFecho(mapa, inicio, marca) {
+  const lista = mapa.get(marca);
+  while (lista.cursor < lista.posicoes.length && lista.posicoes[lista.cursor] < inicio) lista.cursor += 1;
+  return lista.cursor < lista.posicoes.length ? lista.posicoes[lista.cursor] : -1;
 }
 
 // Quebra o texto em pedaços com estilo. `estilos` é o que já vale por fora
@@ -51,13 +72,14 @@ function pedacos(texto, estilos, profundidade) {
   const saida = [];
   let solto = '';
   const despejar = () => { if (solto) { saida.push({ texto: solto, estilos }); solto = ''; } };
+  const mapa = profundidade < 4 ? mapaDeFechos(texto) : null;
   for (let i = 0; i < texto.length;) {
     let casou = null;
-    if (profundidade < 4) {
+    if (mapa) {
       for (const marca of MARCADORES) {
         if (estilos.includes(marca.estilo)) continue; // já está nesse estilo
         if (!podeAbrir(texto, i, marca)) continue;
-        const fim = acharFecho(texto, i + marca.abre.length, marca);
+        const fim = acharFecho(mapa, i + marca.abre.length, marca);
         if (fim > i) { casou = { marca, fim }; break; }
       }
     }

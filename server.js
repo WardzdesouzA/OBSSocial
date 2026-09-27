@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const dns = require('dns');
 const net = require('net');
 const zlib = require('zlib');
+const { StringDecoder } = require('string_decoder'); // 🔒 v0.179: busca nos logs em pedaços
 // WebSocket (cliente) fala com o obs-websocket do OBS; WebSocketServer atende as telas
 const { WebSocket, WebSocketServer } = require('ws');
 
@@ -953,7 +954,7 @@ function mergeSettings(base) {
       const conhecidas = DEFAULT_SETTINGS.layers.ordem;
       const ordem = [...new Set((Array.isArray(l.ordem) ? l.ordem : []).filter((c) => conhecidas.includes(c)))];
       for (const c of conhecidas) if (!ordem.includes(c)) ordem.push(c);
-      return { ...l, ordem };
+      return { ordem }; // 🔒 v0.179: só «ordem» (antes chaves estranhas ficavam)
     })(),
     pecas: Object.fromEntries(Object.keys(DEFAULT_SETTINGS.pecas).map((k) => (
       [k, { ...DEFAULT_SETTINGS.pecas[k], ...((src.pecas || {})[k] || {}) }]
@@ -1015,6 +1016,15 @@ function ajustarSorteio(r) {
     if (Number(r.weights.kickFounder) === 3) r.weights.kickFounder = 5;
     r.founderAjustado = true;
   }
+  // 🔒 v0.179: só os pesos conhecidos, e só números — uma chave estranha em
+  // weights sobrevivia à fusão e acumulava a cada mensagem de configuração
+  const pesos = {};
+  const src = (r.weights && typeof r.weights === 'object') ? r.weights : {};
+  for (const k of Object.keys(DEFAULT_SETTINGS.raffle.weights)) {
+    const v = Number(src[k]);
+    pesos[k] = Number.isFinite(v) ? v : DEFAULT_SETTINGS.raffle.weights[k];
+  }
+  r.weights = pesos;
   return r;
 }
 // O texto plano de uma mensagem (text, ou os runs colados)
@@ -1138,7 +1148,13 @@ function loadConnections() {
     // 🔑 v0.90: o token de bot é gravado cifrado — abre aqui (texto puro de
     // versões antigas passa direto e é cifrado na próxima gravação)
     for (const conn of Object.values(raw)) {
-      if (conn && typeof conn === 'object' && typeof conn.token === 'string') conn.token = abrirSegredo(conn.token);
+      if (conn && typeof conn === 'object' && typeof conn.token === 'string') {
+        const aberto = abrirSegredo(conn.token);
+        // 🔑 v0.179: não abriu (chave trocada)? O cifrado fica em tokenCifrado
+        // e volta ao disco tal como está — antes virava '' e a próxima gravação
+        // apagava o token do bot
+        if (aberto === null) { conn.tokenCifrado = conn.token; conn.token = ''; } else { conn.token = aberto; delete conn.tokenCifrado; }
+      }
     }
     return raw;
   } catch { return {}; }
@@ -1149,8 +1165,8 @@ function loadConnections() {
 function conexoesPublicas() {
   const pub = {};
   for (const [rede, conn] of Object.entries(state.connections || {})) {
-    const { token, ...resto } = conn || {};
-    pub[rede] = { ...resto, ...(token ? { temToken: true } : {}) };
+    const { token, tokenCifrado, ...resto } = conn || {};
+    pub[rede] = { ...resto, ...(token ? { temToken: true } : {}), ...(tokenCifrado ? { tokenIlegivel: true } : {}) }; // 🔑 v0.179
   }
   return pub;
 }
@@ -1159,10 +1175,11 @@ function persistConnections() {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     // 🔑 v0.90: no disco o token vai cifrado (AES-256-GCM, chave local)
+    // 🔑 v0.179: um token que não abriu com esta chave volta como estava
     const gravavel = {};
     for (const [rede, conn] of Object.entries(state.connections || {})) {
-      gravavel[rede] = conn && typeof conn === 'object' && conn.token
-        ? { ...conn, token: guardarSegredo(conn.token) }
+      gravavel[rede] = conn && typeof conn === 'object' && (conn.token || conn.tokenCifrado)
+        ? { ...conn, token: conn.token ? guardarSegredo(conn.token) : conn.tokenCifrado, tokenCifrado: undefined }
         : conn;
     }
     gravarPrivado(CONNECTIONS_FILE, JSON.stringify(gravavel, null, 2));
@@ -1903,18 +1920,26 @@ function relogioPublico() {
 // fica sabendo SE há chave.
 const CLIMA_FILE = path.join(DATA_DIR, 'clima.json');
 const climaChaves = {}; // fonte → chave (aberta, em memória)
+// 🔑 v0.179: fonte → cifrado que NÃO abriu com a chave local (chave trocada por
+// um restauro): volta ao disco como está em vez de sumir na próxima gravação
+const climaChavesCifradas = {};
 function loadClimaChaves() {
   for (const k of Object.keys(climaChaves)) delete climaChaves[k];
+  for (const k of Object.keys(climaChavesCifradas)) delete climaChavesCifradas[k];
   try {
     const raw = JSON.parse(fs.readFileSync(CLIMA_FILE, 'utf8'));
     for (const [fonte, valor] of Object.entries((raw && raw.chaves) || {})) {
-      if (CLIMA_FONTES[fonte] && typeof valor === 'string' && valor) climaChaves[fonte] = abrirSegredo(valor).slice(0, 400);
+      if (!CLIMA_FONTES[fonte] || typeof valor !== 'string' || !valor) continue;
+      const aberto = abrirSegredo(valor);
+      if (aberto === null) climaChavesCifradas[fonte] = valor;
+      else climaChaves[fonte] = aberto.slice(0, 400);
     }
   } catch { /* sem arquivo ainda */ }
 }
 function saveClimaChaves() {
   const chaves = {};
   for (const [fonte, valor] of Object.entries(climaChaves)) if (valor) chaves[fonte] = guardarSegredo(valor);
+  for (const [fonte, cifrado] of Object.entries(climaChavesCifradas)) if (!chaves[fonte]) chaves[fonte] = cifrado; // 🔑 v0.179
   try {
     if (!Object.keys(chaves).length) { apagarArquivos(['clima.json']); return; }
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -1959,7 +1984,7 @@ function climaChavesResumo(ws) {
   const local = !ws || ws.role === 'local';
   const fontes = {};
   for (const [id, f] of Object.entries(CLIMA_FONTES)) {
-    fontes[id] = { nome: f.nome, precisaChave: f.chave, site: f.site, ...(local ? { temChave: !!climaChaves[id] } : {}), erro: climaServico.ultimoErroFonte[id] || null };
+    fontes[id] = { nome: f.nome, precisaChave: f.chave, site: f.site, ...(local ? { temChave: !!climaChaves[id], ...(climaChavesCifradas[id] ? { chaveIlegivel: true } : {}) } : {}), erro: climaServico.ultimoErroFonte[id] || null };
   }
   return { fontes, capitais: CLIMA_CAPITAIS };
 }
@@ -2164,13 +2189,63 @@ function loadSaved() {
   }
 }
 
+// 🔒 v0.179: a gravação da fila era SÍNCRONA (até 3 MB regravados a cada
+// 'save', travando a linha principal). Agora é assíncrona e agrupada, como a
+// da área de transferência: uma rajada de mudanças vira uma gravação só.
+let savedGravaTimer = null;
 function persistSaved() {
+  if (savedGravaTimer) return;
+  savedGravaTimer = setTimeout(() => {
+    savedGravaTimer = null;
+    try {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFile(SAVED_FILE, JSON.stringify(state.saved), (err) => {
+        if (err) console.error('Não consegui salvar os comentários guardados:', err.message);
+      });
+    } catch (err) {
+      console.error('Não consegui salvar os comentários guardados:', err.message);
+    }
+  }, 250);
+  if (savedGravaTimer.unref) savedGravaTimer.unref();
+}
+// Na saída do programa (e ao apagar tudo) a gravação pendente vai já
+function persistSavedAgora() {
+  if (savedGravaTimer) { clearTimeout(savedGravaTimer); savedGravaTimer = null; }
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(SAVED_FILE, JSON.stringify(state.saved, null, 2));
+    fs.writeFileSync(SAVED_FILE, JSON.stringify(state.saved));
   } catch (err) {
     console.error('Não consegui salvar os comentários guardados:', err.message);
   }
+}
+// 🔒 v0.179: a fila inteira vai a todas as telas a cada mudança; as mudanças
+// vindas da REDE são agrupadas (uma retransmissão a cada 300 ms no máximo) —
+// as do computador local continuam imediatas
+let savedAvisoTimer = null;
+function broadcastSaved(imediato) {
+  if (imediato) {
+    if (savedAvisoTimer) { clearTimeout(savedAvisoTimer); savedAvisoTimer = null; }
+    broadcast({ type: 'saved', saved: state.saved });
+    return;
+  }
+  if (savedAvisoTimer) return;
+  savedAvisoTimer = setTimeout(() => {
+    savedAvisoTimer = null;
+    broadcast({ type: 'saved', saved: state.saved });
+  }, 300);
+}
+// 🔒 v0.179: respiro entre salvamentos POR APARELHO (IP), não só por conexão —
+// as 24 conexões permitidas por aparelho somavam dezenas de saves por segundo
+const saveUltimoPorIp = new Map();
+function saveRespiraPorIp(ws) {
+  if (ws.role === 'local') return false;
+  const agora = Date.now();
+  const ip = ws.clientIp || '?';
+  const ultimo = saveUltimoPorIp.get(ip) || 0;
+  if (agora - ultimo < 300) return true;
+  if (saveUltimoPorIp.size > 500) for (const [k, v] of saveUltimoPorIp) if (agora - v > 10000) saveUltimoPorIp.delete(k);
+  saveUltimoPorIp.set(ip, agora);
+  return false;
 }
 
 function loadSettings() {
@@ -2207,6 +2282,7 @@ for (const sinal of ['SIGINT', 'SIGTERM']) {
     // transferência também vai já — o que foi mandado logo antes de fechar
     // ou atualizar o programa sumia no reinício
     persistClipboardAgora();
+    persistSavedAgora(); // 🔒 v0.179: a fila guardada também passou a ser gravada com atraso
     process.exit(0);
   });
 }
@@ -2409,8 +2485,15 @@ function loadLivepixVistos() {
   catch { return new Set(); }
 }
 const livepixVistos = loadLivepixVistos();
+// 🔒 v0.179: o corte em 2000 vale também para o Set em memória (antes só a
+// cópia gravada era cortada; um Set mantém a ordem de chegada, então os mais
+// antigos saem primeiro)
+function podarVistos(set, max = 2000) {
+  while (set.size > max) set.delete(set.values().next().value);
+}
 function saveLivepixVistos() {
-  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(LIVEPIX_VISTOS_FILE, JSON.stringify([...livepixVistos].slice(-2000))); } catch { /* sem disco, sem memória */ }
+  podarVistos(livepixVistos);
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(LIVEPIX_VISTOS_FILE, JSON.stringify([...livepixVistos])); } catch { /* sem disco, sem memória */ }
 }
 // 💚 v0.175: a mesma memória para a PixGG (id da transação de cada doação)
 const PIXGG_VISTOS_FILE = path.join(DATA_DIR, 'pixgg-vistos.json');
@@ -2420,7 +2503,8 @@ function loadPixggVistos() {
 }
 const pixggVistos = loadPixggVistos();
 function savePixggVistos() {
-  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(PIXGG_VISTOS_FILE, JSON.stringify([...pixggVistos].slice(-2000))); } catch { /* sem disco, sem memória */ }
+  podarVistos(pixggVistos); // 🔒 v0.179
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(PIXGG_VISTOS_FILE, JSON.stringify([...pixggVistos])); } catch { /* sem disco, sem memória */ }
 }
 // Os dados extras que uma rede entrega (LivePix; 💚 v0.175: PixGG): guardados
 // e espalhados aos painéis. A carteira (saldo) é do streamer: o modo restrito
@@ -2525,8 +2609,15 @@ function loadPixConfig() {
     // 🔑 v0.90: os segredos vêm cifrados do disco — abre ANTES da limpeza
     // (o blob cifrado é maior que o teto de 200 letras do campo)
     if (raw && typeof raw === 'object') {
-      raw.clientSecret = abrirSegredo(raw.clientSecret);
-      raw.certSenha = abrirSegredo(raw.certSenha);
+      const cs = abrirSegredo(raw.clientSecret);
+      const senha = abrirSegredo(raw.certSenha);
+      // 🔑 v0.179: o que não abriu (chave trocada por um restauro) fica guardado
+      // cifrado como veio e volta intacto ao disco na próxima gravação — antes
+      // virava '' e mexer em qualquer campo do Pix apagava o segredo do banco
+      const cfg = limparPixConfig({ ...raw, clientSecret: cs ?? '', certSenha: senha ?? '' });
+      cfg._clientSecretCifrado = cs === null ? String(raw.clientSecret || '') : null;
+      cfg._certSenhaCifrada = senha === null ? String(raw.certSenha || '') : null;
+      return cfg;
     }
     return limparPixConfig(raw);
   } catch { return limparPixConfig(null); }
@@ -2537,8 +2628,9 @@ function savePixConfig() {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     gravarPrivado(PIX_FILE, JSON.stringify({
       ...pixConfig,
-      clientSecret: guardarSegredo(pixConfig.clientSecret),
-      certSenha: guardarSegredo(pixConfig.certSenha),
+      clientSecret: pixConfig._clientSecretCifrado || guardarSegredo(pixConfig.clientSecret),
+      certSenha: pixConfig._certSenhaCifrada || guardarSegredo(pixConfig.certSenha),
+      _clientSecretCifrado: undefined, _certSenhaCifrada: undefined, // (só em memória)
     }, null, 2));
   } catch (err) { console.error('Não consegui salvar a configuração do Pix:', err.message); }
 }
@@ -2588,6 +2680,8 @@ function pixResumo(ws) {
       intervalo: pixConfig.intervalo,
       temSegredo: !!pixConfig.clientSecret,
       temSenhaCert: !!pixConfig.certSenha,
+      // 🔑 v0.179: há segredo gravado, mas a chave local desta máquina não o abre
+      segredoIlegivel: !!(pixConfig._clientSecretCifrado || pixConfig._certSenhaCifrada),
     } : {}),
   };
 }
@@ -3856,6 +3950,11 @@ function guardarSegredo(texto) {
 
 // O caminho de volta — e a migração de graça: valor sem o prefixo é um
 // segredo antigo em texto puro e passa direto (a próxima gravação cifra).
+// 🔑 v0.179: quando NÃO abre devolve null (antes devolvia ''): os carregadores
+// distinguem «sem segredo» de «segredo ilegível» e guardam o cifrado original
+// para regravá-lo intacto — antes a primeira gravação seguinte (mexer em
+// qualquer campo do Pix, do OBS, das conexões…) apagava o cifrado em silêncio.
+// Quem só exibe usa `abrirSegredo(x) ?? ''`.
 function abrirSegredo(valor) {
   const v = String(valor || '');
   if (!v.startsWith('enc-v1:')) return v;
@@ -3865,12 +3964,12 @@ function abrirSegredo(valor) {
     d.setAuthTag(bruto.subarray(12, 28));
     return Buffer.concat([d.update(bruto.subarray(28)), d.final()]).toString('utf8');
   } catch {
-    // Chave trocada ou arquivo corrompido: devolve vazio (nunca lixo) e
-    // avisa — sem o aviso, a senha do OBS e os tokens sumiam caladinhos e a
-    // primeira gravação seguinte apagava o cifrado que ainda estava lá
+    // Chave trocada ou arquivo corrompido: sinaliza (nunca devolve lixo) e
+    // avisa — o cifrado fica no arquivo como está e volta a abrir se a chave
+    // certa voltar (restauro do backup completo)
     console.error('⚠️  Um segredo guardado não abriu com a chave local desta máquina (data/chave-local.key).');
-    console.error('    Se você restaurou um backup de outro computador, redigite a senha do OBS / os tokens.');
-    return '';
+    console.error('    Ele fica guardado como está; se você restaurou um backup de outro computador, redigite a senha do OBS / os tokens.');
+    return null;
   }
 }
 
@@ -4010,6 +4109,24 @@ function viewerOpAllowed(type, perms) {
 function podeObs(ws) {
   return ws.role !== 'viewer' || security.permissions.obs === true;
 }
+
+// 🔒 v0.179: respiro por conexão para as operações que fazem o SERVIDOR buscar
+// algo lá fora (páginas de taxas, geocodificação, sonda da mídia direta, API da
+// LivePix, ligar/reiniciar redes). O balde de fichas da v0.177 cobre a
+// mensagem, não o custo das buscas de saída que ela dispara: pela rede, no
+// máximo uma a cada `ms` por conexão e por chave; o computador do streamer
+// segue livre. Devolve true quando a operação pode seguir.
+function respiroRede(ws, chave, ms) {
+  if (ws.role === 'local') return true;
+  const agora = Date.now();
+  if (!ws.respiros) ws.respiros = new Map();
+  const ultimo = ws.respiros.get(chave) || 0;
+  if (agora - ultimo < ms) return false;
+  ws.respiros.set(chave, agora);
+  return true;
+}
+// Campos de credencial que o painel pode mandar em connect: só do computador local
+const CONNECT_CREDENCIAIS = ['token', 'cookie', 'secret', 'chave', 'segredo', 'apiKey', 'senha', 'password'];
 
 // Operações de segurança/atualização/reinício: SÓ do computador local.
 const LOCAL_ONLY_OPS = new Set(['securityPassword', 'securityMode', 'securityPerms', 'updateCheck', 'updateApply', 'updateAuto', 'restartApp', 'limpar',
@@ -4201,10 +4318,87 @@ const wss = new WebSocketServer({
 // O mesmo cuidado para o servidor de WebSocket em si
 wss.on('error', (err) => console.error('  ⚠️ Erro no servidor de WebSocket:', err && err.message));
 
+// 📱 v0.179: o telefone do WhatsApp nunca chega a quem só assiste (papel
+// viewer) — nem no tráfego do WebSocket. A v0.177 tirou o número do DOM do
+// chat fixo, mas o servidor seguia mandando authorId/authorLogin/waChatId (o
+// número) em chat/chatNow, no init (recent/recentPorRede/saved), na recarga
+// de coluna, na revisão do dia e na busca. Aqui fica o filtro único: o painel
+// (local/full) continua vendo o número para moderar e responder; o viewer
+// recebe a mensagem sem os identificadores, com o autor mascarado quando ele
+// É um número (o mesmo critério e o mesmo apelido do render.js).
+function pareceTelefoneSrv(nome) {
+  const t = String(nome || '').trim();
+  if (!t) return false;
+  const digitos = t.replace(/\D/g, '');
+  if (digitos.length < 8) return false;
+  return /^[+()\-.\s\d]+$/.test(t);
+}
+function apelidoDeTelefone(nome) {
+  const t = String(nome || '').trim();
+  let h = 0;
+  for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+  return '📱 Convidado ' + h.toString(36).slice(-3).toUpperCase();
+}
+// (o JID do WhatsApp é «número@s.whatsapp.net» ou «número:aparelho@…»)
+const semSufixoJid = (v) => String(v || '').replace(/@.*$/, '').replace(/:.*$/, '');
+function mensagemComTelefone(m) {
+  return !!m && typeof m === 'object' && !Array.isArray(m)
+    && (m.platform === 'whatsapp' || pareceTelefoneSrv(m.author) || pareceTelefoneSrv(semSufixoJid(m.authorLogin)) || pareceTelefoneSrv(semSufixoJid(m.authorId)));
+}
+function mensagemParaViewer(m) {
+  if (!mensagemComTelefone(m)) return m;
+  const { authorId, authorLogin, waChatId, ...resto } = m;
+  if (pareceTelefoneSrv(resto.author)) resto.author = apelidoDeTelefone(resto.author);
+  if (pareceTelefoneSrv(semSufixoJid(resto.channel))) resto.channel = '';
+  return resto;
+}
+// Percorre um quadro qualquer trocando as mensagens que carregam telefone.
+// Devolve o MESMO objeto quando nada mudou (aí o texto já serializado serve).
+function semTelefonesParaViewer(v, prof = 0) {
+  if (!v || typeof v !== 'object' || prof > 6) return v;
+  if (Array.isArray(v)) {
+    let out = null;
+    for (let i = 0; i < v.length; i++) {
+      const n = semTelefonesParaViewer(v[i], prof + 1);
+      if (n !== v[i]) { if (!out) out = v.slice(); out[i] = n; }
+    }
+    return out || v;
+  }
+  if (typeof v.platform === 'string' && ('author' in v || 'runs' in v || 'authorId' in v)) return mensagemParaViewer(v);
+  // a correção de avatar chega com o «login» da pessoa — no WhatsApp é o número
+  if (v.type === 'avatarFix' && (v.platform === 'whatsapp' || pareceTelefoneSrv(semSufixoJid(v.login)))) return { ...v, login: '' };
+  if (v.type === 'apagadas' && pareceTelefoneSrv(v.autor)) return { ...v, autor: null };
+  // o ganhador do sorteio guarda a chave do participante (whatsapp:id:<número>) e
+  // o avatar ampliado leva o nome cru — os dois saem mascarados para o viewer
+  if (typeof v.chave === 'string' && /^whatsapp:/i.test(v.chave)) v = { ...v, chave: 'whatsapp:oculto' };
+  if (typeof v.author === 'string' && !('platform' in v) && pareceTelefoneSrv(v.author)) v = { ...v, author: apelidoDeTelefone(v.author) };
+  let out = null;
+  for (const k of Object.keys(v)) {
+    const n = semTelefonesParaViewer(v[k], prof + 1);
+    if (n !== v[k]) { if (!out) out = { ...v }; out[k] = n; }
+  }
+  return out || v;
+}
+function temViewerConectado() {
+  for (const c of wss.clients) if (c.role === 'viewer' && c.readyState === 1) return true;
+  return false;
+}
+// Resposta direta a UMA conexão, com o mesmo filtro
+function enviarAo(ws, payload) {
+  ws.send(JSON.stringify(ws.role === 'viewer' ? semTelefonesParaViewer(payload) : payload));
+}
+
 function broadcast(payload) {
   const message = JSON.stringify(payload);
+  // 📱 v0.179: só clona (e só serializa de novo) quando há viewer conectado E o
+  // quadro carrega telefone — nas lives sem WhatsApp custa uma passada rasa
+  let paraViewer = message;
+  if (temViewerConectado()) {
+    const limpo = semTelefonesParaViewer(payload);
+    if (limpo !== payload) paraViewer = JSON.stringify(limpo);
+  }
   for (const client of wss.clients) {
-    if (client.readyState === 1) client.send(message);
+    if (client.readyState === 1) client.send(client.role === 'viewer' ? paraViewer : message);
   }
 }
 
@@ -5164,7 +5358,7 @@ function limparDados(escopo) {
     state.readIds = new Map();
     state.saved = [];
     persistRead();
-    persistSaved();
+    persistSavedAgora(); // 🔒 v0.179: apagar grava já (o programa pode reiniciar em seguida)
     broadcast({ type: 'saved', saved: state.saved });
     broadcastReadSync();
     feito.push('marcas');
@@ -5185,6 +5379,7 @@ function limparDados(escopo) {
     obsConfig.host = '127.0.0.1';
     obsConfig.port = 4455;
     obsConfig.password = '';
+    obsConfig.passwordCifrada = null; // 🔑 v0.179
     apagarArquivos(['obs.json']);
     desligarObs(null);
     broadcastObs();
@@ -5196,6 +5391,7 @@ function limparDados(escopo) {
     broadcastVmix();
     // 🌤️ v0.167: as chaves das fontes de clima também
     for (const k of Object.keys(climaChaves)) delete climaChaves[k];
+    for (const k of Object.keys(climaChavesCifradas)) delete climaChavesCifradas[k]; // 🔑 v0.179
     apagarArquivos(['clima.json']);
     broadcastClimaChaves();
     feito.push('conexoes');
@@ -5281,8 +5477,15 @@ const BACKUP_FREQ_RE = /^(manual|temporeal|([1-9]|[1-5][0-9]|60)s|([1-9]|[1-5][0
 // nem no que está gravado) saem antes da fusão. Mapas de chave livre (peças,
 // ritmo por coluna, redes do chat fixo, itens do backup, cores do mini Mesa e
 // os próprios widgets) são pulados: neles a chave é o nome de algo.
-const SECOES_LIVRES = new Set(['pecas', 'layoutV', 'perfilAuto', 'layers', 'janelas']);
-const FILHOS_LIVRES = { panel: ['colDrip', 'columnsOrder', 'ordem'], chat: ['platforms', 'pecas'], backup: ['itens'], deck: ['cores'], widgets: ['pecas'], raffle: ['weights', 'memberLevels'], selos: ['ocultos'], clima: ['cidades', 'fontes', 'chaves'] };
+// 🔒 v0.179: «layers» saiu da lista livre (só tem «ordem», e a fusão a reconstrói)
+// e o sorteio não tem mais filhos livres — os pesos são podados às chaves
+// conhecidas em ajustarSorteio; os dois eram os últimos pontos em que uma
+// mensagem plantava chaves novas que acumulavam a cada envio
+const SECOES_LIVRES = new Set(['pecas', 'layoutV', 'perfilAuto', 'janelas']);
+const FILHOS_LIVRES = { panel: ['colDrip', 'columnsOrder', 'ordem'], chat: ['platforms', 'pecas'], backup: ['itens'], deck: ['cores'], widgets: ['pecas'], selos: ['ocultos'], clima: ['cidades', 'fontes', 'chaves'] };
+// 🔒 v0.179: rede de segurança — uma configuração que ficaria maior que isto
+// não entra (o envio é recusado e o cliente recebe a configuração vigente)
+const SETTINGS_MAX_BYTES = 2 * 1024 * 1024;
 function podarSecoesDesconhecidas(incoming) {
   const hasOwn = (o, k) => !!o && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
   const podar = (obj, molde, atual, livres) => {
@@ -5613,7 +5816,13 @@ if (backupTimer.unref) backupTimer.unref();
 // Varre os logs em disco (todos os dias guardados), nao so o que esta na
 // memoria do painel — mesmo com centenas de paginas o comentario aparece.
 const SEARCH_MAX_RESULTS = 300;
-const SEARCH_MAX_BYTES = 40 * 1024 * 1024; // orcamento de leitura por busca
+const SEARCH_MAX_BYTES = 40 * 1024 * 1024; // orcamento de leitura por busca (computador local)
+// 🔒 v0.179: pela rede o orçamento é bem menor — em bytes lidos E em tempo de
+// processamento acumulado por busca; estourando, a resposta vai com cortado:true
+const SEARCH_MAX_BYTES_REDE = 8 * 1024 * 1024;
+const SEARCH_CPU_MS_REDE = 2000;
+const SEARCH_CPU_MS_LOCAL = 20000;
+const SEARCH_PEDACO = 256 * 1024; // lido por vez; entre pedaços a linha principal respira
 
 function normSearch(value) {
   return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -5624,63 +5833,145 @@ function messageSearchText(message) {
   return normSearch((message.author || '') + ' ' + text);
 }
 
-function searchLogs(query) {
+// 🔒 v0.179: a varredura era SÍNCRONA (até 40 MB lidos e analisados de uma vez
+// na linha principal) — um espectador da rede, com a 🔎 de fábrica e as 24
+// conexões por aparelho, travava o programa inteiro no meio da live. Agora o
+// arquivo é lido em pedaços com fs.promises e a linha principal respira
+// (setImmediate) entre um pedaço e outro; há orçamento de bytes e de tempo de
+// processamento (menor pela rede) e a busca pode ser cancelada (ctrl.cancelado)
+// quando a conexão manda outra ou cai.
+async function searchLogs(query, opts = {}) {
   const q = normSearch(String(query || '').trim());
-  if (!q) return { results: [], truncated: false };
+  const maxBytes = opts.maxBytes || SEARCH_MAX_BYTES;
+  const cpuMs = opts.cpuMs || SEARCH_CPU_MS_LOCAL;
+  const ctrl = opts.ctrl || { cancelado: false };
+  const vazio = { results: [], truncated: false, cortado: false };
+  if (!q) return vazio;
   let files = [];
   try {
-    files = fs.readdirSync(LOGS_DIR)
+    files = (await fs.promises.readdir(LOGS_DIR))
       .filter((f) => /^chat-\d{4}-\d{2}-\d{2}\.jsonl$/.test(f))
       .sort().reverse(); // dias mais novos primeiro
-  } catch { return { results: [], truncated: false }; }
+  } catch { return vazio; }
 
   const results = []; // mais novos primeiro
   const seen = new Set();
-  let bytesLeft = SEARCH_MAX_BYTES;
+  let bytesLeft = maxBytes;
   let truncated = false;
+  let cortado = false; // estourou o tempo de processamento
+  let gasto = 0; // ms de processamento acumulados nesta busca
+  const respirar = () => new Promise((r) => setImmediate(r));
+
+  const olharLinha = (line, dayMatches) => {
+    if (!line) return;
+    try {
+      const entry = JSON.parse(line);
+      // (v0.177: comentários de TESTE não voltam pela busca — o 🧹 os tirou de tudo)
+      if (entry.t === 'chat' && entry.m && entry.m.id && !seen.has(entry.m.id)
+          && !ehMensagemDeTeste(entry.m) && messageSearchText(entry.m).includes(q)) {
+        seen.add(entry.m.id);
+        dayMatches.push(entry.m);
+      }
+    } catch {}
+  };
 
   for (const file of files) {
+    if (ctrl.cancelado || cortado) break;
     if (results.length >= SEARCH_MAX_RESULTS || bytesLeft <= 0) { truncated = true; break; }
-    let text;
+    const dayMatches = [];
+    let fh = null;
     try {
       const filePath = path.join(LOGS_DIR, file);
-      const stat = fs.statSync(filePath);
+      const stat = await fs.promises.stat(filePath);
+      let pos = 0;
+      let fim = stat.size;
+      let pularPrimeira = false;
       if (stat.size > bytesLeft) {
         // Le so o final (a parte mais recente) que cabe no orcamento
-        const fd = fs.openSync(filePath, 'r');
-        const buffer = Buffer.alloc(bytesLeft);
-        fs.readSync(fd, buffer, 0, bytesLeft, stat.size - bytesLeft);
-        fs.closeSync(fd);
-        text = buffer.toString('utf8');
-        text = text.slice(text.indexOf('\n') + 1);
+        pos = stat.size - bytesLeft;
+        pularPrimeira = true;
         truncated = true;
         bytesLeft = 0;
       } else {
-        text = fs.readFileSync(filePath, 'utf8');
         bytesLeft -= stat.size;
       }
-    } catch { continue; }
-
-    const dayMatches = [];
-    for (const line of text.split('\n')) {
-      if (!line) continue;
-      try {
-        const entry = JSON.parse(line);
-        // (v0.177: comentários de TESTE não voltam pela busca — o 🧹 os tirou de tudo)
-        if (entry.t === 'chat' && entry.m && entry.m.id && !seen.has(entry.m.id)
-            && !ehMensagemDeTeste(entry.m) && messageSearchText(entry.m).includes(q)) {
-          seen.add(entry.m.id);
-          dayMatches.push(entry.m);
+      fh = await fs.promises.open(filePath, 'r');
+      const buffer = Buffer.alloc(SEARCH_PEDACO);
+      const decoder = new StringDecoder('utf8');
+      let sobra = '';
+      while (pos < fim && !ctrl.cancelado && !cortado) {
+        const { bytesRead } = await fh.read(buffer, 0, Math.min(SEARCH_PEDACO, fim - pos), pos);
+        if (!bytesRead) break;
+        pos += bytesRead;
+        const t0 = Date.now();
+        const linhas = (sobra + decoder.write(buffer.subarray(0, bytesRead))).split('\n');
+        sobra = linhas.pop();
+        for (let i = 0; i < linhas.length; i++) {
+          if (pularPrimeira) { pularPrimeira = false; continue; } // linha partida no comeco
+          olharLinha(linhas[i], dayMatches);
         }
-      } catch {}
-    }
+        gasto += Date.now() - t0;
+        if (gasto > cpuMs) { cortado = true; truncated = true; break; }
+        await respirar();
+      }
+      if (!ctrl.cancelado && !cortado && !pularPrimeira) olharLinha(sobra + decoder.end(), dayMatches);
+    } catch { /* arquivo sumiu no meio: segue para o proximo */ }
+    if (fh) { try { await fh.close(); } catch {} }
     // Dentro do dia o log e cronologico; invertendo, os mais novos vem primeiro
     for (let i = dayMatches.length - 1; i >= 0; i--) {
       if (results.length >= SEARCH_MAX_RESULTS) { truncated = true; break; }
       results.push(dayMatches[i]);
     }
   }
-  return { results, truncated };
+  return { results, truncated, cortado };
+}
+
+// 🔒 v0.179: uma busca em andamento POR CONEXÃO (a próxima substitui a
+// pendente) e, pela rede, uma de cada vez no programa inteiro — 24 conexões não
+// viram 24 varreduras concorrentes. A do computador local não espera na fila.
+const buscaFilaRede = [];
+let buscaRedeRodando = false;
+function proximaBuscaRede() {
+  if (buscaRedeRodando) return;
+  const tarefa = buscaFilaRede.shift();
+  if (!tarefa) return;
+  buscaRedeRodando = true;
+  tarefa().finally(() => { buscaRedeRodando = false; proximaBuscaRede(); });
+}
+function pedirBusca(ws, query) {
+  const agora = Date.now();
+  const local = ws.role === 'local';
+  const respiro = local ? 300 : 2000;
+  // 🔎 v0.177: a consulta que chega dentro do respiro não é descartada (o
+  // painel ficava em «Procurando…» para sempre): vale a ÚLTIMA digitada
+  ws.buscaPendente = query;
+  // a varredura anterior desta conexão para já — o painel ignoraria a resposta
+  if (ws.buscaCorrente) { ws.buscaCorrente.cancelado = true; ws.buscaCorrente = null; }
+  if (ws.buscaTimer) return;
+  const rodar = () => {
+    ws.buscaTimer = null;
+    const q = ws.buscaPendente; ws.buscaPendente = null;
+    if (typeof q !== 'string' || ws.readyState !== 1) return;
+    ws.ultimaBusca = Date.now();
+    const ctrl = { cancelado: false };
+    ws.buscaCorrente = ctrl;
+    const executar = async () => {
+      if (ctrl.cancelado || ws.readyState !== 1) return;
+      const r = await searchLogs(q, {
+        maxBytes: local ? SEARCH_MAX_BYTES : SEARCH_MAX_BYTES_REDE,
+        cpuMs: local ? SEARCH_CPU_MS_LOCAL : SEARCH_CPU_MS_REDE,
+        ctrl,
+      });
+      if (ws.buscaCorrente === ctrl) ws.buscaCorrente = null;
+      if (ctrl.cancelado || ws.readyState !== 1) return;
+      try { enviarAo(ws, { type: 'searchResults', query: q, results: r.results, truncated: r.truncated, cortado: r.cortado }); } catch {} // 📱 v0.179: viewer sem telefones
+    };
+    if (local) executar().catch(() => {});
+    else { buscaFilaRede.push(() => executar().catch(() => {})); proximaBuscaRede(); }
+  };
+  const espera = ws.ultimaBusca ? respiro - (agora - ws.ultimaBusca) : 0;
+  if (espera > 0) ws.buscaTimer = setTimeout(rodar, Math.max(20, espera));
+  else rodar();
 }
 
 function restoreFromLog() {
@@ -7184,10 +7475,13 @@ function connect(platform, channel, options = {}) {
   const instance = new ConnectorFinal(String(channel), handlers, opcoesFinal);
   state.connectors[platform] = instance;
   // Memoria: lembra o canal para preencher e reconectar na proxima vez
+  const tokenCifradoAntes = state.connections[platform]?.tokenCifrado; // 🔑 v0.179
   state.connections[platform] = { channel: String(channel), active: true };
   // 📨 O token do bot do Telegram fica lembrado (data/, só nesta máquina)
   // para reconectar sem redigitar — como o canal das outras redes
   if ((platform === 'telegram' || platform === 'whatsapp' || platform === 'livepix' || platform === 'pixgg') && options.token) state.connections[platform].token = String(options.token).slice(0, 200);
+  // 🔑 v0.179: sem token novo, o cifrado ilegível segue guardado (não se perde)
+  else if (tokenCifradoAntes) state.connections[platform].tokenCifrado = tokenCifradoAntes;
   if (waModo) state.connections[platform].modo = waModo;
   persistConnections();
   state.status[platform] = { state: 'connecting', detail: '', channel: String(channel) };
@@ -7936,9 +8230,23 @@ function creditoSugerido(endereco) {
   const prefixo = CREDITO_PREFIXO[idiomaDoConsole()] || CREDITO_PREFIXO.pt;
   return (prefixo + ' ' + (perfil ? perfil + ' · ' + site : site)).slice(0, 200);
 }
-function broadcastMidiaDireta() {
-  broadcast({ type: 'midiaDireta', midiaDireta: state.midiaDireta });
+// 🔒 v0.179: o endereço REAL do arquivo achado pela sonda/extrator (urlFonte —
+// às vezes um link assinado do CDN) só vai para quem controla o painel; quem
+// só assiste recebe a retransmissão (/midia-direta/remota/<id>), que basta
+// para tocar. Mesmo filtro no init e em cada broadcast.
+function midiaDiretaParaCliente(ws) {
+  const md = state.midiaDireta;
+  if (!ws || ws.role !== 'viewer' || !md.item || md.item.urlFonte === undefined) return md;
+  const { urlFonte, ...item } = md.item;
+  return { ...md, item };
 }
+function broadcastMidiaDireta() {
+  for (const client of wss.clients) {
+    if (client.readyState !== 1) continue;
+    try { client.send(JSON.stringify({ type: 'midiaDireta', midiaDireta: midiaDiretaParaCliente(client) })); } catch {}
+  }
+}
+const MD_ERRO_REDE_INTERNA = 'Endereços da própria máquina ou da rede local não vão para a tela — use um endereço público (https://...).';
 const MIDIA_DIRETA_EXT = {
   imagem: ['jpg', 'jpeg', 'jfif', 'png', 'apng', 'gif', 'webp', 'avif', 'bmp', 'svg'],
   video: ['mp4', 'webm', 'mov', 'm4v', 'ogv', 'mkv', 'avi', 'mpeg', 'mpg', 'wmv', 'flv', '3gp'],
@@ -7961,9 +8269,15 @@ function classificarUrlMidiaDireta(bruta, dica) {
   // 🔒 v0.177: nada da própria máquina nem da rede interna vai para a tela — o
   // overlay roda no PC do streamer e um endereço como http://127.0.0.1:3000/config
   // ou http://192.168.0.1/ (o roteador) abriria dentro do quadro, na transmissão
-  const hn = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  if (hn === 'localhost' || hn.endsWith('.localhost') || !hn.includes('.') || (net.isIP(hn) && classifyAddress(hn) !== 'remote')) {
-    return { erro: 'Endereços da própria máquina ou da rede local não vão para a tela — use um endereço público (https://...).' };
+  // 🔒 v0.179: o ponto final («localhost.») não disfarça mais o nome; os IPs
+  // literais passam pela mesma régua da sonda (0.0.0.0/8, CGNAT, ::ffff:…); e
+  // os nomes que só existem dentro de casa (.local, .lan, .home.arpa, fritz.box)
+  // caem aqui mesmo, antes de qualquer consulta. O nome PÚBLICO que resolve
+  // para dentro (nip.io e cia) é barrado no despachante, depois de resolver.
+  const hn = u.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+  const soDeCasa = /\.(local|localdomain|lan|home|internal|intranet|home\.arpa)$/.test(hn) || hn === 'fritz.box';
+  if (hn === 'localhost' || hn.endsWith('.localhost') || !hn.includes('.') || soDeCasa || (net.isIP(hn) && !ehPublicoDaSonda(hn))) {
+    return { erro: MD_ERRO_REDE_INTERNA };
   }
   const host = u.hostname.toLowerCase().replace(/^(www|m|mobile)\./, '');
   let nomeArq = '';
@@ -8030,8 +8344,11 @@ function classificarUrlMidiaDireta(bruta, dica) {
 }
 // 🎬 v0.133: a sonda que descobre o ARQUIVO do vídeo de uma página (mora em
 // midiadireta.js para poder ser testada sozinha)
-const { sondarVideoDireto, buscarDaSonda, tipoPelaUrl, hostPublicoDaSonda, recusaSerQuadro, servirRemoto: servirMidiaRemota } = require('./midiadireta')
+const { sondarVideoDireto, buscarDaSonda, tipoPelaUrl, hostPublicoDaSonda, ehPublico: ehPublicoDaSonda, vereditoDoHost, recusaSerQuadro, servirRemoto: servirMidiaRemota } = require('./midiadireta')
   .criarSonda({ classifyAddress, tipoMidiaDiretaPorNome });
+// 🔒 v0.179: a URL que chegou por último é a que vale — a resolução de DNS é
+// assíncrona e uma resposta atrasada não pode passar por cima da mais nova
+let midiaDiretaUrlPedido = 0;
 // 📡 v0.165: o arquivo achado na internet é retransmitido por aqui
 // (/midia-direta/remota/<id>) — id do item → { url, cabecalhos, tipo }. Um
 // por vez, como o arquivo do computador: mídia nova, o anterior sai do ar.
@@ -9356,21 +9673,26 @@ function hostDoObs(valor) {
 function loadObsConfig() {
   try {
     const raw = JSON.parse(fs.readFileSync(OBS_FILE, 'utf8'));
+    // 🔑 v0.90: no disco a senha vai cifrada (texto puro antigo passa direto)
+    // 🔑 v0.179: a senha que não abriu com esta chave fica guardada cifrada
+    // (passwordCifrada) e volta intacta ao disco — antes virava '' e mexer na
+    // porta do OBS apagava a senha gravada
+    const senha = typeof raw.password === 'string' ? abrirSegredo(raw.password) : '';
     return {
       // 🌐 v0.53: o OBS pode estar em OUTRO computador da rede — o endereço
       // faz parte da configuração (antes era 127.0.0.1 na marra)
       host: hostDoObs(raw.host),
       port: Math.round(numeroEntre(raw.port, 1, 65535, 4455)),
-      // 🔑 v0.90: no disco a senha vai cifrada (texto puro antigo passa direto)
-      password: typeof raw.password === 'string' ? abrirSegredo(raw.password).slice(0, 200) : '',
+      password: senha === null ? '' : senha.slice(0, 200),
+      passwordCifrada: senha === null ? String(raw.password) : null,
     };
-  } catch { return { host: '127.0.0.1', port: 4455, password: '' }; }
+  } catch { return { host: '127.0.0.1', port: 4455, password: '', passwordCifrada: null }; }
 }
 const obsConfig = loadObsConfig();
 function saveObsConfig() {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    gravarPrivado(OBS_FILE, JSON.stringify({ ...obsConfig, password: guardarSegredo(obsConfig.password) }, null, 2));
+    gravarPrivado(OBS_FILE, JSON.stringify({ ...obsConfig, password: obsConfig.passwordCifrada || guardarSegredo(obsConfig.password), passwordCifrada: undefined }, null, 2));
   } catch (err) { console.error('Não consegui salvar a configuração do OBS:', err.message); }
 }
 // 🔑 v0.90: quem chegou de versões antigas tem segredos em texto puro nos
@@ -9807,8 +10129,20 @@ function quemPediu(ws) {
   return {
     daRede: !!(ws && ws.role === 'viewer'),
     podeMidia: security.permissions.media === true,
+    // 🔒 v0.179: os coringas (atalho do OBS por nome; função/script/tecla do
+    // vMix) alcançam QUALQUER ação — inclusive as de plugin e as que gravam
+    // arquivo. Só o computador local ou quem entrou com a senha (full) dispara.
+    podeCoringa: !!(ws && (ws.role === 'local' || ws.role === 'full')),
   };
 }
+// 🔒 v0.179: o coringa é uma escotilha sem limite — o seletor 🎬 da rede
+// libera cenas, transições, mudo, ao vivo/gravação, mas não ele
+const AVISO_CORINGA_OBS = 'o atalho por nome do OBS só sai do painel deste computador ou de quem entrou com a senha';
+const AVISO_CORINGA_VMIX = 'as funções livres do vMix (função, script, tecla) só saem do painel deste computador ou de quem entrou com a senha';
+// Funções do vMix que gravam no disco ou carregam um caminho/URL pelo Value:
+// mesmo para quem pode usar o coringa, pela rede sem 🖼️ elas não passam
+const VMIX_FUNCOES_DISCO = new Set(['snapshot', 'snapshotinput', 'openpreset', 'savepreset', 'addinput', 'addinputsearch',
+  'listadd', 'listexport', 'browsernavigate', 'setimage', 'replayexportlastevent']);
 
 // O despachante: uma ação, um alvo já limpo. Devolve quando o OBS respondeu.
 async function obsExecutarAcao(acao, alvo, quem) {
@@ -10000,6 +10334,8 @@ async function obsAcaoInterna(acao, a, quem) {
       // ⌨️ v0.83: dispara um atalho do OBS pelo nome — o coringa que cobre
       // tudo o que ainda não tem botão próprio (inclusive coisas de plugin)
       if (!a.nome) return;
+      // 🔒 v0.179: atalho por nome alcança até ações de plugin — não é da rede
+      if (quem && !quem.podeCoringa) { obsAviso(false, AVISO_CORINGA_OBS); return; }
       if (!obsTem('TriggerHotkeyByName')) { obsAviso(false, 'esta versão do OBS não dispara atalhos por nome'); return; }
       await obsPedir('TriggerHotkeyByName', { hotkeyName: a.nome });
       break;
@@ -10610,19 +10946,33 @@ async function vmixAcaoInterna(acao, a, quem) {
       r = await F(nome, nome === 'ReplayMarkInOut' ? { Value: a.segundos } : undefined);
       break;
     }
-    case 'preset': r = await F(a.modo === 'salvar' ? 'SavePreset' : 'LastPreset'); break;
+    case 'preset':
+      // 🔒 v0.179: «salvar» regrava o preset aberto no disco do vMix — não pela rede sem senha
+      if (a.modo === 'salvar' && quem && !quem.podeCoringa) { vmixAviso(false, AVISO_CORINGA_VMIX); return; }
+      r = await F(a.modo === 'salvar' ? 'SavePreset' : 'LastPreset'); break;
     case 'script':
       if (!a.nome) return;
+      // 🔒 v0.179: script/tecla/função são coringas — só local ou com a senha
+      if (quem && !quem.podeCoringa) { vmixAviso(false, AVISO_CORINGA_VMIX); return; }
       r = await F(a.modo === 'parar' ? 'ScriptStop' : 'ScriptStart', { Value: a.nome });
       break;
     case 'tecla':
       if (!a.nome) return;
+      if (quem && !quem.podeCoringa) { vmixAviso(false, AVISO_CORINGA_VMIX); return; }
       r = await F('KeyPress', { Value: a.nome });
       break;
     case 'funcao': {
       // 🧰 O coringa: qualquer função do vMix pelo nome (só letras e números)
       const nome = String(a.nome || '').replace(/[^A-Za-z0-9]/g, '');
       if (!nome) return;
+      // 🔒 v0.179: o coringa driblava o portão do 🖼️ do 'captura' (Snapshot,
+      // SavePreset, OpenPreset \\UNC, AddInput Browser|url com caminho livre).
+      // Primeiro o papel; depois, o mesmo portão de rede das funções de disco
+      if (quem && !quem.podeCoringa) { vmixAviso(false, AVISO_CORINGA_VMIX); return; }
+      if (quem && quem.daRede && !quem.podeMidia && VMIX_FUNCOES_DISCO.has(nome.toLowerCase())) {
+        vmixAviso(false, 'a função ' + nome + ' grava arquivo ou carrega um endereço na máquina do vMix — está desligada para quem entra pela rede (libere 🖼️ em 🔗 URLs para o OBS)');
+        return;
+      }
       r = await F(nome, { Input: entrada, Value: a.texto || undefined, Duration: a.duracao > 0 ? a.duracao : undefined });
       break;
     }
@@ -10693,7 +11043,12 @@ wss.on('connection', (ws, req) => {
     });
   }
   broadcastClients();
-  ws.on('close', () => { broadcastClients(); kickNavegadorCaiu(ws); });
+  ws.on('close', () => {
+    // 🔒 v0.179: a busca agendada ou em andamento desta conexão morre com ela
+    if (ws.buscaTimer) { clearTimeout(ws.buscaTimer); ws.buscaTimer = null; }
+    if (ws.buscaCorrente) { ws.buscaCorrente.cancelado = true; ws.buscaCorrente = null; }
+    broadcastClients(); kickNavegadorCaiu(ws);
+  });
   // Sem este ouvinte, QUALQUER erro de protocolo do WebSocket (um quadro
   // grande demais, texto malformado, bytes estranhos) virava um erro sem dono
   // e fechava o programa inteiro. Agora a conexão problemática cai sozinha e
@@ -10702,7 +11057,8 @@ wss.on('connection', (ws, req) => {
     console.error('  ⚠️ Conexão com problema, encerrando só ela:', err && err.message);
     try { ws.terminate(); } catch { /* já caiu */ }
   });
-  ws.send(JSON.stringify({
+  // 📱 v0.179: enviarAo tira o telefone do WhatsApp (recent/saved…) para o viewer
+  enviarAo(ws, {
     type: 'init',
     security: { ...(ws.role === 'viewer' ? {} : securitySummary()), role: ws.role },
     // 📱 v0.163: o mini Mesa avisa na hora se este aparelho pode tocar as
@@ -10760,7 +11116,7 @@ wss.on('connection', (ws, req) => {
     // resgate do editor ("De fábrica") para desfazer qualquer bagunça
     trilhaTocando: trilhaTocandoPublica(), // 🎵 v0.169.2: com «agora» (quem chega atrasado entra no ponto certo, seja qual for o relógio dele)
     trilhaTela: state.trilhaTela, // 🖼️🎞️ v0.86
-    midiaDireta: state.midiaDireta, // 🎞️ v0.129
+    midiaDireta: midiaDiretaParaCliente(ws), // 🎞️ v0.129 (🔒 v0.179: sem urlFonte para quem só assiste)
     pastaTocando: pastaFila ? pastaFila.id : null,
     obs: obsResumo(),
     vmix: vmixResumo(), // 🎛️ v0.122
@@ -10782,7 +11138,7 @@ wss.on('connection', (ws, req) => {
     version: APP_VERSION,
     lanUrl: lanAddress() ? `http://${lanAddress()}:${PORT}` : null,
     apoie: listApoie(),
-  }));
+  });
 
   ws.on('message', (raw) => {
     // 🔒 v0.177: pela rede, um balde de fichas por conexão (rajada de 60, ~30
@@ -10916,11 +11272,27 @@ function tratarMensagem(ws, raw) {
   }
 
   switch (msg.type) {
-    case 'connect':
+    case 'connect': {
       // 🔒 v0.177: o nome do canal tem teto (ia inteiro para connections.json e
       // para o broadcast de status)
-      connect(String(msg.platform || ''), String(msg.channel || '').slice(0, 200), (msg.options && typeof msg.options === 'object') ? msg.options : {});
+      const plat = String(msg.platform || '');
+      let opcoes = (msg.options && typeof msg.options === 'object') ? msg.options : {};
+      if (ws.role !== 'local') {
+        // 🔒 v0.179: pela rede (mesmo com 🔌 ou com a senha), connect só escolhe
+        // canal/modo e reutiliza o segredo guardado — token/cookie vindos da rede
+        // sobrescreviam o token cifrado do bot do streamer (sequestro da conexão)
+        if (CONNECT_CREDENCIAIS.some((c) => opcoes[c] !== undefined)) {
+          opcoes = Object.fromEntries(Object.entries(opcoes).filter(([c]) => !CONNECT_CREDENCIAIS.includes(c)));
+          console.log(`  🔒 connect ${plat}: credencial vinda da rede ignorada (só o computador do OBS Social grava tokens)`);
+          try { ws.send(JSON.stringify({ type: 'somenteLocal', op: 'connect', mensagem: 'Tokens, chaves e cookies das redes só podem ser gravados no painel aberto no computador onde o OBS Social roda. Pela rede, a conexão usa o segredo que já está guardado lá.' })); } catch { /* já caiu */ }
+        }
+        // 🔒 v0.179: ligar uma rede dispara buscas de saída — pela rede, uma a cada 2 s por rede
+        if (!Object.prototype.hasOwnProperty.call(CONNECTORS, plat)) break; // rede desconhecida não entra na memória do respiro
+        if (!respiroRede(ws, 'connect:' + plat, 2000)) break;
+      }
+      connect(plat, String(msg.channel || '').slice(0, 200), opcoes);
       break;
+    }
     case 'disconnect': {
       // 🔒 v0.177: só redes de verdade — «__proto__» chegava a state.connections
       // e gravava active=false no protótipo de TODOS os objetos do processo
@@ -10937,7 +11309,7 @@ function tratarMensagem(ws, raw) {
       const lista = rede === '__all'
         ? state.recent
         : (state.recentByPlatform[rede] || []);
-      ws.send(JSON.stringify({ type: 'recarga', platform: rede, messages: lista }));
+      enviarAo(ws, { type: 'recarga', platform: rede, messages: lista }); // 📱 v0.179: sem telefone para o viewer
       break;
     }
     case 'kickNavegador': {
@@ -10975,6 +11347,8 @@ function tratarMensagem(ws, raw) {
       const c = state.connectors.livepix;
       const responder = (obj) => responderLocal(ws, { type: 'livepixControle', ...obj });
       if (!c || typeof c.controlar !== 'function') { responder({ ok: false, erro: 'A LivePix não está conectada.' }); break; }
+      // 🔒 v0.179: cada comando vira uma chamada à API da LivePix — pela rede, um por segundo
+      if (!respiroRede(ws, 'livepixControle', 1000)) { responder({ ok: false, erro: 'Espere um instante antes do próximo comando da LivePix.' }); break; }
       c.controlar({ autoPlay: typeof msg.autoPlay === 'boolean' ? msg.autoPlay : undefined, skip: msg.skip === true, replay: msg.replay === true })
         .then((controles) => {
           responder({ ok: true, controles });
@@ -10992,13 +11366,16 @@ function tratarMensagem(ws, raw) {
       const dia = String(msg.dia || '');
       if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) break;
       const lido = lerLogDoDia(dia);
-      try { ws.send(JSON.stringify(lido ? { type: 'logDia', ...lido } : { type: 'logDia', dia, erro: 'Não há log desse dia.' })); } catch { /* já caiu */ }
+      try { enviarAo(ws, lido ? { type: 'logDia', ...lido } : { type: 'logDia', dia, erro: 'Não há log desse dia.' }); } catch { /* já caiu */ }
       break;
     }
     case 'taxasBuscar': {
       // 💰 v0.170: busca as taxas nos serviços — YouTube: a página de ajuda
       // dos Supers («os criadores recebem 70%»); Pix: a regra do Banco
       // Central. A página preenche e grava; nada muda aqui sem ela.
+      // 🔒 v0.179: são duas páginas de até 4 MB baixadas por pedido — pela rede,
+      // uma busca a cada 10 s por conexão (a página avisa em vez de ficar no «⏳»)
+      if (!respiroRede(ws, 'taxasBuscar', 10000)) { try { ws.send(JSON.stringify({ type: 'taxas', erro: 'As taxas acabaram de ser buscadas — espere alguns segundos para buscar de novo.' })); } catch { /* já caiu */ } break; }
       (async () => {
         const responder = (obj) => responderLocal(ws, { type: 'taxas', ...obj });
         const resultado = {
@@ -11034,7 +11411,9 @@ function tratarMensagem(ws, raw) {
       // de novo com o canal informado ou com o lembrado da ultima vez
       const platform = String(msg.platform || '');
       const channel = String(msg.channel || '').trim().slice(0, 200) || state.connections[platform]?.channel;
+      // 🔒 v0.179: reiniciar = derrubar e buscar tudo de novo lá fora — pela rede, um a cada 2 s por rede
       if (Object.prototype.hasOwnProperty.call(CONNECTORS, platform) && channel) {
+        if (!respiroRede(ws, 'connect:' + platform, 2000)) break;
         console.log(`  🔄 Reiniciando a conexão ${platform} (${channel})...`);
         connect(platform, channel, state.connections[platform]?.token ? { token: state.connections[platform].token } : {});
       }
@@ -11136,6 +11515,8 @@ function tratarMensagem(ws, raw) {
       break;
     case 'reconnectAll':
       // Reinicia todas as redes que estavam ligadas
+      // 🔒 v0.179: N redes reconectando de uma vez — pela rede, uma vez a cada 10 s por conexão
+      if (!respiroRede(ws, 'reconnectAll', 10000)) break;
       for (const [platform, conn] of Object.entries(state.connections)) {
         if (conn?.active && conn.channel && CONNECTORS[platform]) {
           console.log(`  🔄 Reiniciando a conexão ${platform} (${conn.channel})...`);
@@ -11146,32 +11527,10 @@ function tratarMensagem(ws, raw) {
     case 'search': {
       // Busca global: responde so para quem pediu
       const query = String(msg.query || '');
-      // 🔒 v0.127.1: a busca lê até 40 MB de logs de uma vez — em rajada ela
-      // travava o programa inteiro. Uma por vez por conexão, com respiro.
-      {
-        const agora = Date.now();
-        const respiro = ws.role === 'local' ? 300 : 2000;
-        if (ws.ultimaBusca && agora - ws.ultimaBusca < respiro) {
-          // 🔎 v0.177: a consulta que chega dentro do respiro não é mais descartada
-          // (o painel ficava em «Procurando…» para sempre): vale a ÚLTIMA digitada,
-          // respondida assim que o respiro passa
-          ws.buscaPendente = query;
-          if (!ws.buscaTimer) {
-            ws.buscaTimer = setTimeout(() => {
-              ws.buscaTimer = null;
-              const q = ws.buscaPendente; ws.buscaPendente = null;
-              if (typeof q !== 'string' || ws.readyState !== 1) return;
-              ws.ultimaBusca = Date.now();
-              const r = searchLogs(q);
-              try { ws.send(JSON.stringify({ type: 'searchResults', query: q, results: r.results, truncated: r.truncated })); } catch {}
-            }, Math.max(20, respiro - (agora - ws.ultimaBusca)));
-          }
-          break;
-        }
-        ws.ultimaBusca = agora;
-      }
-      const { results, truncated } = searchLogs(query);
-      ws.send(JSON.stringify({ type: 'searchResults', query, results, truncated }));
+      // 🔒 v0.127.1: uma por vez por conexão, com respiro.
+      // 🔒 v0.179: varredura assíncrona em pedaços, orçamento menor pela rede e
+      // fila única para as buscas da rede — ver pedirBusca/searchLogs
+      pedirBusca(ws, query);
       break;
     }
     case 'feature': {
@@ -11383,6 +11742,7 @@ function tratarMensagem(ws, raw) {
         }
       }
       const navCookiesAntes = (state.settings.ytdlp || {}).cookiesNavegador || ''; // 🍪 v0.166
+      const settingsAntes = state.settings; // 🔒 v0.179: para desfazer se estourar o teto
       state.settings = mergeSettings({
         ...state.settings,
         ...incoming,
@@ -11478,6 +11838,15 @@ function tratarMensagem(ws, raw) {
         }),
         widgets,
       });
+      // 🔒 v0.179: rede de segurança — se, mesmo com a poda, a configuração
+      // ficaria maior que o teto, nada muda (nem disco, nem telas) e quem
+      // mandou recebe a configuração vigente de volta
+      if (JSON.stringify(state.settings).length > SETTINGS_MAX_BYTES) {
+        state.settings = settingsAntes;
+        console.error(`  ⚠️ Configuração recusada: ficaria maior que ${Math.round(SETTINGS_MAX_BYTES / 1024)} KB (${quemPediu(ws)}).`);
+        try { ws.send(JSON.stringify({ type: 'settings', settings: settingsParaCliente(ws) })); } catch { /* já caiu */ }
+        break;
+      }
       // 🍪 v0.166: trocou o navegador dos cookies? o que falhou pode passar agora
       if (((state.settings.ytdlp || {}).cookiesNavegador || '') !== navCookiesAntes) extratorYtDlp.esquecer();
       // 🏷️ Selos: tudo aqui é liga/desliga
@@ -11495,7 +11864,7 @@ function tratarMensagem(ws, raw) {
         const bruta = Array.isArray(state.settings.layers.ordem) ? state.settings.layers.ordem : [];
         const ordem = [...new Set(bruta.filter((c) => conhecidas.includes(c)))];
         for (const c of conhecidas) if (!ordem.includes(c)) ordem.push(c);
-        state.settings.layers.ordem = ordem;
+        state.settings.layers = { ordem }; // 🔒 v0.179: reconstruída — nenhuma chave estranha fica
       }
       // 🧩 Peças do destaque: números dentro do limite, ajuste conhecido e
       // nenhuma chave estranha (nem peça inventada, nem campo inventado)
@@ -11946,6 +12315,14 @@ function tratarMensagem(ws, raw) {
         const antes = new Map(state.trilhas.map((t) => [t.id, t]));
         const cruas = new Map((Array.isArray(msg.trilhas) ? msg.trilhas : []).filter((b) => b && typeof b === 'object').map((b) => [String(b.id || ''), b]));
         state.trilhas = sanitizeTrilhas(msg.trilhas);
+        // 🔒 v0.179: quem entra pela rede sem senha não planta teclas coringa (atalho do OBS
+        // por nome; função/script/tecla livres do vMix) para o streamer apertar depois:
+        // a tecla nova some e a que já existia fica como estava
+        if (ws.role === 'viewer') {
+          const CORINGAS_VMIX = new Set(['funcao', 'script', 'tecla']);
+          const coringa = (t) => !!t && (t.obsAcao === 'atalho' || CORINGAS_VMIX.has(t.vmixAcao));
+          state.trilhas = state.trilhas.map((t) => (coringa(t) ? (antes.get(t.id) || null) : t)).filter(Boolean);
+        }
         for (const t of state.trilhas) {
           const crua = cruas.get(t.id);
           const m = /^\/trilha-local\/([^/]+)$/.exec(String((crua && crua.url) || ''));
@@ -12058,22 +12435,59 @@ function tratarMensagem(ws, raw) {
     case 'midiaDiretaUrl': {
       const r = classificarUrlMidiaDireta(msg.url, msg.tipo);
       if (r.erro) { try { ws.send(JSON.stringify({ type: 'midiaDiretaErro', texto: r.erro })); } catch {} break; }
-      const md = state.midiaDireta;
-      midiaDiretaArquivos.clear(); // o arquivo local anterior (se havia) sai do ar
-      midiaDiretaRemotas.clear();
-      md.item = { id: newInstanceId('md'), ...r.item };
-      md.player = midiaDiretaPlayerInicial(md.player); // mídia nova = player zerado e pausado
-      // 🏷️ v0.136: o crédito nasce sugerido pelo endereço; o «mostrar» fica
-      md.credito = { texto: creditoSugerido(r.item.url), mostrar: md.credito.mostrar !== false };
-      if (msg.mostrar !== undefined) md.visible = msg.mostrar === true;
-      broadcastMidiaDireta();
-      // 🎬 v0.133: pergunta ao site o que aquele endereço é de verdade e, se
-      // for uma página, procura o ARQUIVO do vídeo nas metatags — achando,
-      // vira vídeo nosso, com todos os controles. O YouTube fica de fora: o
-      // quadro dele já obedece a tudo pela API oficial.
-      if (!(r.item.tipo === 'embed' && r.item.embed && r.item.embed.provedor === 'youtube')) {
-        conferirMidiaDaUrl(md.item.id, r.item.url, r.item.tipo, r.item.embed && r.item.embed.provedor);
+      // 🔒 v0.179: pela rede, uma URL a cada 3 s por conexão — cada pedido faz
+      // o servidor sondar o endereço (HEAD + GET de até 512 KB, e o extrator
+      // se o Labs estiver ligado); o que chega no meio do respiro é avisado
+      if (ws.role !== 'local') {
+        const agora = Date.now();
+        if (ws.ultimaMidiaUrl && agora - ws.ultimaMidiaUrl < 3000) {
+          try { ws.send(JSON.stringify({ type: 'midiaDiretaErro', texto: 'Calma: pela rede, uma URL a cada 3 segundos — espere um instante e mande de novo.' })); } catch {}
+          break;
+        }
+        ws.ultimaMidiaUrl = agora;
       }
+      const aplicar = () => {
+        const md = state.midiaDireta;
+        midiaDiretaArquivos.clear(); // o arquivo local anterior (se havia) sai do ar
+        midiaDiretaRemotas.clear();
+        md.item = { id: newInstanceId('md'), ...r.item };
+        md.player = midiaDiretaPlayerInicial(md.player); // mídia nova = player zerado e pausado
+        // 🏷️ v0.136: o crédito nasce sugerido pelo endereço; o «mostrar» fica
+        md.credito = { texto: creditoSugerido(r.item.url), mostrar: md.credito.mostrar !== false };
+        if (msg.mostrar !== undefined) md.visible = msg.mostrar === true;
+        broadcastMidiaDireta();
+        // 🎬 v0.133: pergunta ao site o que aquele endereço é de verdade e, se
+        // for uma página, procura o ARQUIVO do vídeo nas metatags — achando,
+        // vira vídeo nosso, com todos os controles. O YouTube fica de fora: o
+        // quadro dele já obedece a tudo pela API oficial.
+        if (!(r.item.tipo === 'embed' && r.item.embed && r.item.embed.provedor === 'youtube')) {
+          conferirMidiaDaUrl(md.item.id, r.item.url, r.item.tipo, r.item.embed && r.item.embed.provedor);
+        }
+      };
+      // 🔒 v0.179: a barreira da v0.177 só via IP literal — um NOME que resolve
+      // para dentro de casa (192-168-0-1.nip.io, o roteador por DNS) passava e
+      // a tela abria a rede interna na transmissão. Agora o host é resolvido e
+      // a mídia solta ou o quadro de site desconhecido ('outro') só vão para a
+      // tela se TODOS os endereços forem da internet. Os provedores conhecidos
+      // ficam de fora: o quadro deles tem endereço fixo, não o que a pessoa colou.
+      if (r.item.tipo === 'embed' && r.item.embed && r.item.embed.provedor !== 'outro') { aplicar(); break; }
+      const pedido = ++midiaDiretaUrlPedido;
+      let hostDaUrl = '';
+      try { hostDaUrl = new URL(r.item.url).hostname; } catch { /* já passou pela classificação */ }
+      vereditoDoHost(hostDaUrl).then((veredito) => {
+        if (pedido !== midiaDiretaUrlPedido) return; // outra URL chegou no meio
+        // nome que não resolve: pela rede não vai (não tem uso legítimo e é
+        // justamente o cliente que a barreira vigia); no computador do
+        // streamer passa — o navegador da tela, na mesma máquina, falha do
+        // mesmo jeito, e uma tela aberta em outro PC da rede pode resolver
+        if (veredito === 'interno' || (veredito === 'desconhecido' && ws.role !== 'local')) {
+          const texto = veredito === 'interno' ? MD_ERRO_REDE_INTERNA
+            : 'Esse endereço não foi encontrado na internet — confira a URL (pela rede, só endereços que o computador do OBS Social resolve vão para a tela).';
+          try { ws.send(JSON.stringify({ type: 'midiaDiretaErro', texto })); } catch {}
+          return;
+        }
+        aplicar();
+      }).catch(() => {});
       break;
     }
     case 'midiaDiretaArquivo': {
@@ -12215,7 +12629,9 @@ function tratarMensagem(ws, raw) {
       const novo = limparPixConfig({ ...pixConfig, ...msg.config });
       if (msg.config && typeof msg.config === 'object') {
         if (!String(msg.config.clientSecret || '').trim()) novo.clientSecret = pixConfig.clientSecret;
+        else pixConfig._clientSecretCifrado = null; // 🔑 v0.179: segredo novo digitado substitui o ilegível
         if (!String(msg.config.certSenha || '').trim()) novo.certSenha = pixConfig.certSenha;
+        else pixConfig._certSenhaCifrada = null;
       }
       Object.assign(pixConfig, novo);
       savePixConfig();
@@ -12370,7 +12786,7 @@ function tratarMensagem(ws, raw) {
     case 'obsConfig':
       if (typeof msg.host === 'string') obsConfig.host = hostDoObs(msg.host);
       if (msg.port !== undefined) obsConfig.port = Math.round(numeroEntre(msg.port, 1, 65535, 4455));
-      if (typeof msg.password === 'string') obsConfig.password = msg.password.slice(0, 200);
+      if (typeof msg.password === 'string') { obsConfig.password = msg.password.slice(0, 200); obsConfig.passwordCifrada = null; } // 🔑 v0.179: senha nova substitui a ilegível
       saveObsConfig();
       desligarObs(null);
       if (state.settings.labs?.obs === true) conectarObs();
@@ -12531,11 +12947,9 @@ function tratarMensagem(ws, raw) {
       // 🔒 v0.177: pela rede, um respiro entre salvamentos; e a fila inteira tem
       // um teto de bytes (500 × 64 KB regravados e retransmitidos a cada 'save'
       // eram gigabytes de tráfego a partir do seletor 🖥️)
-      if (ws.role !== 'local') {
-        const agora = Date.now();
-        if (ws.ultimoSave && agora - ws.ultimoSave < 300) break;
-        ws.ultimoSave = agora;
-      }
+      // 🔒 v0.179: o respiro passou a valer por aparelho (IP), e a gravação e a
+      // retransmissão vindas da rede são agrupadas — ver saveRespiraPorIp/broadcastSaved
+      if (saveRespiraPorIp(ws)) break;
       if (msg.message && typeof msg.message === 'object' && msg.message.id && JSON.stringify(msg.message).length <= 64 * 1024
           && !state.saved.some((m) => m.id === msg.message.id)) {
         state.saved.push(msg.message);
@@ -12546,14 +12960,20 @@ function tratarMensagem(ws, raw) {
           if (bytes > SAVED_MAX_BYTES && i > 0) { state.saved.splice(0, i); break; }
         }
         persistSaved();
-        broadcast({ type: 'saved', saved: state.saved });
+        broadcastSaved(ws.role === 'local');
       }
       break;
-    case 'unsave':
+    case 'unsave': {
+      // 🔒 v0.179: mesmo respiro por aparelho do 'save' (tirar também regrava e
+      // retransmite a fila inteira)
+      if (saveRespiraPorIp(ws)) break;
+      const antes = state.saved.length;
       state.saved = state.saved.filter((m) => m.id !== msg.id);
+      if (state.saved.length === antes && ws.role !== 'local') break; // nada mudou: nada a regravar
       persistSaved();
-      broadcast({ type: 'saved', saved: state.saved });
+      broadcastSaved(ws.role === 'local');
       break;
+    }
     case 'test': {
       // atrasMs (opcional, só para testes): simula uma mensagem antiga —
       // como as recuperadas do histórico — para validar a ordenação
@@ -12878,8 +13298,8 @@ function tratarMensagem(ws, raw) {
       break;
     case 'climaProcurar': {
       // geocodificação (Open-Meteo, sem chave): responde só para quem pediu;
-      // uma busca por segundo por cliente
-      if (ws.climaProcurouEm && Date.now() - ws.climaProcurouEm < 1000) break;
+      // uma busca por segundo por cliente — 🔒 v0.179: pela rede, uma a cada 3 s
+      if (ws.climaProcurouEm && Date.now() - ws.climaProcurouEm < (ws.role === 'local' ? 1000 : 3000)) break;
       ws.climaProcurouEm = Date.now();
       const nome = String(msg.nome || '').trim().slice(0, 80);
       const pais = /^[A-Za-z]{2}$/.test(String(msg.pais || '')) ? String(msg.pais).toUpperCase() : (msg.pais === '' ? '' : 'BR');
@@ -12896,9 +13316,10 @@ function tratarMensagem(ws, raw) {
         if (!CLIMA_FONTES[fonte] || !CLIMA_FONTES[fonte].chave) continue;
         const valor = String(bruto || '').trim().slice(0, 400);
         if (!valor) continue;
-        if (valor === 'APAGAR') { if (climaChaves[fonte]) { delete climaChaves[fonte]; mudou = true; } continue; }
+        if (valor === 'APAGAR') { if (climaChaves[fonte] || climaChavesCifradas[fonte]) { delete climaChaves[fonte]; delete climaChavesCifradas[fonte]; mudou = true; } continue; }
         if (/[\r\n]/.test(valor)) continue;
         climaChaves[fonte] = valor;
+        delete climaChavesCifradas[fonte]; // 🔑 v0.179: chave nova digitada substitui a ilegível
         mudou = true;
       }
       if (mudou) {
@@ -13149,6 +13570,10 @@ function loadControleConfig() {
     if (typeof token === 'string' && /^[a-f0-9]{40}$/.test(token)) {
       return { token, criadoEm: Number(raw.criadoEm) || Date.now() };
     }
+    // 🔑 v0.179: não abriu com esta chave — um token ilegível não serve para
+    // conferir nada, então um novo nasce quando o painel pedir (e o streamer
+    // vê o token novo na página do controle); aqui só fica dito o porquê
+    if (token === null) console.error('    O token do controle externo (Stream Deck etc.) não abriu — um novo será gerado; atualize os atalhos que usavam o antigo.');
   } catch {}
   return null;
 }
@@ -13436,7 +13861,9 @@ function controleResolver(caminho, p) {
     if (verbo === 'reiniciar') return { acao, msg: { type: 'reconnect', platform: rede, channel: canal } };
     if (verbo === 'ligar') {
       if (!canal && rede !== 'telegram' && rede !== 'whatsapp') return { erro: 'Informe o canal (?canal=...) — essa rede nunca foi conectada.' };
-      return { acao, msg: { type: 'connect', platform: rede, channel: canal, options: lembrada.token ? { token: lembrada.token } : {} } };
+      // 🔒 v0.179: o token guardado fica no servidor — connect() reaproveita o que já está
+      // cifrado; mandar a credencial de volta pela rede (papel full) seria descartado com aviso
+      return { acao, msg: { type: 'connect', platform: rede, channel: canal, options: {} } };
     }
     return { erro: 'Use ligar, desligar ou reiniciar.', status: 404 };
   }
@@ -13507,11 +13934,14 @@ function controleEstado() {
 
 // Executa UMA operação pelo despachante do painel, com um ws de mentira que
 // só recolhe o que o servidor responderia (as respostas voltam no JSON)
+// 🔒 v0.179: os respiros do controle externo valem por IP (o wsFalso nasce a cada pedido)
+const controleRespiros = new Map();
 function controleExecutar(msg, ip) {
   const respostas = [];
+  if (!controleRespiros.has(ip)) { if (controleRespiros.size >= 200) controleRespiros.delete(controleRespiros.keys().next().value); controleRespiros.set(ip, new Map()); }
   const wsFalso = {
     role: 'full', clientIp: ip, addressClass: classifyAddress(ip), deviceInfo: 'Controle externo', deviceName: null,
-    readyState: 1, controleExterno: true,
+    readyState: 1, controleExterno: true, respiros: controleRespiros.get(ip),
     send: (s) => { try { const d = JSON.parse(s); if (d && d.type && respostas.length < 20) respostas.push(d); } catch {} },
   };
   tratarMensagem(wsFalso, JSON.stringify(msg));
