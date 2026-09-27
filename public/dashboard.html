@@ -181,6 +181,9 @@
   #relogioModos .modo-btn.na-tela::after { content: '👁'; margin-left: 5px; font-size: 10px; }
   #relogioModos .modo-btn.rodando::after { content: '●'; margin-left: 5px; color: var(--green, #29cc7a); }
   #relogioModos .modo-btn.na-tela.rodando::after { content: '● 👁'; margin-left: 5px; font-size: 10px; color: var(--green, #29cc7a); }
+  /* 🌐 v0.179: a fileira dos modos quebra linha quando a tradução não cabe
+     nos 340px do cartão (es/fr/tr) — antes o 3.º botão saía cortado */
+  #relogioModos { flex-wrap: wrap; }
   /* 🏆 Winstreak: números editáveis, passo do botão segurado e brilho do marco */
   .ws-nums-edit { display: inline-flex; align-items: center; gap: 2px; }
   .ws-nums-edit input {
@@ -231,6 +234,8 @@
   }
   button.icon-btn.danger { background: #b62324; border-color: #b62324; color: #fff; }
   button.icon-btn.active { background: var(--green); border-color: var(--green); color: #fff; }
+  /* 👀 v0.179: modo espectador — o que o streamer não liberou fica apagado (só os que aplicarModoEspectador marcou) */
+  button.icon-btn[data-titulo-original] { opacity: 0.35; cursor: not-allowed; }
 
   /* Tooltip instantânea: uma só, flutuando por cima de tudo (nunca fica atrás) */
   #tipFloat {
@@ -1056,7 +1061,7 @@
     <button class="icon-btn danger" id="avClose" title="Fechar (some do painel e da tela do OBS)">✖</button>
     <div class="jan-opcoes" data-jan="telinha:avatar" style="display:none"></div>
     <div class="av-preview" id="avPreview"></div>
-    <div class="av-name" id="avName"></div>
+    <div class="av-name" id="avName" data-no-i18n></div>
     <label class="av-slider">➖ <input type="range" id="avSize" min="10" max="70" step="1" title="Ampliar ou diminuir o avatar"> ➕</label>
     <div class="hint" style="margin:0">Este avatar está aparecendo também na tela do OBS. Arraste a barra para ampliar ou diminuir (vale nos dois lugares).</div>
   </div>
@@ -1812,7 +1817,7 @@
     </label>
     <button id="feedFlushBtn" class="icon-btn" title="Atualizar agora: solta as mensagens que estão aguardando (elas entram suavemente)">🔃</button>
     <button id="feedJumpBtn" class="icon-btn" title="Ir direto para o agora: solta TODA a fila de uma vez, sem esperar o ritmo">⏭️<span class="mini-badge" id="feedPendingBadge" style="display:none">0</span></button>
-    <button id="clearAllBtn" class="icon-btn danger" title="Limpar a tela: tira destaque, sorteio, likômetro e winstreak. O QR code fica.">✖</button>
+    <button id="clearAllBtn" class="icon-btn danger" title="Limpar a tela: tira tudo de uma vez — destaque, sorteio, likômetro, winstreak, avisos, audiência, avatar ampliado, relógio/cronômetro/timer, clima e mídia. O QR code fica.">✖</button>
   </div>
 
   <div class="tabs">
@@ -2089,6 +2094,65 @@ const motorAudioOvPainel = criarMotorAudioOv((chave, momento) => {
   return (c && c.onde !== 'overlay') ? c : null;
 });
 
+// 👀 v0.179: modo espectador (rede sem senha, modo restrito). A faixa amarela
+// entra quando o papel é 'viewer' e SAI quando o papel muda numa reconexão
+// (o streamer ligou a liberdade total ou a senha foi digitada) — antes ela
+// ficava até a pessoa recarregar. E os botões cujo seletor está fechado ficam
+// apagados, com o motivo no title, em vez de cliques mudos.
+const BOTOES_POR_SELETOR = {
+  screen: ['testBtn', 'feedFlushBtn'],
+  tools: ['qrToolBtn', 'raffleToolBtn', 'avisoToolBtn', 'likemeterToolBtn'],
+};
+let papelDaConexao = null;
+let ultimaAcaoDaPessoa = 0; // último clique/tecla: separa o «negado» de um clique do que a página manda sozinha
+for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { ultimaAcaoDaPessoa = Date.now(); }, true);
+function aplicarModoEspectador(papel, podeRede) {
+  const espectador = papel === 'viewer';
+  if (!espectador) document.getElementById('viewerBanner')?.remove();
+  else if (!document.getElementById('viewerBanner')) {
+    const banner = document.createElement('div');
+    banner.id = 'viewerBanner';
+    banner.style.cssText = 'position:sticky;top:0;z-index:9999;background:#b68a24;color:#141414;text-align:center;padding:8px 14px;font-weight:600;font-size:14px';
+    banner.textContent = '👀 Modo espectador — você pode assistir ao painel e usar o que o streamer liberou nas configurações. O resto só funciona para quem tem a senha (ou no computador do streamer).';
+    document.body.prepend(banner);
+  }
+  const MOTIVO = 'Não liberado pelo streamer para quem entra pela rede';
+  for (const [seletor, ids] of Object.entries(BOTOES_POR_SELETOR)) {
+    const fechado = espectador && podeRede && podeRede[seletor] === false;
+    for (const id of ids) {
+      const btn = document.getElementById(id);
+      if (!btn) continue;
+      // O botão NÃO fica disabled: assim o clique/toque ainda chega ao
+      // avisarEspectador() (um disabled morre calado, sem retorno no celular).
+      // O dedinho copia o title para data-tip e apaga o title, então os dois
+      // são guardados/restaurados.
+      if (fechado && !btn.dataset.tituloOriginal) {
+        btn.dataset.tituloOriginal = btn.title || btn.dataset.tip || ' ';
+        btn.title = MOTIVO;
+        if (btn.dataset.tip) btn.dataset.tip = MOTIVO;
+      } else if (!fechado && btn.dataset.tituloOriginal) {
+        const orig = btn.dataset.tituloOriginal.trim();
+        btn.title = orig;
+        if (btn.dataset.tip) btn.dataset.tip = orig;
+        delete btn.dataset.tituloOriginal;
+      }
+    }
+  }
+}
+// 👀 v0.179: o aviso do modo espectador, sem empilhar (um a cada 3 s)
+function avisarEspectador() {
+  if (Date.now() - (window.__negadoEm || 0) < 3000) return;
+  window.__negadoEm = Date.now();
+  obsAviso('O streamer não liberou essa função para quem entra pela rede. Ela só funciona com a senha ou no computador do streamer (Configurações → 🔗 URLs para o OBS).', 'Modo espectador', '👀');
+}
+// Clique/toque num botão apagado: não abre popover nem manda operação — explica o motivo
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('[data-titulo-original]');
+  if (!b) return;
+  e.stopPropagation(); e.preventDefault();
+  avisarEspectador();
+}, true);
+
 const hub = connectHub((event) => {
   switch (event.type) {
     case 'init':
@@ -2099,7 +2163,8 @@ const hub = connectHub((event) => {
       settings = event.settings;
       defaultSettings = event.defaults || null;
       // 🟢 v0.169.3: o painel atende consultas ao Kick quando o Cloudflare barra o programa
-      KICK_NAVEGADOR.pronto(hub);
+      // 🟢 v0.179: só do computador local (pela rede o servidor descarta o sinal)
+      if (!event.security || !event.security.role || event.security.role === 'local') KICK_NAVEGADOR.pronto(hub);
       if (event.updateAvailable) showUpdateBanner(event.updateAvailable);
       updateFeedPending(event.feedPending || 0);
       colTotals = event.feedTotals || {};
@@ -2108,14 +2173,9 @@ const hub = connectHub((event) => {
       participantesPorRede = event.participantesPorRede || {};
       colPendingBy = event.feedPendingBy || {};
       // Modo espectador: o servidor só deixa assistir (rede sem senha, modo restrito)
-      // (função do aviso de versão nova definida logo abaixo do hub)
-      if (event.security?.role === 'viewer' && !document.getElementById('viewerBanner')) {
-        const banner = document.createElement('div');
-        banner.id = 'viewerBanner';
-        banner.style.cssText = 'position:sticky;top:0;z-index:9999;background:#b68a24;color:#141414;text-align:center;padding:8px 14px;font-weight:600;font-size:14px';
-        banner.textContent = '👀 Modo espectador — você pode assistir ao painel e usar o que o streamer liberou nas configurações. O resto só funciona para quem tem a senha (ou no computador do streamer).';
-        document.body.prepend(banner);
-      }
+      // 👀 v0.179: a faixa e os botões seguem o papel de CADA conexão (função acima do hub)
+      papelDaConexao = event.security?.role || null;
+      aplicarModoEspectador(papelDaConexao, event.podeRede);
       readIds.clear();
       for (const [id, at] of Object.entries(event.readIds || {})) readIds.set(id, at);
       // 🎙️ v0.67: rascunhos de transcrição já prontos (sobrevivem a reinício)
@@ -2363,6 +2423,16 @@ const hub = connectHub((event) => {
       // Aviso da busca automática diária: versão nova no GitHub (só no PC local)
       if (event.auto && event.hasUpdate) showUpdateBanner(event.latest);
       break;
+    case 'deckPode': // 👀 v0.179: o streamer mexeu nos seletores da rede com o painel do espectador aberto
+      if (event.podeRede) aplicarModoEspectador(papelDaConexao, event.podeRede);
+      break;
+    case 'negado': { // 🔒 v0.179: modo restrito — o streamer não liberou essa categoria para a rede
+      // só quando veio de um clique/tecla da pessoa (o que a página manda sozinha,
+      // como o fim de uma mídia, não vira janela) e sem empilhar avisos
+      if (Date.now() - ultimaAcaoDaPessoa > 2500) break;
+      avisarEspectador();
+      break;
+    }
     case 'settings':
       settings = event.settings;
       applyPanel();
@@ -4470,7 +4540,9 @@ function atualizarMidiaTelaCtrl(message) {
 // 🎛️ v0.71: player remoto da mídia na tela — o overlay nunca toca sozinho;
 // play/pause/posição/volume saem daqui
 let midiaPlayerState = { estado: 'pausado', posicao: 0, em: Date.now(), volume: 100 };
-function mpDuracao() { return Math.max(0, Number(featuredComMidia?.midia?.duracao) || 0); }
+// 🏁 v0.179: mídia que chegou sem duração (figurinha de vídeo, documento do
+// Telegram) ganha a que a tela mediu ao terminar — a régua aparece e o ▶ recomeça do zero
+function mpDuracao() { return Math.max(0, Number(featuredComMidia?.midia?.duracao) || Number(midiaPlayerState?.duracao) || 0); }
 function mpPosicao() {
   const p = midiaPlayerState || {};
   const base = Number(p.posicao) || 0;
@@ -4707,7 +4779,9 @@ for (const btn of document.querySelectorAll('.pop-toggle')) {
   });
 }
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.tool-wrap')) closePopovers();
+  // 🖥️ v0.179: clicar em OK/Cancelar num diálogo do programa (fica no <body>,
+  // fora do .tool-wrap) não é «clique fora» — o popover que o abriu continua
+  if (!e.target.closest('.tool-wrap, .obs-dialog')) closePopovers();
 });
 
 // ---------- Ferramentas: QR code (mini páginas: principal + adicionais) ----------
@@ -5466,6 +5540,7 @@ function rfWinnerCard(winner, place, delayMs, raffle) {
   card.appendChild(avatar);
   const name = document.createElement('div');
   name.className = 'w-name';
+  name.setAttribute('data-no-i18n', ''); // 🌐 v0.179: e nunca traduzido
   name.textContent = winner.author; // conteúdo de espectador: só texto, nunca HTML
   card.appendChild(name);
   const platformRow = document.createElement('div');
@@ -5480,6 +5555,7 @@ function rfWinnerCard(winner, place, delayMs, raffle) {
   if (resposta && settings?.raffle?.respostaPainel !== false) {
     const balao = document.createElement('div');
     balao.className = 'w-reply';
+    balao.setAttribute('data-no-i18n', ''); // 🌐 v0.179: e nunca traduzido
     balao.textContent = resposta.texto || '💬'; // conteúdo de espectador: só texto
     card.appendChild(balao);
   } else if (raffle?.expirados?.[place]) {
@@ -6135,6 +6211,7 @@ function renderAvatarExtras(lista) {
       card.style.top = (110 + (i % 6) * 40) + 'px';
       const nome = document.createElement('div');
       nome.className = 'nome';
+      nome.setAttribute('data-no-i18n', ''); // 🌐 v0.179: nome de espectador, nunca traduzido
       nome.textContent = az.author || '';
       const foto = document.createElement('div');
       if (avatarUrlOk(az.url)) { // 🔒 v0.127.1: só https ou foto local
@@ -6286,6 +6363,8 @@ avisoTexto.addEventListener('input', () => {
 avisoToggleBtn.onclick = () => {
   // Mostrar já manda o que está escrito (sem depender do tempo de digitação)
   const av = currentAviso();
+  // 📢 v0.179: sem texto não há o que mostrar — o foco vai para o campo (como no QR)
+  if (!av?.visible && !avisoTexto.value.trim()) { avisoTexto.focus(); return; }
   hub.send({ type: 'avisoSet', id: av?.id, texto: avisoTexto.value, visible: !av?.visible });
 };
 document.getElementById('avisoLimparBtn').onclick = async () => {
@@ -7188,7 +7267,7 @@ function fmtRelogio(d) {
     timeZone: fusoAtual(),
   };
   if (conf.mostrarSegundos !== false) opcoes.second = '2-digit';
-  return d.toLocaleTimeString('pt-BR', opcoes);
+  return d.toLocaleTimeString(idiomaDoPainel(), opcoes); // 🌐 v0.179: a hora também segue o idioma
 }
 // 🌐 A data por extenso do relógio acompanha o idioma da interface
 function idiomaDoPainel() {
@@ -7281,10 +7360,10 @@ function pintarRelogio() {
   const cronAtivo = relogioState.cronometro.rodando || tempoCron() > 0;
   if (timerAtivo) {
     horaEl.textContent = fmtTempo(tempoTimer(), false);
-    dataEl.textContent = 'Timer';
+    dataEl.textContent = OBS_I18N.t('Timer'); // 🌐 v0.179: rótulos traduzidos
   } else if (cronAtivo) {
     horaEl.textContent = fmtTempo(tempoCron(), false);
-    dataEl.textContent = 'Cronômetro';
+    dataEl.textContent = OBS_I18N.t('Cronômetro');
   } else {
     const agora = agoraNoFuso();
     horaEl.textContent = fmtRelogio(agora);
@@ -7573,7 +7652,7 @@ function renderClipboard() {
     vazio.className = 'hint';
     vazio.style.cssText = 'margin:0;text-align:center;padding:6px 0';
     vazio.textContent = clipFechado
-      ? OBS_I18N.t('🔒 A área de transferência está fechada para a rede. O streamer libera em Configurações → Segurança → o que a rede pode usar.')
+      ? OBS_I18N.t('🔒 A área de transferência está fechada para a rede. O streamer libera em ⚙️ Configurações → 🔗 URLs para o OBS → o que a rede pode usar.') // 🔗 v0.179: nome certo da página
       : OBS_I18N.t('Nenhuma entrada ainda.');
     lista.appendChild(vazio);
   }

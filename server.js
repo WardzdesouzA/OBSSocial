@@ -56,6 +56,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': 'Keep this window open while you are live.',
     'Para parar, feche esta janela ou aperte Ctrl+C.': 'To stop, close this window or press Ctrl+C.',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 New version available: v$1 (you are on v$2). Update in Settings → ℹ️ About.',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 Recovered $1 comments from today\'s log ($2).',
   },
   es: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ ¡OBS Social v$1 Beta está funcionando!',
@@ -67,6 +68,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': 'Deja esta ventana abierta mientras estés en vivo.',
     'Para parar, feche esta janela ou aperte Ctrl+C.': 'Para detener, cierra esta ventana o presiona Ctrl+C.',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 Nueva versión disponible: v$1 (estás en la v$2). Actualiza en Configuración → ℹ️ Acerca de.',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 Recuperé $1 comentarios del registro de hoy ($2).',
   },
   fr: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ OBS Social v$1 Beta est en marche !',
@@ -78,6 +80,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': 'Laissez cette fenêtre ouverte pendant votre live.',
     'Para parar, feche esta janela ou aperte Ctrl+C.': 'Pour arrêter, fermez cette fenêtre ou appuyez sur Ctrl+C.',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 Nouvelle version disponible : v$1 (vous êtes en v$2). Mettez à jour dans Paramètres → ℹ️ À propos.',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 $1 commentaires récupérés du journal du jour ($2).',
   },
   de: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ OBS Social v$1 Beta läuft!',
@@ -89,6 +92,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': 'Lassen Sie dieses Fenster während des Livestreams geöffnet.',
     'Para parar, feche esta janela ou aperte Ctrl+C.': 'Zum Beenden dieses Fenster schließen oder Strg+C drücken.',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 Neue Version verfügbar: v$1 (Sie haben v$2). Aktualisieren unter Einstellungen → ℹ️ Über.',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 $1 Kommentare aus dem heutigen Protokoll wiederhergestellt ($2).',
   },
   ru: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ OBS Social v$1 Beta запущен!',
@@ -100,6 +104,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': 'Держите это окно открытым во время эфира.',
     'Para parar, feche esta janela ou aperte Ctrl+C.': 'Чтобы остановить, закройте это окно или нажмите Ctrl+C.',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 Доступна новая версия: v$1 (у вас v$2). Обновите в Настройки → ℹ️ О программе.',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 Восстановлено $1 комментариев из сегодняшнего журнала ($2).',
   },
   tr: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ OBS Social v$1 Beta çalışıyor!',
@@ -111,6 +116,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': 'Yayın sırasında bu pencereyi açık tutun.',
     'Para parar, feche esta janela ou aperte Ctrl+C.': 'Durdurmak için bu pencereyi kapatın veya Ctrl+C tuşlarına basın.',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 Yeni sürüm mevcut: v$1 (siz v$2 sürümündesiniz). Ayarlar → ℹ️ Hakkında bölümünden güncelleyin.',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 Bugünün kaydından $1 yorum geri alındı ($2).',
   },
   ja: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ OBS Social v$1 Beta が起動しました！',
@@ -122,6 +128,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': '配信中はこのウィンドウを開いたままにしてください。',
     'Para parar, feche esta janela ou aperte Ctrl+C.': '停止するには、このウィンドウを閉じるか Ctrl+C を押してください。',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 新しいバージョンがあります: v$1（現在は v$2）。設定 → ℹ️ このアプリについて から更新してください。',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 本日のログから $1 件のコメントを復元しました（$2）。',
   },
   ko: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ OBS Social v$1 Beta 실행 중!',
@@ -133,6 +140,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': '방송 중에는 이 창을 열어 두세요.',
     'Para parar, feche esta janela ou aperte Ctrl+C.': '중지하려면 이 창을 닫거나 Ctrl+C를 누르세요.',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 새 버전이 있습니다: v$1 (현재 v$2). 설정 → ℹ️ 정보에서 업데이트하세요.',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 오늘 로그에서 댓글 $1개를 복구했습니다 ($2).',
   },
   zh: {
     '✅ OBS Social v$1 Beta está rodando!': '✅ OBS Social v$1 Beta 正在运行！',
@@ -144,6 +152,7 @@ const CONSOLE_TEXTOS = {
     'Deixe esta janela aberta enquanto estiver fazendo live.': '直播期间请保持此窗口打开。',
     'Para parar, feche esta janela ou aperte Ctrl+C.': '要停止，请关闭此窗口或按 Ctrl+C。',
     '🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.': '🎉 有新版本: v$1（当前为 v$2）。请在 设置 → ℹ️ 关于 中更新。',
+    '📜 Recuperei $1 comentários do log de hoje ($2).': '📜 已从今天的日志中恢复 $1 条评论（$2）。',
   },
 };
 function idiomaDoConsole() {
@@ -808,6 +817,7 @@ for (const grupo of [DEFAULT_SETTINGS.pecas,
 const ANIM_CHAT_ANTIGA = { slide: 'slide-up', 'slide-side': 'slide-left' };
 
 let migrarArteDosPerfis = false; // 🖼️ v0.102: os moldes passam pela mesma migração da arte
+let gravarMarcaAnimacao = false; // 🎬 v0.179: a marca animPadraoV81 acabou de nascer e precisa ir ao disco
 // 🔊 v0.77: os overlays que têm som e os quatro momentos. Ficam AQUI, antes
 // de `state` nascer, porque sanitizeAudiosOverlay roda já na carga do
 // settings.json (mergeSettings) — declarados mais abaixo, davam ReferenceError
@@ -892,8 +902,15 @@ function mergeSettings(base) {
   // 🎬 v0.81: padrão ÚNICO de entrada/saída em todos os overlays — o fade do
   // relógio. Quem ainda estava nos padrões antigos (destaque slide-up e
   // aviso slide-down) muda junto; escolha personalizada no editor fica como está.
-  if (src.animation === 'slide-up') src.animation = 'fade';
-  if (widgets.aviso && ((src.widgets || {}).aviso || {}).animation === 'slide-down') widgets.aviso.animation = 'fade';
+  // 🎬 v0.179: a passagem roda UMA vez (marca animPadraoV81, como a da arte) —
+  // rodava em toda gravação e engolia «Deslizar de baixo»/«Deslizar de cima»
+  // escolhidos depois no editor (voltavam sempre para «Aparecer suave»).
+  if (src.animPadraoV81 !== true) {
+    if (src.animation === 'slide-up') src.animation = 'fade';
+    if (widgets.aviso && ((src.widgets || {}).aviso || {}).animation === 'slide-down') widgets.aviso.animation = 'fade';
+    src.animPadraoV81 = true;
+    gravarMarcaAnimacao = true;
+  }
   // 🖼️ v0.102: a arte deixa de ser esticada na caixa do cartão. Quem estava
   // no padrão antigo (100% × 100% = "preenche o cartão") passa para o tamanho
   // real (automático) UMA vez; uma escolha feita de propósito depois disso
@@ -1676,12 +1693,14 @@ state.perfisOverlay = loadPerfisOverlay();
 // 🖼️ v0.102: a passagem da arte vai para o disco JÁ — a gravação normal só
 // acontece quando algo muda, e um reinício antes disso repetia a migração
 // (inofensiva, mas a marca `arteTamanhoReal` precisa ficar guardada)
-if (migrarArteDosPerfis) {
+// 🎬 v0.179: a marca `animPadraoV81` segue o mesmo caminho
+if (migrarArteDosPerfis || gravarMarcaAnimacao) {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(state.settings, null, 2));
   } catch { /* o debounce normal grava depois */ }
   migrarArteDosPerfis = false;
+  gravarMarcaAnimacao = false;
 }
 
 // 🧹 v0.95: as artes de fábrica saíram do programa a pedido do streamer — ele
@@ -2093,6 +2112,34 @@ function scheduleWidgetHide(kind, instanceId, hideFn) {
   const timer = setTimeout(() => { hideTimers.delete(key); hideFn(); }, secs * 1000);
   if (timer.unref) timer.unref();
   hideTimers.set(key, timer);
+}
+
+// 🎛️ v0.179: o player da mídia do destaque zerado e PAUSADO (o volume, a
+// velocidade e a distorção escolhidos ficam) — usado quando o destaque entra,
+// sai ou a tela é limpa, para o servidor e todas as telas contarem a mesma coisa
+function midiaPlayerZerado() {
+  const p = state.midiaPlayer || {};
+  return { estado: 'pausado', posicao: 0, em: Date.now(), volume: p.volume, velocidade: p.velocidade || 1, semDistorcao: p.semDistorcao !== false };
+}
+
+// ⏱️ v0.179: o tempo de tela do comentário em destaque é do SERVIDOR, como o
+// dos widgets — antes só a tela tirava o cartão (por conta própria), e o
+// painel continuava «no ar», um F5 na fonte do OBS ou uma 2ª tela traziam o
+// destaque expirado de volta e o player da mídia nunca zerava.
+let featuredHideTimer = null;
+function tirarDestaque() {
+  clearTimeout(featuredHideTimer); featuredHideTimer = null;
+  state.featured = null;
+  state.midiaPlayer = midiaPlayerZerado();
+  broadcast({ type: 'featured', featured: null });
+  broadcast({ type: 'midiaPlayer', player: state.midiaPlayer });
+}
+function agendarTempoDeTelaDestaque() {
+  clearTimeout(featuredHideTimer); featuredHideTimer = null;
+  const secs = Math.max(0, Math.min(3600, Number(state.settings.autoHideSeconds) || 0));
+  if (!secs || !state.featured) return;
+  featuredHideTimer = setTimeout(tirarDestaque, secs * 1000);
+  if (featuredHideTimer.unref) featuredHideTimer.unref();
 }
 
 function broadcastQrs() {
@@ -2968,6 +3015,10 @@ const server = http.createServer((req, res) => {
         return;
       }
       if (conferiu === true) {
+        // 🔐 v0.179: quem acertou a senha não está atacando — zera o contador
+        // do IP (antes, 8 entradas certas em 10 min travavam o próprio dono;
+        // atrás de túnel/proxy, todo mundo divide o mesmo IP)
+        authAttempts.delete(req.socket.remoteAddress);
         const token = createSession();
         res.writeHead(200, {
           'Content-Type': 'application/json',
@@ -3000,7 +3051,7 @@ const server = http.createServer((req, res) => {
   if (role === 'login') {
     // Senha definida e ainda não autenticado: só a tela de entrada.
     res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8', 'X-Frame-Options': 'SAMEORIGIN', 'Content-Security-Policy': "frame-ancestors 'self'" });
-    res.end(LOGIN_PAGE);
+    res.end(loginPage(idiomaDoPedido(req)));
     return;
   }
 
@@ -3882,7 +3933,7 @@ const OP_CATEGORY = {
   clipboard: 'clipboard', clipboardApagar: 'clipboard', clipboardLimpar: 'clipboard',
   search: 'search',
   feature: 'screen', unfeature: 'screen', clearOverlays: 'screen', feedFlush: 'screen', feedJump: 'screen',
-  midiaPlayer: 'screen', audioOverlayMomento: 'screen',
+  midiaPlayer: 'screen',
   avatarShow: 'screen', avatarHide: 'screen', avatarSize: 'screen',
   save: 'screen', unsave: 'screen', test: 'screen',
   connect: 'connections', disconnect: 'connections',
@@ -3911,14 +3962,14 @@ const OP_CATEGORY = {
   livepixControle: 'screen', // 💜 v0.174: represar/soltar, pular e repetir os alertas da LivePix
   // 🎵 A mesa de trilhas é uma ferramenta; 🎬 o OBS tem seletor próprio
   trilhasSet: 'tools', trilhaTocar: 'tools', trilhaParar: 'tools', pastaTocar: 'tools',
-  trilhaTela: 'tools', trilhaTelaFim: 'tools', // 🖼️🎞️ v0.86: teclas de mídia
+  trilhaTela: 'tools', // 🖼️🎞️ v0.86: teclas de mídia
   trilhaTelaAjuste: 'tools', // 🚀 v0.87: velocidade/distorção/nitidez
   deckInfo: 'tools', // 📱 v0.163: os endereços (e o QR) do mini Mesa
   // 🎞️ v0.129: mídia direta é tela (como o destaque e o player da mídia)
   midiaDiretaUrl: 'screen', midiaDiretaArquivo: 'screen', midiaDiretaPastas: 'screen',
   midiaDiretaToggle: 'screen', midiaDiretaFechar: 'screen', midiaDiretaTela: 'screen',
   midiaDiretaCredito: 'screen', // 🏷️ v0.136: o crédito de fonte
-  midiaDiretaPlayer: 'screen', midiaDiretaInfo: 'screen', midiaDiretaFim: 'screen',
+  midiaDiretaPlayer: 'screen', midiaDiretaInfo: 'screen',
   obsCena: 'obs', obsTransicao: 'obs', obsMudo: 'obs',
   obsAoVivo: 'obs', obsGravacao: 'obs', obsAtualizar: 'obs', obsAcao: 'obs',
   // 🎛️ v0.122: comandar o vMix é do MESMO seletor 🎬 (mesa de corte = mesa de corte)
@@ -3927,11 +3978,20 @@ const OP_CATEGORY = {
   obsMonitor: 'obs', vmixMonitor: 'obs',
 };
 
+// 📺 v0.179: avisos de RETORNO da tela — a tela do OBS conta que o vídeo da
+// tecla acabou, que a mídia direta acabou ou que um widget entrou/saiu. Não
+// comandam nada: só fecham/sincronizam o que JÁ está no ar (cada case confere
+// id, estado e chave). Valem de qualquer papel — antes contavam como 🖥️/🧰 e
+// a tela aberta noutro computador no modo restrito era ignorada: o vídeo
+// ficava preso na tela e os sons «no painel» dos overlays nunca tocavam.
+const OPS_RETORNO_TELA = new Set(['trilhaTelaFim', 'midiaDiretaFim', 'midiaPlayerFim', 'audioOverlayMomento']);
+
 // 🔊 v0.77: última vez que cada momento de áudio foi repassado (anti-eco)
 const audioOvUltimos = new Map();
 
 // O modo restrito só passa por aqui: operação sem categoria conhecida = negada.
 function viewerOpAllowed(type, perms) {
+  if (OPS_RETORNO_TELA.has(type)) return true;
   const category = OP_CATEGORY[type];
   return !!(category && perms[category]);
 }
@@ -3995,23 +4055,52 @@ function authAllowed(ip) {
   return entry.count <= 8;
 }
 
-const LOGIN_PAGE = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>OBS Social — Entrar</title>
+// 🌐 v0.179: a tela de entrada é montada no servidor, no idioma do pedido —
+// ela fica ANTES do portão (o /i18n.js também recebe 401 nesse estado), então
+// as frases moram aqui, sem o motor do navegador. Idioma fixo das
+// configurações; no "auto", o do navegador (Accept-Language), como o i18n.js.
+const LOGIN_TEXTOS = {
+  pt: { titulo: 'OBS Social — Entrar', aviso: 'Este painel está protegido por senha.', senha: 'Senha', entrar: 'Entrar', errada: 'Senha incorreta.', muitas: 'Muitas tentativas — espere alguns minutos.' },
+  en: { titulo: 'OBS Social — Sign in', aviso: 'This dashboard is password-protected.', senha: 'Password', entrar: 'Sign in', errada: 'Wrong password.', muitas: 'Too many attempts — wait a few minutes.' },
+  es: { titulo: 'OBS Social — Entrar', aviso: 'Este panel está protegido con contraseña.', senha: 'Contraseña', entrar: 'Entrar', errada: 'Contraseña incorrecta.', muitas: 'Demasiados intentos — espera unos minutos.' },
+  fr: { titulo: 'OBS Social — Connexion', aviso: 'Ce panneau est protégé par mot de passe.', senha: 'Mot de passe', entrar: 'Entrer', errada: 'Mot de passe incorrect.', muitas: 'Trop de tentatives — attendez quelques minutes.' },
+  de: { titulo: 'OBS Social — Anmelden', aviso: 'Dieses Panel ist passwortgeschützt.', senha: 'Passwort', entrar: 'Anmelden', errada: 'Falsches Passwort.', muitas: 'Zu viele Versuche — warte ein paar Minuten.' },
+  ru: { titulo: 'OBS Social — Вход', aviso: 'Эта панель защищена паролем.', senha: 'Пароль', entrar: 'Войти', errada: 'Неверный пароль.', muitas: 'Слишком много попыток — подождите несколько минут.' },
+  tr: { titulo: 'OBS Social — Giriş', aviso: 'Bu panel parola korumalı.', senha: 'Parola', entrar: 'Giriş', errada: 'Parola yanlış.', muitas: 'Çok fazla deneme — birkaç dakika bekleyin.' },
+  ja: { titulo: 'OBS Social — ログイン', aviso: 'このパネルはパスワードで保護されています。', senha: 'パスワード', entrar: 'ログイン', errada: 'パスワードが違います。', muitas: '試行回数が多すぎます — 数分お待ちください。' },
+  ko: { titulo: 'OBS Social — 로그인', aviso: '이 패널은 비밀번호로 보호됩니다.', senha: '비밀번호', entrar: '로그인', errada: '비밀번호가 틀렸습니다.', muitas: '시도가 너무 많습니다 — 몇 분 기다려 주세요.' },
+  zh: { titulo: 'OBS Social — 登录', aviso: '此面板受密码保护。', senha: '密码', entrar: '登录', errada: '密码错误。', muitas: '尝试次数过多 — 请等几分钟。' },
+};
+function idiomaDoPedido(req) {
+  const fixo = state?.settings?.idioma;
+  if (fixo && fixo !== 'auto' && CONSOLE_IDIOMAS.includes(fixo)) return fixo;
+  const primeiro = String(req.headers['accept-language'] || '').split(',')[0].trim().toLowerCase();
+  if (!primeiro || primeiro === '*' || primeiro.startsWith('pt')) return 'pt'; // «*» = qualquer idioma → o padrão do programa
+  const base = primeiro.slice(0, 2);
+  return CONSOLE_IDIOMAS.includes(base) ? base : 'en';
+}
+function loginPage(idioma) {
+  // Só textos constantes do próprio código entram no HTML — nada vem do pedido
+  const t = LOGIN_TEXTOS[idioma] || LOGIN_TEXTOS.pt;
+  const lang = { pt: 'pt-BR', zh: 'zh-CN' }[idioma] || idioma;
+  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><title>${t.titulo}</title>
 <style>body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1420;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
 .box{background:#1a2233;border:1px solid #2c3850;border-radius:16px;padding:28px;max-width:340px;text-align:center}
 input{width:100%;padding:10px;border-radius:10px;border:1px solid #2c3850;background:#0f1420;color:#fff;margin:12px 0;box-sizing:border-box}
 button{width:100%;padding:10px;border-radius:10px;border:none;background:#7c3aed;color:#fff;font-weight:700;cursor:pointer}
 .err{color:#ff5c5c;font-size:13px;min-height:18px}</style></head><body>
-<div class="box"><h2>🔐 OBS Social</h2><p>Este painel está protegido por senha.</p>
-<input type="password" id="pw" placeholder="Senha" autofocus><div class="err" id="err"></div>
-<button onclick="entrar()">Entrar</button></div>
+<div class="box"><h2>🔐 OBS Social</h2><p>${t.aviso}</p>
+<input type="password" id="pw" placeholder="${t.senha}" autofocus><div class="err" id="err"></div>
+<button onclick="entrar()">${t.entrar}</button></div>
 <script>
 async function entrar(){
   const res = await fetch('/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: document.getElementById('pw').value }) });
   if (res.ok) location.reload();
-  else document.getElementById('err').textContent = res.status === 429 ? 'Muitas tentativas — espere alguns minutos.' : 'Senha incorreta.';
+  else document.getElementById('err').textContent = res.status === 429 ? ${JSON.stringify(t.muitas)} : ${JSON.stringify(t.errada)};
 }
 document.getElementById('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); });
 </script></body></html>`;
+}
 
 // ---------------------------------------------------------------------------
 // Proteção contra ataques vindos de sites maliciosos (CSRF / DNS-rebinding).
@@ -4131,7 +4220,8 @@ function broadcastSecurity() {
     if (client.role !== 'viewer') client.send(message);
     // 📱 v0.163: quem só assiste não recebe o resumo, mas o mini Mesa precisa
     // saber na hora se os seletores 🧰/🎬 abriram ou fecharam para ele
-    else client.send(JSON.stringify({ type: 'deckPode', mesa: security.permissions.tools === true, obs: security.permissions.obs === true }));
+    // (👀 v0.179: e o painel do espectador recebe junto o mapa dos seletores)
+    else client.send(JSON.stringify({ type: 'deckPode', mesa: security.permissions.tools === true, obs: security.permissions.obs === true, podeRede: { ...security.permissions } }));
   }
 }
 
@@ -5643,7 +5733,8 @@ function restoreFromLog() {
       lista.sort(porHorario);
       state.recentByPlatform[rede] = lista.slice(-MAX_RECENT_REDE);
     }
-    console.log(`  📜 Recuperei ${total} comentários do log de hoje (${path.basename(logPath)}).`);
+    // 🌐 v0.179: frase de abertura — sai no idioma da janela preta, como o banner
+    console.log('  ' + tcons('📜 Recuperei $1 comentários do log de hoje ($2).', total, path.basename(logPath)));
   } catch { /* sem log de hoje: comeco limpo */ }
 }
 
@@ -5825,8 +5916,7 @@ function removerMensagens({ platform, ids, autor, tudo, teste }) {
   const idsFora = [...new Set(saíram)];
   // O comentário em destaque na tela também sai, se for um deles
   if (state.featured && (combina(state.featured) || idsFora.includes(String(state.featured.id)))) {
-    state.featured = null;
-    broadcast({ type: 'featured', featured: null });
+    tirarDestaque(); // ⏱️🎛️ v0.179: cancela o tempo de tela e zera o player junto
   }
   persistSaved();
   broadcast({ type: 'saved', saved: state.saved });
@@ -6034,8 +6124,7 @@ function trocarDeConta(platform, contaNova, contaAntiga) {
   if (!foram.size && !trocou) return 0;
   for (const m of foram.values()) descontarDosTotais(m);
   if (state.featured && combina(state.featured)) {
-    state.featured = null;
-    broadcast({ type: 'featured', featured: null });
+    tirarDestaque(); // ⏱️🎛️ v0.179: cancela o tempo de tela e zera o player junto
   }
   if (trocou) {
     // Os participantes do sorteio daquela rede eram da live anterior
@@ -6527,6 +6616,11 @@ let audiencePollTick = 0;
 
 async function pollAudience() {
   if (audiencePolling) return;
+  // 🧪 v0.179: com o exemplo de audiência no ar, o poll não mexe — a limpeza
+  // de «redes desconectadas» logo abaixo apagava o YouTube/Twitch/Kick de
+  // mentira em 10 s e deixava «👥 —» na tela com o botão ainda em «tirar».
+  // exemploOverlayFora devolve o estado real e o poll seguinte segue normal.
+  if (exemploAntes && exemploAntes.alvo === 'audience') return;
   audiencePolling = true;
   try {
     const tasks = [];
@@ -6585,6 +6679,8 @@ async function pollAudience() {
     if (state.connectors.bilibili?.roomId) watch('bilibili', fetchBilibiliViewers(state.connectors.bilibili.roomId));
     // Limpa plataformas que foram desconectadas.
     for (const platform of Object.keys(state.audience.platforms)) {
+      // 🧪 v0.179: contagem de teste (audienceTest) não é rede desconectada
+      if (state.audience.platforms[platform]?.teste) continue;
       if (!state.connectors[platform]) delete state.audience.platforms[platform];
     }
     await Promise.all(tasks);
@@ -9690,7 +9786,7 @@ async function obsAcaoInterna(acao, a, quem) {
   // liberado, e mesmo assim só da cena que está NO AR.
   if (acao === 'captura' && quem && quem.daRede) {
     if (!quem.podeMidia) {
-      obsAviso(false, 'o print está desligado para quem entra pela rede (libere 🖼️ em 🔒 Segurança)');
+      obsAviso(false, 'o print está desligado para quem entra pela rede (libere 🖼️ em 🔗 URLs para o OBS)'); // 🔗 v0.179: nome certo da página
       return;
     }
     a.fonte = '';
@@ -10397,7 +10493,7 @@ async function vmixAcaoInterna(acao, a, quem) {
     case 'captura':
       // O print fica NA MÁQUINA do vMix (na pasta de snapshots dele) — a API
       // não devolve a imagem; quem vem da rede no modo restrito não tira print
-      if (quem && quem.daRede && !quem.podeMidia) { vmixAviso(false, 'o print está desligado para quem entra pela rede (libere 🖼️ em 🔒 Segurança)'); return; }
+      if (quem && quem.daRede && !quem.podeMidia) { vmixAviso(false, 'o print está desligado para quem entra pela rede (libere 🖼️ em 🔗 URLs para o OBS)'); return; } // 🔗 v0.179: nome certo da página
       r = await F('Snapshot', a.texto ? { Value: a.texto } : undefined);
       if (r && r.ok) { vmixAviso(true, 'print salvo pelo vMix, na pasta de snapshots dele'); return; }
       break;
@@ -10554,6 +10650,9 @@ wss.on('connection', (ws, req) => {
     // 📱 v0.163: o mini Mesa avisa na hora se este aparelho pode tocar as
     // teclas (modo restrito da rede: seletores 🧰 e 🎬) — em vez de teclas mudas
     deckPode: { mesa: ws.role !== 'viewer' || security.permissions.tools === true, obs: podeObs(ws) },
+    // 👀 v0.179: o espectador recebe só os seletores por categoria (booleanos —
+    // nem senha nem modo), para o painel apagar os botões do que não foi liberado
+    ...(ws.role === 'viewer' ? { podeRede: { ...security.permissions } } : {}),
     ...(ws.role === 'local' ? {
       clients: clientsSummary(),
       backup: resumoBackup(),
@@ -10734,6 +10833,10 @@ function tratarMensagem(ws, raw) {
   // «Verificar se há versão nova» preso para sempre. Agora a página fica
   // sabendo o motivo.
   if (LOCAL_ONLY_OPS.has(msg.type) && ws.role !== 'local') {
+    // 🟢 v0.179: 'kickNavegador' é um sinal automático da página («estou pronto»
+    // a cada init / resposta de consulta), não uma ação da pessoa — pela rede
+    // só descarta, sem o diálogo «Só no computador» a cada carga
+    if (msg.type === 'kickNavegador') return;
     const mensagem = 'Essa operação só pode ser feita no computador onde o OBS Social roda (esta página veio pela rede). Abra o painel nele pelo endereço http://localhost:3000 que a janela preta mostra.';
     const resposta = (msg.type === 'updateCheck' || msg.type === 'updateApply')
       ? { type: 'update', error: mensagem }
@@ -10747,6 +10850,10 @@ function tratarMensagem(ws, raw) {
     // rede (o calendário vazio parecia «não há log»)
     if (msg.type === 'logsDias') { try { ws.send(JSON.stringify({ type: 'logsDias', dias: [], semPermissao: true })); } catch {} }
     else if (msg.type === 'logDia') { try { ws.send(JSON.stringify({ type: 'logDia', dia: String(msg.dia || ''), erro: 'O streamer não liberou os logs para quem entra pela rede.', semPermissao: true })); } catch {} }
+    // 👀 v0.179: as outras operações também respondem — antes o clique morria em
+    // silêncio e o painel do espectador parecia quebrado (mesmo padrão do v0.169.5
+    // para as operações só do computador local)
+    else { try { ws.send(JSON.stringify({ type: 'negado', op: String(msg.type).slice(0, 60), categoria: Object.prototype.hasOwnProperty.call(OP_CATEGORY, msg.type) ? OP_CATEGORY[msg.type] : null })); } catch { /* já caiu */ } }
     return;
   }
 
@@ -11031,17 +11138,15 @@ function tratarMensagem(ws, raw) {
         }
       }
       // 🎛️ mídia nova = player zerado e PAUSADO (o volume escolhido fica)
-      state.midiaPlayer = { estado: 'pausado', posicao: 0, em: Date.now(), volume: state.midiaPlayer.volume, velocidade: state.midiaPlayer.velocidade || 1, semDistorcao: state.midiaPlayer.semDistorcao !== false };
+      state.midiaPlayer = midiaPlayerZerado();
       broadcast({ type: 'featured', featured: state.featured, transcricaoDestaque: transcricaoDoDestaque() });
       broadcast({ type: 'midiaPlayer', player: state.midiaPlayer });
+      agendarTempoDeTelaDestaque(); // ⏱️ v0.179: quem tira depois do tempo de tela é o servidor
       if (cabe && msg.message?.id) markRead(msg.message.id);
       break;
     }
     case 'unfeature':
-      state.featured = null;
-      state.midiaPlayer = { estado: 'pausado', posicao: 0, em: Date.now(), volume: state.midiaPlayer.volume, velocidade: state.midiaPlayer.velocidade || 1, semDistorcao: state.midiaPlayer.semDistorcao !== false };
-      broadcast({ type: 'featured', featured: null });
-      broadcast({ type: 'midiaPlayer', player: state.midiaPlayer });
+      tirarDestaque();
       break;
     // 🎛️ v0.71: controle do player da mídia na tela, direto do painel.
     // O overlay é só um espelho: aplica o estado que chega daqui.
@@ -11079,6 +11184,23 @@ function tratarMensagem(ws, raw) {
         // 🎭 semDistorcao=true mantém a voz natural (preservesPitch)
         p.semDistorcao = msg.semDistorcao !== false;
       } else break;
+      broadcast({ type: 'midiaPlayer', player: p });
+      break;
+    }
+    case 'midiaPlayerFim': {
+      // 🏁 v0.179: a tela avisou que o vídeo/áudio do destaque acabou: fica
+      // pausado no fim, como a mídia direta faz. Antes só o painel percebia o
+      // fim, pelo relógio, e só com a duração conhecida — figurinha de vídeo
+      // e documentos do Telegram chegam sem ela e o ⏸ ficava «tocando» para
+      // sempre. A duração que a tela mediu vale quando a mídia veio sem ela.
+      const p = state.midiaPlayer;
+      if (p.estado !== 'tocando') break;
+      const d = Number(msg.duracao);
+      if (Number.isFinite(d) && d > 0 && d <= 24 * 3600) p.duracao = Math.round(d * 100) / 100;
+      p.posicao = Number(state.featured?.midia?.duracao) || p.duracao
+        || Math.max(0, (Number(p.posicao) || 0) + ((Date.now() - (Number(p.em) || Date.now())) / 1000) * (Number(p.velocidade) || 1));
+      p.estado = 'pausado';
+      p.em = Date.now();
       broadcast({ type: 'midiaPlayer', player: p });
       break;
     }
@@ -12540,6 +12662,9 @@ function tratarMensagem(ws, raw) {
       if (msg.label !== undefined) inst.label = String(msg.label || 'Aviso').slice(0, 30);
       // Escrever um aviso novo já o coloca na tela, se pedido
       if (typeof msg.visible === 'boolean') inst.visible = msg.visible;
+      // 📢 v0.179: sem texto não há o que mostrar — a tela já escondia o aviso
+      // vazio, mas o painel ficava em «Tirar da tela» e o /estado dizia «no ar»
+      if (!String(inst.texto || '').trim()) inst.visible = false;
       // ⏰ v0.80: «sumir sozinho» — data/hora do relógio e/ou tempo restante
       // do timer (campos em zero são o padrão e não fazem nada)
       if (msg.sumir !== undefined) inst.sumir = sanitizeSumir(msg.sumir);
@@ -12554,6 +12679,8 @@ function tratarMensagem(ws, raw) {
       const inst = findAviso(msg.id);
       if (!inst) break;
       inst.visible = typeof msg.visible === 'boolean' ? msg.visible : !inst.visible;
+      // 📢 v0.179: aviso vazio nunca fica «na tela» (painel e tela contam a mesma história)
+      if (!String(inst.texto || '').trim()) inst.visible = false;
       if (inst.visible && inst.texto) {
         scheduleWidgetHide('aviso', inst.id, () => { inst.visible = false; persistAvisos(); broadcastAvisos(); });
       }
@@ -12876,7 +13003,7 @@ function tratarMensagem(ws, raw) {
         for (const [platform, count] of Object.entries(msg.platforms)) {
           // 🔒 v0.177: só redes que existem — nomes inventados cresciam sem teto
           if (!Object.prototype.hasOwnProperty.call(CONNECTORS, platform)) continue;
-          state.audience.platforms[platform] = { count: Number(count) || 0, updatedAt: Date.now() };
+          state.audience.platforms[platform] = { count: Number(count) || 0, updatedAt: Date.now(), teste: true };
         }
         broadcast({ type: 'audience', audience: state.audience });
       }
@@ -12901,6 +13028,10 @@ function tratarMensagem(ws, raw) {
       exemploAntes = null; // 🧪 limpou a tela: não há mais o que devolver
       broadcast({ type: 'exemplo', alvo: null });
       state.featured = null;
+      clearTimeout(featuredHideTimer); featuredHideTimer = null; // ⏱️ v0.179
+      // 🎛️ v0.179: o destaque saiu: o player da mídia zera e pausa, como no
+      // 'unfeature' (antes ficava «tocando» no servidor e no init das telas novas)
+      state.midiaPlayer = midiaPlayerZerado();
       if (state.raffle) state.raffle.visible = false;
       pararRespostaTimer();
       setLikemeter(false);
@@ -12921,6 +13052,7 @@ function tratarMensagem(ws, raw) {
       // 🎞️ v0.129: a mídia direta sai da tela (o item fica carregado no painel)
       if (state.midiaDireta.visible) { state.midiaDireta.visible = false; state.midiaDireta.player = midiaDiretaPlayerInicial(state.midiaDireta.player); broadcastMidiaDireta(); }
       broadcast({ type: 'featured', featured: null });
+      broadcast({ type: 'midiaPlayer', player: state.midiaPlayer }); // 🎛️ v0.179
       broadcast({ type: 'avatarZoom', avatarZoom: state.avatarZoom });
       broadcast({ type: 'avatarZooms', lista: state.avatarZooms });
       broadcast({ type: 'raffle', raffle: state.raffle });

@@ -441,6 +441,9 @@
   input.sw:checked::after { left: 24px; background: var(--accent); }
   label:has(> input.sw) { display: flex; align-items: center; gap: 10px; cursor: pointer; }
   label:has(> input.sw) > span { flex: 1; }
+  /* 🔒 v0.179: seletor travado (página aberta pela rede) fica apagado, sem mão */
+  label:has(> input.sw:disabled), input.sw:disabled { opacity: .45; cursor: default; }
+  label:has(> input.sw:disabled) > input.sw { opacity: 1; }
   .net-perms { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 6px 16px; margin: 6px 0 4px; }
   /* Prévia do painel (arraste para reordenar) */
   .mini-panel { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
@@ -2899,7 +2902,7 @@
             <button id="obsSalvarBtn" class="icon-btn" title="Salvar e conectar">💾</button>
             <span id="obsConfigStatus" class="hint" style="margin:0">—</span>
           </div>
-          <div class="hint" style="margin-bottom:0">A senha fica guardada só neste computador (na pasta <code>data/</code>, cifrada com AES-256) e nunca é enviada às telas. Quem acessa o painel pela rede só comanda o OBS se você liberar o seletor 🎬 no modo restrito (aba 🔒 Segurança) — de fábrica, fica bloqueado.</div>
+          <div class="hint" style="margin-bottom:0">A senha fica guardada só neste computador (na pasta <code>data/</code>, cifrada com AES-256) e nunca é enviada às telas. Quem acessa o painel pela rede só comanda o OBS se você liberar o seletor 🎬 no modo restrito (em 🔗 URLs para o OBS) — de fábrica, fica bloqueado.</div>
           <!-- 🎛️ v0.53: o controle do OBS no painel é montado por blocos, e
                cada bloco tem o seu liga/desliga: quem só troca de cena não
                precisa de mixer, filtros e perfis ocupando a tela -->
@@ -2935,7 +2938,7 @@
             <button id="vmixSalvarBtn" class="icon-btn" title="Salvar e conectar">💾</button>
             <span id="vmixConfigStatus" class="hint" style="margin:0">—</span>
           </div>
-          <div class="hint" style="margin-bottom:0">Quem acessa o painel pela rede só comanda o vMix se você liberar o seletor 🎬 no modo restrito (aba 🔒 Segurança) — o mesmo seletor do OBS; de fábrica, fica bloqueado. O snapshot 📸 é salvo pelo próprio vMix, na pasta dele.</div>
+          <div class="hint" style="margin-bottom:0">Quem acessa o painel pela rede só comanda o vMix se você liberar o seletor 🎬 no modo restrito (em 🔗 URLs para o OBS) — o mesmo seletor do OBS; de fábrica, fica bloqueado. O snapshot 📸 é salvo pelo próprio vMix, na pasta dele.</div>
           <details id="vmixPainelBloco" style="margin-top:10px">
             <summary style="cursor:pointer;font-weight:700">🎛️ O que aparece no controle do vMix dentro do painel</summary>
             <div class="hint" style="margin:6px 0">Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.</div>
@@ -3465,7 +3468,8 @@ const hub = connectHub((event) => {
       }
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
       // 🟢 v0.169.3: esta página atende consultas ao Kick quando o Cloudflare barra o programa
-      KICK_NAVEGADOR.pronto(hub);
+      // 🟢 v0.179: só do computador local (pela rede o servidor descarta o sinal)
+      if (!event.security || !event.security.role || event.security.role === 'local') KICK_NAVEGADOR.pronto(hub);
       hub.send({ type: 'logsDias' }); // 📅 v0.171: o calendário dos dias com log
       // 🔒 v0.169.5: a atualização só se verifica/instala no computador do
       // OBS Social — quem abriu pela rede fica sabendo antes de clicar
@@ -3476,6 +3480,20 @@ const hub = connectHub((event) => {
         const auto = document.getElementById('updAutoChk');
         if (auto && auto.closest('label')) auto.closest('label').style.display = 'none';
         document.getElementById('updStatus').textContent = 'ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+        // 🔒 v0.179: o card de segurança em 🔗 URLs também é só do computador local
+        // (LOCAL_ONLY_OPS): pela rede os seletores e a senha ficam travados em vez
+        // de aceitar o clique e mentir na tela depois da recusa do servidor
+        for (const el of document.querySelectorAll('#netRestrictChk, .net-perm, #pwCurrent, #pwNew, #pwSetBtn, #pwRemoveBtn')) el.disabled = true;
+        document.getElementById('pwHint').textContent = 'ℹ️ Esta página veio pela rede: os seletores e a senha só se mudam no computador onde o OBS Social roda — abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+        if (event.security.role === 'viewer') {
+          // o servidor não manda o resumo de segurança ao espectador: sem o estado
+          // real, a caixa some em vez de mostrar tudo desligado
+          document.getElementById('netRestrictBox').style.display = 'none';
+          document.getElementById('netHint').textContent = 'ℹ️ Esta página veio pela rede: o que a rede pode usar só aparece e se muda no computador onde o OBS Social roda (http://localhost:3000).';
+        }
+        // 🖥️ v0.179: a lista de máquinas conectadas só chega ao computador local —
+        // o «carregando...» ficava para sempre
+        document.getElementById('clientsList').textContent = 'ℹ️ Essa lista só aparece no computador onde o OBS Social roda.';
       }
       fillSettingsForm();
       // 📱 v0.163: os endereços/QR do mini Mesa, e a cópia do tema deste
@@ -3719,6 +3737,7 @@ const hub = connectHub((event) => {
     // 🔒 v0.169.5: uma operação só do computador local, pedida pela rede
     case 'somenteLocal':
       obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒');
+      fillSecurity(secState.last); // 🔒 v0.179: a tela volta ao estado real (o servidor recusou)
       break;
     // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
     case 'kickNavegador':
@@ -3884,7 +3903,7 @@ function fillSecurity(sec) {
   document.getElementById('netRestrictBox').style.display = restrito ? '' : 'none';
   document.getElementById('netHint').textContent = restrito
     ? '🔒 Modo seguro: quem entra pela rede só assiste ao painel e usa o que você liberar nos seletores abaixo.'
-    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha. Use só em redes que você confia de verdade.';
+    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha (a senha que você definiu não é pedida neste modo). Use só em redes que você confia de verdade.';
   for (const chk of document.querySelectorAll('.net-perm')) {
     chk.checked = !!(sec.permissions && sec.permissions[chk.dataset.perm]);
   }
@@ -3944,7 +3963,7 @@ document.getElementById('netRestrictChk').onchange = async (e) => {
   document.getElementById('netRestrictBox').style.display = restrito ? '' : 'none';
   document.getElementById('netHint').textContent = restrito
     ? '🔒 Modo seguro: quem entra pela rede só assiste ao painel e usa o que você liberar nos seletores abaixo.'
-    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha. Use só em redes que você confia de verdade.';
+    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha (a senha que você definiu não é pedida neste modo). Use só em redes que você confia de verdade.';
   hub.send({ type: 'securityMode', networkAccess: restrito ? 'restricted' : 'full' });
 };
 for (const chk of document.querySelectorAll('.net-perm')) {
@@ -8682,8 +8701,9 @@ function fillDeckCard() {
     const restrito = !sec.passwordSet && sec.networkAccess !== 'full';
     const perms = sec.permissions || {};
     let texto = '';
-    if (restrito && perms.tools !== true) texto = '⚠️ A rede está no modo restrito sem 🧰 Ferramentas: o celular vai ver as teclas, mas não vai tocar nada. Em 🔐 Segurança, ligue 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.';
-    else if (restrito && perms.obs !== true && (cfgTrilhas || []).some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) texto = 'ℹ️ As teclas do OBS/vMix ficam travadas pela rede enquanto o seletor 🎬 estiver desligado em 🔐 Segurança.';
+    // 🔗 v0.179: os seletores da rede moram em «🔗 URLs para o OBS» (não existe aba «Segurança»)
+    if (restrito && perms.tools !== true) texto = '⚠️ A rede está no modo restrito sem 🧰 Ferramentas: o celular vai ver as teclas, mas não vai tocar nada. Em 🔗 URLs para o OBS, ligue 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.';
+    else if (restrito && perms.obs !== true && (cfgTrilhas || []).some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) texto = 'ℹ️ As teclas do OBS/vMix ficam travadas pela rede enquanto o seletor 🎬 estiver desligado em 🔗 URLs para o OBS.';
     hint.textContent = texto ? OBS_I18N.t(texto) : '';
     hint.style.display = texto ? '' : 'none';
   }

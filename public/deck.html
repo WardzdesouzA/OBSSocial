@@ -491,8 +491,9 @@ setInterval(() => { if (trilhaTocandoId) renderTocando(); }, 1000);
 function textoDoAviso() {
   if (!conectado) return { texto: '🔌 Sem conexão com o OBS Social — tentando de novo…', travado: false };
   if (!settings || !(settings.labs || {}).trilhas) return { texto: '🎵 A Mesa de Trilhas está desligada no OBS Social. No computador: ⚙️ Configurações → 🧪 Labs → 🎵 Mesa de Trilhas.', travado: true };
-  if (!pode.mesa) return { texto: '🔒 Modo restrito da rede: este aparelho só olha. No computador: ⚙️ Configurações → 🔐 Segurança → libere 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.', travado: true };
-  if (!pode.obs && trilhasLista.some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) return { texto: '🎬 As teclas do OBS/vMix estão travadas para a rede: no computador, ⚙️ Configurações → 🔐 Segurança → seletor 🎬.', travado: false };
+  // 🔗 v0.179: os seletores da rede moram na página «🔗 URLs para o OBS» (não existe aba «Segurança»)
+  if (!pode.mesa) return { texto: '🔒 Modo restrito da rede: este aparelho só olha. No computador: ⚙️ Configurações → 🔗 URLs para o OBS → libere 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.', travado: true };
+  if (!pode.obs && trilhasLista.some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) return { texto: '🎬 As teclas do OBS/vMix estão travadas para a rede: no computador, ⚙️ Configurações → 🔗 URLs para o OBS → seletor 🎬.', travado: false };
   return null;
 }
 let avisoTimer = null;
