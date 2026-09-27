@@ -2178,7 +2178,8 @@
 
     <div class="card" id="sec-chat">
       <h3>📺 Chat ao vivo fixo na tela <span class="hist-btns" data-section="chat"><button data-act="undo" title="Voltar (desfazer o último ajuste)">◀</button><button data-act="redo" title="Avançar (refazer)">▶</button><button data-act="reset" title="Voltar ao padrão original">↺</button></span></h3>
-      <div class="hint">Personalização da URL do chat ao vivo (a segunda URL lá em cima).</div>
+      <!-- 📺 v0.179: a URL do chat não mora mais nesta página (foi para 🔗 URLs para o OBS) -->
+      <div class="hint">Personalização do chat fixo na tela — a URL dele fica na página 🔗 URLs para o OBS (campo «Chat ao vivo fixo na tela»).</div>
       <div class="settings-grid">
         <div>
           <label>Lado da tela</label>
@@ -2201,8 +2202,10 @@
             <option value="clean">Só texto (transparente)</option>
           </select>
         </div>
-        <div><label>Largura: <span id="c-width-val"></span>px</label><input type="range" id="c-width" min="240" max="800" step="1"></div>
-        <div><label>Altura: <span id="c-height-val"></span>px (0 = tela inteira)</label><input type="range" id="c-height" min="0" max="1080" step="1"></div>
+        <!-- 📐 v0.179: as réguas vão até onde o 🖱️ Organizar a tela deixa ir (altura 2160, largura 1920) —
+             antes um chat esticado lá aparecia aqui grudado no teto da régua -->
+        <div><label>Largura: <span id="c-width-val"></span>px</label><input type="range" id="c-width" min="240" max="1920" step="1"></div>
+        <div><label>Altura: <span id="c-height-val"></span>px (0 = tela inteira)</label><input type="range" id="c-height" min="0" max="2160" step="1"></div>
         <div><label>Tamanho da letra: <span id="c-fontSize-val"></span>px</label><input type="range" id="c-fontSize" min="12" max="40" step="1"></div>
         <div><label>Quantas mensagens</label><input type="number" id="c-maxMessages" min="3" max="50" step="1"></div>
         <div><label>Espaço entre mensagens: <span id="c-spacing-val"></span>px</label><input type="range" id="c-spacing" min="0" max="24" step="1"></div>
@@ -4542,6 +4545,21 @@ function fillGroup(prefix, fields, source) {
     if (prop === 'checked') el.checked = !!source[key];
     else if (PERCENT_IDS.has(prefix + key)) el.value = Math.round((Number(source[key]) || 0) * 100);
     else el.value = source[key];
+    // 🔤 v0.179: a fonte que veio do tema (ex.: Georgia, Courier New) não está na
+    // lista — a caixa ficava em branco e qualquer toque no card mandava ''.
+    // Ela entra como opção extra, com o nome que está valendo.
+    if (key === 'fontFamily' && el.tagName === 'SELECT') {
+      for (const extra of el.querySelectorAll('option[data-extra]')) extra.remove();
+      const valor = typeof source[key] === 'string' ? source[key] : '';
+      if (valor && el.value !== valor) {
+        const op = document.createElement('option');
+        op.value = valor;
+        op.dataset.extra = '1';
+        op.textContent = valor.replace(/['"]/g, '') + ' (do tema)';
+        el.appendChild(op);
+        el.value = valor;
+      }
+    }
   }
 }
 
@@ -4736,11 +4754,17 @@ function updateRangeLabels() {
   }
 }
 
-function collectGroup(prefix, fields) {
+// 🎯 v0.179: soTocados = só os controles em que o usuário mexeu desde o último
+// envio (marca data-tocado). Antes o grupo INTEIRO ia a cada toque, e um
+// controle que não representava o valor real reescrevia a configuração: a
+// régua no teto devolvia 800×1080 para um chat esticado a 1000×1500 no
+// Organizar, e a lista de fontes sem a fonte do tema mandava '' (Segoe UI).
+function collectGroup(prefix, fields, soTocados) {
   const out = {};
   for (const [key, prop] of Object.entries(fields)) {
     const el = document.getElementById(prefix + key);
     if (!el) continue;
+    if (soTocados && el.dataset.tocado !== '1') continue;
     const value = prop === 'checked' ? el.checked : (prop === 'valueAsNumber' ? el.valueAsNumber : el.value);
     if (prop === 'valueAsNumber' && !Number.isFinite(value)) continue;
     out[key] = PERCENT_IDS.has(prefix + key) ? value / 100 : value;
@@ -4749,19 +4773,28 @@ function collectGroup(prefix, fields) {
 }
 
 let settingsTimer = null;
+let chatPlatTocado = false; // 🎯 v0.179: algum «Mostrar no chat fixo» mudou?
 function pushSettings() {
   updateRangeLabels();
   clearTimeout(settingsTimer);
   settingsTimer = setTimeout(() => {
     for (const section of changedSections) recordChange(section);
     changedSections.clear();
-    const updated = collectGroup('s-', SETTING_FIELDS);
-    updated.chat = collectGroup('c-', CHAT_FIELDS);
-    updated.chat.platforms = {};
-    for (const platform of CHAT_PLATFORMS) {
-      const el = document.getElementById('c-plat-' + platform);
-      updated.chat.platforms[platform] = el ? el.checked : true;
+    // 🎯 v0.179: vai só o que foi mexido — cada grupo (destaque s-, chat c-)
+    // entra apenas com os seus controles tocados
+    const updated = collectGroup('s-', SETTING_FIELDS, true);
+    const chatMudou = collectGroup('c-', CHAT_FIELDS, true);
+    if (chatPlatTocado) {
+      chatMudou.platforms = {};
+      for (const platform of CHAT_PLATFORMS) {
+        const el = document.getElementById('c-plat-' + platform);
+        chatMudou.platforms[platform] = el ? el.checked : true;
+      }
     }
+    if (Object.keys(chatMudou).length) updated.chat = chatMudou;
+    chatPlatTocado = false;
+    for (const el of document.querySelectorAll('[data-tocado]')) delete el.dataset.tocado;
+    if (!Object.keys(updated).length) return;
     applyingSettings = true;
     hub.send({ type: 'settings', settings: updated });
     setTimeout(() => { applyingSettings = false; }, 300);
@@ -4770,15 +4803,15 @@ function pushSettings() {
 
 for (const key of Object.keys(SETTING_FIELDS)) {
   const el = document.getElementById('s-' + key);
-  if (el) el.addEventListener('input', () => { changedSections.add('featured'); pushSettings(); });
+  if (el) el.addEventListener('input', () => { el.dataset.tocado = '1'; changedSections.add('featured'); pushSettings(); });
 }
 for (const key of Object.keys(CHAT_FIELDS)) {
   const el = document.getElementById('c-' + key);
-  if (el) el.addEventListener('input', () => { changedSections.add('chat'); pushSettings(); });
+  if (el) el.addEventListener('input', () => { el.dataset.tocado = '1'; changedSections.add('chat'); pushSettings(); });
 }
 for (const platform of CHAT_PLATFORMS) {
   const el = document.getElementById('c-plat-' + platform);
-  if (el) el.addEventListener('input', () => { changedSections.add('chat'); pushSettings(); });
+  if (el) el.addEventListener('input', () => { chatPlatTocado = true; changedSections.add('chat'); pushSettings(); });
 }
 // ✨ v0.86: a sombra dos overlays vai e volta como bloco próprio
 for (const id of ['sombraTipoSel', 'sombraOpNum']) {
