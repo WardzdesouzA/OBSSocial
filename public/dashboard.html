@@ -2778,7 +2778,11 @@ function buildItem(message, inSavedTab) {
   item.dataset.platform = message.platform;
   item.dataset.id = message.id;
   item.style.setProperty('--platform-color', platformColor(message.platform));
-  if (isSuperchat(message)) {
+  if (isResgate(message)) {
+    // 🎁 v0.178: o resgate de pontos ganha o mesmo cartão colorido das doações
+    item.classList.add('superchat');
+    item.style.setProperty('--sc-color', resgateCor(message));
+  } else if (isSuperchat(message)) {
     item.classList.add('superchat');
     if (corHexOk(message.superchat?.color)) item.style.setProperty('--sc-color', corHexOk(message.superchat.color));
   }

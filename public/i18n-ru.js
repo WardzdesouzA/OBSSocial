@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    // v0.178: FAQ dos 🎁 resgates
+    "🎁 Os resgates de pontos do canal aparecem?": "🎁 Отображаются ли награды за баллы канала?",
+    "Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.": "Да, на Twitch и Kick: награда попадает в панель, закреплённый чат и на экран в виде карточки цвета награды с её названием (и стоимостью в баллах, когда Twitch её передаёт). Она не попадает во вкладку 💰 и в сумму сборов. Ограничение Twitch: через анонимный чат приходят только награды с текстом (и «Выделить сообщение»); награды без текстового поля Twitch передаёт только при входе владельца канала. У YouTube и Bilibili нет баллов канала.",
+    // v0.178: 🎁 resgates de pontos do canal
+    "🎁 Resgate": "🎁 Награда",
+    "🎁 Destacar mensagem": "🎁 Выделить сообщение",
     // v0.177: textos que ficavam em português (diálogos, limpeza, clima, editor do vMix, FAQ)
     "Aviso": "Внимание",
     "Confirmar": "Подтвердить",
@@ -3499,5 +3505,7 @@ window.OBS_I18N_DICTS.ru = {
     [/^📋 Ajustes de «(.+)» copiados para (\d+) molde\(s\) — cada um ficou com a arte dele\.$/, "📋 Настройки «$1» скопированы в $2 шаблон(а/ов) — у каждого осталась своя графика."],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável)$/, "$1 — $2 на экране: $3"],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável) · 🔁 repete$/, "$1 — $2 на экране: $3 · 🔁 повторяется"],
+    // v0.178: pílula do resgate (recompensa · custo em pontos)
+    [/^🎁 (.+) · (\d+) pontos$/, "🎁 $1 · $2 баллов"],
   ],
 };

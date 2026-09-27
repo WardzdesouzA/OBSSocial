@@ -1352,6 +1352,7 @@ function updateFullscreenVisibility() {
 
 function accentFor(message) {
   if (isSuperchat(message) && corHexOk(message.superchat?.color)) return corHexOk(message.superchat.color);
+  if (isResgate(message)) return resgateCor(message); // 🎁 v0.178
   if (settings.accentMode === 'custom') return settings.accentColor;
   return platformColor(message.platform);
 }
@@ -1523,6 +1524,17 @@ function buildFeaturedLivre(message, card) {
       aplicarFormatoInline(amount, (settings.pecas || {}).valor);
       c.appendChild(amount);
     });
+  } else if (isResgate(message)) {
+    // 🎁 v0.178: o resgate ocupa a peça «valor» com o nome da recompensa
+    valorEl = addPeca('valor', (c) => {
+      const amount = document.createElement('span');
+      const comoTexto = ((settings.pecas || {}).valor || {}).estilo === 'texto';
+      amount.className = 'sc-amount' + (comoTexto ? ' sc-amount--texto' : '');
+      amount.textContent = resgateRotulo(message);
+      if (!comoTexto) amount.style.background = resgateCor(message);
+      aplicarFormatoInline(amount, (settings.pecas || {}).valor);
+      c.appendChild(amount);
+    });
   }
   const textoEl = addPeca('texto', (c) => {
     c.appendChild(renderRuns(message.runs));
@@ -1624,6 +1636,8 @@ function buildFeatured(message) {
   if (corDoNome) card.style.setProperty('--card-nome', corDoNome);
   if (isSuperchat(message) && corHexOk(message.superchat?.color)) {
     card.style.setProperty('--card-bg', `color-mix(in srgb, ${corHexOk(message.superchat.color)} 35%, var(--bg-color))`);
+  } else if (isResgate(message)) {
+    card.style.setProperty('--card-bg', `color-mix(in srgb, ${resgateCor(message)} 35%, var(--bg-color))`); // 🎁 v0.178
   }
 
   // 🖼️ v0.56.1: arte escolhida = o cartão É a arte, sempre. Ela entra como a
@@ -1733,6 +1747,15 @@ function buildFeatured(message) {
     // 💰 v0.110: «Texto simples» também vale no cartão padrão
     if ((pecasFmt.valor || {}).estilo === 'texto') amount.classList.add('sc-amount--texto');
     else amount.style.background = corHexOk(message.superchat.color) || '#ffb300';
+    aplicarFormatoInline(amount, pecasFmt.valor);
+    meta.appendChild(amount);
+  } else if (isResgate(message)) {
+    // 🎁 v0.178: cartão padrão do resgate — a recompensa na pílula, com a cor dela
+    const amount = document.createElement('span');
+    amount.className = 'sc-amount';
+    amount.textContent = resgateRotulo(message);
+    if ((pecasFmt.valor || {}).estilo === 'texto') amount.classList.add('sc-amount--texto');
+    else amount.style.background = resgateCor(message);
     aplicarFormatoInline(amount, pecasFmt.valor);
     meta.appendChild(amount);
   } else if (settings.showBadges) {

@@ -444,7 +444,23 @@ function seloLigado(cargo) {
 // ricos (com imagem) que o conector trouxe com os cargos simples de sempre.
 function ehEtiquetaDeValor(nome) {
   const n = String(nome);
-  return n.startsWith('superchat') || n.startsWith('doação');
+  return n.startsWith('superchat') || n.startsWith('doação') || n.startsWith('resgate');
+}
+
+// 🎁 v0.178: resgate de pontos do canal (Twitch e Kick) — o comentário traz o
+// bloco `resgate` { titulo, custo, cor, entrada } e ganha um cartão com a cor
+// da recompensa, como as doações
+function isResgate(message) {
+  return !!(message && message.resgate && typeof message.resgate === 'object');
+}
+function resgateCor(message) {
+  return corHexOk(message?.resgate?.cor) || (message?.platform === 'kick' ? '#53fc18' : '#9147ff');
+}
+function resgateRotulo(message) {
+  const r = (message && message.resgate) || {};
+  const titulo = String(r.titulo || 'Resgate').slice(0, 80);
+  const custo = Number(r.custo);
+  return '🎁 ' + titulo + (Number.isFinite(custo) && custo > 0 ? ` · ${custo} pontos` : '');
 }
 
 function badgeRow(message, aoAdicionar, opcoes) {
@@ -490,6 +506,13 @@ function badgeElement(badgeName, message, selo) {
     span.textContent = nome;
     span.classList.add('sc');
     span.style.background = corHexOk(message.superchat.color) || '#ffb300';
+    return span;
+  }
+  // 🎁 v0.178: a etiqueta do resgate mostra a recompensa (e o custo) na cor dela
+  if (nome.startsWith('resgate') && isResgate(message)) {
+    span.textContent = resgateRotulo(message);
+    span.classList.add('sc');
+    span.style.background = resgateCor(message);
     return span;
   }
   const imagens = confSelos().imagens !== false;

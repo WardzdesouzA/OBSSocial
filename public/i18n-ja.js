@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // v0.178: FAQ dos 🎁 resgates
+    "🎁 Os resgates de pontos do canal aparecem?": "🎁 チャンネルポイントの引き換えは表示されますか？",
+    "Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.": "はい、Twitch と Kick では表示されます。引き換えは報酬の色のカードとして、報酬名（Twitch が提供する場合はポイントの費用も）付きでパネル・固定チャット・画面に届きます。💰 タブや集計額には入りません。Twitch の制限: 匿名チャット経由ではテキスト入力が必要な報酬（と「メッセージをハイライト」）だけが届き、テキスト欄のない報酬の引き換えはチャンネル所有者のログインがある場合にのみ Twitch が配信します。YouTube と Bilibili にはチャンネルポイントがありません。",
+    // v0.178: 🎁 resgates de pontos do canal
+    "🎁 Resgate": "🎁 引き換え",
+    "🎁 Destacar mensagem": "🎁 メッセージをハイライト",
     // v0.177: textos que ficavam em português (diálogos, limpeza, clima, editor do vMix, FAQ)
     "Aviso": "注意",
     "Confirmar": "確認",
@@ -3499,5 +3505,7 @@ window.OBS_I18N_DICTS.ja = {
     [/^📋 Ajustes de «(.+)» copiados para (\d+) molde\(s\) — cada um ficou com a arte dele\.$/, "📋 «$1» の調整を $2 件の型にコピーしました — アートはそれぞれのまま。"],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável)$/, "$1 — $2 を画面に: $3"],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável) · 🔁 repete$/, "$1 — $2 を画面に: $3 · 🔁 リピート"],
+    // v0.178: pílula do resgate (recompensa · custo em pontos)
+    [/^🎁 (.+) · (\d+) pontos$/, "🎁 $1 · $2 ポイント"],
   ],
 };

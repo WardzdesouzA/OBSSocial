@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.178: FAQ dos 🎁 resgates
+    "🎁 Os resgates de pontos do canal aparecem?": "🎁 채널 포인트 리딤이 표시되나요?",
+    "Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.": "네, Twitch와 Kick에서 표시됩니다. 리딤은 보상의 색을 띤 카드로 패널, 고정 채팅, 화면에 도착하며 보상 이름(Twitch가 알려주는 경우 포인트 비용도)이 함께 표시됩니다. 💰 탭이나 모금 합계에는 들어가지 않습니다. Twitch의 한계: 익명 채팅으로는 텍스트를 요구하는 보상(과 「메시지 강조」)만 도착하고, 텍스트 입력란이 없는 보상의 리딤은 채널 소유자 로그인이 있을 때만 Twitch가 전달합니다. YouTube와 Bilibili에는 채널 포인트가 없습니다.",
+    // v0.178: 🎁 resgates de pontos do canal
+    "🎁 Resgate": "🎁 리딤",
+    "🎁 Destacar mensagem": "🎁 메시지 강조",
     // v0.177: textos que ficavam em português (diálogos, limpeza, clima, editor do vMix, FAQ)
     "Aviso": "알림",
     "Confirmar": "확인",
@@ -3499,5 +3505,7 @@ window.OBS_I18N_DICTS.ko = {
     [/^📋 Ajustes de «(.+)» copiados para (\d+) molde\(s\) — cada um ficou com a arte dele\.$/, "📋 «$1»의 조정값을 틀 $2개에 복사했습니다 — 아트는 각자 그대로입니다."],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável)$/, "$1 — 화면에 $2: $3"],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável) · 🔁 repete$/, "$1 — 화면에 $2: $3 · 🔁 반복"],
+    // v0.178: pílula do resgate (recompensa · custo em pontos)
+    [/^🎁 (.+) · (\d+) pontos$/, "🎁 $1 · $2 포인트"],
   ],
 };

@@ -1,4 +1,13 @@
 {
+  "0.178.0": {
+    "titulo": "🎁 Canjes de puntos del canal (Twitch y Kick)",
+    "itens": [
+      "🎁 Los canjes de recompensas con puntos del canal ahora llegan al panel, al chat fijo y a la pantalla: Twitch (recompensas que piden texto y «Destacar mi mensaje») y Kick (cualquier recompensa, con o sin texto).",
+      "La tarjeta del canje usa el color de la recompensa y muestra su nombre (y el costo en puntos, cuando Twitch lo informa) en una píldora, como las donaciones — pero sin entrar en la pestaña 💰 ni en lo recaudado.",
+      "Límite conocido: por la lectura anónima del chat de Twitch, los canjes de recompensas SIN campo de texto no llegan (Twitch solo los entrega con el inicio de sesión del dueño del canal). YouTube y Bilibili no tienen puntos del canal.",
+      "🧪 Dos muestras nuevas (Twitch y Kick) para probar la tarjeta del canje."
+    ]
+  },
   "0.177.0": {
     "titulo": "🔒 Revisión de seguridad y correcciones: teléfono de WhatsApp fuera de la pantalla pública, espectadores de la red sin datos del streamer, FAQ y README actualizados",
     "itens": [

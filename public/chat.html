@@ -356,6 +356,10 @@ function addMessage(message, animate) {
   if (chat.superchatColors && isSuperchat(message) && corHexOk(message.superchat?.color)) {
     item.classList.add('superchat-colored');
     item.style.setProperty('--sc-color', corHexOk(message.superchat.color));
+  } else if (chat.superchatColors && isResgate(message)) {
+    // 🎁 v0.178: resgate de pontos com a cor da recompensa, como as doações
+    item.classList.add('superchat-colored');
+    item.style.setProperty('--sc-color', resgateCor(message));
   }
 
   if (chat.showAvatar) item.appendChild(avatarElement(message));
@@ -369,6 +373,12 @@ function addMessage(message, animate) {
     amount.textContent = message.superchat.amount
       + (message.superchat.converted ? ` ≈ ${message.superchat.converted}` : '');
     amount.style.background = corHexOk(message.superchat.color) || '#ffb300';
+    content.appendChild(amount);
+  } else if (isResgate(message)) {
+    const amount = document.createElement('span');
+    amount.className = 'sc-amount';
+    amount.textContent = resgateRotulo(message);
+    amount.style.background = resgateCor(message);
     content.appendChild(amount);
   } else if (chat.showBadges) {
     badgeRow(message, (el) => content.appendChild(el));
@@ -474,7 +484,7 @@ function redesenharSelos() {
     const content = item.querySelector('.content');
     if (!message || !content) continue;
     for (const velho of [...content.querySelectorAll('.badge')]) velho.remove();
-    if (!chat?.showBadges || message.superchat?.amount) continue;
+    if (!chat?.showBadges || message.superchat?.amount || isResgate(message)) continue;
     const autor = content.querySelector('.author');
     badgeRow(message, (el) => content.insertBefore(el, autor));
   }

@@ -1,4 +1,13 @@
 {
+  "0.178.0": {
+    "titulo": "🎁 Kanal puanı ödülleri (Twitch ve Kick)",
+    "itens": [
+      "🎁 Kanal puanıyla alınan ödüller artık panele, sabit sohbete ve ekrana geliyor: Twitch (metin isteyen ödüller ve «Mesajımı vurgula») ve Kick (metinli veya metinsiz her ödül).",
+      "Ödül kartı ödülün rengini kullanır ve adını (Twitch bildirdiğinde puan maliyetini de) bağışlardaki gibi bir etikette gösterir — ancak 💰 sekmesine ve toplanan tutara girmez.",
+      "Bilinen sınır: Twitch’in anonim sohbeti üzerinden metin alanı OLMAYAN ödüller gelmez (Twitch bunları yalnızca kanal sahibinin girişiyle iletir). YouTube ve Bilibili’de kanal puanı yoktur.",
+      "🧪 Ödül kartını denemek için iki yeni örnek (Twitch ve Kick)."
+    ]
+  },
   "0.177.0": {
     "titulo": "🔒 Güvenlik kontrolü ve düzeltmeler: WhatsApp numarası genel ekrandan çıktı, ağ izleyicileri yayıncı verileri olmadan, SSS ve README güncellendi",
     "itens": [

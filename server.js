@@ -7234,6 +7234,8 @@ const TEST_SAMPLES = [
   { platform: 'twitch', author: 'Nightbot', authorLogin: 'nightbot', text: 'Siga o canal nas redes sociais! 🤖', badges: ['bot'] },
   // ---------------- 🟢 Kick ----------------
   { platform: 'kick', author: 'pedrinho77', authorLogin: 'pedrinho77', authorColor: '#53fc18', text: 'kkkkk melhor momento da live' },
+  // 🎁 v0.178: resgate de recompensa sem texto (só o aviso do resgate)
+  { platform: 'kick', author: 'Resgatadora', authorLogin: 'resgatadora', text: '', resgate: { titulo: 'Beba água!', custo: null, cor: '#53fc18', entrada: false }, badges: ['resgate Beba água!'] },
   {
     platform: 'kick', author: 'vip_da_casa', authorLogin: 'vip_da_casa', authorColor: '#ff9f1c', text: 'Cheguei com a galera! 🎉',
     badges: ['vip'],
@@ -7266,6 +7268,8 @@ const TEST_SAMPLES = [
   { platform: 'kick', author: 'BotRix', authorLogin: 'botrix', text: 'Comandos: !discord !redes', badges: ['bot'] },
   // 🎞️ v0.176.2: GIF do chat da Twitch (na live real vem da GIPHY; a amostra usa um GIF do programa)
   { platform: 'twitch', author: 'AssinanteT3', authorLogin: 'assinantet3', authorColor: '#00e5a0', badges: ['sub'], subTier: 't3', runs: [{ type: 'emote', gif: true, alt: 'Yay GIF', url: '/amostras/gif-twitch.gif' }] },
+  // 🎁 v0.178: resgate de pontos do canal (recompensa com texto)
+  { platform: 'twitch', author: 'Resgatador', authorLogin: 'resgatador', authorColor: '#ff7eb6', text: 'Bebe água aí! 💧', resgate: { titulo: 'Beba água!', custo: 50, cor: '#9147ff', entrada: true }, badges: ['resgate Beba água!'] },
   // ---------------- 🩵 Bilibili ----------------
   { platform: 'bilibili', author: '小明', authorLogin: '4521', text: '主播好棒！' },
   {
@@ -7365,6 +7369,7 @@ function sendTestMessage(atrasMs = 0) {
     subTier: sample.subTier || null,
     memberLevel: sample.memberLevel || null,
     superchat: sample.superchat || null,
+    ...(sample.resgate ? { resgate: { ...sample.resgate } } : {}), // 🎁 v0.178
     membroMeses: Number.isFinite(sample.membroMeses) ? sample.membroMeses : null, // 🕒 v0.118
     runs: Array.isArray(sample.runs) ? sample.runs : [{ type: 'text', text: String(texto || '') || (midia ? `[${midia.nome}]` : '') }],
     midia: midia || undefined,

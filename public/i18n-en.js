@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    // v0.178: FAQ dos 🎁 resgates
+    "🎁 Os resgates de pontos do canal aparecem?": "🎁 Do channel point redemptions show up?",
+    "Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.": "Yes, on Twitch and Kick: the redemption reaches the dashboard, the fixed chat and the screen as a card in the reward’s colour, with the reward’s name (and the cost in points, when Twitch provides it). It does not enter the 💰 tab or the earnings. Twitch limit: through the anonymous chat only rewards that ask for text arrive (plus “Highlight My Message”); redemptions without a text field are only delivered by Twitch to the channel owner’s login. YouTube and Bilibili have no channel points.",
+    // v0.178: 🎁 resgates de pontos do canal
+    "🎁 Resgate": "🎁 Redemption",
+    "🎁 Destacar mensagem": "🎁 Highlight My Message",
     // v0.177: textos que ficavam em português (diálogos, limpeza, clima, editor do vMix, FAQ)
     "Aviso": "Notice",
     "Confirmar": "Confirm",
@@ -3499,5 +3505,7 @@ window.OBS_I18N_DICTS.en = {
     [/^📋 Ajustes de «(.+)» copiados para (\d+) molde\(s\) — cada um ficou com a arte dele\.$/, "📋 Settings of «$1» copied to $2 template(s) — each kept its own art."],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável)$/, "$1 — $2 on screen: $3"],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável) · 🔁 repete$/, "$1 — $2 on screen: $3 · 🔁 loops"],
+    // v0.178: pílula do resgate (recompensa · custo em pontos)
+    [/^🎁 (.+) · (\d+) pontos$/, "🎁 $1 · $2 points"],
   ],
 };

@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.178: FAQ dos 🎁 resgates
+    "🎁 Os resgates de pontos do canal aparecem?": "🎁 Kanal puanı ödülleri görünüyor mu?",
+    "Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.": "Evet, Twitch ve Kick’te: ödül panele, sabit sohbete ve ekrana ödülün renginde bir kart olarak gelir; adı (ve Twitch bildirdiğinde puan maliyeti) üzerinde yazar. 💰 sekmesine ve toplanan tutara girmez. Twitch sınırı: anonim sohbet üzerinden yalnızca metin isteyen ödüller gelir (ve «Mesajımı vurgula»); metin alanı olmayan ödülleri Twitch yalnızca kanal sahibinin girişiyle iletir. YouTube ve Bilibili’de kanal puanı yoktur.",
+    // v0.178: 🎁 resgates de pontos do canal
+    "🎁 Resgate": "🎁 Ödül",
+    "🎁 Destacar mensagem": "🎁 Mesajımı vurgula",
     // v0.177: textos que ficavam em português (diálogos, limpeza, clima, editor do vMix, FAQ)
     "Aviso": "Uyarı",
     "Confirmar": "Onayla",
@@ -3499,5 +3505,7 @@ window.OBS_I18N_DICTS.tr = {
     [/^📋 Ajustes de «(.+)» copiados para (\d+) molde\(s\) — cada um ficou com a arte dele\.$/, "📋 «$1» ayarları $2 kalıba kopyalandı — her biri kendi görselini korudu."],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável)$/, "$1 — ekranda $2: $3"],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável) · 🔁 repete$/, "$1 — ekranda $2: $3 · 🔁 tekrarlar"],
+    // v0.178: pílula do resgate (recompensa · custo em pontos)
+    [/^🎁 (.+) · (\d+) pontos$/, "🎁 $1 · $2 puan"],
   ],
 };

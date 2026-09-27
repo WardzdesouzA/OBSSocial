@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // v0.178: FAQ dos 🎁 resgates
+    "🎁 Os resgates de pontos do canal aparecem?": "🎁 频道积分兑换会显示吗？",
+    "Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.": "会，在 Twitch 和 Kick 上：兑换会以奖励颜色的卡片出现在面板、固定聊天和画面上，并带有奖励名称（Twitch 提供时还有积分花费）。它不计入 💰 标签页和筹款总额。Twitch 的限制：通过匿名聊天只有需要输入文字的奖励（以及「高亮我的消息」）会到达；没有文字输入框的兑换只有在频道主登录时 Twitch 才会推送。YouTube 和 Bilibili 没有频道积分。",
+    // v0.178: 🎁 resgates de pontos do canal
+    "🎁 Resgate": "🎁 兑换",
+    "🎁 Destacar mensagem": "🎁 高亮我的消息",
     "Uma versão que acabou de sair pode levar alguns minutos para aparecer — se você espera uma, tente de novo daqui a pouco.": "刚发布的版本可能需要几分钟才会显示 —— 如果你在等待新版本，请稍后再试。",
     "Cada doação recebida pela PixGG vira um comentário na aba 💚 PixGG (e numa coluna própria), com nome, valor, mensagem e o áudio quando houver. Cole a": "通过 PixGG 收到的每笔捐赠成为 💚 PixGG 标签页（及专属列）中的一条评论，带名字、金额、留言和音频（如有）。粘贴",
     ", que está no painel da PixGG → Widgets).": "（在 PixGG 面板 → 小组件中）。",
@@ -3300,5 +3306,7 @@ window.OBS_I18N_DICTS.zh = {
     [/^🔴 (.+)$/, "🔴 $1"],
     // 🎞️ v0.129: mídia direta — o recado de erro do servidor com o ⚠️ na frente
     [/^⚠️ (.+)$/, "⚠️ $1"],
+    // v0.178: pílula do resgate (recompensa · custo em pontos)
+    [/^🎁 (.+) · (\d+) pontos$/, "🎁 $1 · $2 积分"],
   ],
 };
