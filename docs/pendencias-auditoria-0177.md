@@ -1,42 +1,55 @@
-# Pendências da checagem de segurança e bugs (auditoria da v0.177.0)
+# Pendências da checagem geral (depois da v0.179.0)
 
-A auditoria completa foi interrompida a pedido; a v0.177.0 fechou o que estava pronto. O que ficou
-para as próximas versões (achados relatados pelos testadores, ainda **sem verificação independente**):
+A checagem geral pedida na v0.177 foi concluída na v0.179.0: os achados funcionais pendentes foram
+verificados por reprodução independente e corrigidos, as três lentes de segurança que faltavam rodaram,
+as correções de segurança da v0.177 foram reverificadas por atacantes e completadas, as áreas nunca
+exercitadas (chat fixo, configurações, Labs, deck/controle externo, servidor/conectores) foram auditadas
+e corrigidas, e o chinês recebeu o que faltava desde a v0.177. O que ficou para as próximas versões:
 
-## Segurança (lentes sem integração: dos-robustez, egress-exec, connectors-parse)
-- Rodar essas três lentes e a verificação adversarial dos achados já corrigidos (foram corrigidos pelas evidências dos finders).
+## Segurança (registrado pelos revisores, sem correção nesta versão)
+- 🕹️ O token do controle externo dá papel «full» completo pela rede (é por desenho; hint, FAQ e README
+  passaram a dizer isso). Se um dia for preciso um token só de atalhos, será um recurso novo.
+- Modo túnel (`OBS_SOCIAL_EXIGIR_SENHA_LOCAL=1`): todos os usuários chegam como 127.0.0.1 e dividem o
+  mesmo teto de 24 conexões e os mesmos respiros por IP — um usuário pode atrapalhar o outro.
+- Respiros por conexão (mídia direta, buscas de saída): o teto real de amplificação é 24× o respiro
+  (24 conexões por IP). Um respiro por IP para essas operações seria mais justo.
+- `chat.platforms` e `selos.ocultos` ainda aceitam chaves desconhecidas (até ~400 KB por mensagem; não
+  acumulam entre mensagens e o teto de 2 MB segura o total). Podar às redes/selos conhecidos.
+- O «canal» digitado para o WhatsApp (id do grupo) vai a todos os papéis em `init.connections`/`status`;
+  se alguém digitar um número de contato ali, ele chega ao viewer. Mascarar com `pareceTelefoneSrv`.
+- Lacunas do crítico não exercitadas: caminho ao vivo da Bilibili (wss danmaku, reconexão, respostas
+  hostis), `deck.html` (XSS/estado, fluxo do token/QR), `responderInscrito` (chatId/replyTo crus, limite
+  de taxa — só papel full), tempestade de reconexão com `recarregarMin` + muitas redes.
+- vMix: o segundo portão do coringa «funcao» (lista `VMIX_FUNCOES_DISCO`) ficou como defesa em
+  profundidade, hoje inalcançável (o viewer é barrado antes).
 
-## Painel — ferramentas e tela
-- ⏱️ Tempo de tela do destaque só acontece na tela: servidor e painel continuam «no ar» e um F5 na fonte do OBS traz o destaque expirado de volta.
-- 🧪 Exemplo da audiência some da tela em até 10 s (o poll de audiência apaga as redes de exemplo).
-- 📢 Clicar 👁️ com o aviso vazio deixa o painel em «Tirar da tela» sem nada na tela.
-- Confirmar um diálogo (remover QR, zerar winstreak, limpar histórico) fecha o popover da ferramenta.
-- Dica do ✖ Limpar tela desatualizada (não cita avisos, audiência, avatar, relógio, clima e mídia).
-- Relógio no overlay: data sempre em pt-BR; rótulos «Cronômetro»/«Timer» fixos.
-- Animação «Deslizar de baixo» (destaque) e «Deslizar de cima» (aviso) voltam para «Aparecer suave» a cada salvamento (migração antiga em `mergeSettings`).
-- Mudar qualquer configuração com áudio do inscrito tocando reinicia e pausa o áudio na tela.
-- Mídia sem duração conhecida termina na tela, mas o painel fica «tocando» para sempre.
-- Tela do OBS aberta em outra máquina da rede (viewer): avisos que a tela manda ao servidor (fim de vídeo, momentos de áudio) são descartados.
-- 🧹 limpar a tela não zera o player da mídia no servidor.
-
-## Rede e papéis
-- Painel/config/deck derrubados por senha nova ficam «mortos» (reconectando em loop com 401, sem tela de senha).
-- config.html pela rede mostra o diálogo «Só no computador do OBS Social» sem clique (o `kickNavegador` do init é local-only).
-- Card de segurança em 🔗 URLs pela rede (papel full) fica editável e mente depois da recusa.
-- «Máquinas conectadas agora» fica em «carregando...» pela rede.
-- Modo espectador: botões que o servidor vai negar continuam ativos e o clique morre em silêncio; a faixa «Modo espectador» não some quando a restrição é desligada.
-- Logins certos contam para o bloqueio de força bruta (8 entradas corretas do mesmo IP em 10 min bloqueiam a 9ª).
-- Textos apontam para uma «aba 🔒 Segurança» que não existe (é 🔗 URLs para o OBS); README/hint dizem que a senha vale mesmo com «liberdade total».
-- Tela de senha só em português.
+## Painel, tela e conexões
+- YouTube: reconectar à MESMA live pelo link (em vez do @) não apaga nada, mas as mensagens antigas ficam
+  carimbadas com a forma anterior da conta; ao REINICIAR com o link lembrado, `restoreFromLog` deixa as
+  da forma antiga só no log. Resolver a conta para uma chave única (id da live) antes de carimbar.
+- Modo espectador: o aviso «Modo espectador» também aparece para operações que a página manda sozinha
+  se isso cair até 2,5 s depois de um clique (ex.: relógio do player). `testLimpar` não tem categoria em
+  `OP_CATEGORY`, então é negado ao espectador mesmo com 🖥️ liberado (enquanto `test` é liberado).
+- Tempo de tela do destaque: mudar o ⏱️ com um destaque já no ar não vale para esse destaque (o relógio é
+  armado no `feature`); mandar o mesmo comentário de novo reinicia o relógio.
+- No modo restrito sem 🖥️, uma tela aberta pela rede que avisa `midiaPlayerFim` é aceita (é aviso de
+  retorno), mas qualquer aparelho da rede também consegue mandar esses avisos com um id visível no init
+  (risco residual aceito: só fecham o que já está no ar).
+- `audienceTest` (🧰): um número de mentira mandado pelo gancho fica no ar até «Tirar da tela» ou reinício.
+- O teste `uitest179-viewer-avisos-tela` cria um alias de IP (10.99.0.2) e só roda como root.
 
 ## Idiomas
-- Overlay traduz o que o espectador/streamer escreveu (nome no pódio, avatar ampliado, texto do aviso, nome do QR) — precisa de `data-no-i18n`.
-- Página de login sem o motor de idiomas.
-- 🕹️ Controle Externo: 45 itens do catálogo (mídia direta, clima, apagar testes) em português nos 9 idiomas.
-- Popover 🕐: fileira de modos não cabe em espanhol, francês e turco.
-- Janela preta: «Recuperei N comentários do log de hoje» sempre em português.
-- Chinês (zh): os 180 textos + 19 padrões novos da v0.177 ainda sem tradução (os outros 8 idiomas receberam).
-- Revisão humana das traduções novas (foram feitas por tradutor automático sem a etapa de revisão).
+- Concordância numérica nos modelos estáticos do russo («2 баллов», «клавиш(а/и)», «шаблон(а/ов)») — só
+  com plural por função no motor.
+- Terminologia mista nos dicionários antigos (não nos blocos novos): «Mesa de trilhas», «destaque»,
+  «painel», «rede», aspas «»/“”/「」 variam dentro do mesmo idioma (fr, de, ru, tr, ja, ko, zh). Um passe
+  de unificação por idioma.
+- ko: «Transcrição local» está como «로컬 필사» em 11 lugares (필사 é copiar à mão; áudio→texto é
+  전사/받아쓰기). ja: a interface oficial da Twitch usa «交換» para o resgate (o dicionário usa «引き換え»).
+- es (305) e en (116) têm entradas com tradução igual à chave — nem todas são nomes próprios.
+- Fragmentos concatenados em tempo de execução («Pela» + «API oficial» + «da LivePix…», «…Com a» +
+  «troca automática» + «ligada, …») ficam frágeis em japonês/coreano/chinês (ordem da frase).
 
-## Áreas não exercitadas pela auditoria funcional
-chat fixo, config (conexões, visual, dados), Labs/integrações, deck/controle externo, servidor/conectores.
+## Documentação
+- A resposta do FAQ sobre a tela cheia do editor, a moldura e o modo de tela pode ganhar uma linha sobre o
+  comportamento novo (o editor acompanha na hora).

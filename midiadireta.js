@@ -85,6 +85,23 @@ function criarSonda({ classifyAddress, tipoMidiaDiretaPorNome, remotoMs }) {
     });
   }
   async function hostPublicoDaSonda(hostname) { return !!(await enderecosPublicos(hostname)); }
+  // 🔒 v0.179: o veredito sobre um host que vai para a TELA (quem o abre é o
+  // navegador do streamer, não o servidor): 'publico' quando TODO endereço
+  // resolvido é da internet; 'interno' quando algum é de casa (loopback, rede
+  // local, link-local/169.254.169.254, ULA, 0.0.0.0…) — inclusive por um nome
+  // público que aponta para dentro (192-168-0-1.nip.io); 'desconhecido' quando
+  // o nome não resolve (quem chama decide o que fazer com esse caso).
+  function vereditoDoHost(hostname) {
+    return new Promise((resolve) => {
+      const h = String(hostname || '').replace(/^\[|\]$/g, '').replace(/\.$/, '');
+      if (!h) return resolve('desconhecido');
+      if (net.isIP(h)) return resolve(ehPublico(h) ? 'publico' : 'interno');
+      dns.lookup(h, { all: true }, (err, enderecos) => {
+        if (err || !Array.isArray(enderecos) || !enderecos.length) return resolve('desconhecido');
+        resolve(enderecos.every((e) => ehPublico(e.address)) ? 'publico' : 'interno');
+      });
+    });
+  }
   // o «lookup» que o http.request vai usar: a lista já conferida, e só ela
   function pinar(conferidos) {
     return (host, opcoes, cb) => {
@@ -324,7 +341,7 @@ function criarSonda({ classifyAddress, tipoMidiaDiretaPorNome, remotoMs }) {
     fonte.pipe(res);
   }
 
-  return { hostPublicoDaSonda, enderecosPublicos, ipCanonico, buscarDaSonda, candidatosDeVideo, tipoPelaUrl, sondarVideoDireto, recusaSerQuadro, abrirRemoto, servirRemoto };
+  return { hostPublicoDaSonda, enderecosPublicos, ehPublico, vereditoDoHost, ipCanonico, buscarDaSonda, candidatosDeVideo, tipoPelaUrl, sondarVideoDireto, recusaSerQuadro, abrirRemoto, servirRemoto };
 }
 
 module.exports = { criarSonda };

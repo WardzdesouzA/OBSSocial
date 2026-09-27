@@ -994,9 +994,16 @@ function applySettings(next) {
     const card = buildFeatured(currentFeaturedMessage);
     if (currentFeaturedMessage.previa === true) card.classList.add('featured--previa'); // 📺 v0.103
     card.classList.remove(...ANIMATIONS.map((a) => 'anim-' + a));
+    // 🎧 v0.179: o reprodutor do áudio do cartão clássico NÃO recomeça com a
+    // mudança de ajuste — a pílula que já estava tocando muda para o cartão
+    // novo (mesmo arquivo), sem cortar o som
+    const apVelho = featuredSlot.querySelector('.audio-player');
+    const apNovo = card.querySelector('.audio-player');
+    if (apVelho && apNovo && apVelho.querySelector('audio')?.src === apNovo.querySelector('audio')?.src) apNovo.replaceWith(apVelho);
     featuredSlot.innerHTML = '';
     featuredSlot.appendChild(card);
     startFeaturedLoop(card);
+    aplicarMidiaPlayer(); // 🎧 v0.179: o <audio> do cartão segue o estado do servidor (tocando/pausado, posição, volume)
   }
 }
 
@@ -1506,7 +1513,8 @@ function buildFeaturedLivre(message, card) {
     const lado = (p.larg && p.alt) ? Math.min(W, H) : (p.larg ? W : H);
     if (lado > 0) el.style.setProperty('--quadrado', lado + 'px');
   };
-  const nomeEl = addPeca('nome', (c) => { c.textContent = message.author; });
+  // 🌐 v0.179: nome de espectador — nunca passa pelo tradutor
+  const nomeEl = addPeca('nome', (c) => { c.setAttribute('data-no-i18n', ''); c.textContent = message.author; });
   addPeca('selos', (c) => badgeRow(message, (el) => c.appendChild(el), { semValor: true }));
   let valorEl = null;
   if (message.superchat?.amount) {
@@ -1784,7 +1792,9 @@ function buildFeatured(message) {
   // (nos moldes/peças ele segue na camada flutuante).
   const mid = message.midia;
   if (mid && mid.tipo === 'audio' && String(mid.url || '').startsWith('/midia-inscritos/')) {
-    body.appendChild(montarAudioBonito(mid));
+    const ap = montarAudioBonito(mid);
+    avisarFimDoPlayer(ap.querySelector('audio')); // 🏁 v0.179
+    body.appendChild(ap);
   }
 
   card.appendChild(body);
@@ -1809,7 +1819,7 @@ let exemploPrevia = null;  // o comentário de exemplo que o editor mandou
 let destaqueReal = null;   // o que o servidor diz estar no ar (a live)
 let exemploQrPrevia = null; // a matriz do QR de exemplo (vem no init)
 const EXEMPLO_PREVIA = {
-  aviso: { visible: true, texto: 'Exemplo de aviso na tela 📢 — ajuste a posição e o tamanho por aqui' },
+  aviso: { visible: true, exemploPrevia: true, texto: 'Exemplo de aviso na tela 📢 — ajuste a posição e o tamanho por aqui' },
   likemeter: { enabled: true, viewers: 1234, likes: 567, error: null },
   raffle: {
     visible: true, drawnAt: 1, origem: 'exemplo', vez: null, prazoAte: null,
@@ -1948,6 +1958,7 @@ function montarAvatarZoomEm(box, az) {
   }
   const nome = document.createElement('div');
   nome.className = 'av-name';
+  nome.setAttribute('data-no-i18n', ''); // 🌐 v0.179: nome de espectador, nunca traduzido
   nome.textContent = az.author || '';
   // ✍️ v0.100: o nome do avatar em alta segue a mesma cor de nome do destaque
   const corDoNome = nomeColorFor(az);
@@ -2370,12 +2381,15 @@ function renderMidiaPublico() {
       // 🎛️ sem autoplay: só toca quando o apresentador der play no painel
       const vi = document.createElement('video');
       vi.src = m.url; vi.playsInline = true; vi.preload = 'auto';
+      avisarFimDoPlayer(vi); // 🏁 v0.179
       box.appendChild(vi);
     } else if (m.tipo === 'audio') {
       // 🎧 v0.73: reprodutor bonito para o público — espelho visual do
       // player remoto do painel (o público só assiste; quem comanda é o
       // apresentador). O <audio> escondido segue sendo o motor do som.
-      box.appendChild(montarAudioBonito(m));
+      const ap = montarAudioBonito(m);
+      avisarFimDoPlayer(ap.querySelector('audio')); // 🏁 v0.179
+      box.appendChild(ap);
       const selo = document.createElement('span');
       selo.className = 'midia-rotulo';
       selo.textContent = '🎙️ ' + (m.nome || 'áudio');
@@ -2539,6 +2553,20 @@ function avisarFimDaMidiaDireta(el) {
     if (el.loop || el._fimAvisado) return;
     el._fimAvisado = true;
     hubOv.send({ type: 'midiaDiretaFim' });
+  });
+}
+// 🏁 v0.179: o mesmo para o vídeo/áudio do comentário em destaque — antes só
+// o painel percebia o fim, pelo relógio, e mídia sem duração conhecida
+// (figurinha de vídeo, documento do Telegram) ficava «tocando» para sempre.
+// A duração medida vai junto: o painel ganha a régua e o ▶ recomeça do zero.
+function avisarFimDoPlayer(el) {
+  if (!el) return;
+  el.addEventListener('play', () => { el._fimAvisado = false; });
+  el.addEventListener('ended', () => {
+    if (el.loop || el._fimAvisado) return;
+    el._fimAvisado = true;
+    const d = Number(el.duration);
+    hubOv.send({ type: 'midiaPlayerFim', ...(Number.isFinite(d) && d > 0 ? { duracao: d } : {}) });
   });
 }
 // Manda um comando para o iframe do YouTube (IFrame API por postMessage)
@@ -2713,8 +2741,11 @@ function showFeatured(message) {
   startFeaturedLoop(newCard);
   updateFullscreenVisibility();
   renderMidiaPublico();
+  // ⏱️ v0.179: o tempo de tela de um destaque DE VERDADE é do servidor (que
+  // avisa o painel e todas as telas com featured:null). O relógio local fica
+  // só para o exemplo da prévia do editor, que o servidor não conhece.
   const seconds = Number(settings.autoHideSeconds) || 0;
-  if (seconds > 0) {
+  if (seconds > 0 && message.previa === true) {
     hideTimer = setTimeout(() => {
       // 📺 v0.103: na prévia, o tempo de tela esgotado devolve o exemplo local
       if (PREVIA && exemploPrevia) { destaqueReal = null; mostrarDestaqueAtual(); } else showFeatured(null);
@@ -2897,6 +2928,8 @@ function updateQrElement(el, qr) {
   // confFor já funde a família com o estilo próprio do adicional
   drawQrCanvas(el.querySelector('canvas'), qr, confFor(el));
   const nameEl = el.querySelector('.qr-name');
+  // 🌐 v0.179: o nome do QR é do streamer — não se traduz (só o «Exemplo» da prévia é do programa)
+  nameEl.toggleAttribute('data-no-i18n', !qr.exemploPrevia);
   nameEl.textContent = qr.name || '';
   nameEl.style.display = qr.name ? '' : 'none';
   showWidgetEl(el, 'qr');
@@ -2924,7 +2957,7 @@ function showQrs(qrs) {
     }
     // 📺 v0.103: na prévia do editor o QR desligado aparece como exemplo
     const mostrar = (PREVIA && !qr.visible && exemploQrPrevia)
-      ? { ...qr, visible: true, name: 'Exemplo', matrix: exemploQrPrevia } : qr;
+      ? { ...qr, visible: true, name: 'Exemplo', exemploPrevia: true, matrix: exemploQrPrevia } : qr;
     updateQrElement(el, mostrar);
   });
 }
@@ -3068,6 +3101,7 @@ function renderAvisoEl(el, inst) {
   el.innerHTML = '';
   const texto = document.createElement('div');
   texto.className = 'av-texto';
+  texto.toggleAttribute('data-no-i18n', !dados.exemploPrevia); // 🌐 v0.179: texto do streamer, nunca traduzido (só o exemplo da prévia é do programa)
   texto.textContent = String(dados.texto).slice(0, 1000); // sempre como texto puro
   // ✍️ v0.110: a peça de texto do aviso tem a mesma formatação das outras
   // (fonte, contorno, espaçamento, cor própria...) por cima dos ajustes de sempre
@@ -3175,6 +3209,12 @@ function tempoTimerOv() {
   return Math.max(0, relogioBaseOv.restante - passado);
 }
 
+// 🌐 v0.179: a data e a hora do relógio seguem o idioma da tela (o das
+// configurações), como já acontecia no painel — antes saíam sempre em português
+function idiomaOverlay() {
+  const atual = (window.OBS_I18N && OBS_I18N.atual) || 'pt';
+  return atual === 'pt' ? 'pt-BR' : atual === 'zh' ? 'zh-CN' : atual;
+}
 function pintarRelogioOverlay() {
   if (!algumRelogioVisivel()) return;
   const conf = settings?.widgets?.relogio || {};
@@ -3198,18 +3238,19 @@ function pintarRelogioOverlay() {
     const opcoes = { hour: '2-digit', minute: '2-digit', hour12: conf.formato24h === false, timeZone: fusoOverlay() };
     if (conf.mostrarSegundos !== false) opcoes.second = '2-digit';
     const data = conf.mostrarData !== false
-      ? d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', timeZone: fusoOverlay() })
+      ? d.toLocaleDateString(idiomaOverlay(), { weekday: 'long', day: '2-digit', month: 'long', timeZone: fusoOverlay() })
       : '';
-    bloco(d.toLocaleTimeString('pt-BR', opcoes), data, 'rl-data');
+    bloco(d.toLocaleTimeString(idiomaOverlay(), opcoes), data, 'rl-data');
   }
+  // 🌐 v0.179: os rótulos passam pelo tradutor (são textos do programa)
   if (relogioAtual.cronometro?.visible) {
     bloco(fmtTempoOv(tempoCronOv(), conf.mostrarDecimos !== false),
-      conf.mostrarRotulo !== false ? 'Cronômetro' : '', 'rl-rotulo');
+      conf.mostrarRotulo !== false ? OBS_I18N.t('Cronômetro') : '', 'rl-rotulo');
   }
   if (relogioAtual.timer?.visible) {
     const ms = tempoTimerOv();
     acabou = ms === 0;
-    bloco(fmtTempoOv(ms, false), conf.mostrarRotulo !== false ? 'Timer' : '', 'rl-rotulo', 'rl-timer');
+    bloco(fmtTempoOv(ms, false), conf.mostrarRotulo !== false ? OBS_I18N.t('Timer') : '', 'rl-rotulo', 'rl-timer');
   }
   relogioEl.style.setProperty('--rl-size', (Number(conf.fontSize) || 44) + 'px');
   relogioEl.style.setProperty('--rl-font', conf.fontFamily ? `'${String(conf.fontFamily).replace(/['"\\]/g, '')}', 'Segoe UI', sans-serif` : 'inherit');
@@ -3634,6 +3675,7 @@ function winnerCard(winner, place, delayMs, raffle) {
 
   const name = document.createElement('div');
   name.className = 'w-name';
+  name.setAttribute('data-no-i18n', ''); // 🌐 v0.179: nome de espectador, nunca traduzido
   name.textContent = winner.author;
   card.appendChild(name);
 
@@ -3650,6 +3692,7 @@ function winnerCard(winner, place, delayMs, raffle) {
   if (resposta && settings?.raffle?.respostaTela !== false) {
     const balao = document.createElement('div');
     balao.className = 'w-reply';
+    balao.setAttribute('data-no-i18n', ''); // 🌐 v0.179: resposta do espectador
     balao.textContent = resposta.texto || '💬';
     card.appendChild(balao);
   } else if (raffle?.expirados?.[place]) {
@@ -3840,7 +3883,8 @@ const hubOv = connectHub((event) => {
       // novos não aparecem, ex.: figurinha animada virando 📎 arquivo)
       if (!window.versaoDoPrograma) window.versaoDoPrograma = event.version || 'x';
       else if (event.version && window.versaoDoPrograma !== event.version) { location.reload(); break; }
-      KICK_NAVEGADOR.pronto(hubOv); // 🟢 v0.169.3: esta tela também atende consultas ao Kick
+      // 🟢 v0.169.3: esta tela também atende consultas ao Kick — 🟢 v0.179: só do computador local
+      if (!event.security || !event.security.role || event.security.role === 'local') KICK_NAVEGADOR.pronto(hubOv);
       settingsBase = event.settings;
       perfisOverlay = Array.isArray(event.perfisOverlay) ? event.perfisOverlay : [];
       destaqueReal = event.featured || null;

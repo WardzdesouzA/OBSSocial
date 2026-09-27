@@ -717,16 +717,29 @@ function connectHub(onEvent) {
   // Comandos enviados durante uma reconexão (ex.: logo após o programa
   // reiniciar) não podem se perder: ficam na fila e saem quando reconectar.
   const fila = [];
+  let seguidas = 0; // quedas seguidas sem conseguir abrir
   const open = () => {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws`);
-    ws.onopen = () => { while (fila.length) ws.send(fila.shift()); };
+    ws.onopen = () => { seguidas = 0; while (fila.length) ws.send(fila.shift()); };
     ws.onmessage = (event) => {
       // v0.127: um erro tratando UMA mensagem não derruba a conexão, mas
       // também não pode sumir calado — fica no console para achar a causa
       try { onEvent(JSON.parse(event.data)); } catch (e) { console.error('Erro tratando uma mensagem do servidor:', e); }
     };
-    ws.onclose = () => setTimeout(open, 1500);
+    // 🔒 v0.179: 4001 'seguranca' = o servidor derrubou ESTA página de propósito
+    // (senha nova/trocada, modo da rede mudou). Reconectar só dava 401 em loop
+    // e a página ficava morta; recarregar cai na tela de senha ou renasce já
+    // com o papel novo. Qualquer outro fechamento é queda: reconecta como antes.
+    ws.onclose = (ev) => {
+      if (ev && ev.code === 4001) { location.reload(); return; }
+      // O programa reiniciou (as sessões da senha ficam só na memória) ou a
+      // senha nasceu com esta página desconectada: o servidor está de pé mas
+      // recusa o WebSocket (401). Recarregar cai na tela de senha em vez de
+      // tentar para sempre; servidor fora do ar = o fetch falha e segue tentando.
+      if (++seguidas >= 3) fetch(location.pathname + location.search, { cache: 'no-store' }).then((r) => { if (r.status === 401) location.reload(); }).catch(() => {});
+      setTimeout(open, 1500);
+    };
   };
   open();
   return {

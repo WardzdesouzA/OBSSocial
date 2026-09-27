@@ -87,7 +87,9 @@ function init(dataDir) {
 // Aceita "1,234.56" (en), "1.234,56" (europeu), "1,00,000.00" (indiano),
 // "1'234.50" (suico), "1 000,50" (frances) e valores simples.
 function parseNumber(raw) {
-  let s = String(raw).trim().replace(/[\s  ']/g, '');
+  // 💱 v0.179: o apóstrofo tipográfico ’ (U+2019) e o ʼ (U+02BC) são o separador
+  // de milhar suíço em tipografia/CLDR — «CHF 1’234.50» virava CHF 1, sem aviso
+  let s = String(raw).trim().replace(/[\s  '’ʼ]/g, '');
   const lastComma = s.lastIndexOf(',');
   const lastDot = s.lastIndexOf('.');
   if (lastComma > -1 && lastDot > -1) {
@@ -121,7 +123,7 @@ function resolveToken(rawToken) {
 // "US$ 5.00" / "$5.00" / "5,00 €" / "PEN 10.00" / "10.00 SEK" -> { currency, value }
 function parseAmount(text) {
   const cleaned = String(text).trim().replace(/ /g, ' ');
-  const match = cleaned.match(/^(.*?)(\d[\d., ' ]*)(.*)$/);
+  const match = cleaned.match(/^(.*?)(\d[\d., '’ʼ ]*)(.*)$/); // 💱 v0.179: ’ e ʼ também
   if (!match) return null;
   const value = parseNumber(match[2]);
   if (!Number.isFinite(value)) return null;

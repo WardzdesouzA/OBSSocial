@@ -15,6 +15,15 @@ const BROWSER_HEADERS = {
 // 🔒 v0.127.1: teto do pacote descompactado — um frame "bomba" não pode
 // estourar a memória (o chat real fica na casa dos KB)
 const LIMITE_INFLADO = 4 * 1024 * 1024;
+// 🔒 v0.179: o teto acima é POR pacote; um frame com 200 pacotes «bomba» de
+// 14 bytes cada inflava 800 MB e prendia o programa por segundos. Agora cada
+// frame tem um orçamento TOTAL de descompressão e uma profundidade máxima de
+// pacote dentro de pacote (o chat real usa um nível)
+const LIMITE_FRAME = 8 * 1024 * 1024;
+const PROFUNDIDADE_MAX = 2;
+// Teto do frame WebSocket vindo do servidor de danmaku (o padrão da biblioteca
+// é 100 MB; o chat real fica na casa dos KB)
+const WS_MAX_PAYLOAD = 16 * 1024 * 1024;
 
 // 🛡️ v0.172: as consultas à API da Bilibili (sala, acesso ao chat, histórico,
 // audiência) passam pelos caminhos de reserva do Kick — Node → Node com a
@@ -50,7 +59,8 @@ function packet(op, bodyStr) {
   return Buffer.concat([header, body]);
 }
 
-function* parsePackets(buffer) {
+// `orcamento` é um só para o frame inteiro (compartilhado pela recursão)
+function* parsePackets(buffer, orcamento = { restante: LIMITE_FRAME }, profundidade = 0) {
   let offset = 0;
   while (offset + 16 <= buffer.length) {
     const packLen = buffer.readUInt32BE(offset);
@@ -59,13 +69,20 @@ function* parsePackets(buffer) {
     const op = buffer.readUInt32BE(offset + 8);
     const body = buffer.subarray(offset + 16, offset + packLen);
     if (op === OP_MESSAGE && (protoVer === 2 || protoVer === 3)) {
+      // 🔒 v0.179: orçamento do frame esgotado ou pacote aninhado demais — o
+      // resto do frame é descartado
+      if (orcamento.restante <= 0 || profundidade >= PROFUNDIDADE_MAX) return;
+      const teto = Math.min(LIMITE_INFLADO, orcamento.restante);
       let dentro = null;
       try {
         dentro = protoVer === 2
-          ? zlib.inflateSync(body, { maxOutputLength: LIMITE_INFLADO })
-          : zlib.brotliDecompressSync(body, { maxOutputLength: LIMITE_INFLADO });
-      } catch { dentro = null; /* passou do teto ou veio corrompido: descarta o frame */ }
-      if (dentro) yield* parsePackets(dentro);
+          ? zlib.inflateSync(body, { maxOutputLength: teto })
+          : zlib.brotliDecompressSync(body, { maxOutputLength: teto });
+      } catch { dentro = null; orcamento.restante -= teto; /* passou do teto ou veio corrompido: o trabalho gasto conta no orçamento */ }
+      if (dentro) {
+        orcamento.restante -= dentro.length;
+        yield* parsePackets(dentro, orcamento, profundidade + 1);
+      }
     } else {
       yield { op, body };
     }
@@ -155,7 +172,7 @@ class BilibiliConnector {
 
   open() {
     if (this.stopped) return;
-    const ws = new WebSocket(this.wsUrl, { headers: { Origin: 'https://live.bilibili.com' } });
+    const ws = new WebSocket(this.wsUrl, { headers: { Origin: 'https://live.bilibili.com' }, maxPayload: WS_MAX_PAYLOAD });
     this.ws = ws;
 
     ws.on('open', () => {
@@ -284,4 +301,4 @@ class BilibiliConnector {
   }
 }
 
-module.exports = { BilibiliConnector, bilibiliPedir, bilibiliCaminhos: caminhos };
+module.exports = { BilibiliConnector, bilibiliPedir, bilibiliCaminhos: caminhos, parsePackets, LIMITE_INFLADO, LIMITE_FRAME };

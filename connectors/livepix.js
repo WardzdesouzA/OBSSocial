@@ -36,8 +36,20 @@ const ESPERA_MAX_MS = Math.max(ESPERA_BASE_MS * 4, 300000 * (ESPERA_BASE_MS / 15
 
 // 429 aqui é o limite de chamadas (não um bloqueio): fica de fora da lista
 // de «barrado», senão a cadeia tentaria curl/PowerShell à toa
-const caminhos = criarCaminhos({ rede: 'livepix', rotulo: 'LivePix', headers: { Accept: 'application/json' }, referer: 'https://livepix.gg/', tempoMs: 15000, barrado: [403, 503] });
+// 💜 v0.179: artigo 'A' — as frases dos caminhos saíam no masculino («O LivePix barrou…»)
+const caminhos = criarCaminhos({ rede: 'livepix', rotulo: 'LivePix', artigo: 'A', headers: { Accept: 'application/json' }, referer: 'https://livepix.gg/', tempoMs: 15000, barrado: [403, 503] });
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+// 🔒 v0.179: a memória dos ids já vistos tem teto também em RAM (o disco já
+// cortava em 2000; o Set em memória só crescia enquanto o programa rodava —
+// uma API que devolvesse ids novos sem parar inflava o processo sem fim)
+const VISTOS_MAX = 2000;
+function podarVistos(set) {
+  if (set.size <= VISTOS_MAX) return;
+  for (const v of set) { set.delete(v); if (set.size <= VISTOS_MAX) break; } // os mais antigos saem primeiro
+}
+// O id só vale como texto ou número — um objeto virava «[object Object]» e
+// barrava todos os itens seguintes como repetidos
+const idDe = (item) => (item && (typeof item.id === 'string' || typeof item.id === 'number') ? String(item.id).trim().slice(0, 80) : '');
 
 // Centavos → «R$ 10,00» (ou «USD 10.00» para outra moeda, que a LivePix não
 // oferece hoje — só BRL — mas o campo existe)
@@ -166,15 +178,17 @@ class LivePixConnector {
     lista.sort((a, b) => (Date.parse(a.createdAt) || 0) - (Date.parse(b.createdAt) || 0));
     let novas = 0;
     for (const m of lista) {
-      if (!m || !m.id) continue;
-      if (m.proof) this.provas.add(String(m.proof));
-      const chave = 'm:' + m.id;
+      const id = idDe(m);
+      if (!id) continue;
+      if (m.proof) this.provas.add(String(m.proof).slice(0, 120));
+      const chave = 'm:' + id;
       if (this.vistos.has(chave)) continue;
       this.vistos.add(chave);
       if (this.primeira) continue;
       novas += 1;
       this.emitir(m, true);
     }
+    podarVistos(this.vistos); podarVistos(this.provas);
     if (novas) this.salvarVistos(this.vistos);
   }
 
@@ -187,15 +201,17 @@ class LivePixConnector {
     lista.sort((a, b) => (Date.parse(a.createdAt) || 0) - (Date.parse(b.createdAt) || 0));
     let novos = 0;
     for (const p of lista) {
-      if (!p || !p.id) continue;
-      const chave = 'p:' + p.id;
+      const id = idDe(p);
+      if (!id) continue;
+      const chave = 'p:' + id;
       if (this.vistos.has(chave)) continue;
       this.vistos.add(chave);
       if (this.primeira) continue;
-      if (p.proof && this.provas.has(String(p.proof))) continue;
+      if (p.proof && this.provas.has(String(p.proof).slice(0, 120))) continue;
       novos += 1;
       this.emitir(p, false);
     }
+    podarVistos(this.vistos);
     if (novos) this.salvarVistos(this.vistos);
   }
 

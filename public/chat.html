@@ -315,7 +315,7 @@ function applySettings(next) {
     document.getElementById('formato-css').textContent = [regra('.msg .author', pz.nome), regra('.msg .msg-text', pz.texto)].filter(Boolean).join('\n');
   }
   customStyle.textContent = String(chat.customCSS || '');
-  redesenharSelos();
+  redesenhar();
   trim();
 }
 
@@ -331,7 +331,9 @@ function allowed(message) {
   return platforms[message.platform] !== false;
 }
 
-function addMessage(message, animate) {
+// addMessage(message, animate, restanteMs): restanteMs é o tempo de tela que
+// AINDA falta (histórico do init — 📺 v0.179); sem ele vale o tempo inteiro.
+function addMessage(message, animate, restanteMs) {
   if (!chat || !allowed(message)) return;
   const item = document.createElement('div');
   item.className = 'msg';
@@ -347,11 +349,68 @@ function addMessage(message, animate) {
   // Guarda o comentário junto do elemento: e assim que mudar um liga/desliga
   // dos distintivos, da para redesenhar o que ja esta na tela
   item.__msg = message;
-  // ☎️ v0.64: daqui para baixo é o que vai AO AR — autor que pareça telefone
-  // entra mascarado (o painel continua vendo o número; a busca/dedup acima
-  // também usa o original, guardado no item)
-  message = mensagemParaTela(message);
   if (animate && chat.animation && chat.animation !== 'none') item.classList.add('anim-' + chat.animation);
+  // 🎨 v0.179: o miolo (foto, ícone, valor/selos, nome, texto) sai de montar(),
+  // a mesma função que redesenha o que já está na tela quando o card 📺 muda
+  montar(item, message);
+
+  // Encaixa pela ORDEM DE CHEGADA (v0.53): o lote do YouTube não fura a fila
+  // da Twitch/Kick, e o histórico recuperado ainda entra no lugar certo do
+  // passado, não no fim
+  item.dataset.ts = String(message.timestamp || 0);
+  item.dataset.seq = String(message.seq || 0);
+  item.dataset.ordem = String(posicaoNaLinha(message));
+  const ordem = posicaoNaLinha(message);
+  const seq = Number(message.seq) || 0;
+  // mensagem do elemento chegou antes desta?
+  const veioAntes = (el) => {
+    const elOrdem = Number(el.dataset.ordem);
+    const pos = Number.isFinite(elOrdem) ? elOrdem : (Number(el.dataset.ts) || 0);
+    return pos < ordem || (pos === ordem && (Number(el.dataset.seq) || 0) < seq);
+  };
+  if (chat.direction === 'top') {
+    let alvo = null;
+    for (const filho of box.children) {
+      if (veioAntes(filho)) { alvo = filho; break; }
+    }
+    if (alvo) box.insertBefore(item, alvo);
+    else box.appendChild(item);
+  } else {
+    let alvo = null;
+    for (let i = box.children.length - 1; i >= 0; i--) {
+      if (!veioAntes(box.children[i])) alvo = box.children[i];
+      else break;
+    }
+    if (alvo) box.insertBefore(item, alvo);
+    else box.appendChild(item);
+  }
+  trim();
+
+  const fade = Number(chat.fadeAfterSeconds) || 0;
+  if (fade > 0) {
+    // ⏱️ v0.179: só removeMsg — ele já agenda o item.remove() no fim da
+    // «Velocidade da saída» escolhida (o antigo remove() fixo em 0,7 s cortava
+    // a animação no meio). No histórico do init vale só o tempo que falta.
+    const espera = Number(restanteMs) > 0 ? Number(restanteMs) : fade * 1000;
+    setTimeout(() => removeMsg(item), espera);
+  }
+}
+
+// 🎨 v0.179: monta (ou REMONTA) o conteúdo visível de uma mensagem a partir do
+// comentário guardado em item.__msg: foto, ícone da plataforma, valor do
+// Super Chat/resgate ou selos, nome (com a cor escolhida) e texto. addMessage
+// usa na chegada; redesenhar() usa de novo em tudo o que já está na tela, para
+// os liga/desliga do card 📺 (foto, ícone, cor dos nomes, cor dos Super Chats,
+// selos) valerem na hora — como o painel e o comentário em destaque já fazem.
+// O .msg em si (classes de animação, data-leaving, ordem) não é tocado.
+function montar(item, original) {
+  // ☎️ v0.64: daqui para baixo é o que vai AO AR — autor que pareça telefone
+  // entra mascarado (o painel continua vendo o número; a busca/dedup usa o
+  // original, guardado no item)
+  const message = mensagemParaTela(original);
+  for (const velho of [...item.children]) velho.remove();
+  item.classList.remove('superchat-colored');
+  item.style.removeProperty('--sc-color');
   item.style.setProperty('--msg-accent', platformColor(message.platform));
   if (chat.superchatColors && isSuperchat(message) && corHexOk(message.superchat?.color)) {
     item.classList.add('superchat-colored');
@@ -412,46 +471,6 @@ function addMessage(message, animate) {
   }
   content.appendChild(corpo);
   item.appendChild(content);
-
-  // Encaixa pela ORDEM DE CHEGADA (v0.53): o lote do YouTube não fura a fila
-  // da Twitch/Kick, e o histórico recuperado ainda entra no lugar certo do
-  // passado, não no fim
-  item.dataset.ts = String(message.timestamp || 0);
-  item.dataset.seq = String(message.seq || 0);
-  item.dataset.ordem = String(posicaoNaLinha(message));
-  const ordem = posicaoNaLinha(message);
-  const seq = Number(message.seq) || 0;
-  // mensagem do elemento chegou antes desta?
-  const veioAntes = (el) => {
-    const elOrdem = Number(el.dataset.ordem);
-    const pos = Number.isFinite(elOrdem) ? elOrdem : (Number(el.dataset.ts) || 0);
-    return pos < ordem || (pos === ordem && (Number(el.dataset.seq) || 0) < seq);
-  };
-  if (chat.direction === 'top') {
-    let alvo = null;
-    for (const filho of box.children) {
-      if (veioAntes(filho)) { alvo = filho; break; }
-    }
-    if (alvo) box.insertBefore(item, alvo);
-    else box.appendChild(item);
-  } else {
-    let alvo = null;
-    for (let i = box.children.length - 1; i >= 0; i--) {
-      if (!veioAntes(box.children[i])) alvo = box.children[i];
-      else break;
-    }
-    if (alvo) box.insertBefore(item, alvo);
-    else box.appendChild(item);
-  }
-  trim();
-
-  const fade = Number(chat.fadeAfterSeconds) || 0;
-  if (fade > 0) {
-    setTimeout(() => {
-      removeMsg(item);
-      setTimeout(() => item.remove(), 700);
-    }, fade * 1000);
-  }
 }
 
 // Remove uma mensagem com a animacao de saida escolhida
@@ -476,17 +495,15 @@ function trim() {
   }
 }
 
-// 🏷️ Mudou um liga/desliga dos distintivos: os comentários que já estão na
-// tela também obedecem na hora, sem esperar chegar comentário novo.
-function redesenharSelos() {
+// 🏷️ Mudou um liga/desliga do card 📺 (distintivos, foto, ícone da plataforma,
+// cor dos nomes, cor dos Super Chats): os comentários que já estão na tela
+// também obedecem na hora, sem esperar chegar comentário novo.
+// 🎨 v0.179: antes só os selos eram redesenhados (redesenharSelos); agora o
+// miolo inteiro é remontado por montar(), o mesmo caminho da chegada.
+function redesenhar() {
   for (const item of box.children) {
-    const message = item.__msg;
-    const content = item.querySelector('.content');
-    if (!message || !content) continue;
-    for (const velho of [...content.querySelectorAll('.badge')]) velho.remove();
-    if (!chat?.showBadges || message.superchat?.amount || isResgate(message)) continue;
-    const autor = content.querySelector('.author');
-    badgeRow(message, (el) => content.insertBefore(el, autor));
+    if (!item.__msg) continue;
+    montar(item, item.__msg);
   }
 }
 
@@ -513,9 +530,28 @@ connectHub((event) => {
       // para rodar o código novo (fonte do OBS/aba não recarrega sozinha)
       if (!window.versaoDoPrograma) window.versaoDoPrograma = event.version || 'x';
       else if (event.version && window.versaoDoPrograma !== event.version) { location.reload(); break; }
-      applySettings(event.settings);
       box.innerHTML = '';
-      for (const message of (event.recent || []).slice(-30)) addMessage(message, false);
+      applySettings(event.settings);
+      {
+        // 📺 v0.179: o histórico volta respeitando o card — só as últimas
+        // «Quantas mensagens» (antes: sempre 30, e a poda animava a saída das
+        // excedentes de uma vez) e, com «Tempo de tela» ligado, só as que
+        // ainda estariam na tela, cada uma com o tempo que lhe falta (antes,
+        // uma recarga da fonte do OBS trazia de volta mensagens já expiradas
+        // por um período inteiro)
+        const max = Math.max(1, Number(chat?.maxMessages) || 12);
+        const fade = Number(chat?.fadeAfterSeconds) || 0;
+        const agora = Date.now();
+        // quanto do tempo de tela ainda falta (ms); 0 = sem tempo de tela;
+        // sem horário conhecido a mensagem conta como recém-chegada
+        const restante = (m) => {
+          if (fade <= 0) return 0;
+          const ts = Number(m.timestamp) || 0;
+          return ts > 0 ? fade * 1000 - (agora - ts) : fade * 1000;
+        };
+        const recentes = (event.recent || []).filter((m) => fade <= 0 || restante(m) > 0);
+        for (const message of recentes.slice(-max)) addMessage(message, false, fade > 0 ? Math.max(200, restante(message)) : 0);
+      }
       break;
     case 'settings':
       applySettings(event.settings);
@@ -532,6 +568,13 @@ connectHub((event) => {
       if (!avatarUrlOk(event.avatar) || !alvo) break; // 🔒 v0.127.1: só https ou foto local
       // 🖼️ v0.138: a mesma troca do painel e da tela do público (render.js)
       aplicarFotoQueChegou(document.body, event.platform, alvo, event.avatar);
+      // 🎨 v0.179: a foto fica também no comentário guardado — assim um
+      // redesenho (liga/desliga do card 📺) não volta para as iniciais
+      for (const item of box.children) {
+        const m = item.__msg;
+        if (!m || m.platform !== event.platform || (m.avatar && avatarUrlOk(m.avatar))) continue;
+        if ([m.authorLogin, m.author].some((v) => v && String(v).toLowerCase() === alvo)) m.avatar = event.avatar;
+      }
       break;
     }
   }

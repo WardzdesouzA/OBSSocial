@@ -3,3 +3,7 @@ data/
 # programa na v0.95. Se alguma cópia voltar para cá durante um teste, ela NÃO
 # pode ser commitada de novo — este repositório é público.
 public/artes/
+
+# Pastas de trabalho da ferramenta de desenvolvimento e arquivos de PID de testes
+.claude/
+*.pid

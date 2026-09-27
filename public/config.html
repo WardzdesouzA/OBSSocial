@@ -441,6 +441,9 @@
   input.sw:checked::after { left: 24px; background: var(--accent); }
   label:has(> input.sw) { display: flex; align-items: center; gap: 10px; cursor: pointer; }
   label:has(> input.sw) > span { flex: 1; }
+  /* 🔒 v0.179: seletor travado (página aberta pela rede) fica apagado, sem mão */
+  label:has(> input.sw:disabled), input.sw:disabled { opacity: .45; cursor: default; }
+  label:has(> input.sw:disabled) > input.sw { opacity: 1; }
   .net-perms { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 6px 16px; margin: 6px 0 4px; }
   /* Prévia do painel (arraste para reordenar) */
   .mini-panel { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
@@ -873,6 +876,13 @@
     position: fixed; inset: 0; z-index: 600; margin: 0;
     border-radius: 0; overflow: auto; max-width: none;
   }
+  /* ⛶ v0.179: em tela cheia só ficam o mapa e as ferramentas dele — o título,
+     a dica, as barras 🎭 perfil / 🖼️ arte e a tira de perfis empurravam o mapa
+     para o rodapé da janela, e ele saía MENOR do que fora da tela cheia */
+  body.organizar-cheio #sec-widgets > h3, body.organizar-cheio #editorDica,
+  body.organizar-cheio #perfilBar, body.organizar-cheio #perfilEditAviso,
+  body.organizar-cheio #arteBar, body.organizar-cheio #perfisArte { display: none !important; } /* (as barras têm display inline) */
+  body.organizar-cheio .layout-flex { justify-content: center; }
 
   /* Menu lateral só com os ícones */
   #navColapso { width: 100%; height: 24px; font-size: 12px; padding: 0; }
@@ -1356,6 +1366,8 @@
             <label class="check lab-toggle"><input type="checkbox" class="sw net-perm" data-perm="obs"> <span>🎬 Comandar o OBS e o vMix (cenas/entradas, live/gravação, mixer, fontes, filtros, mídias — e as teclas 🎬🎛️ da Mesa)</span></label>
           </div>
           <div class="hint">Assistir ao painel é sempre permitido; o resto só funciona com o seletor ligado. Quem entrar com a senha abaixo ignora os seletores e controla tudo.</div>
+          <!-- 🔒 v0.179: os coringas ficam fora do seletor 🎬 da rede -->
+          <div class="hint">🔒 Os coringas — o ⌨️ atalho do OBS por nome e a 🧰 função, o 📜 script e a ⌨️ tecla livres do vMix — alcançam qualquer ação (até as de plugin e as que gravam arquivo) e por isso ficam só com este computador ou com quem entrou com a senha, mesmo com o 🎬 ligado.</div>
 
           <label style="font-size:12px">🔑 Senha de acesso pela rede (opcional) — <b id="pwStatus">sem senha</b></label>
           <div class="row">
@@ -1552,7 +1564,7 @@
 
     <div class="card" id="sec-widgets">
       <h3>🎨 Editor visual de overlay</h3>
-      <div class="hint" style="font-size:12px;color:var(--muted)">A sua tela (16:9) inteira como mesa de trabalho. <b>Arraste cada elemento</b> (salva sozinho, muda na live na hora), puxe as <b>8 alças</b> para o tamanho, e use a barra <b>🗂️ Selecionar elemento</b> logo abaixo do mapa para escolher qualquer coisa e mudar a camada dela com ▲▼. Escolha um <b>perfil</b> aqui em cima para editá-lo; em «Visual ao vivo», o editor mexe no visual de sempre.</div>
+      <div class="hint" id="editorDica" style="font-size:12px;color:var(--muted)">A sua tela inteira (no tamanho escolhido em «Tela») como mesa de trabalho. <b>Arraste cada elemento</b> (salva sozinho, muda na live na hora), puxe as <b>8 alças</b> para o tamanho, e use a barra <b>🗂️ Selecionar elemento</b> logo abaixo do mapa para escolher qualquer coisa e mudar a camada dela com ▲▼. Escolha um <b>perfil</b> aqui em cima para editá-lo; em «Visual ao vivo», o editor mexe no visual de sempre.</div>
       <div id="perfilBar" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:8px 0;padding:10px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2)">
         <label style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)">🎭 Perfil (molde do destaque)
           <select id="perfilEdit" style="min-width:180px"><option value="">— Visual ao vivo —</option></select>
@@ -1719,7 +1731,8 @@
       <div id="painelPx">
         <div class="camadas-titulo" id="painelPxTitulo">📐 —</div>
         <div id="painelPxCampos"><span class="hint painel-px-dica">Clique num overlay ou numa peça para ver e digitar as medidas dele.</span></div>
-        <div class="hint" style="margin:4px 0 0">Números em <b>pixels</b> da tela 1920×1080.</div>
+        <!-- 📐 v0.179: o tamanho é o da tela escolhida em «Tela» (syncTelaUI escreve) -->
+        <div class="hint" style="margin:4px 0 0">Números em <b>pixels</b> da tela <span id="painelPxTela">1920×1080</span>.</div>
         <!-- 📏 v0.115: força do pontilhado branco do modo medida (preferência do navegador) -->
         <label class="hint" id="medidaPontilhadoWrap" style="display:flex;align-items:center;gap:6px;margin:6px 0 0" title="Quanto o contorno pontilhado branco aparece enquanto você digita no seletor manual (modo medida). Preferência deste navegador.">📏 Pontilhado do modo medida
           <select id="medidaPontilhado" style="padding:3px 6px;font-size:12px"><option value="1">Normal</option><option value="2">Mais visível</option><option value="3">Bem visível</option></select>
@@ -1806,7 +1819,7 @@
 
     <div class="card">
       <h3>🧩 Personalizar widgets da tela <span class="hist-btns" data-section="widget"><button data-act="undo" title="Voltar (desfazer o último ajuste)">◀</button><button data-act="redo" title="Avançar (refazer)">▶</button><button data-act="reset" title="Voltar ao padrão original">↺</button></span></h3>
-      <div class="hint">Cada widget (QR, sorteio, likômetro, winstreak e audiência) pode ser personalizado por completo: posição, tamanho, cores, animações de entrada e de saída, ⏱️ tempo de tela, mídia própria de fundo e CSS. Escolha o widget na lista e mexa à vontade — tudo salva sozinho e muda na tela na hora.</div>
+      <div class="hint">Cada widget (QR, sorteio, likômetro, winstreak, audiência, avisos, relógio e clima) pode ser personalizado por completo: posição, tamanho, cores, animações de entrada e de saída, ⏱️ tempo de tela, mídia própria de fundo e CSS. Escolha o widget na lista e mexa à vontade — tudo salva sozinho e muda na tela na hora.</div>
       <div class="field">
         <label>Qual widget personalizar</label>
         <select id="w-select">
@@ -2167,7 +2180,8 @@
 
     <div class="card" id="sec-chat">
       <h3>📺 Chat ao vivo fixo na tela <span class="hist-btns" data-section="chat"><button data-act="undo" title="Voltar (desfazer o último ajuste)">◀</button><button data-act="redo" title="Avançar (refazer)">▶</button><button data-act="reset" title="Voltar ao padrão original">↺</button></span></h3>
-      <div class="hint">Personalização da URL do chat ao vivo (a segunda URL lá em cima).</div>
+      <!-- 📺 v0.179: a URL do chat não mora mais nesta página (foi para 🔗 URLs para o OBS) -->
+      <div class="hint">Personalização do chat fixo na tela — a URL dele fica na página 🔗 URLs para o OBS (campo «Chat ao vivo fixo na tela»).</div>
       <div class="settings-grid">
         <div>
           <label>Lado da tela</label>
@@ -2190,8 +2204,10 @@
             <option value="clean">Só texto (transparente)</option>
           </select>
         </div>
-        <div><label>Largura: <span id="c-width-val"></span>px</label><input type="range" id="c-width" min="240" max="800" step="1"></div>
-        <div><label>Altura: <span id="c-height-val"></span>px (0 = tela inteira)</label><input type="range" id="c-height" min="0" max="1080" step="1"></div>
+        <!-- 📐 v0.179: as réguas vão até onde o 🖱️ Organizar a tela deixa ir (altura 2160, largura 1920) —
+             antes um chat esticado lá aparecia aqui grudado no teto da régua -->
+        <div><label>Largura: <span id="c-width-val"></span>px</label><input type="range" id="c-width" min="240" max="1920" step="1"></div>
+        <div><label>Altura: <span id="c-height-val"></span>px (0 = tela inteira)</label><input type="range" id="c-height" min="0" max="2160" step="1"></div>
         <div><label>Tamanho da letra: <span id="c-fontSize-val"></span>px</label><input type="range" id="c-fontSize" min="12" max="40" step="1"></div>
         <div><label>Quantas mensagens</label><input type="number" id="c-maxMessages" min="3" max="50" step="1"></div>
         <div><label>Espaço entre mensagens: <span id="c-spacing-val"></span>px</label><input type="range" id="c-spacing" min="0" max="24" step="1"></div>
@@ -2899,7 +2915,7 @@
             <button id="obsSalvarBtn" class="icon-btn" title="Salvar e conectar">💾</button>
             <span id="obsConfigStatus" class="hint" style="margin:0">—</span>
           </div>
-          <div class="hint" style="margin-bottom:0">A senha fica guardada só neste computador (na pasta <code>data/</code>, cifrada com AES-256) e nunca é enviada às telas. Quem acessa o painel pela rede só comanda o OBS se você liberar o seletor 🎬 no modo restrito (aba 🔒 Segurança) — de fábrica, fica bloqueado.</div>
+          <div class="hint" style="margin-bottom:0">A senha fica guardada só neste computador (na pasta <code>data/</code>, cifrada com AES-256) e nunca é enviada às telas. Quem acessa o painel pela rede só comanda o OBS se você liberar o seletor 🎬 no modo restrito (em 🔗 URLs para o OBS) — de fábrica, fica bloqueado.</div>
           <!-- 🎛️ v0.53: o controle do OBS no painel é montado por blocos, e
                cada bloco tem o seu liga/desliga: quem só troca de cena não
                precisa de mixer, filtros e perfis ocupando a tela -->
@@ -2935,7 +2951,7 @@
             <button id="vmixSalvarBtn" class="icon-btn" title="Salvar e conectar">💾</button>
             <span id="vmixConfigStatus" class="hint" style="margin:0">—</span>
           </div>
-          <div class="hint" style="margin-bottom:0">Quem acessa o painel pela rede só comanda o vMix se você liberar o seletor 🎬 no modo restrito (aba 🔒 Segurança) — o mesmo seletor do OBS; de fábrica, fica bloqueado. O snapshot 📸 é salvo pelo próprio vMix, na pasta dele.</div>
+          <div class="hint" style="margin-bottom:0">Quem acessa o painel pela rede só comanda o vMix se você liberar o seletor 🎬 no modo restrito (em 🔗 URLs para o OBS) — o mesmo seletor do OBS; de fábrica, fica bloqueado. O snapshot 📸 é salvo pelo próprio vMix, na pasta dele.</div>
           <details id="vmixPainelBloco" style="margin-top:10px">
             <summary style="cursor:pointer;font-weight:700">🎛️ O que aparece no controle do vMix dentro do painel</summary>
             <div class="hint" style="margin:6px 0">Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.</div>
@@ -3143,7 +3159,7 @@
               <li><b>Celular e tablet:</b> <span>no iPhone/iPad, o app Atalhos tem «Obter conteúdo da URL»; no Android, apps como HTTP Shortcuts ou o Tasker. Ou só cole o endereço no navegador — cada aba vira um botão.</span></li>
               <li><b>Automações (Node-RED, Home Assistant, scripts):</b> <span>qualquer GET ou POST no endereço. O token também pode ir no cabeçalho «Authorization: Bearer …» ou «X-Token».</span></li>
             </ul>
-            <div class="hint">⚠️ O token vale como a senha do painel: quem tem um endereço com o token manda em tudo (menos no que é só do computador local — senha, atualizações, apagar dados, credenciais). Se vazar, aperte 🔄 para gerar outro. De fora da sua rede nada entra, com ou sem token.</div>
+            <div class="hint">⚠️ O token É a senha do painel para quem está na sua rede: não vale só para os atalhos desta lista — quem tem um endereço com o token controla o painel inteiro pela rede, tudo o que o painel faz com a senha (tela, conexões, ferramentas, configurações, moderação e a operação livre «op»), menos o que é só do computador local (senha, atualizações, apagar dados, credenciais). Trate-o como a senha: não o cole em serviços de terceiros nem em prints; se vazar, aperte 🔄 para gerar outro. De fora da sua rede nada entra, com ou sem token.</div>
           </details>
           <details style="margin-top:6px">
             <summary style="cursor:pointer;font-weight:700">🧰 Para programas: catálogo, estado e operação livre</summary>
@@ -3203,17 +3219,17 @@
       <div class="hint">Tudo o que mais perguntam sobre o OBS Social, em respostas curtas. Clique numa pergunta para abrir.</div>
 
       <details class="faq-item"><summary>O que é o OBS Social?</summary><div class="faq-resposta">Um programa gratuito que junta os chats do YouTube, da Twitch, da Kick e da Bilibili — e, se você ligar em 🧪 Labs, as mensagens do 📨 Telegram e do 💬 WhatsApp — num painel só, junto das doações da 💜 LivePix, da 💚 PixGG e do 💠 Pix direto do banco, e coloca comentários, widgets e alertas na sua tela do OBS. Os chats são lidos sem login e sem chave de API.</div></details>
-      <details class="faq-item"><summary>Preciso de login ou senha das plataformas?</summary><div class="faq-resposta">Para os chats, não: o OBS Social lê o chat público das lives — você só digita o nome do canal em 🔌 Conexões e clica em conectar. Só as conexões que são SUAS pedem uma credencial sua: a LivePix (ID e segredo do cliente, criados de graça no painel dela), a PixGG (a chave do widget de alertas), o Telegram (o token do bot criado no @BotFather) e o WhatsApp (o QR da biblioteca local ou o token do gateway). Tudo isso fica cifrado só no seu computador e nunca vai para as telas.</div></details>
+      <details class="faq-item"><summary>Preciso de login ou senha das plataformas?</summary><div class="faq-resposta">Para os chats, não: o OBS Social lê o chat público das lives — você só digita o nome do canal em 🔌 Conexões e clica em conectar. Só as conexões que são SUAS pedem uma credencial sua: a LivePix (ID e segredo do cliente, criados de graça no painel dela), a PixGG (a chave do widget de alertas), o Telegram (o token do bot criado no @BotFather), o WhatsApp (o QR da biblioteca local ou o token do gateway) e o 💠 Pix direto do banco (Client ID, Client Secret e certificado da API Pix do seu banco, em 🧪 Labs). Tudo isso fica cifrado só no seu computador e nunca vai para as telas.</div></details>
       <details class="faq-item"><summary>Como coloco o overlay no OBS?</summary><div class="faq-resposta">Em 🔗 URLs para o OBS, copie a URL do overlay e crie no OBS uma fonte "Navegador" com ela, em 1920×1080. O 📺 chat fixo tem a própria URL, na mesma página.</div></details>
       <details class="faq-item"><summary>O que significam as cores da bolinha de conexão?</summary><div class="faq-resposta">🟢 Verde: conectado e com a live NO AR (YouTube, Twitch, Kick, Bilibili) — na LivePix, na PixGG, no Telegram e no WhatsApp, que não têm o conceito de live no ar, verde quer dizer simplesmente «Conectado». 🟡 Amarela: conectado, mas sem live no ar neste momento. 🔴 Vermelha: a conexão falhou — o texto ao lado diz o motivo e, quando o programa vai tentar de novo sozinho, em quantos segundos. Em ♿ Acessibilidade, «Formas além de cor» acrescenta ✓, ! e ✕ à bolinha, para quem não distingue as cores.</div></details>
       <details class="faq-item"><summary>🎁 Os resgates de pontos do canal aparecem?</summary><div class="faq-resposta">Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.</div></details>
       <details class="faq-item"><summary>Como destaco um comentário na tela?</summary><div class="faq-resposta">No painel, clique com o botão direito no comentário e escolha «📺 Enviar para a tela». Ele aparece no overlay na hora — e sai quando você tirar (ou sozinho, se você definir o ⏱️ tempo de tela). O clique simples não envia nada: é uma proteção contra o clique acidental no meio da live.</div></details>
-      <details class="faq-item"><summary>Como mudo a posição e o tamanho das coisas na tela?</summary><div class="faq-resposta">Aba 🎨 Temas → 🖱️ Organizar a tela: arraste cada item no mapa, estique pelas alças e use as 🪟 Camadas para decidir quem fica por cima. Os botões ◀▶ desfazem/refazem qualquer ajuste, e o ↺ devolve tudo ao padrão de fábrica.</div></details>
+      <details class="faq-item"><summary>Como mudo a posição e o tamanho das coisas na tela?</summary><div class="faq-resposta">Aba 🎨 Temas → 🖱️ Organizar a tela: arraste cada item no mapa, estique pelas alças e use a barra 🗂️ Selecionar elemento (setinhas ▲▼) para decidir quem fica por cima. Os botões ◀▶ desfazem/refazem qualquer ajuste, e o ↺ devolve tudo ao padrão de fábrica.</div></details>
       <details class="faq-item"><summary>O que é o 🧩 Overlay em peças?</summary><div class="faq-resposta">Um modo avançado que desmonta o cartão do destaque e os widgets em peças independentes (avatar, nome, texto, hora...), cada uma com posição, tamanho, giro, cor e camada próprios — tudo arrastado no Organizar a tela.</div></details>
       <details class="faq-item"><summary>Como uso uma arte minha no overlay?</summary><div class="faq-resposta">Na aba 🎨 Temas, dentro do 🎨 Editor visual de overlay, bloco <b>🖼️ Suas artes</b>: envie a imagem ou o vídeo e escolha onde ela entra (fundo do destaque, moldura de tela inteira ou fundo de widget). Com uma arte no fundo do destaque, o overlay padrão sai de cena sozinho: a arte vira a peça 🖼️ Sua arte no Organizar a tela, com posição e tamanho ajustáveis — e, com um molde em edição no 🖱️, a arte escolhida grava dentro do perfil.</div></details>
       <details class="faq-item"><summary>Enviei um vídeo de arte e ficou preto na tela. Por quê?</summary><div class="faq-resposta">Porque nem todo vídeo TOCA num navegador — e o OBS mostra os overlays dentro de um. Renders de overlay costumam sair em <b>.mov ProRes</b> ou <b>QuickTime com alfa</b> (a exportação padrão do After Effects): o arquivo entra, o programa lê a ficha dele, e mesmo assim nenhum quadro aparece. O caminho é exportar de novo: <b>WEBM (VP9 com alfa)</b> quando o fundo precisa ser transparente, ou <b>MP4 (H.264)</b> quando não precisa. O envio avisa na hora quando o arquivo não mostra quadro nenhum.</div></details>
       <details class="faq-item"><summary>Como faço backup dos meus dados?</summary><div class="faq-resposta">Em 🗄️ Logs e dados: escolha a pasta e, em cada item, a frequência — manual, tempo real (grava assim que algo muda) ou um relógio de 1s a 24h. O ↩️ Restaurar traz de volta o backup que você escolher, inclusive o das ⚙️ configurações.</div></details>
-      <details class="faq-item"><summary>Onde ficam os meus dados? Algo vai para a internet?</summary><div class="faq-resposta">Tudo fica na pasta data/ do programa, no SEU computador (e na pasta de backup que você escolher). O programa só sai para a internet para fazer o que você pediu: ler o chat público e as fotos e selos das plataformas, consultar a LivePix e a PixGG com as SUAS credenciais, buscar a cotação das moedas e o tempo das fontes de clima, e conferir no GitHub se há versão nova. Nada seu — comentários, configurações, senha, chaves — é enviado a ninguém: as chaves ficam cifradas só no seu computador e nunca aparecem nas telas.</div></details>
+      <details class="faq-item"><summary>Onde ficam os meus dados? Algo vai para a internet?</summary><div class="faq-resposta">Tudo fica na pasta data/ do programa, no SEU computador (e na pasta de backup que você escolher). O programa só sai para a internet para fazer o que você pediu: ler o chat público e as fotos e selos das plataformas, consultar a LivePix, a PixGG e a API Pix do seu banco com as SUAS credenciais, buscar a cotação das moedas e o tempo das fontes de clima, e conferir no GitHub se há versão nova. Nada seu — comentários, configurações, senha, chaves — é enviado a ninguém: as chaves ficam cifradas só no seu computador e nunca aparecem nas telas.</div></details>
       <details class="faq-item"><summary>O que são os distintivos ao lado dos nomes?</summary><div class="faq-resposta">Os cargos de cada rede: dono, moderador, VIP, assinante, membro, fundador (Twitch e Kick), OG, verificado e 🤖 BOT. Em 🏷️ Distintivos do chat você desliga qualquer um deles — ou usa a arte original da plataforma.</div></details>
       <details class="faq-item"><summary>Como funciona o 🎁 sorteio?</summary><div class="faq-resposta">Quem comenta durante a live entra na lista de participantes. O sorteio pode dar fichas extras por nível de assinante/membro, roda com animação e mostra o pódio na tela do OBS.</div></details>
       <details class="faq-item"><summary>Para que servem o Likômetro, o Winstreak e a Audiência?</summary><div class="faq-resposta">São widgets da tela: o 📊 Likômetro mostra curtidas e espectadores do YouTube; o 🏆 Winstreak conta vitórias (com recorde); a 👥 Audiência soma os espectadores de todas as redes conectadas, ao vivo.</div></details>
@@ -3223,12 +3239,12 @@
       <details class="faq-item"><summary>O overlay não aparece no OBS. O que eu confiro?</summary><div class="faq-resposta">Três coisas: o OBS Social está aberto? A URL da fonte "Navegador" é exatamente a da página 🔗? Clicou em "Atualizar" na fonte? A 📺 prévia real do Organizar a tela mostra exatamente o que o OBS captura — se aparece lá, aparece no OBS.</div></details>
       <details class="faq-item"><summary>Como atualizo o OBS Social?</summary><div class="faq-resposta">Em ℹ️ Sobre: o programa avisa quando existe versão nova (ele procura ao abrir e uma vez por dia) e se atualiza sozinho quando você confirmar — depois fecha e abre sozinho, e seus dados, senha, logs e configurações são mantidos. Isso só funciona no computador onde o OBS Social roda (http://localhost:3000): pela rede, a página Sobre esconde os botões e avisa.</div></details>
       <details class="faq-item"><summary>O programa ficou fechado e perdi comentários. Dá para recuperar?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🕘 Recuperar mensagens perdidas: ao conectar, o OBS Social busca o que cada serviço ainda guarda do chat recente — sem duplicar nada.</div></details>
-      <details class="faq-item"><summary>Como controlo o OBS pelo painel?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🎬 OBS Studio pelo painel (experimental). Para linkar: no OBS (28+), abra Ferramentas → Configurações do Servidor WebSocket, marque Ativar servidor WebSocket, clique em Mostrar senha das conexões e copie a porta (4455) e a senha para o card do Labs — o passo a passo numerado está lá. Se o OBS estiver em OUTRO computador da rede, ponha o IP dele no campo Endereço (e libere a porta 4455 no firewall daquela máquina). A ferramenta 🎬 do painel comanda tudo: transmitir, gravar (com pausa e marcador de capítulo), câmera virtual, replay buffer, cenas, modo estúdio, transições, mostrar/esconder fontes, mixer de áudio, controle de mídia, filtros, coleções, perfis e print da tela — e cada bloco tem um liga/desliga no card do Labs, para a ferramenta ficar do tamanho que você usa. Tudo dentro do seu computador, sem internet.</div></details>
+      <details class="faq-item"><summary>Como controlo o OBS pelo painel?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🎬 OBS Studio pelo painel (experimental). Para linkar: no OBS (28+), abra Ferramentas → Configurações do Servidor WebSocket, marque Ativar servidor WebSocket, clique em Mostrar senha das conexões e copie a porta (4455) e a senha para a página 🎬 OBS Studio Remoto (que aparece no menu com o seletor ligado) — o passo a passo numerado está lá. Se o OBS estiver em OUTRO computador da rede, ponha o IP dele no campo Endereço (e libere a porta 4455 no firewall daquela máquina). A ferramenta 🎬 do painel comanda tudo: transmitir, gravar (com pausa e marcador de capítulo), câmera virtual, replay buffer, cenas, modo estúdio, transições, mostrar/esconder fontes, mixer de áudio, controle de mídia, filtros, coleções, perfis e print da tela — e cada bloco tem um liga/desliga nessa página, para a ferramenta ficar do tamanho que você usa. Tudo dentro do seu computador, sem internet.</div></details>
       <details class="faq-item"><summary>Dá para transformar as coisas do OBS em botões?</summary><div class="faq-resposta">Dá — é a tecla <b>🎬 Ação do OBS</b> na 🎵 Mesa de trilhas. Crie uma tecla, escolha o tipo 🎬 e depois a ação (trocar de cena, gravar, mudo do microfone, mostrar uma fonte, ligar um filtro, tocar uma mídia...). As listas de cenas, fontes e filtros vêm do OBS conectado; o ▶ Testar agora dispara na hora para você conferir. A tecla <b>acende sozinha</b> quando o que ela controla está ligado (gravando, no ar, fonte visível). Essas teclas também entram dentro de um 🎛️ Botão de multi ação: a fila mistura som e comando — trocar de cena, esperar 2s e tocar a vinheta, por exemplo.</div></details>
-      <details class="faq-item"><summary>Como controlo o vMix pelo painel?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🎛️ vMix pelo painel (experimental). O vMix já traz a API TCP ligada de fábrica, na porta 8099 e sem senha — não precisa instalar nada. Na página 🎛️ vMix Remoto, deixe 127.0.0.1 se o vMix roda na mesma máquina, ou ponha o IP do computador do vMix (e libere a porta 8099 no firewall dele) e aperte 💾. A ferramenta 🎛️ do painel comanda: transmitir, gravar, saída externa, MultiCorder, tela cheia, entradas (preview e ao vivo, com o tally), os 4 botões de transição, corte, fade, fade to black, overlays 1 a 4, mixer de áudio (master e por entrada), controle de mídia, textos dos títulos, e no bloco avançado replay, presets, scripts, tecla de atalho e qualquer função do vMix pelo nome. Cada bloco tem um liga/desliga no card do Labs. O snapshot 📸 é salvo pelo próprio vMix, na pasta dele.</div></details>
+      <details class="faq-item"><summary>Como controlo o vMix pelo painel?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🎛️ vMix pelo painel (experimental). O vMix já traz a API TCP ligada de fábrica, na porta 8099 e sem senha — não precisa instalar nada. Na página 🎛️ vMix Remoto, deixe 127.0.0.1 se o vMix roda na mesma máquina, ou ponha o IP do computador do vMix (e libere a porta 8099 no firewall dele) e aperte 💾. A ferramenta 🎛️ do painel comanda: transmitir, gravar, saída externa, MultiCorder, tela cheia, entradas (preview e ao vivo, com o tally), os 4 botões de transição, corte, fade, fade to black, overlays 1 a 4, mixer de áudio (master e por entrada), controle de mídia, textos dos títulos, e no bloco avançado replay, presets, scripts, tecla de atalho e qualquer função do vMix pelo nome. Cada bloco tem um liga/desliga na página 🎛️ vMix Remoto. O snapshot 📸 é salvo pelo próprio vMix, na pasta dele.</div></details>
       <details class="faq-item"><summary>Dá para transformar as coisas do vMix em botões?</summary><div class="faq-resposta">Dá — é a tecla <b>🎛️ Ação do vMix</b> na 🎵 Mesa de trilhas, igualzinha à do OBS: crie uma tecla, escolha o tipo 🎛️ e depois a ação (mandar uma entrada ao vivo ou ao preview, transição, gravar, mudo de uma entrada, overlay, texto de um título, função livre...). As entradas vêm do vMix conectado; o ▶ Testar agora dispara na hora. A tecla <b>acende sozinha</b> quando o que ela controla está ligado (gravando, no ar, no preview, overlay no ar, entrada muda). Essas teclas entram na fila de um 🎛️ Botão de multi ação como as outras, e o criador do card 🎵 do Labs monta várias de uma vez.</div></details>
       <details class="faq-item"><summary>Dá para usar o Stream Deck (ou outro aparelho de botões) com o OBS Social?</summary><div class="faq-resposta">Dá — é o 🕹️ Controle externo, em 🧪 Labs (experimental). Cada ação do OBS Social ganha um endereço (URL) com um token; o aparelho abre o endereço e a ação acontece. Funciona com qualquer coisa que saiba abrir um endereço: Stream Deck (com um plugin de requisição HTTP da loja da Elgato, ou a ação «Site»), Bitfocus Companion (conexão Generic: HTTP), Touch Portal, Loupedeck, Razer Stream Controller, Macro Deck, Streamer.bot, o app Atalhos do iPhone, HTTP Shortcuts no Android, Node-RED... A página 🕹️ Controle Externo lista todos os endereços prontos para copiar, com um ▶ para testar cada um antes de gravar no aparelho.</div></details>
-      <details class="faq-item"><summary>O que o controle externo consegue fazer?</summary><div class="faq-resposta">Tudo o que o painel faz pela rede com senha: limpar a tela, destacar o último comentário (de qualquer rede ou de uma só) ou um salvo, tirar o destaque, soltar a fila, player da mídia, 🎞️ mídia direta (URL, mostrar, tocar, pausar, volume, tela cheia e o crédito de fonte), sortear/esconder/zerar o sorteio, likômetro, audiência, winstreak (+1, −1, zerar, mostrar), QR code, escrever e mostrar avisos (cada um pelo id), relógio, cronômetro e timer (iniciar, pausar, zerar, duração, mostrar), 🌤️ clima (mostrar, esconder, próxima cidade, atualizar e o cartão completo), os alertas da LivePix (represar, pular, repetir), ligar/desligar/reiniciar cada conexão, disparar qualquer tecla da Mesa de trilhas (pelo id ou pelo nome), qualquer ação do OBS Studio e do vMix (as mesmas das teclas), comentário de teste e 🧹 apagar os de teste, área de transferência — e, para quem programa, a operação livre («op») manda qualquer operação do painel. Fora só o que é do computador local: senha, atualizações, reiniciar, apagar dados, backups e credenciais.</div></details>
+      <details class="faq-item"><summary>O que o controle externo consegue fazer?</summary><div class="faq-resposta">Tudo o que o painel faz pela rede com senha: limpar a tela, destacar o último comentário (de qualquer rede ou de uma só) ou um salvo, tirar o destaque, soltar a fila, player da mídia, 🎞️ mídia direta (URL, mostrar, tocar, pausar, volume, tela cheia e o crédito de fonte), sortear/esconder/zerar o sorteio, likômetro, audiência, winstreak (+1, −1, zerar, mostrar), QR code, escrever e mostrar avisos (cada um pelo id), relógio, cronômetro e timer (iniciar, pausar, zerar, duração, mostrar), 🌤️ clima (mostrar, esconder, próxima cidade, atualizar e o cartão completo), os alertas da LivePix (represar, pular, repetir), ligar/desligar/reiniciar cada conexão, disparar qualquer tecla da Mesa de trilhas (pelo id ou pelo nome), qualquer ação do OBS Studio e do vMix (as mesmas das teclas), comentário de teste e 🧹 apagar os de teste, área de transferência — e, para quem programa, a operação livre («op») manda qualquer operação do painel. Fora só o que é do computador local: senha, atualizações, reiniciar, apagar dados, backups e credenciais. ⚠️ Por isso o token não é um «atalho»: quem o tem controla o painel inteiro pela rede, exatamente como quem sabe a senha — guarde-o como guarda a senha e gere outro (🔄) se ele vazar.</div></details>
       <details class="faq-item"><summary>O que é a 🎵 Mesa de trilhas?</summary><div class="faq-resposta">Uma mesa de som experimental (🧪 Labs): cada trilha vira um botão no painel. Uma toca por vez, apertar outra troca com fade, BGM pode repetir (🔁) e o ⏹ para tudo. O som pode sair na live (pelo overlay no OBS), só no painel, ou nos dois. No celular ou tablet ela abre em tela cheia pelo endereço /deck — a 📱 Mini Mesa, com QR em ⚙️ → 🎵 Mesa de Trilhas — sincronizada com o painel. As teclas 🎬 Ação do OBS e 🎛️ Ação do vMix entram na mesma Mesa, e dá até para importar os botões de som do seu Stream Deck, com um backup de perfis.</div></details>
       <details class="faq-item"><summary>Como deixo a animação de fundo do meu jeito?</summary><div class="faq-resposta">Em 🎨 Temas → 🎬 Animação de fundo: escolha a animação (aurora, estrelas, neve, bolhas, grade retrô, confete) e afine tudo — intensidade, velocidade, quantidade, tamanho, brilho, rastro, vento e as cores (do tema ou três suas). Cada efeito tem os próprios detalhes: nas estrelas, as pontas de difração como as fotos do telescópio James Webb, a cintilação, as estrelas cadentes e a nebulosa; na aurora, as cortinas; na neve, cristais ou pontos; nas bolhas, o reflexo; na grade, o sol e o horizonte; no confete, as formas. Em 🪟 Onde a animação aparece dá para pôr a camada por cima de tudo e baixar a opacidade dos painéis (padrão 100%, opaco) para a animação atravessar cards e colunas em qualquer lugar. A própria página é a prévia. «↺ Padrão da animação» desfaz os ajustes.</div></details>
       <details class="faq-item"><summary>Como funciona o 🌤️ Clima na tela?</summary><div class="faq-resposta">É um widget com o tempo agora e um ícone animado (sol, lua, nuvens, chuva, trovoada, neve…). Em 🎨 Temas → 🌤️ Clima você procura a sua cidade (ou adiciona as capitais do Brasil de uma vez), liga o rodízio para a tela passar por várias cidades a cada tantos segundos, escolhe se o nome da cidade aparece e de quanto em quanto tempo as informações são atualizadas (10 a 60 minutos). O rodízio também pode percorrer, sem cadastrar nada, todos os municípios do Brasil ou os de um estado (a lista do IBGE, em ordem alfabética) — o tempo de cada cidade é buscado pouco antes de ela entrar. As cidades cadastradas valem para o cartão da tela, para o mostrador do painel (ao lado do relógio, que mostra a sua cidade — ou o que está na tela, se você marcar) e para o 🗂️ cartão completo: o tempo agora com tudo, as próximas horas e os próximos dias, no meio da tela, temporário — o ✖ tira dos dois lugares sem mexer no cartão pequeno. Bairros não existem nas fontes de clima: a previsão vem numa grade de uns 10 km. As informações vêm das fontes marcadas em 🔌 Conexões → 🌤️ Fontes de clima: Open-Meteo e MET Norway funcionam sem cadastro; OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo e Weather Underground pedem uma chave gratuita, que fica só no seu computador. O botão 🌤️ do painel põe e tira da tela; posição, tamanho e cores no 🖱️ Organizar a tela.</div></details>
@@ -3465,7 +3481,8 @@ const hub = connectHub((event) => {
       }
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
       // 🟢 v0.169.3: esta página atende consultas ao Kick quando o Cloudflare barra o programa
-      KICK_NAVEGADOR.pronto(hub);
+      // 🟢 v0.179: só do computador local (pela rede o servidor descarta o sinal)
+      if (!event.security || !event.security.role || event.security.role === 'local') KICK_NAVEGADOR.pronto(hub);
       hub.send({ type: 'logsDias' }); // 📅 v0.171: o calendário dos dias com log
       // 🔒 v0.169.5: a atualização só se verifica/instala no computador do
       // OBS Social — quem abriu pela rede fica sabendo antes de clicar
@@ -3476,6 +3493,20 @@ const hub = connectHub((event) => {
         const auto = document.getElementById('updAutoChk');
         if (auto && auto.closest('label')) auto.closest('label').style.display = 'none';
         document.getElementById('updStatus').textContent = 'ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+        // 🔒 v0.179: o card de segurança em 🔗 URLs também é só do computador local
+        // (LOCAL_ONLY_OPS): pela rede os seletores e a senha ficam travados em vez
+        // de aceitar o clique e mentir na tela depois da recusa do servidor
+        for (const el of document.querySelectorAll('#netRestrictChk, .net-perm, #pwCurrent, #pwNew, #pwSetBtn, #pwRemoveBtn')) el.disabled = true;
+        document.getElementById('pwHint').textContent = 'ℹ️ Esta página veio pela rede: os seletores e a senha só se mudam no computador onde o OBS Social roda — abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+        if (event.security.role === 'viewer') {
+          // o servidor não manda o resumo de segurança ao espectador: sem o estado
+          // real, a caixa some em vez de mostrar tudo desligado
+          document.getElementById('netRestrictBox').style.display = 'none';
+          document.getElementById('netHint').textContent = 'ℹ️ Esta página veio pela rede: o que a rede pode usar só aparece e se muda no computador onde o OBS Social roda (http://localhost:3000).';
+        }
+        // 🖥️ v0.179: a lista de máquinas conectadas só chega ao computador local —
+        // o «carregando...» ficava para sempre
+        document.getElementById('clientsList').textContent = 'ℹ️ Essa lista só aparece no computador onde o OBS Social roda.';
       }
       fillSettingsForm();
       // 📱 v0.163: os endereços/QR do mini Mesa, e a cópia do tema deste
@@ -3547,6 +3578,15 @@ const hub = connectHub((event) => {
         // controle) chega dentro da janela do applyingSettings — as páginas
         // exclusivas precisam aparecer/sumir no menu mesmo assim
         atualizarPaginasLabs();
+        // 🧪 v0.179: a ★ do modelo da transcrição e o rótulo dos cookies do
+        // extrator são desenhados a partir de `settings` — o eco da escolha
+        // feita nesta mesma página também precisa redesenhá-los
+        fillTranscricaoForm();
+        fillYtDlpForm();
+        // 🖱️ v0.179: e o 🖱️ Organizar a tela também — o eco do que ESTA página
+        // mandou pulava o fillSettingsForm inteiro, e o editor só repintava no
+        // PRÓXIMO eco qualquer (ou ao recarregar)
+        sincronizarEditorPeloEco();
       }
       applyPanel();
       break;
@@ -3718,7 +3758,9 @@ const hub = connectHub((event) => {
       break;
     // 🔒 v0.169.5: uma operação só do computador local, pedida pela rede
     case 'somenteLocal':
+      if (event.op === 'connect') SEGREDO_PENDENTE.clear(); // 🔒 v0.179: o segredo digitado pela rede foi descartado — nada a confirmar
       obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒');
+      fillSecurity(secState.last); // 🔒 v0.179: a tela volta ao estado real (o servidor recusou)
       break;
     // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
     case 'kickNavegador':
@@ -3884,7 +3926,7 @@ function fillSecurity(sec) {
   document.getElementById('netRestrictBox').style.display = restrito ? '' : 'none';
   document.getElementById('netHint').textContent = restrito
     ? '🔒 Modo seguro: quem entra pela rede só assiste ao painel e usa o que você liberar nos seletores abaixo.'
-    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha. Use só em redes que você confia de verdade.';
+    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha (a senha que você definiu não é pedida neste modo). Use só em redes que você confia de verdade.';
   for (const chk of document.querySelectorAll('.net-perm')) {
     chk.checked = !!(sec.permissions && sec.permissions[chk.dataset.perm]);
   }
@@ -3944,7 +3986,7 @@ document.getElementById('netRestrictChk').onchange = async (e) => {
   document.getElementById('netRestrictBox').style.display = restrito ? '' : 'none';
   document.getElementById('netHint').textContent = restrito
     ? '🔒 Modo seguro: quem entra pela rede só assiste ao painel e usa o que você liberar nos seletores abaixo.'
-    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha. Use só em redes que você confia de verdade.';
+    : '⚠️ Liberdade total: qualquer pessoa conectada na sua rede/Wi-Fi controla o programa inteiro, sem senha (a senha que você definiu não é pedida neste modo). Use só em redes que você confia de verdade.';
   hub.send({ type: 'securityMode', networkAccess: restrito ? 'restricted' : 'full' });
 };
 for (const chk of document.querySelectorAll('.net-perm')) {
@@ -3957,6 +3999,8 @@ for (const chk of document.querySelectorAll('.net-perm')) {
 
 
 // ---------- Conexões ----------
+// 🔑 v0.179: redes com segredo recém-enviado, à espera da resposta do servidor
+const SEGREDO_PENDENTE = new Set();
 for (const card of document.querySelectorAll('.card[data-platform]')) {
   const platform = card.dataset.platform;
   const input = card.querySelector('.channel-input');
@@ -3979,10 +4023,13 @@ for (const card of document.querySelectorAll('.card[data-platform]')) {
     hub.send({ type: 'connect', platform, channel, options });
     // 🔒 v0.177: o segredo digitado não fica na página depois de enviado (o
     // servidor guarda cifrado e nunca devolve) — como já fazem o OBS e o Pix
+    // 🔑 v0.179: o aviso «token guardado» só entra quando o servidor confirmar
+    // (status conectando/conectado — updateStatus); chave recusada de cara
+    // (PixGG) não guarda nada e o campo continua pedindo a chave
     if (secretInput && secretInput.value) {
       secretInput.value = '';
-      const tx = '🔑 token guardado — deixe vazio para usar o mesmo (digite para trocar)';
-      secretInput.placeholder = (typeof OBS_I18N !== 'undefined' && OBS_I18N) ? OBS_I18N.t(tx) : tx;
+      if (!secretInput.dataset.placeholderAntes) secretInput.dataset.placeholderAntes = secretInput.placeholder;
+      SEGREDO_PENDENTE.add(platform);
     }
   };
   button.onclick = () => {
@@ -4135,6 +4182,19 @@ function updateStatus(platform, status) {
         : status.state === 'connecting' ? 'Conectando...' : 'Desconectado');
     }
     if (status.channel && !input.value) input.value = status.channel;
+    // 🔑 v0.179: o segredo enviado foi aceito (o servidor só passa a
+    // «conectando» depois de guardar)? Aí sim o campo avisa que existe um
+    // guardado; recusado de cara (erro), o campo volta a pedir a chave
+    const segredo = card.querySelector('.secret-input');
+    if (segredo && SEGREDO_PENDENTE.has(platform) && status.state !== 'disconnected') {
+      SEGREDO_PENDENTE.delete(platform);
+      if (status.state === 'error') {
+        if (segredo.dataset.placeholderAntes) segredo.placeholder = segredo.dataset.placeholderAntes;
+      } else {
+        const tx = '🔑 token guardado — deixe vazio para usar o mesmo (digite para trocar)';
+        segredo.placeholder = (typeof OBS_I18N !== 'undefined' && OBS_I18N) ? OBS_I18N.t(tx) : tx;
+      }
+    }
     if (status.state === 'connected' || status.state === 'connecting' || status.state === 'auth') {
       button.textContent = '⏹';
       button.title = 'Desconectar';
@@ -4506,6 +4566,21 @@ function fillGroup(prefix, fields, source) {
     if (prop === 'checked') el.checked = !!source[key];
     else if (PERCENT_IDS.has(prefix + key)) el.value = Math.round((Number(source[key]) || 0) * 100);
     else el.value = source[key];
+    // 🔤 v0.179: a fonte que veio do tema (ex.: Georgia, Courier New) não está na
+    // lista — a caixa ficava em branco e qualquer toque no card mandava ''.
+    // Ela entra como opção extra, com o nome que está valendo.
+    if (key === 'fontFamily' && el.tagName === 'SELECT') {
+      for (const extra of el.querySelectorAll('option[data-extra]')) extra.remove();
+      const valor = typeof source[key] === 'string' ? source[key] : '';
+      if (valor && el.value !== valor) {
+        const op = document.createElement('option');
+        op.value = valor;
+        op.dataset.extra = '1';
+        op.textContent = valor.replace(/['"]/g, '') + ' (do tema)';
+        el.appendChild(op);
+        el.value = valor;
+      }
+    }
   }
 }
 
@@ -4670,6 +4745,26 @@ function fillSettingsForm() {
   syncExactInputs();
 }
 
+// 🖱️ v0.179: a parte do fillSettingsForm que o eco do PRÓPRIO ajuste não pode
+// pular — só o que não é campo de digitação (nada de apagar o que o streamer
+// está escrevendo): abas 🖥️/📱 e proporção do mapa (modo de tela), moldura e
+// arte no mapa + miniatura (via renderLayout) e os interruptores gêmeos das
+// 🧩 peças soltas (o da barra do editor e os dos cards andam juntos)
+function sincronizarEditorPeloEco() {
+  if (!settings) return;
+  try {
+    syncTelaUI();
+    const sd = document.getElementById('s-destaqueLivre');
+    if (sd && document.activeElement !== sd) sd.checked = settings.destaqueLivre === true;
+    const wp = document.getElementById('w-pecasLivre');
+    if (wp && document.activeElement !== wp && typeof selectedWidget === 'function') {
+      const conf = (settings.widgets || {})[selectedWidget().kind];
+      if (conf && conf.pecasLivre !== undefined) wp.checked = conf.pecasLivre !== false;
+    }
+    renderLayout(); // relê o 🧩 da barra e redesenha moldura, arte, peças e miniatura
+  } catch {}
+}
+
 function updateRangeLabels() {
   for (const id of ['s-fontSize', 's-maxWidth', 's-scale', 's-borderRadius', 's-accentBarWidth', 's-paddingScale',
                     's-bgOpacity', 's-mediaOpacity', 's-cardAlturaEm',
@@ -4680,11 +4775,17 @@ function updateRangeLabels() {
   }
 }
 
-function collectGroup(prefix, fields) {
+// 🎯 v0.179: soTocados = só os controles em que o usuário mexeu desde o último
+// envio (marca data-tocado). Antes o grupo INTEIRO ia a cada toque, e um
+// controle que não representava o valor real reescrevia a configuração: a
+// régua no teto devolvia 800×1080 para um chat esticado a 1000×1500 no
+// Organizar, e a lista de fontes sem a fonte do tema mandava '' (Segoe UI).
+function collectGroup(prefix, fields, soTocados) {
   const out = {};
   for (const [key, prop] of Object.entries(fields)) {
     const el = document.getElementById(prefix + key);
     if (!el) continue;
+    if (soTocados && el.dataset.tocado !== '1') continue;
     const value = prop === 'checked' ? el.checked : (prop === 'valueAsNumber' ? el.valueAsNumber : el.value);
     if (prop === 'valueAsNumber' && !Number.isFinite(value)) continue;
     out[key] = PERCENT_IDS.has(prefix + key) ? value / 100 : value;
@@ -4693,19 +4794,28 @@ function collectGroup(prefix, fields) {
 }
 
 let settingsTimer = null;
+let chatPlatTocado = false; // 🎯 v0.179: algum «Mostrar no chat fixo» mudou?
 function pushSettings() {
   updateRangeLabels();
   clearTimeout(settingsTimer);
   settingsTimer = setTimeout(() => {
     for (const section of changedSections) recordChange(section);
     changedSections.clear();
-    const updated = collectGroup('s-', SETTING_FIELDS);
-    updated.chat = collectGroup('c-', CHAT_FIELDS);
-    updated.chat.platforms = {};
-    for (const platform of CHAT_PLATFORMS) {
-      const el = document.getElementById('c-plat-' + platform);
-      updated.chat.platforms[platform] = el ? el.checked : true;
+    // 🎯 v0.179: vai só o que foi mexido — cada grupo (destaque s-, chat c-)
+    // entra apenas com os seus controles tocados
+    const updated = collectGroup('s-', SETTING_FIELDS, true);
+    const chatMudou = collectGroup('c-', CHAT_FIELDS, true);
+    if (chatPlatTocado) {
+      chatMudou.platforms = {};
+      for (const platform of CHAT_PLATFORMS) {
+        const el = document.getElementById('c-plat-' + platform);
+        chatMudou.platforms[platform] = el ? el.checked : true;
+      }
     }
+    if (Object.keys(chatMudou).length) updated.chat = chatMudou;
+    chatPlatTocado = false;
+    for (const el of document.querySelectorAll('[data-tocado]')) delete el.dataset.tocado;
+    if (!Object.keys(updated).length) return;
     applyingSettings = true;
     hub.send({ type: 'settings', settings: updated });
     setTimeout(() => { applyingSettings = false; }, 300);
@@ -4714,15 +4824,15 @@ function pushSettings() {
 
 for (const key of Object.keys(SETTING_FIELDS)) {
   const el = document.getElementById('s-' + key);
-  if (el) el.addEventListener('input', () => { changedSections.add('featured'); pushSettings(); });
+  if (el) el.addEventListener('input', () => { el.dataset.tocado = '1'; changedSections.add('featured'); pushSettings(); });
 }
 for (const key of Object.keys(CHAT_FIELDS)) {
   const el = document.getElementById('c-' + key);
-  if (el) el.addEventListener('input', () => { changedSections.add('chat'); pushSettings(); });
+  if (el) el.addEventListener('input', () => { el.dataset.tocado = '1'; changedSections.add('chat'); pushSettings(); });
 }
 for (const platform of CHAT_PLATFORMS) {
   const el = document.getElementById('c-plat-' + platform);
-  if (el) el.addEventListener('input', () => { changedSections.add('chat'); pushSettings(); });
+  if (el) el.addEventListener('input', () => { chatPlatTocado = true; changedSections.add('chat'); pushSettings(); });
 }
 // ✨ v0.86: a sombra dos overlays vai e volta como bloco próprio
 for (const id of ['sombraTipoSel', 'sombraOpNum']) {
@@ -5974,6 +6084,7 @@ function fillTranscricaoForm() {
   }
   const cmd = document.getElementById('trComandoInput');
   if (cmd && document.activeElement !== cmd) cmd.value = conf.comando || '';
+  renderTranscricao(); // 🧪 v0.179: a ★ do «modelo em uso» acompanha a escolha
 }
 function trPush() {
   applyingSettings = true;
@@ -6196,6 +6307,8 @@ document.getElementById('taxasBuscarBtn').addEventListener('click', () => {
   hub.send({ type: 'taxasBuscar' });
 });
 function aplicarTaxasBuscadas(event) {
+  // 🔒 v0.179: pela rede o servidor pede um respiro entre buscas — avisa em vez de ficar no «⏳»
+  if (event.erro) { document.getElementById('taxasStatus').textContent = '⚠️ ' + event.erro; return; }
   const sc = event.superchat || {}; const px = event.pix || {}; const lp = event.livepix || {}; // 💜 v0.174
   const pg = event.pixgg || {}; // 💚 v0.175 (valor de referência: a página da PixGG não pode ser lida pelo programa)
   const taxas = {};
@@ -8682,8 +8795,9 @@ function fillDeckCard() {
     const restrito = !sec.passwordSet && sec.networkAccess !== 'full';
     const perms = sec.permissions || {};
     let texto = '';
-    if (restrito && perms.tools !== true) texto = '⚠️ A rede está no modo restrito sem 🧰 Ferramentas: o celular vai ver as teclas, mas não vai tocar nada. Em 🔐 Segurança, ligue 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.';
-    else if (restrito && perms.obs !== true && (cfgTrilhas || []).some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) texto = 'ℹ️ As teclas do OBS/vMix ficam travadas pela rede enquanto o seletor 🎬 estiver desligado em 🔐 Segurança.';
+    // 🔗 v0.179: os seletores da rede moram em «🔗 URLs para o OBS» (não existe aba «Segurança»)
+    if (restrito && perms.tools !== true) texto = '⚠️ A rede está no modo restrito sem 🧰 Ferramentas: o celular vai ver as teclas, mas não vai tocar nada. Em 🔗 URLs para o OBS, ligue 🧰 Ferramentas (e 🎬 para as teclas do OBS/vMix) — ou defina uma senha.';
+    else if (restrito && perms.obs !== true && (cfgTrilhas || []).some((t) => t.tipo === 'obs' || t.tipo === 'vmix')) texto = 'ℹ️ As teclas do OBS/vMix ficam travadas pela rede enquanto o seletor 🎬 estiver desligado em 🔗 URLs para o OBS.';
     hint.textContent = texto ? OBS_I18N.t(texto) : '';
     hint.style.display = texto ? '' : 'none';
   }
@@ -9675,7 +9789,9 @@ logRetentionInput.addEventListener('input', () => {
   logRetentionTimer = setTimeout(() => {
     const value = logRetentionInput.valueAsNumber;
     if (!Number.isFinite(value)) return;
-    const clamped = Math.max(0, Math.min(365, value));
+    // 📅 v0.179: mesma regra do servidor (0 = nunca; senão 366 a 3650) — o teto
+    // antigo de 365 rebaixava qualquer valor acima de um ano e o campo travava
+    const clamped = value === 0 ? 0 : Math.max(366, Math.min(3650, Math.round(value)));
     if (clamped !== value) logRetentionInput.value = clamped;
     applyingSettings = true;
     hub.send({ type: 'settings', settings: { logRetentionDays: clamped } });
@@ -9910,7 +10026,7 @@ function updateLogsInfo(logs) {
   if (!logs) return;
   const text = logs.files === 0
     ? 'nenhum log'
-    : `${logs.files} ${logs.files === 1 ? 'arquivo' : 'arquivos'} · ${humanSize(logs.bytes)}`;
+    : `${logs.files} ${logs.files === 1 ? 'arquivo' : 'arquivos'} · ${humanBytes(logs.bytes)}`; // 🗄️ v0.179: mesmo formato do contador ao lado de «Apagar»
   document.getElementById('logsInfoText').textContent = text;
 }
 
@@ -9963,6 +10079,8 @@ function syncTelaUI() {
   const canvas = document.getElementById('layoutCanvas');
   const w = Number(settings?.panel?.previewW) || 1920;
   const h = Number(settings?.panel?.previewH) || 1080;
+  // 📐 v0.179: a dica do painel diz a tela EM USO (era fixa em 1920×1080)
+  { const t = document.getElementById('painelPxTela'); if (t) { const px = telaPxAtual(); t.textContent = `${px.w}×${px.h}`; } }
   if (telaAtiva() === 'v') {
     // Vertical: a mesma tela, de pé — limitada à altura visível e centralizada
     const menor = Math.min(w, h);
@@ -14007,7 +14125,7 @@ document.getElementById('updAutoChk').onchange = (e) => {
   hub.send({ type: 'updateAuto', enabled: e.target.checked });
 };
 updApplyBtn.onclick = async () => {
-  if (!await obsConfirmar('Instalar a atualização agora? Suas configurações, senha, logs e mídias ficam intactos. Depois de instalar, feche a janela preta do OBS Social e abra de novo para concluir.', { icone: '⬇️', ok: 'Instalar' })) return;
+  if (!await obsConfirmar('Instalar a atualização agora? Suas configurações, senha, logs e mídias ficam intactos. Depois de instalar, o OBS Social fecha e abre sozinho e esta página recarrega.', { icone: '⬇️', ok: 'Instalar' })) return; // ⬇️ v0.179: o texto condiz com o reinício automático
   updApplyBtn.disabled = true;
   updStatus.textContent = '⏳ Baixando e instalando... (a live não é interrompida)';
   hub.send({ type: 'updateApply' });

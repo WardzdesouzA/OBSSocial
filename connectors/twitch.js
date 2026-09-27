@@ -89,6 +89,7 @@ async function catalogoDeRecompensas(canal, clientId, forcar) {
   if (buscandoRecompensas.has(canal)) return buscandoRecompensas.get(canal);
   const promessa = (async () => {
     const mapa = new Map();
+    let ok = false;
     try {
       const res = await twitchPedir(TWITCH_GQL, {
         method: 'POST',
@@ -97,6 +98,7 @@ async function catalogoDeRecompensas(canal, clientId, forcar) {
         extra: true,
       });
       const lista = res.ok && res.json ? res.json?.data?.user?.channel?.communityPointsSettings?.customRewards : null;
+      ok = !!(res.ok && res.json);
       for (const r of Array.isArray(lista) ? lista : []) {
         if (!r || typeof r.id !== 'string') continue;
         const custo = Number(r.cost);
@@ -107,7 +109,9 @@ async function catalogoDeRecompensas(canal, clientId, forcar) {
         });
       }
     } catch { /* sem catálogo: o resgate aparece só como «Resgate» */ }
-    catalogoRecompensas.set(canal, { em: Date.now(), mapa });
+    // 🎁 v0.179: uma consulta que falhou não vale por 1 hora — a próxima tentativa
+    // (ao ver um resgate) busca de novo
+    catalogoRecompensas.set(canal, { em: ok ? Date.now() : 0, mapa });
     return mapa;
   })();
   buscandoRecompensas.set(canal, promessa);
@@ -208,10 +212,15 @@ class TwitchConnector {
   constructor(channel, handlers) {
     // O nome vai dentro de um comando do chat (JOIN #canal), que é um
     // protocolo de linhas: quebra de linha ali viraria outro comando.
-    this.channel = channel.trim().toLowerCase()
-      .replace(/^#/, '').replace(/^@/, '')
-      .replace(/[^a-z0-9_]/g, '')
-      .slice(0, 40);
+    // 🔀 v0.179: URL colada (twitch.tv/nome?x=y) vira só o nome; o que ainda
+    // sobrar fora de [a-z0-9_] (espaço, barra...) NÃO é apagado às cegas — o
+    // start() recusa com erro claro, em vez de «conectar» num canal que não existe
+    let nome = String(channel || '').trim().toLowerCase();
+    const daUrl = nome.match(/twitch\.tv\/([^/?#\s]+)/);
+    if (daUrl) nome = daUrl[1];
+    nome = nome.replace(/^[#@]+/, '');
+    this.invalido = !/^[a-z0-9_]{1,25}$/.test(nome);
+    this.channel = nome.replace(/[^a-z0-9_]/g, '').slice(0, 40);
     this.handlers = handlers;
     this.ws = null;
     this.stopped = false;
@@ -244,6 +253,11 @@ class TwitchConnector {
   }
 
   start() {
+    // 🔀 v0.179: nome que não é de canal da Twitch = erro definitivo, sem JOIN
+    if (this.invalido) {
+      this.handlers.onStatus('error', 'Digite só o nome do canal (o que aparece em twitch.tv/nome).');
+      return;
+    }
     this.handlers.onStatus('connecting', `Conectando ao chat de ${this.channel}...`);
     this.open();
   }

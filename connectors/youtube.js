@@ -198,6 +198,7 @@ class YouTubeConnector {
     this.continuation = null;
     this.timer = null;
     this.seen = new Set();
+    this.emErro = false; // 🔁 v0.179: avisou «Perdi a conexão…» e ainda não voltou
     // 🔒 v0.127.1: o stop() aborta a consulta em andamento — um conector
     // trocado não pode continuar consultando o YouTube (o sinal viaja com
     // cada pedido pelos caminhos, v0.172)
@@ -287,6 +288,10 @@ class YouTubeConnector {
         this.handlers.onStatus('error', 'O chat ao vivo terminou (a live acabou?).');
         return;
       }
+      // 🔁 v0.179: depois de um bloqueio passageiro o status ficava em «erro» para
+      // sempre — as mensagens voltavam (a continuation guardada volta a responder)
+      // sem passar pelo initChat, e ninguém recolocava «connected»
+      this.reconectou();
       const cont = findFirstContinuation(data);
       if (cont) {
         this.continuation = cont.continuation;
@@ -302,16 +307,27 @@ class YouTubeConnector {
       // Tenta reabrir o chat do zero; se falhar, reporta e tenta de novo depois.
       try {
         await this.initChat();
+        if (this.stopped) return;
+        this.reconectou(); // 🔁 v0.179: o chat reaberto do zero também volta a «connected»
       } catch (reinitErr) {
         if (this.stopped) return;
         // 🛡️ v0.172: «insiste» — o conector continua vivo e tenta de novo
         // sozinho (antes o servidor o desligava aqui e o poll seguinte nunca vinha)
         const explicacao = reinitErr.barrado ? ' ' + caminhos.explicacaoBarrado(reinitErr) : '';
+        this.emErro = true; // 🔁 v0.179: o próximo poll que der certo avisa que voltou
         this.handlers.onStatus('error', `Perdi a conexão com o chat do YouTube: ${reinitErr.message}${explicacao} Nova tentativa sozinha em 15s.`, { insiste: true });
         timeoutMs = 15000;
       }
     }
     if (!this.stopped) this.timer = setTimeout(() => this.poll(), timeoutMs);
+  }
+
+  // 🔁 v0.179: o chat voltou depois de um erro avisado — o status volta a
+  // «connected» (o servidor aceita repetir e o painel repinta o chip)
+  reconectou() {
+    if (!this.emErro) return;
+    this.emErro = false;
+    this.handlers.onStatus('connected', `Lendo o chat da live ${this.videoId}`);
   }
 
   handleAction(action) {

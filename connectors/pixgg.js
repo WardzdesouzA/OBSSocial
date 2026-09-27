@@ -24,8 +24,18 @@ const PUSHER_KEY = '787e05d557a8480c3ee7';
 const PUSHER_CLUSTER = 'mt1';
 // Gancho de teste: um Pusher de mentira no lugar do real
 const PUSHER_BASE = process.env.OBS_TESTE_PIXGG_PUSHER || `wss://ws-${PUSHER_CLUSTER}.pusher.com`;
+// 🔁 v0.179: espera até tentar de novo depois de um «pusher:error» (gancho de
+// teste: OBS_TESTE_PIXGG_ESPERA_MS encurta)
+const ESPERA_ERRO_MS = Number(process.env.OBS_TESTE_PIXGG_ESPERA_MS) || 30000;
 const CHAVE_OK = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AUDIO_MAX = 8 * 1024 * 1024;
+// 🔒 v0.179: a memória das doações já vistas tem teto também em RAM (o disco
+// já cortava em 2000; o Set em memória só crescia enquanto o programa rodava)
+const VISTOS_MAX = 2000;
+function podarVistos(set) {
+  if (set.size <= VISTOS_MAX) return;
+  for (const v of set) { set.delete(v); if (set.size <= VISTOS_MAX) break; } // os mais antigos saem primeiro
+}
 
 // A chave pode vir como a URL inteira do widget (api.pixgg.com/?apikey=...)
 function extrairChave(texto) {
@@ -51,11 +61,17 @@ function baixarAudio(url, salvarMidia) {
   return new Promise((resolve) => {
     if (typeof salvarMidia !== 'function' || !/^https?:\/\//i.test(String(url || ''))) return resolve(null);
     let u; try { u = new URL(url); } catch { return resolve(null); }
-    if (u.protocol === 'http:' && !/^(localhost|127\.0\.0\.1)$/.test(u.hostname)) return resolve(null); // fora daqui, só https
+    // 🔒 v0.179: http só para a máquina local e só com o gancho de teste ligado
+    // — em produção um link http://127.0.0.1 vindo do evento faria o programa
+    // bater em serviços locais do próprio PC. Fora do teste, só https.
+    const testeLocal = !!process.env.OBS_TESTE_PIXGG_PUSHER && u.protocol === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(u.hostname);
+    if (u.protocol !== 'https:' && !testeLocal) return resolve(null);
     const mod = u.protocol === 'http:' ? http : https;
     const req = mod.get(u, { timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
       if (res.statusCode !== 200) { res.resume(); return resolve(null); }
       const tipo = String(res.headers['content-type'] || '').toLowerCase();
+      // 🔒 v0.179: página ou texto não é áudio (o S3 pode mandar octet-stream, que passa)
+      if (/^text\/|html|json|javascript/.test(tipo)) { res.resume(); return resolve(null); }
       const daUrl = ((u.pathname.match(/\.(mp3|ogg|wav|m4a|webm|opus)$/i) || [])[1] || '').toLowerCase();
       const ext = tipo.includes('mpeg') || tipo.includes('mp3') ? 'mp3' : tipo.includes('ogg') ? 'ogg' : tipo.includes('wav') ? 'wav' : tipo.includes('mp4') || tipo.includes('m4a') ? 'm4a' : (daUrl || 'mp3');
       const pedacos = []; let total = 0;
@@ -123,7 +139,18 @@ class PixGGConnector {
     if (p.event === 'pusher:ping') { ws.send(JSON.stringify({ event: 'pusher:pong', data: {} })); return; }
     if (p.event === 'pusher:error') {
       const msg = (p.data && p.data.message) || 'erro do Pusher';
-      this.handlers.onStatus('error', `O canal do widget da PixGG recusou a conexão (${String(msg).slice(0, 120)}). Nova tentativa sozinha em 30s.`, { insiste: true });
+      this.handlers.onStatus('error', `O canal do widget da PixGG recusou a conexão (${String(msg).slice(0, 120)}). Nova tentativa sozinha em ${Math.round(ESPERA_ERRO_MS / 1000)}s.`, { insiste: true });
+      // 🔁 v0.179: o Pusher deixa o socket ABERTO depois do erro — o 'close' que
+      // reconecta nunca vinha e a tentativa prometida não acontecia (a PixGG só
+      // voltava com 🔄 manual). Agenda a tentativa: derruba este socket e abre outro.
+      clearTimeout(this.erroTimer);
+      this.erroTimer = setTimeout(() => {
+        this.erroTimer = null;
+        if (this.stopped || this.ws !== ws) return;
+        this.ws = null; // o 'close' deste socket não agenda outra reconexão
+        try { ws.terminate(); } catch {}
+        this.open();
+      }, ESPERA_ERRO_MS);
       return;
     }
     let dados = p.data;
@@ -145,13 +172,17 @@ class PixGGConnector {
   // O evento «messages» é a doação. Ele chega de novo quando o streamer manda
   // «tocar» pelo painel da PixGG (ForceToPlay): o id da transação impede repetir.
   doacao(d) {
-    const tx = String(d.TransactionId || '').trim();
+    // 🔒 v0.179: o id só vale como texto ou número (um objeto virava
+    // «[object Object]» e barrava todas as doações seguintes), com teto de tamanho
+    const tx = typeof d.TransactionId === 'string' || typeof d.TransactionId === 'number' ? String(d.TransactionId).trim().slice(0, 80) : '';
     const nome = String(d.DonatorNickname || '').trim().slice(0, 60) || 'Anônimo';
     const texto = String(d.DonatorMessage || '').slice(0, 500);
     const reais = valorReais(d.TotalAmount);
-    const chave = tx || `${nome}|${reais}|${texto}|${String(d.Date || '').slice(0, 16)}`;
+    // sem id, a chave é a doação resumida (v0.179: texto curto, para não engordar a memória)
+    const chave = tx || `${nome}|${reais}|${texto.slice(0, 80)}|${String(d.Date || '').slice(0, 16)}`;
     if (this.vistos.has(chave)) return;
     this.vistos.add(chave);
+    podarVistos(this.vistos);
     this.salvarVistos(this.vistos);
     const moeda = String(d.Currency || 'BRL').toUpperCase();
     const valor = valorTexto(reais, 'BRL');
@@ -199,6 +230,7 @@ class PixGGConnector {
 
   stop() {
     this.stopped = true;
+    clearTimeout(this.erroTimer); this.erroTimer = null; // 🔁 v0.179
     if (this.ws) try { this.ws.close(); } catch {}
   }
 }
