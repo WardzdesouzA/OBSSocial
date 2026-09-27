@@ -36,7 +36,8 @@ const ESPERA_MAX_MS = Math.max(ESPERA_BASE_MS * 4, 300000 * (ESPERA_BASE_MS / 15
 
 // 429 aqui é o limite de chamadas (não um bloqueio): fica de fora da lista
 // de «barrado», senão a cadeia tentaria curl/PowerShell à toa
-const caminhos = criarCaminhos({ rede: 'livepix', rotulo: 'LivePix', headers: { Accept: 'application/json' }, referer: 'https://livepix.gg/', tempoMs: 15000, barrado: [403, 503] });
+// 💜 v0.179: artigo 'A' — as frases dos caminhos saíam no masculino («O LivePix barrou…»)
+const caminhos = criarCaminhos({ rede: 'livepix', rotulo: 'LivePix', artigo: 'A', headers: { Accept: 'application/json' }, referer: 'https://livepix.gg/', tempoMs: 15000, barrado: [403, 503] });
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
 // Centavos → «R$ 10,00» (ou «USD 10.00» para outra moeda, que a LivePix não

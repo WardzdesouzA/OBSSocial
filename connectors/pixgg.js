@@ -24,6 +24,9 @@ const PUSHER_KEY = '787e05d557a8480c3ee7';
 const PUSHER_CLUSTER = 'mt1';
 // Gancho de teste: um Pusher de mentira no lugar do real
 const PUSHER_BASE = process.env.OBS_TESTE_PIXGG_PUSHER || `wss://ws-${PUSHER_CLUSTER}.pusher.com`;
+// 🔁 v0.179: espera até tentar de novo depois de um «pusher:error» (gancho de
+// teste: OBS_TESTE_PIXGG_ESPERA_MS encurta)
+const ESPERA_ERRO_MS = Number(process.env.OBS_TESTE_PIXGG_ESPERA_MS) || 30000;
 const CHAVE_OK = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AUDIO_MAX = 8 * 1024 * 1024;
 
@@ -123,7 +126,18 @@ class PixGGConnector {
     if (p.event === 'pusher:ping') { ws.send(JSON.stringify({ event: 'pusher:pong', data: {} })); return; }
     if (p.event === 'pusher:error') {
       const msg = (p.data && p.data.message) || 'erro do Pusher';
-      this.handlers.onStatus('error', `O canal do widget da PixGG recusou a conexão (${String(msg).slice(0, 120)}). Nova tentativa sozinha em 30s.`, { insiste: true });
+      this.handlers.onStatus('error', `O canal do widget da PixGG recusou a conexão (${String(msg).slice(0, 120)}). Nova tentativa sozinha em ${Math.round(ESPERA_ERRO_MS / 1000)}s.`, { insiste: true });
+      // 🔁 v0.179: o Pusher deixa o socket ABERTO depois do erro — o 'close' que
+      // reconecta nunca vinha e a tentativa prometida não acontecia (a PixGG só
+      // voltava com 🔄 manual). Agenda a tentativa: derruba este socket e abre outro.
+      clearTimeout(this.erroTimer);
+      this.erroTimer = setTimeout(() => {
+        this.erroTimer = null;
+        if (this.stopped || this.ws !== ws) return;
+        this.ws = null; // o 'close' deste socket não agenda outra reconexão
+        try { ws.terminate(); } catch {}
+        this.open();
+      }, ESPERA_ERRO_MS);
       return;
     }
     let dados = p.data;
@@ -199,6 +213,7 @@ class PixGGConnector {
 
   stop() {
     this.stopped = true;
+    clearTimeout(this.erroTimer); this.erroTimer = null; // 🔁 v0.179
     if (this.ws) try { this.ws.close(); } catch {}
   }
 }

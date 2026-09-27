@@ -4547,7 +4547,8 @@ async function downloadUpdate(aoProgresso) {
   if (/CERT|SELF_SIGNED|UNABLE_TO_VERIFY|DEPTH_ZERO/i.test(causa)) {
     causa += ' — parece um antivírus/firewall com "inspeção HTTPS" interceptando a conexão. Atualize o Node.js para a versão LTS mais nova em nodejs.org (aí o programa passa a confiar nos certificados do Windows) ou desative a inspeção HTTPS do antivírus para o Node.';
   } else if (/respondeu 40[134]/.test(causa)) {
-    causa += ' — o pacote de atualização não está acessível agora. Tente de novo mais tarde.';
+    // ✍️ v0.179: sem ponto nem «tente de novo» aqui — quem chama já fecha a frase
+    causa += ' — o pacote de atualização não está acessível agora';
   }
   throw new Error(causa);
 }
@@ -5378,6 +5379,25 @@ function marcaAgora() {
   return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}-${p2(d.getMinutes())}-${p2(d.getSeconds())}`;
 }
 
+// 🛡️ v0.179: cria a pasta do backup nível a nível, SEM { recursive: true } —
+// num pseudo-sistema de arquivos (ex.: /proc no Linux) o mkdir devolve ENOENT
+// com o pai existindo e o mkdir recursivo do Node entra em laço infinito,
+// travando a live inteira (nem Ctrl+C encerrava). Assim o erro vira exceção
+// e a tela mostra «O backup falhou: …» como nos outros casos.
+function criarPastaDoBackup(destino) {
+  const faltam = [];
+  let alvo = path.resolve(destino);
+  for (let i = 0; i < 64 && !fs.existsSync(alvo); i++) {
+    faltam.unshift(alvo);
+    const pai = path.dirname(alvo);
+    if (pai === alvo) break;
+    alvo = pai;
+  }
+  for (const p of faltam) {
+    try { fs.mkdirSync(p); } catch (err) { if (err.code !== 'EEXIST') throw err; }
+  }
+}
+
 function fazerBackup(item, forcado = false) {
   const def = backupItemDef(item);
   if (!def) return { ok: false, erro: 'item desconhecido' };
@@ -5388,7 +5408,7 @@ function fazerBackup(item, forcado = false) {
     if (def.antes) def.antes(); // ex.: descarrega o debounce das configurações
     const marca = marcaAgora();
     const destino = path.join(backupBase(), item, marca);
-    fs.mkdirSync(destino, { recursive: true });
+    criarPastaDoBackup(destino);
     let algum = false;
     for (const p of def.files ? def.files() : []) {
       try { fs.copyFileSync(p, path.join(destino, path.basename(p))); algum = true; } catch { /* item ainda sem arquivo */ }
@@ -13061,6 +13081,10 @@ function tratarMensagem(ws, raw) {
       broadcastAvisos();
       broadcast({ type: 'relogio', relogio: relogioPublico() });
       break;
+    default:
+      // 🕹️ v0.179: só o controle externo precisa saber que a operação não existe
+      // (o painel não manda nome inventado; pela rede o portão acima já respondeu)
+      if (ws.controleExterno) ws.opDesconhecida = true;
   }
 }
 
@@ -13454,6 +13478,10 @@ function controleExecutar(msg, ip) {
     send: (s) => { try { const d = JSON.parse(s); if (d && d.type && respostas.length < 20) respostas.push(d); } catch {} },
   };
   tratarMensagem(wsFalso, JSON.stringify(msg));
+  // 🕹️ v0.179: operação inventada (typo, maiúscula) não é «ok» — antes caía fora
+  // do switch em silêncio e o pedido voltava {ok:true}, contava como ação e
+  // mostrava o recado 🕹️ no painel sem nada acontecer
+  if (wsFalso.opDesconhecida) { const e = new Error('Operação desconhecida: ' + String(msg.type)); e.opDesconhecida = true; throw e; }
   return respostas;
 }
 
@@ -13519,6 +13547,9 @@ function tratarControleHttp(req, res, urlPath) {
     if (LOCAL_ONLY_OPS.has(msg.type)) return json(403, { ok: false, erro: 'Essa operação só pode ser feita no painel do próprio computador.' });
     let respostas;
     try { respostas = controleExecutar(msg, ip); } catch (err) {
+      // 🕹️ v0.179: nome de operação que o painel não conhece → 404 como as ações
+      // prontas (sem contar como ação, sem recado no painel)
+      if (err && err.opDesconhecida) return json(404, { ok: false, erro: 'Operação desconhecida: ' + String(msg.type).slice(0, 60) + ' — use o nome exato da operação do painel (maiúsculas e minúsculas contam), ou uma ação pronta da lista em /api/controle/catalogo.' });
       console.error('  ⚠️ Erro numa ação do controle externo:', err && err.message);
       return json(500, { ok: false, erro: 'Deu erro executando a ação: ' + (err && err.message) });
     }
