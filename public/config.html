@@ -3996,6 +3996,8 @@ for (const chk of document.querySelectorAll('.net-perm')) {
 
 
 // ---------- Conexões ----------
+// 🔑 v0.179: redes com segredo recém-enviado, à espera da resposta do servidor
+const SEGREDO_PENDENTE = new Set();
 for (const card of document.querySelectorAll('.card[data-platform]')) {
   const platform = card.dataset.platform;
   const input = card.querySelector('.channel-input');
@@ -4018,10 +4020,13 @@ for (const card of document.querySelectorAll('.card[data-platform]')) {
     hub.send({ type: 'connect', platform, channel, options });
     // 🔒 v0.177: o segredo digitado não fica na página depois de enviado (o
     // servidor guarda cifrado e nunca devolve) — como já fazem o OBS e o Pix
+    // 🔑 v0.179: o aviso «token guardado» só entra quando o servidor confirmar
+    // (status conectando/conectado — updateStatus); chave recusada de cara
+    // (PixGG) não guarda nada e o campo continua pedindo a chave
     if (secretInput && secretInput.value) {
       secretInput.value = '';
-      const tx = '🔑 token guardado — deixe vazio para usar o mesmo (digite para trocar)';
-      secretInput.placeholder = (typeof OBS_I18N !== 'undefined' && OBS_I18N) ? OBS_I18N.t(tx) : tx;
+      if (!secretInput.dataset.placeholderAntes) secretInput.dataset.placeholderAntes = secretInput.placeholder;
+      SEGREDO_PENDENTE.add(platform);
     }
   };
   button.onclick = () => {
@@ -4174,6 +4179,19 @@ function updateStatus(platform, status) {
         : status.state === 'connecting' ? 'Conectando...' : 'Desconectado');
     }
     if (status.channel && !input.value) input.value = status.channel;
+    // 🔑 v0.179: o segredo enviado foi aceito (o servidor só passa a
+    // «conectando» depois de guardar)? Aí sim o campo avisa que existe um
+    // guardado; recusado de cara (erro), o campo volta a pedir a chave
+    const segredo = card.querySelector('.secret-input');
+    if (segredo && SEGREDO_PENDENTE.has(platform) && status.state !== 'disconnected') {
+      SEGREDO_PENDENTE.delete(platform);
+      if (status.state === 'error') {
+        if (segredo.dataset.placeholderAntes) segredo.placeholder = segredo.dataset.placeholderAntes;
+      } else {
+        const tx = '🔑 token guardado — deixe vazio para usar o mesmo (digite para trocar)';
+        segredo.placeholder = (typeof OBS_I18N !== 'undefined' && OBS_I18N) ? OBS_I18N.t(tx) : tx;
+      }
+    }
     if (status.state === 'connected' || status.state === 'connecting' || status.state === 'auth') {
       button.textContent = '⏹';
       button.title = 'Desconectar';

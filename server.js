@@ -18,13 +18,21 @@ const APP_VERSION = (() => {
 })();
 
 // Endereco do computador na rede local (para o co-apresentador acessar o painel)
-function lanAddress() {
+// 🌐 v0.179: só um IP que o próprio servidor aceita (faixa privada, veja
+// classifyAddress) — o primeiro IP da máquina pode ser de VPN/CGNAT/público, e
+// esse o hostAllowed recusa com 403: anunciá-lo no 👥 e no QR era um link morto.
+function enderecosDeRede() {
+  const lista = [];
   for (const interfaces of Object.values(os.networkInterfaces())) {
     for (const ni of interfaces || []) {
-      if (ni.family === 'IPv4' && !ni.internal) return ni.address;
+      if (ni.family !== 'IPv4' || ni.internal || lista.includes(ni.address)) continue;
+      if (classifyAddress(ni.address) === 'network') lista.push(ni.address);
     }
   }
-  return null;
+  return lista;
+}
+function lanAddress() {
+  return enderecosDeRede()[0] || null;
 }
 
 // 🌐 Idioma da janela preta (console): segue o idioma escolhido nas
@@ -6111,6 +6119,9 @@ function marcarRobo(message) {
 function normalizarConta(platform, canal) {
   let s = String(canal || '').trim().toLowerCase();
   if (!s) return '';
+  // 🔀 v0.179: «#canal» — o # inicial sai ANTES do corte de fragmento de URL
+  // (senão «#canalz» virava conta vazia e a troca de @ não limpava nada)
+  s = s.replace(/^[@#]+/, '');
   s = s.replace(/^https?:\/\//, '').replace(/^(www\.|m\.)/, '');
   s = s.replace(/^(youtube\.com|youtu\.be|twitch\.tv|kick\.com|live\.bilibili\.com|bilibili\.com|t\.me|web\.whatsapp\.com)\//, '');
   const video = s.match(/(?:^|[?&])v=([a-z0-9_-]{11})/i);
@@ -6634,7 +6645,7 @@ async function fetchYouTubeLiveInfo(videoId) {
 let audiencePolling = false;
 let audiencePollTick = 0;
 
-async function pollAudience() {
+async function pollAudience(opts = {}) {
   if (audiencePolling) return;
   // 🧪 v0.179: com o exemplo de audiência no ar, o poll não mexe — a limpeza
   // de «redes desconectadas» logo abaixo apagava o YouTube/Twitch/Kick de
@@ -6683,7 +6694,8 @@ async function pollAudience() {
     audiencePollTick++;
     // 🟢 v0.169.3: com o Kick em erro (barrado, esperando a nova tentativa) não
     // vale consultar espectadores — só somaria pedidos no Cloudflare deles
-    if (state.connectors.kick?.channel && state.status.kick?.state !== 'error' && audiencePollTick % 3 === 0) watch('kick', fetchKickViewers(state.connectors.kick.channel));
+    // 🟢 v0.179: kickAgora = consulta pós-conexão, fora do compasso de 1 em 3
+    if (state.connectors.kick?.channel && state.status.kick?.state !== 'error' && (audiencePollTick % 3 === 0 || opts.kickAgora === true)) watch('kick', fetchKickViewers(state.connectors.kick.channel));
     if (state.connectors.youtube?.videoId) {
       const videoId = state.connectors.youtube.videoId;
       watch('youtube', Promise.all([
@@ -7054,13 +7066,25 @@ function connect(platform, channel, options = {}) {
   // e nunca aparece como canal). v0.176: sem Labs e sem avisos — a PixGG
   // autorizou o uso por e-mail (24/09/2026), então ela mora nas Conexões
   if (platform === 'pixgg') channel = 'pixgg';
-  // 🔀 v0.172: mudou a @? O que era da @ anterior sai do painel antes da nova
-  // conexão começar (o log fica; a revisão 📅 mostra o dia inteiro)
+  // 🔀 v0.179: Twitch e Kick recebem o canal já limpo (URL colada, @, #) — o
+  // conector entrava em «httpswwwtwitchtvmeucanal» enquanto o servidor
+  // carimbava «meucanal»
+  if (platform === 'twitch' || platform === 'kick') channel = normalizarConta(platform, channel) || String(channel).trim();
+  // 🔀 v0.172: mudou a @? O que era da @ anterior sai do painel (o log fica; a
+  // revisão 📅 mostra o dia inteiro).
+  // 🔀 v0.179: só DEPOIS de a @ nova conectar (ou entregar o 1º comentário) —
+  // uma @ digitada errada (canal inexistente) não pode apagar os comentários
+  // da @ certa antes mesmo de falhar. Mesma @: confere na hora, como antes.
+  let trocaPendente = null;
   {
     const contaNova = normalizarConta(platform, channel);
     const contaAntiga = normalizarConta(platform, state.connections[platform]?.channel);
-    trocarDeConta(platform, contaNova, contaAntiga);
+    if (contaAntiga && contaAntiga !== contaNova) trocaPendente = { contaNova, contaAntiga };
+    else trocarDeConta(platform, contaNova, contaAntiga);
   }
+  // 🔀 v0.179: YouTube — @ e link da MESMA live são a mesma conta: guarda o
+  // vídeo do conector anterior para comparar quando o novo resolver o dele
+  const videoAnterior = platform === 'youtube' ? (state.connectors.youtube?.videoId || null) : null;
   disconnect(platform, true);
 
   // 🔒 v0.127.1: só as opções que o painel tem o direito de mandar. As
@@ -7075,10 +7099,21 @@ function connect(platform, channel, options = {}) {
     if (typeof o.cookie === 'string' && o.cookie.trim()) options.cookie = o.cookie.replace(/[\r\n]/g, '').slice(0, 4000);
   }
 
+  // 🔀 v0.179: a troca de @ adiada acontece aqui, na 1ª prova de que a @ nova
+  // funciona (status «connected» ou 1º comentário, o que vier antes)
+  const confirmarTroca = () => {
+    if (!trocaPendente) return;
+    const troca = trocaPendente;
+    trocaPendente = null;
+    // Mesma live do YouTube (o @ e o link do vídeo resolvem ao mesmo id)? Não
+    // é troca de @ — nada sai do painel
+    if (platform === 'youtube' && videoAnterior && instance.videoId && instance.videoId === videoAnterior) return;
+    trocarDeConta(platform, troca.contaNova, troca.contaAntiga);
+  };
   const handlers = {
     // 🔀 v0.172: só o conector ATUAL entrega — um trocado/desligado, com uma
     // consulta ainda no ar, não pode carimbar comentário com a @ nova
-    onMessage: (m) => { if (state.connectors[platform] === instance) onChatMessage(m); },
+    onMessage: (m) => { if (state.connectors[platform] === instance) { confirmarTroca(); onChatMessage(m); } },
     // 🗑️ A plataforma avisou que uma mensagem (ou tudo de alguém) foi apagada
     onRemove: (aviso) => removerMensagens({ ...aviso, platform: aviso.platform || platform }),
     // A Twitch precisa do Client-ID público para buscar o catálogo de selos
@@ -7112,6 +7147,7 @@ function connect(platform, channel, options = {}) {
         delete state.connectors[platform];
         instance.stop();
       }
+      if (statusState === 'connected') confirmarTroca(); // 🔀 v0.179
       setStatus(platform, statusState, detail);
     },
   };
@@ -7163,7 +7199,9 @@ function connect(platform, channel, options = {}) {
     }
   });
   // Busca a audiencia logo depois de conectar (o loop de 30s continua depois).
-  setTimeout(() => pollAudience().catch(() => {}), 3000);
+  // 🟢 v0.179: a Kick entra nessa consulta também (o ciclo dela é 1 em 3 —
+  // sem forçar, o chip ficava amarelo «sem live no ar» por até 30 s)
+  setTimeout(() => pollAudience({ kickAgora: platform === 'kick' }).catch(() => {}), 3000);
 }
 
 function disconnect(platform, silent = false) {
@@ -11966,10 +12004,9 @@ function tratarMensagem(ws, raw) {
       // quem pediu recebe — é uma resposta, não um estado. E só quem tem
       // controle: a lista de placas da máquina não é para o modo restrito.
       if (ws.role === 'viewer') break;
-      const enderecos = [];
-      for (const lista of Object.values(os.networkInterfaces())) {
-        for (const ni of lista || []) if (ni.family === 'IPv4' && !ni.internal && !enderecos.includes(ni.address)) enderecos.push(ni.address);
-      }
+      // 🌐 v0.179: só IPs de rede local (os que hostAllowed aceita) — um de
+      // VPN/CGNAT dava QR de endereço que o servidor recusa com 403
+      const enderecos = enderecosDeRede();
       const pedido = String(msg.endereco || '');
       const escolhido = enderecos.includes(pedido) ? pedido : (enderecos[0] || null);
       const url = escolhido ? `http://${escolhido}:${PORT}/deck` : null;
