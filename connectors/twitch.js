@@ -89,6 +89,7 @@ async function catalogoDeRecompensas(canal, clientId, forcar) {
   if (buscandoRecompensas.has(canal)) return buscandoRecompensas.get(canal);
   const promessa = (async () => {
     const mapa = new Map();
+    let ok = false;
     try {
       const res = await twitchPedir(TWITCH_GQL, {
         method: 'POST',
@@ -97,6 +98,7 @@ async function catalogoDeRecompensas(canal, clientId, forcar) {
         extra: true,
       });
       const lista = res.ok && res.json ? res.json?.data?.user?.channel?.communityPointsSettings?.customRewards : null;
+      ok = !!(res.ok && res.json);
       for (const r of Array.isArray(lista) ? lista : []) {
         if (!r || typeof r.id !== 'string') continue;
         const custo = Number(r.cost);
@@ -107,7 +109,9 @@ async function catalogoDeRecompensas(canal, clientId, forcar) {
         });
       }
     } catch { /* sem catálogo: o resgate aparece só como «Resgate» */ }
-    catalogoRecompensas.set(canal, { em: Date.now(), mapa });
+    // 🎁 v0.179: uma consulta que falhou não vale por 1 hora — a próxima tentativa
+    // (ao ver um resgate) busca de novo
+    catalogoRecompensas.set(canal, { em: ok ? Date.now() : 0, mapa });
     return mapa;
   })();
   buscandoRecompensas.set(canal, promessa);
