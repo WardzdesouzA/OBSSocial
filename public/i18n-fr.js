@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    // v0.178: FAQ dos 🎁 resgates
+    "🎁 Os resgates de pontos do canal aparecem?": "🎁 Les échanges de points de chaîne apparaissent-ils ?",
+    "Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.": "Oui, sur Twitch et Kick : l’échange arrive dans le panneau, le chat fixe et l’écran sous forme de carte à la couleur de la récompense, avec son nom (et le coût en points, quand Twitch l’indique). Il n’entre ni dans l’onglet 💰 ni dans le total récolté. Limite Twitch : par la lecture anonyme du chat, seules les récompenses qui demandent un texte arrivent (et « Mettre mon message en avant ») ; les échanges sans champ texte ne sont livrés par Twitch qu’avec la connexion du propriétaire de la chaîne. YouTube et Bilibili n’ont pas de points de chaîne.",
+    // v0.178: 🎁 resgates de pontos do canal
+    "🎁 Resgate": "🎁 Récompense",
+    "🎁 Destacar mensagem": "🎁 Mettre mon message en avant",
     // v0.177: textos que ficavam em português (diálogos, limpeza, clima, editor do vMix, FAQ)
     "Aviso": "Avis",
     "Confirmar": "Confirmer",
@@ -3499,5 +3505,7 @@ window.OBS_I18N_DICTS.fr = {
     [/^📋 Ajustes de «(.+)» copiados para (\d+) molde\(s\) — cada um ficou com a arte dele\.$/, "📋 Réglages de « $1 » copiés vers $2 moule(s) — chacun a gardé son visuel."],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável)$/, "$1 — $2 à l’écran : $3"],
     [/^(.+) — (🎞️ vídeo|🖼️ imagem) na tela: (tela cheia|janela redimensionável) · 🔁 repete$/, "$1 — $2 à l’écran : $3 · 🔁 répète"],
+    // v0.178: pílula do resgate (recompensa · custo em pontos)
+    [/^🎁 (.+) · (\d+) pontos$/, "🎁 $1 · $2 points"],
   ],
 };

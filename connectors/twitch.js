@@ -69,6 +69,51 @@ async function catalogoDeSelos(canal, clientId) {
   try { return await promessa; } finally { buscandoSelos.delete(canal); }
 }
 
+// ---------------------------------------------------------------------------
+// 🎁 Catálogo de recompensas (pontos do canal)
+//
+// O chat anônimo só avisa o resgate de uma recompensa QUE PEDE TEXTO: a
+// mensagem chega com a etiqueta custom-reward-id (um UUID). O nome, o custo e a
+// cor vêm da mesma consulta pública que o site usa para desenhar a lista de
+// recompensas para qualquer visitante. Resgates sem texto («Beba água!» sem
+// campo) não passam pelo chat anônimo — precisariam de login do dono do canal.
+const RECOMPENSAS_QUERY = `query Recompensas($login: String!) {
+  user(login: $login) { channel { communityPointsSettings { customRewards { id title cost backgroundColor } } } }
+}`;
+const catalogoRecompensas = new Map(); // canal -> { em, mapa }
+const buscandoRecompensas = new Map();
+
+async function catalogoDeRecompensas(canal, clientId, forcar) {
+  const guardado = catalogoRecompensas.get(canal);
+  if (!forcar && guardado && Date.now() - guardado.em < 60 * 60 * 1000) return guardado.mapa;
+  if (buscandoRecompensas.has(canal)) return buscandoRecompensas.get(canal);
+  const promessa = (async () => {
+    const mapa = new Map();
+    try {
+      const res = await twitchPedir(TWITCH_GQL, {
+        method: 'POST',
+        headers: { 'Client-ID': clientId || TWITCH_CLIENT_ID_PUBLICO, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: RECOMPENSAS_QUERY, variables: { login: canal } }),
+        extra: true,
+      });
+      const lista = res.ok && res.json ? res.json?.data?.user?.channel?.communityPointsSettings?.customRewards : null;
+      for (const r of Array.isArray(lista) ? lista : []) {
+        if (!r || typeof r.id !== 'string') continue;
+        const custo = Number(r.cost);
+        mapa.set(r.id, {
+          titulo: String(r.title || 'Resgate').slice(0, 80),
+          custo: Number.isFinite(custo) && custo > 0 ? custo : null,
+          cor: /^#[0-9a-f]{6}$/i.test(String(r.backgroundColor || '')) ? String(r.backgroundColor) : null,
+        });
+      }
+    } catch { /* sem catálogo: o resgate aparece só como «Resgate» */ }
+    catalogoRecompensas.set(canal, { em: Date.now(), mapa });
+    return mapa;
+  })();
+  buscandoRecompensas.set(canal, promessa);
+  try { return await promessa; } finally { buscandoRecompensas.delete(canal); }
+}
+
 // Cargos que o painel já desenha bonito por conta própria
 const CARGOS_TWITCH = {
   broadcaster: 'dono',
@@ -172,13 +217,30 @@ class TwitchConnector {
     this.stopped = false;
     this.retryMs = 2000;
     this.selos = new Map(); // catálogo de distintivos deste canal
+    this.recompensas = new Map(); // 🎁 catálogo de recompensas (pontos do canal)
+    this.recompensasEm = 0;
   }
 
   async carregarSelos() {
     try {
       const clientId = this.handlers.twitchClientId ? await this.handlers.twitchClientId() : null;
-      this.selos = await catalogoDeSelos(this.channel, clientId);
+      const [selos, recompensas] = await Promise.all([catalogoDeSelos(this.channel, clientId), catalogoDeRecompensas(this.channel, clientId)]);
+      this.selos = selos;
+      this.recompensas = recompensas;
     } catch { /* sem catálogo, os selos aparecem só com o nome */ }
+  }
+
+  // 🎁 Recompensa desconhecida (criada depois do catálogo): busca de novo, no
+  // máximo uma vez a cada 5 minutos
+  recarregarRecompensas() {
+    if (Date.now() - this.recompensasEm < 5 * 60 * 1000) return;
+    this.recompensasEm = Date.now();
+    (async () => {
+      try {
+        const clientId = this.handlers.twitchClientId ? await this.handlers.twitchClientId() : null;
+        this.recompensas = await catalogoDeRecompensas(this.channel, clientId, true);
+      } catch { /* fica o que tinha */ }
+    })();
   }
 
   start() {
@@ -337,11 +399,26 @@ class TwitchConnector {
     }
 
     const sentTs = Number(tags['tmi-sent-ts']) || Date.now();
+
+    // 🎁 v0.178: resgate de pontos do canal. A recompensa própria do canal
+    // chega com custom-reward-id; a «Destacar minha mensagem» (recompensa
+    // padrão da Twitch) chega com msg-id=highlighted-message.
+    let resgate = null;
+    const recompensaId = tags['custom-reward-id'];
+    if (recompensaId) {
+      const r = this.recompensas.get(recompensaId) || null;
+      if (!r) this.recarregarRecompensas();
+      resgate = { titulo: r ? r.titulo : 'Resgate', custo: r ? r.custo : null, cor: r ? r.cor : null, entrada: true };
+    } else if (tags['msg-id'] === 'highlighted-message') {
+      resgate = { titulo: 'Destacar mensagem', custo: null, cor: '#755ebc', entrada: true };
+    }
+    if (resgate) badges.push('resgate ' + resgate.titulo);
     // ATENÇÃO: aqui existia "do histórico, só o que for mais novo que a última
     // já emitida". Como o histórico É o passado recente, isso descartava tudo
     // depois de qualquer reconexão. Quem barra repetição é o servidor, pelo id.
 
     this.handlers.onMessage({
+      ...(resgate ? { resgate } : {}),
       platform: 'twitch',
       channel: this.channel,
       // Sem id próprio, um id estável pelo conteúdo evita repetir o histórico

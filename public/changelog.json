@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.178.0",
+    "titulo": "🎁 Resgates de pontos do canal (Twitch e Kick)",
+    "itens": [
+      "🎁 Resgates de recompensas com pontos do canal agora chegam ao painel, ao chat fixo e à tela: Twitch (recompensas que pedem texto e a «Destacar minha mensagem») e Kick (qualquer recompensa, com ou sem texto).",
+      "O cartão do resgate usa a cor da recompensa e mostra o nome dela (e o custo em pontos, quando a Twitch informa) numa pílula, como as doações — mas sem entrar na aba 💰 nem no arrecadado.",
+      "Limite conhecido: pela leitura anônima do chat da Twitch, resgates de recompensas SEM campo de texto não chegam (a Twitch só os entrega com login do dono do canal). YouTube e Bilibili não têm pontos do canal.",
+      "🧪 Duas amostras novas (Twitch e Kick) para testar o cartão do resgate."
+    ]
+  },
+  {
     "version": "0.177.0",
     "titulo": "🔒 Checagem de segurança e correções: telefone do WhatsApp fora da tela pública, espectador da rede sem dados do streamer, FAQ e README atualizados",
     "itens": [

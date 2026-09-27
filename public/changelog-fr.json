@@ -1,4 +1,13 @@
 {
+  "0.178.0": {
+    "titulo": "🎁 Récompenses en points de chaîne (Twitch et Kick)",
+    "itens": [
+      "🎁 Les échanges de récompenses en points de chaîne arrivent maintenant dans le panneau, le chat fixe et l’écran : Twitch (récompenses qui demandent un texte et « Mettre mon message en avant ») et Kick (toute récompense, avec ou sans texte).",
+      "La carte de la récompense reprend sa couleur et affiche son nom (et le coût en points, quand Twitch l’indique) dans une pastille, comme les dons — sans entrer dans l’onglet 💰 ni dans le total récolté.",
+      "Limite connue : par la lecture anonyme du chat Twitch, les échanges de récompenses SANS champ texte n’arrivent pas (Twitch ne les livre qu’avec la connexion du propriétaire de la chaîne). YouTube et Bilibili n’ont pas de points de chaîne.",
+      "🧪 Deux nouveaux exemples (Twitch et Kick) pour essayer la carte de récompense."
+    ]
+  },
   "0.177.0": {
     "titulo": "🔒 Contrôle de sécurité et corrections : numéro WhatsApp hors de l’écran public, spectateurs du réseau sans les données du streamer, FAQ et README mis à jour",
     "itens": [

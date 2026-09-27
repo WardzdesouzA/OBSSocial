@@ -1,4 +1,13 @@
 {
+  "0.178.0": {
+    "titulo": "🎁 Kanalpunkte-Einlösungen (Twitch und Kick)",
+    "itens": [
+      "🎁 Einlösungen von Belohnungen mit Kanalpunkten erreichen jetzt das Panel, den festen Chat und den Bildschirm: Twitch (Belohnungen mit Texteingabe und „Nachricht hervorheben“) und Kick (jede Belohnung, mit oder ohne Text).",
+      "Die Einlösungskarte nutzt die Farbe der Belohnung und zeigt ihren Namen (und die Kosten in Punkten, wenn Twitch sie liefert) in einer Pille, wie bei Spenden — ohne in den Tab 💰 oder die Einnahmen einzugehen.",
+      "Bekannte Grenze: Über den anonymen Twitch-Chat kommen Einlösungen von Belohnungen OHNE Textfeld nicht an (Twitch liefert sie nur mit Login des Kanalinhabers). YouTube und Bilibili haben keine Kanalpunkte.",
+      "🧪 Zwei neue Beispiele (Twitch und Kick) zum Ausprobieren der Einlösungskarte."
+    ]
+  },
   "0.177.0": {
     "titulo": "🔒 Sicherheits-Check und Korrekturen: WhatsApp-Nummer weg vom öffentlichen Bildschirm, Netzwerk-Zuschauer ohne Streamer-Daten, FAQ und README aktualisiert",
     "itens": [

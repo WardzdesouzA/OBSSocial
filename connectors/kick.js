@@ -303,6 +303,15 @@ class KickConnector {
       this.emitChat(data, false);
       return null;
     }
+    // 🎁 v0.178: resgate de recompensa do canal (pontos). A Kick avisa na
+    // própria sala do chat, com o nome da recompensa e o texto que a pessoa
+    // digitou (se a recompensa pedir texto).
+    if (/\\RewardRedeemedEvent$/.test(String(packet.event || ''))) {
+      let d;
+      try { d = JSON.parse(packet.data); } catch { return null; }
+      if (d && typeof d === 'object') this.emitResgate(d);
+      return null;
+    }
     // 🗑️ Moderação: mensagem apagada, pessoa banida/silenciada, chat limpo.
     // Sem isto, o que o mod tirou do chat continuava na tela da live.
     if (!this.handlers.onRemove) return null;
@@ -358,6 +367,37 @@ class KickConnector {
       // cargo e o nome curto. Juntamos os dois pelo nome.
       selos: selosDaKick(brutos, brutosV2, this.arteAssinante),
       runs: buildRuns(String(data.content || '')),
+      timestamp: ts,
+    });
+  }
+
+  // 🎁 v0.178: um resgate vira um comentário com o bloco `resgate` (o painel,
+  // o chat fixo e a tela desenham o cartão especial a partir dele)
+  emitResgate(d) {
+    const titulo = String(d.reward_title || d.title || 'Resgate').trim().slice(0, 80) || 'Resgate';
+    const quem = (d.user && typeof d.user === 'object') ? d.user : {};
+    const autor = String(d.username || quem.username || 'anônimo').slice(0, 80);
+    const entrada = String(d.user_input || '').slice(0, 500);
+    const custoBruto = Number(d.reward_cost ?? d.cost);
+    const cor = String(d.reward_background_color || d.background_color || '');
+    const ts = Date.now();
+    this.handlers.onMessage({
+      platform: 'kick',
+      channel: this.channel,
+      id: `kick-r-${ts}-${idEstavel(`${autor}|${titulo}|${entrada}`)}`,
+      author: autor,
+      authorLogin: String(quem.slug || d.username || quem.username || '').toLowerCase() || null,
+      authorColor: null,
+      avatar: null,
+      badges: ['resgate ' + titulo],
+      subTier: null,
+      resgate: {
+        titulo,
+        custo: Number.isFinite(custoBruto) && custoBruto > 0 ? custoBruto : null,
+        cor: /^#[0-9a-f]{6}$/i.test(cor) ? cor : null,
+        entrada: !!entrada,
+      },
+      runs: buildRuns(entrada),
       timestamp: ts,
     });
   }

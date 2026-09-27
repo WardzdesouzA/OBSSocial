@@ -1,4 +1,13 @@
 {
+  "0.178.0": {
+    "titulo": "🎁 Channel point redemptions (Twitch and Kick)",
+    "itens": [
+      "🎁 Channel-point reward redemptions now reach the panel, the fixed chat and the screen: Twitch (rewards that ask for text, plus “Highlight My Message”) and Kick (any reward, with or without text).",
+      "The redemption card uses the reward’s colour and shows its name (and the cost in points, when Twitch provides it) in a pill, like donations — but it does not enter the 💰 tab or the raised total.",
+      "Known limit: through Twitch’s anonymous chat, redemptions of rewards WITHOUT a text field do not arrive (Twitch only delivers them with the channel owner’s login). YouTube and Bilibili have no channel points.",
+      "🧪 Two new samples (Twitch and Kick) to try the redemption card."
+    ]
+  },
   "0.177.0": {
     "titulo": "🔒 Security check-up and fixes: WhatsApp phone number off the public screen, network viewers without the streamer’s data, FAQ and README updated",
     "itens": [
