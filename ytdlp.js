@@ -79,7 +79,9 @@ class Extrator {
       const r = spawnSync(onde.comando, ['--version'], { timeout: 5000, windowsHide: true, encoding: 'utf8' });
       if (!r.error && r.status === 0) texto = String(r.stdout || '').trim().slice(0, 40) || null;
     } catch { /* não respondeu */ }
-    this._versao = { comando: onde.comando, texto };
+    // 🎞️ v0.179: só guarda quando conseguiu ler — uma falha passageira (arquivo
+    // recém-gravado ainda ocupado, ETXTBSY) não pode virar «sem versão» para sempre
+    this._versao = texto ? { comando: onde.comando, texto } : null;
     return texto;
   }
 
@@ -228,7 +230,10 @@ class Extrator {
         }
       });
       res.pipe(escrita);
-      escrita.on('finish', () => aoPronto(destinoPart));
+      // 🎞️ v0.179: só avisa «pronto» no 'close' (arquivo já fechado) — no
+      // 'finish' o descritor de escrita ainda está aberto e o --version que
+      // mede a versão falhava com ETXTBSY, deixando o painel sem a versão
+      escrita.on('close', () => { if (!avisou) aoPronto(destinoPart); });
       escrita.on('error', aoErro);
       res.on('error', aoErro);
     });

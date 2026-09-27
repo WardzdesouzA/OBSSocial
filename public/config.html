@@ -3565,6 +3565,11 @@ const hub = connectHub((event) => {
         // controle) chega dentro da janela do applyingSettings — as páginas
         // exclusivas precisam aparecer/sumir no menu mesmo assim
         atualizarPaginasLabs();
+        // 🧪 v0.179: a ★ do modelo da transcrição e o rótulo dos cookies do
+        // extrator são desenhados a partir de `settings` — o eco da escolha
+        // feita nesta mesma página também precisa redesenhá-los
+        fillTranscricaoForm();
+        fillYtDlpForm();
       }
       applyPanel();
       break;
@@ -5993,6 +5998,7 @@ function fillTranscricaoForm() {
   }
   const cmd = document.getElementById('trComandoInput');
   if (cmd && document.activeElement !== cmd) cmd.value = conf.comando || '';
+  renderTranscricao(); // 🧪 v0.179: a ★ do «modelo em uso» acompanha a escolha
 }
 function trPush() {
   applyingSettings = true;
