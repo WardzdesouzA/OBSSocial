@@ -876,6 +876,13 @@
     position: fixed; inset: 0; z-index: 600; margin: 0;
     border-radius: 0; overflow: auto; max-width: none;
   }
+  /* ⛶ v0.179: em tela cheia só ficam o mapa e as ferramentas dele — o título,
+     a dica, as barras 🎭 perfil / 🖼️ arte e a tira de perfis empurravam o mapa
+     para o rodapé da janela, e ele saía MENOR do que fora da tela cheia */
+  body.organizar-cheio #sec-widgets > h3, body.organizar-cheio #editorDica,
+  body.organizar-cheio #perfilBar, body.organizar-cheio #perfilEditAviso,
+  body.organizar-cheio #arteBar, body.organizar-cheio #perfisArte { display: none !important; } /* (as barras têm display inline) */
+  body.organizar-cheio .layout-flex { justify-content: center; }
 
   /* Menu lateral só com os ícones */
   #navColapso { width: 100%; height: 24px; font-size: 12px; padding: 0; }
@@ -1555,7 +1562,7 @@
 
     <div class="card" id="sec-widgets">
       <h3>🎨 Editor visual de overlay</h3>
-      <div class="hint" style="font-size:12px;color:var(--muted)">A sua tela (16:9) inteira como mesa de trabalho. <b>Arraste cada elemento</b> (salva sozinho, muda na live na hora), puxe as <b>8 alças</b> para o tamanho, e use a barra <b>🗂️ Selecionar elemento</b> logo abaixo do mapa para escolher qualquer coisa e mudar a camada dela com ▲▼. Escolha um <b>perfil</b> aqui em cima para editá-lo; em «Visual ao vivo», o editor mexe no visual de sempre.</div>
+      <div class="hint" id="editorDica" style="font-size:12px;color:var(--muted)">A sua tela inteira (no tamanho escolhido em «Tela») como mesa de trabalho. <b>Arraste cada elemento</b> (salva sozinho, muda na live na hora), puxe as <b>8 alças</b> para o tamanho, e use a barra <b>🗂️ Selecionar elemento</b> logo abaixo do mapa para escolher qualquer coisa e mudar a camada dela com ▲▼. Escolha um <b>perfil</b> aqui em cima para editá-lo; em «Visual ao vivo», o editor mexe no visual de sempre.</div>
       <div id="perfilBar" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:8px 0;padding:10px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2)">
         <label style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)">🎭 Perfil (molde do destaque)
           <select id="perfilEdit" style="min-width:180px"><option value="">— Visual ao vivo —</option></select>
@@ -1722,7 +1729,8 @@
       <div id="painelPx">
         <div class="camadas-titulo" id="painelPxTitulo">📐 —</div>
         <div id="painelPxCampos"><span class="hint painel-px-dica">Clique num overlay ou numa peça para ver e digitar as medidas dele.</span></div>
-        <div class="hint" style="margin:4px 0 0">Números em <b>pixels</b> da tela 1920×1080.</div>
+        <!-- 📐 v0.179: o tamanho é o da tela escolhida em «Tela» (syncTelaUI escreve) -->
+        <div class="hint" style="margin:4px 0 0">Números em <b>pixels</b> da tela <span id="painelPxTela">1920×1080</span>.</div>
         <!-- 📏 v0.115: força do pontilhado branco do modo medida (preferência do navegador) -->
         <label class="hint" id="medidaPontilhadoWrap" style="display:flex;align-items:center;gap:6px;margin:6px 0 0" title="Quanto o contorno pontilhado branco aparece enquanto você digita no seletor manual (modo medida). Preferência deste navegador.">📏 Pontilhado do modo medida
           <select id="medidaPontilhado" style="padding:3px 6px;font-size:12px"><option value="1">Normal</option><option value="2">Mais visível</option><option value="3">Bem visível</option></select>
@@ -1809,7 +1817,7 @@
 
     <div class="card">
       <h3>🧩 Personalizar widgets da tela <span class="hist-btns" data-section="widget"><button data-act="undo" title="Voltar (desfazer o último ajuste)">◀</button><button data-act="redo" title="Avançar (refazer)">▶</button><button data-act="reset" title="Voltar ao padrão original">↺</button></span></h3>
-      <div class="hint">Cada widget (QR, sorteio, likômetro, winstreak e audiência) pode ser personalizado por completo: posição, tamanho, cores, animações de entrada e de saída, ⏱️ tempo de tela, mídia própria de fundo e CSS. Escolha o widget na lista e mexa à vontade — tudo salva sozinho e muda na tela na hora.</div>
+      <div class="hint">Cada widget (QR, sorteio, likômetro, winstreak, audiência, avisos, relógio e clima) pode ser personalizado por completo: posição, tamanho, cores, animações de entrada e de saída, ⏱️ tempo de tela, mídia própria de fundo e CSS. Escolha o widget na lista e mexa à vontade — tudo salva sozinho e muda na tela na hora.</div>
       <div class="field">
         <label>Qual widget personalizar</label>
         <select id="w-select">
@@ -3211,7 +3219,7 @@
       <details class="faq-item"><summary>O que significam as cores da bolinha de conexão?</summary><div class="faq-resposta">🟢 Verde: conectado e com a live NO AR (YouTube, Twitch, Kick, Bilibili) — na LivePix, na PixGG, no Telegram e no WhatsApp, que não têm o conceito de live no ar, verde quer dizer simplesmente «Conectado». 🟡 Amarela: conectado, mas sem live no ar neste momento. 🔴 Vermelha: a conexão falhou — o texto ao lado diz o motivo e, quando o programa vai tentar de novo sozinho, em quantos segundos. Em ♿ Acessibilidade, «Formas além de cor» acrescenta ✓, ! e ✕ à bolinha, para quem não distingue as cores.</div></details>
       <details class="faq-item"><summary>🎁 Os resgates de pontos do canal aparecem?</summary><div class="faq-resposta">Sim, na Twitch e na Kick: o resgate chega ao painel, ao chat fixo e à tela como um cartão na cor da recompensa, com o nome dela (e o custo em pontos, quando a Twitch informa). Ele não entra na aba 💰 nem no arrecadado. Limite da Twitch: pela leitura anônima do chat só chegam as recompensas que pedem texto (e a «Destacar minha mensagem»); resgates sem campo de texto a Twitch só entrega com o login do dono do canal. YouTube e Bilibili não têm pontos do canal.</div></details>
       <details class="faq-item"><summary>Como destaco um comentário na tela?</summary><div class="faq-resposta">No painel, clique com o botão direito no comentário e escolha «📺 Enviar para a tela». Ele aparece no overlay na hora — e sai quando você tirar (ou sozinho, se você definir o ⏱️ tempo de tela). O clique simples não envia nada: é uma proteção contra o clique acidental no meio da live.</div></details>
-      <details class="faq-item"><summary>Como mudo a posição e o tamanho das coisas na tela?</summary><div class="faq-resposta">Aba 🎨 Temas → 🖱️ Organizar a tela: arraste cada item no mapa, estique pelas alças e use as 🪟 Camadas para decidir quem fica por cima. Os botões ◀▶ desfazem/refazem qualquer ajuste, e o ↺ devolve tudo ao padrão de fábrica.</div></details>
+      <details class="faq-item"><summary>Como mudo a posição e o tamanho das coisas na tela?</summary><div class="faq-resposta">Aba 🎨 Temas → 🖱️ Organizar a tela: arraste cada item no mapa, estique pelas alças e use a barra 🗂️ Selecionar elemento (setinhas ▲▼) para decidir quem fica por cima. Os botões ◀▶ desfazem/refazem qualquer ajuste, e o ↺ devolve tudo ao padrão de fábrica.</div></details>
       <details class="faq-item"><summary>O que é o 🧩 Overlay em peças?</summary><div class="faq-resposta">Um modo avançado que desmonta o cartão do destaque e os widgets em peças independentes (avatar, nome, texto, hora...), cada uma com posição, tamanho, giro, cor e camada próprios — tudo arrastado no Organizar a tela.</div></details>
       <details class="faq-item"><summary>Como uso uma arte minha no overlay?</summary><div class="faq-resposta">Na aba 🎨 Temas, dentro do 🎨 Editor visual de overlay, bloco <b>🖼️ Suas artes</b>: envie a imagem ou o vídeo e escolha onde ela entra (fundo do destaque, moldura de tela inteira ou fundo de widget). Com uma arte no fundo do destaque, o overlay padrão sai de cena sozinho: a arte vira a peça 🖼️ Sua arte no Organizar a tela, com posição e tamanho ajustáveis — e, com um molde em edição no 🖱️, a arte escolhida grava dentro do perfil.</div></details>
       <details class="faq-item"><summary>Enviei um vídeo de arte e ficou preto na tela. Por quê?</summary><div class="faq-resposta">Porque nem todo vídeo TOCA num navegador — e o OBS mostra os overlays dentro de um. Renders de overlay costumam sair em <b>.mov ProRes</b> ou <b>QuickTime com alfa</b> (a exportação padrão do After Effects): o arquivo entra, o programa lê a ficha dele, e mesmo assim nenhum quadro aparece. O caminho é exportar de novo: <b>WEBM (VP9 com alfa)</b> quando o fundo precisa ser transparente, ou <b>MP4 (H.264)</b> quando não precisa. O envio avisa na hora quando o arquivo não mostra quadro nenhum.</div></details>
@@ -3570,6 +3578,10 @@ const hub = connectHub((event) => {
         // feita nesta mesma página também precisa redesenhá-los
         fillTranscricaoForm();
         fillYtDlpForm();
+        // 🖱️ v0.179: e o 🖱️ Organizar a tela também — o eco do que ESTA página
+        // mandou pulava o fillSettingsForm inteiro, e o editor só repintava no
+        // PRÓXIMO eco qualquer (ou ao recarregar)
+        sincronizarEditorPeloEco();
       }
       applyPanel();
       break;
@@ -4692,6 +4704,26 @@ function fillSettingsForm() {
   rebuildWidgetMediaOptions();
   fillWidgetForm();
   syncExactInputs();
+}
+
+// 🖱️ v0.179: a parte do fillSettingsForm que o eco do PRÓPRIO ajuste não pode
+// pular — só o que não é campo de digitação (nada de apagar o que o streamer
+// está escrevendo): abas 🖥️/📱 e proporção do mapa (modo de tela), moldura e
+// arte no mapa + miniatura (via renderLayout) e os interruptores gêmeos das
+// 🧩 peças soltas (o da barra do editor e os dos cards andam juntos)
+function sincronizarEditorPeloEco() {
+  if (!settings) return;
+  try {
+    syncTelaUI();
+    const sd = document.getElementById('s-destaqueLivre');
+    if (sd && document.activeElement !== sd) sd.checked = settings.destaqueLivre === true;
+    const wp = document.getElementById('w-pecasLivre');
+    if (wp && document.activeElement !== wp && typeof selectedWidget === 'function') {
+      const conf = (settings.widgets || {})[selectedWidget().kind];
+      if (conf && conf.pecasLivre !== undefined) wp.checked = conf.pecasLivre !== false;
+    }
+    renderLayout(); // relê o 🧩 da barra e redesenha moldura, arte, peças e miniatura
+  } catch {}
 }
 
 function updateRangeLabels() {
@@ -9989,6 +10021,8 @@ function syncTelaUI() {
   const canvas = document.getElementById('layoutCanvas');
   const w = Number(settings?.panel?.previewW) || 1920;
   const h = Number(settings?.panel?.previewH) || 1080;
+  // 📐 v0.179: a dica do painel diz a tela EM USO (era fixa em 1920×1080)
+  { const t = document.getElementById('painelPxTela'); if (t) { const px = telaPxAtual(); t.textContent = `${px.w}×${px.h}`; } }
   if (telaAtiva() === 'v') {
     // Vertical: a mesma tela, de pé — limitada à altura visível e centralizada
     const menor = Math.min(w, h);
