@@ -1,4 +1,14 @@
 {
+  "0.180.0": {
+    "titulo": "🎵 Table des pistes : le fichier vit sur la touche",
+    "itens": [
+      "⬆️ Envoyer un fichier et 🗑️ Supprimer le fichier sont maintenant dans l’éditeur de la touche de la Table — le « Choisir un fichier » en haut de la Table a disparu.",
+      "La touche adopte le type du fichier envoyé : un son devient 🎵 touche de son, une image 🖼️ image à l’écran et une vidéo 🎞️ vidéo à l’écran — sans changer le type à la main.",
+      "Une touche sans nom prend le nom du fichier ; image et vidéo naissent en fenêtre à 45 %. Remplacer le fichier d’une touche n’efface pas les précédents de la bibliothèque de la Table.",
+      "🗑️ Supprimer le fichier demande confirmation, indique combien d’autres touches utilisent le même fichier et l’efface du disque — les touches deviennent en attente au lieu de pointer vers un fichier inexistant.",
+      "FAQ et textes de l’éditeur mis à jour dans les 10 langues."
+    ]
+  },
   "0.179.2": {
     "titulo": "🎨 Table des pistes dans le thème clair : menus et touches",
     "itens": [

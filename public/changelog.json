@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.180.0",
+    "titulo": "🎵 Mesa de trilhas: o arquivo mora na tecla",
+    "itens": [
+      "⬆️ Enviar arquivo e 🗑️ Excluir arquivo agora ficam dentro do editor da tecla da Mesa de trilhas — o «Escolher arquivo» do topo da Mesa saiu.",
+      "A tecla adota o tipo do arquivo enviado: som vira 🎵 tecla de som, imagem vira 🖼️ imagem na tela e vídeo vira 🎞️ vídeo na tela — sem trocar o tipo na mão.",
+      "Tecla sem nome ganha o nome do arquivo; imagem e vídeo já nascem em janela de 45%. Trocar o arquivo de uma tecla não apaga os anteriores da biblioteca da Mesa.",
+      "🗑️ Excluir arquivo pede confirmação, avisa quantas outras teclas usam o mesmo arquivo e apaga do disco — as teclas ficam pendentes em vez de apontar para um arquivo que não existe.",
+      "FAQ e textos do editor atualizados nos 10 idiomas."
+    ]
+  },
+  {
     "version": "0.179.2",
     "titulo": "🎨 Mesa de trilhas no tema claro: menus e teclas",
     "itens": [

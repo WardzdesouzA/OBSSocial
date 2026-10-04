@@ -1,4 +1,14 @@
 {
+  "0.180.0": {
+    "titulo": "🎵 Mesa de pistas: el archivo vive en la tecla",
+    "itens": [
+      "⬆️ Enviar archivo y 🗑️ Eliminar archivo ahora están dentro del editor de la tecla de la Mesa — el «Elegir archivo» de arriba de la Mesa desapareció.",
+      "La tecla adopta el tipo del archivo subido: un sonido pasa a ser 🎵 tecla de sonido, una imagen 🖼️ imagen en pantalla y un vídeo 🎞️ vídeo en pantalla — sin cambiar el tipo a mano.",
+      "La tecla sin nombre toma el nombre del archivo; imagen y vídeo nacen como ventana al 45%. Cambiar el archivo de una tecla no borra los anteriores de la biblioteca de la Mesa.",
+      "🗑️ Eliminar archivo pide confirmación, avisa cuántas otras teclas usan el mismo archivo y lo borra del disco — las teclas quedan pendientes en vez de apuntar a un archivo que no existe.",
+      "FAQ y textos del editor actualizados en los 10 idiomas."
+    ]
+  },
   "0.179.2": {
     "titulo": "🎨 Mesa de pistas en el tema claro: menús y teclas",
     "itens": [

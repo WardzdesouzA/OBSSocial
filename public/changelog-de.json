@@ -1,4 +1,14 @@
 {
+  "0.180.0": {
+    "titulo": "🎵 Soundboard: die Datei wohnt auf der Taste",
+    "itens": [
+      "⬆️ Datei hochladen und 🗑️ Datei löschen sitzen jetzt im Tasten-Editor des Soundboards — das «Datei wählen» oben im Soundboard ist weg.",
+      "Die Taste übernimmt den Typ der hochgeladenen Datei: ein Sound wird zur 🎵 Sound-Taste, ein Bild zu 🖼️ Bild am Bildschirm und ein Video zu 🎞️ Video am Bildschirm — ohne den Typ von Hand umzustellen.",
+      "Eine Taste ohne Namen bekommt den Dateinamen; Bild und Video starten als 45%-Fenster. Die Datei einer Taste zu ersetzen löscht die vorherigen nicht aus der Bibliothek des Soundboards.",
+      "🗑️ Datei löschen fragt nach, sagt, wie viele andere Tasten dieselbe Datei nutzen, und entfernt sie von der Platte — die Tasten werden ausstehend, statt auf eine fehlende Datei zu zeigen.",
+      "FAQ und Editor-Texte in allen 10 Sprachen aktualisiert."
+    ]
+  },
   "0.179.2": {
     "titulo": "🎨 Soundboard im hellen Thema: Menüs und Tasten",
     "itens": [
