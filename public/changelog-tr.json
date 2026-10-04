@@ -1,4 +1,14 @@
 {
+  "0.180.0": {
+    "titulo": "🎵 Parça Masası: dosya tuşta yaşar",
+    "itens": [
+      "⬆️ Dosya gönder ve 🗑️ Dosyayı sil artık Masa’nın tuş düzenleyicisinin içinde — Masa’nın üstündeki «Dosya seç» kaldırıldı.",
+      "Tuş, gönderilen dosyanın türünü alır: ses 🎵 ses tuşu, görsel 🖼️ ekranda görsel, video 🎞️ ekranda video olur — türü elle değiştirmeden.",
+      "Adı olmayan tuş dosyanın adını alır; görsel ve video %45 pencere olarak doğar. Bir tuşun dosyasını değiştirmek öncekileri Masa kitaplığından silmez.",
+      "🗑️ Dosyayı sil onay ister, aynı dosyayı kaç tuşun daha kullandığını söyler ve diskten siler — tuşlar var olmayan bir dosyayı göstermek yerine beklemede kalır.",
+      "SSS ve düzenleyici metinleri 10 dilde güncellendi."
+    ]
+  },
   "0.179.2": {
     "titulo": "🎨 Açık temada Parça masası: menüler ve tuşlar",
     "itens": [

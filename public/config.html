@@ -2996,7 +2996,6 @@
             </div>
           </details>
           <div class="row" style="align-items:center;flex-wrap:wrap">
-            <input type="file" id="trilhaArquivo" accept="audio/*,image/*,video/*,.mp3,.wav,.ogg,.oga,.m4a,.aac,.flac,.opus,.weba,.aif,.aiff,.wma,.amr,.mka,.png,.jpg,.jpeg,.jpe,.jfif,.gif,.webp,.avif,.bmp,.apng,.svg,.tif,.tiff,.heic,.heif,.jxl,.mp4,.webm,.ogv,.mov,.m4v,.avi,.mkv,.mpeg,.mpg,.vob,.wmv,.asf,.flv,.f4v,.3gp,.3g2,.ts,.mts,.m2ts" style="padding:6px" title="Enviar som, imagem ou vídeo para a biblioteca da Mesa — vira uma tecla na hora">
             <span style="flex:1"></span>
             <label style="font-size:12px;color:var(--muted)" title="Quantos botões por página — nas configurações e no painel">🔢 <select id="trilhasGradeSel" style="width:auto">
               <option value="4">4 botões</option>
@@ -3016,7 +3015,6 @@
             <input type="number" id="trilhasSegurarInp" min="0" max="5" step="0.1" style="width:64px" title="Segundos segurando o botão de multi ação para abri-lo (0 a 5; 0 = abre no toque)">
             <span style="font-size:12px;color:var(--muted)">s</span>
           </div>
-          <div id="trilhaUploadStatus" class="hint" style="display:none"></div>
           <!-- 🎛️ O teclado: botões quadrados, uma página por vez, como no Stream Deck.
                Clique seleciona e abre o editor embaixo (um por vez); arraste reordena.
                🎛️➡ v0.85: a pasta/multi ação aberta ganha a PRÓPRIA grade ao
@@ -3248,7 +3246,7 @@
       <details class="faq-item"><summary>Dá para transformar as coisas do vMix em botões?</summary><div class="faq-resposta">Dá — é a tecla <b>🎛️ Ação do vMix</b> na 🎵 Mesa de trilhas, igualzinha à do OBS: crie uma tecla, escolha o tipo 🎛️ e depois a ação (mandar uma entrada ao vivo ou ao preview, transição, gravar, mudo de uma entrada, overlay, texto de um título, função livre...). As entradas vêm do vMix conectado; o ▶ Testar agora dispara na hora. A tecla <b>acende sozinha</b> quando o que ela controla está ligado (gravando, no ar, no preview, overlay no ar, entrada muda). Essas teclas entram na fila de um 🎛️ Botão de multi ação como as outras, e o criador do card 🎵 do Labs monta várias de uma vez.</div></details>
       <details class="faq-item"><summary>Dá para usar o Stream Deck (ou outro aparelho de botões) com o OBS Social?</summary><div class="faq-resposta">Dá — é o 🕹️ Controle externo, em 🧪 Labs (experimental). Cada ação do OBS Social ganha um endereço (URL) com um token; o aparelho abre o endereço e a ação acontece. Funciona com qualquer coisa que saiba abrir um endereço: Stream Deck (com um plugin de requisição HTTP da loja da Elgato, ou a ação «Site»), Bitfocus Companion (conexão Generic: HTTP), Touch Portal, Loupedeck, Razer Stream Controller, Macro Deck, Streamer.bot, o app Atalhos do iPhone, HTTP Shortcuts no Android, Node-RED... A página 🕹️ Controle Externo lista todos os endereços prontos para copiar, com um ▶ para testar cada um antes de gravar no aparelho.</div></details>
       <details class="faq-item"><summary>O que o controle externo consegue fazer?</summary><div class="faq-resposta">Tudo o que o painel faz pela rede com senha: limpar a tela, destacar o último comentário (de qualquer rede ou de uma só) ou um salvo, tirar o destaque, soltar a fila, player da mídia, 🎞️ mídia direta (URL, mostrar, tocar, pausar, volume, tela cheia e o crédito de fonte), sortear/esconder/zerar o sorteio, likômetro, audiência, winstreak (+1, −1, zerar, mostrar), QR code, escrever e mostrar avisos (cada um pelo id), relógio, cronômetro e timer (iniciar, pausar, zerar, duração, mostrar), 🌤️ clima (mostrar, esconder, próxima cidade, atualizar e o cartão completo), os alertas da LivePix (represar, pular, repetir), ligar/desligar/reiniciar cada conexão, disparar qualquer tecla da Mesa de trilhas (pelo id ou pelo nome), qualquer ação do OBS Studio e do vMix (as mesmas das teclas), comentário de teste e 🧹 apagar os de teste, área de transferência — e, para quem programa, a operação livre («op») manda qualquer operação do painel. Fora só o que é do computador local: senha, atualizações, reiniciar, apagar dados, backups e credenciais. ⚠️ Por isso o token não é um «atalho»: quem o tem controla o painel inteiro pela rede, exatamente como quem sabe a senha — guarde-o como guarda a senha e gere outro (🔄) se ele vazar.</div></details>
-      <details class="faq-item"><summary>O que é a 🎵 Mesa de trilhas?</summary><div class="faq-resposta">Uma mesa de som experimental (🧪 Labs): cada trilha vira um botão no painel. Uma toca por vez, apertar outra troca com fade, BGM pode repetir (🔁) e o ⏹ para tudo. O som pode sair na live (pelo overlay no OBS), só no painel, ou nos dois. No celular ou tablet ela abre em tela cheia pelo endereço /deck — a 📱 Mini Mesa, com QR em ⚙️ → 🎵 Mesa de Trilhas — sincronizada com o painel. As teclas 🎬 Ação do OBS e 🎛️ Ação do vMix entram na mesma Mesa, e dá até para importar os botões de som do seu Stream Deck, com um backup de perfis.</div></details>
+      <details class="faq-item"><summary>O que é a 🎵 Mesa de trilhas?</summary><div class="faq-resposta">Uma mesa de som experimental (🧪 Labs): cada trilha vira um botão no painel. Uma toca por vez, apertar outra troca com fade, BGM pode repetir (🔁) e o ⏹ para tudo. O som pode sair na live (pelo overlay no OBS), só no painel, ou nos dois. No celular ou tablet ela abre em tela cheia pelo endereço /deck — a 📱 Mini Mesa, com QR em ⚙️ → 🎵 Mesa de Trilhas — sincronizada com o painel. As teclas 🎬 Ação do OBS e 🎛️ Ação do vMix entram na mesma Mesa, e dá até para importar os botões de som do seu Stream Deck, com um backup de perfis. Som, imagem e vídeo entram pela própria tecla: no editor dela, ⬆️ Enviar arquivo sobe o arquivo e a tecla vira tecla de som, de imagem ou de vídeo conforme o que você mandou; 🗑️ Excluir arquivo apaga o arquivo do disco.</div></details>
       <details class="faq-item"><summary>Como deixo a animação de fundo do meu jeito?</summary><div class="faq-resposta">Em 🎨 Temas → 🎬 Animação de fundo: escolha a animação (aurora, estrelas, neve, bolhas, grade retrô, confete) e afine tudo — intensidade, velocidade, quantidade, tamanho, brilho, rastro, vento e as cores (do tema ou três suas). Cada efeito tem os próprios detalhes: nas estrelas, as pontas de difração como as fotos do telescópio James Webb, a cintilação, as estrelas cadentes e a nebulosa; na aurora, as cortinas; na neve, cristais ou pontos; nas bolhas, o reflexo; na grade, o sol e o horizonte; no confete, as formas. Em 🪟 Onde a animação aparece dá para pôr a camada por cima de tudo e baixar a opacidade dos painéis (padrão 100%, opaco) para a animação atravessar cards e colunas em qualquer lugar. A própria página é a prévia. «↺ Padrão da animação» desfaz os ajustes.</div></details>
       <details class="faq-item"><summary>Como funciona o 🌤️ Clima na tela?</summary><div class="faq-resposta">É um widget com o tempo agora e um ícone animado (sol, lua, nuvens, chuva, trovoada, neve…). Em 🎨 Temas → 🌤️ Clima você procura a sua cidade (ou adiciona as capitais do Brasil de uma vez), liga o rodízio para a tela passar por várias cidades a cada tantos segundos, escolhe se o nome da cidade aparece e de quanto em quanto tempo as informações são atualizadas (10 a 60 minutos). O rodízio também pode percorrer, sem cadastrar nada, todos os municípios do Brasil ou os de um estado (a lista do IBGE, em ordem alfabética) — o tempo de cada cidade é buscado pouco antes de ela entrar. As cidades cadastradas valem para o cartão da tela, para o mostrador do painel (ao lado do relógio, que mostra a sua cidade — ou o que está na tela, se você marcar) e para o 🗂️ cartão completo: o tempo agora com tudo, as próximas horas e os próximos dias, no meio da tela, temporário — o ✖ tira dos dois lugares sem mexer no cartão pequeno. Bairros não existem nas fontes de clima: a previsão vem numa grade de uns 10 km. As informações vêm das fontes marcadas em 🔌 Conexões → 🌤️ Fontes de clima: Open-Meteo e MET Norway funcionam sem cadastro; OpenWeatherMap, WeatherAPI, AccuWeather, Climatempo e Weather Underground pedem uma chave gratuita, que fica só no seu computador. O botão 🌤️ do painel põe e tira da tela; posição, tamanho e cores no 🖱️ Organizar a tela.</div></details>
       <details class="faq-item"><summary>O que são os 🎭 Perfis de overlay?</summary><div class="faq-resposta">Moldes completos do comentário em destaque — cores, letra, arte, posição e as peças — salvos com um nome, na barra 🎭 Perfil do 🎨 Editor visual de overlay (aba 🎨 Temas). Monte o visual, salve como perfil e troque o overlay inteiro em um clique. Com a <b>troca automática</b> ligada, cada comentário destacado veste o molde certo sozinho: um perfil para os comentários comuns e um por <b>faixa de valor</b> para Super Chats e 💝 doações — em qualquer moeda, convertida para reais pela cotação do dia. O 🧪 de cada faixa põe no ar um Super Chat de teste com aquele valor, para conferir antes da live.</div></details>
@@ -6745,6 +6743,8 @@ function controleLinha(a) {
 }
 
 const EXTS_TRILHA = /\.(mp3|wav|ogg|oga|weba|m4a|aac|flac|opus)$/i;
+// ⬆️ v0.180: o que o ⬆️ Enviar arquivo do editor da tecla aceita (som, imagem ou vídeo)
+const ACEITA_MIDIA_MESA = 'audio/*,image/*,video/*,.mp3,.wav,.ogg,.oga,.m4a,.aac,.flac,.opus,.weba,.aif,.aiff,.wma,.amr,.mka,.png,.jpg,.jpeg,.jpe,.jfif,.gif,.webp,.avif,.bmp,.apng,.svg,.tif,.tiff,.heic,.heif,.jxl,.mp4,.webm,.ogv,.mov,.m4v,.avi,.mkv,.mpeg,.mpg,.vob,.wmv,.asf,.flv,.f4v,.3gp,.3g2,.ts,.mts,.m2ts';
 const EXTS_IMG_TRILHA = /\.(png|jpe?g|jfif|gif|webp|avif|bmp|apng)$/i;
 function sonsDisponiveis() {
   return midiasDaMesa().filter((m) => EXTS_TRILHA.test(m.name)).map((m) => ({ url: m.url, rotulo: m.name.replace(/^trilhas\//, '') }));
@@ -7792,6 +7792,7 @@ function montarEditorTecla(card, slot, idSel) {
   // v0.51: a tecla tem TRÊS caras — som, 🎛️ Botão de multi ação (clique toca
   // tudo em fila; segurar abre) ou 📁 Pasta simples (só guarda; clique abre)
   const tipoSel = document.createElement('select');
+  tipoSel.className = 'tecla-tipo';
   for (const [v, r] of [['trilha', '🎵 Tecla de som'], ['imagem', '🖼️ Imagem na tela'], ['video', '🎞️ Vídeo na tela'], ['obs', '🎬 Ação do OBS'], ['vmix', '🎛️ Ação do vMix'], ['pasta', '🎛️ Botão de multi ação'], ['pastaSimples', '📁 Pasta simples']]) {
     const op = document.createElement('option');
     op.value = v; op.textContent = r;
@@ -7893,6 +7894,7 @@ function montarEditorTecla(card, slot, idSel) {
   // Som: arquivo, modo, fade, volume, destino
   const som = linha();
   const arq = document.createElement('select');
+  arq.className = 'tecla-arq-som';
   arq.style.flex = '1'; arq.style.minWidth = '160px';
   {
     const op0 = document.createElement('option');
@@ -7913,6 +7915,70 @@ function montarEditorTecla(card, slot, idSel) {
     }
   }
   som.appendChild(campo('Arquivo de som', arq));
+  // ⬆️🗑️ v0.180: enviar e excluir o arquivo DAQUI, no editor da tecla — a tecla
+  // adota o tipo da mídia (som → tecla de som; imagem → imagem na tela; vídeo →
+  // vídeo na tela). O «Escolher arquivo» do topo da Mesa saiu.
+  const ferramentasArquivo = () => {
+    const w = document.createElement('div');
+    w.style.cssText = 'display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap';
+    const input = document.createElement('input');
+    input.type = 'file'; input.style.display = 'none'; input.accept = ACEITA_MIDIA_MESA; input.className = 'tecla-arquivo-input';
+    const enviar = document.createElement('button');
+    enviar.type = 'button'; enviar.className = 'icon-btn tecla-enviar'; enviar.style.cssText = 'width:auto;padding:0 10px;height:34px;font-size:13px';
+    enviar.textContent = '⬆️ Enviar arquivo';
+    enviar.title = 'Envia um som, imagem ou vídeo para a biblioteca da Mesa e põe nesta tecla — ela vira tecla de som, de imagem ou de vídeo conforme o arquivo';
+    enviar.onclick = () => input.click();
+    const excluir = document.createElement('button');
+    excluir.type = 'button'; excluir.className = 'icon-btn tecla-excluir'; excluir.style.cssText = 'width:auto;padding:0 10px;height:34px;font-size:13px';
+    excluir.textContent = '🗑️ Excluir arquivo';
+    excluir.title = 'Apaga do disco o arquivo desta tecla — a tecla fica sem arquivo';
+    const status = document.createElement('div'); status.className = 'hint'; status.style.cssText = 'margin:0;flex-basis:100%;display:none';
+    const atual = () => cfgTrilhas.find((x) => x.id === t.id) || t;
+    const arquivoDe = (url) => { const m = /^\/uploads\/(trilhas\/)?([^/?#]+)$/.exec(String(url || '')); return m ? { name: (m[1] || '') + decodeURIComponent(m[2]), nome: decodeURIComponent(m[2]) } : null; };
+    excluir.style.display = arquivoDe(atual().url) ? '' : 'none';
+    input.onchange = async () => {
+      const file = input.files[0]; input.value = '';
+      if (!file) return;
+      status.style.display = ''; status.textContent = `Enviando "${file.name}"...`;
+      try {
+        const res = await fetch('/upload?pasta=trilhas&name=' + encodeURIComponent(file.name), { method: 'POST', body: file });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'falha no envio');
+        const k = tipoDoArquivo(file.name);
+        const tipoNovo = k === 'video' ? 'video' : k === 'image' ? 'imagem' : 'trilha';
+        const alvo = atual();
+        alvo.url = data.url; alvo.tipo = tipoNovo;
+        if (!String(alvo.nome || '').trim()) alvo.nome = file.name.replace(/\.[^.]+$/, '').slice(0, 50);
+        if (tipoNovo !== 'trilha') { if (!alvo.telaModo) alvo.telaModo = 'janela'; if (!alvo.telaEscala) alvo.telaEscala = 45; }
+        // a lista de mídias chega pelo eco do servidor; entra já aqui para o seletor mostrar o arquivo
+        if (!mediaList.some((m) => m.url === data.url)) mediaList.unshift({ name: data.name, url: data.url, type: k, size: file.size, mtime: Date.now() });
+        enviarTrilhas();
+        renderTrilhasDeck();
+        renderTrilhaEditorCard(); // remonta o editor já com o tipo novo
+        const aviso = await avisoDeFormato(data.url, file.name);
+        if (aviso) obsAviso(aviso, 'Enviar arquivo', '⬆️');
+      } catch (err) {
+        status.textContent = `❌ Erro ao enviar: ${err.message}`;
+      }
+    };
+    excluir.onclick = async () => {
+      const alvo = atual(); const a = arquivoDe(alvo.url);
+      if (!a) return;
+      const outras = cfgTrilhas.filter((x) => x.id !== alvo.id && (x.url === alvo.url || x.imagem === alvo.url)).length;
+      const ok = await obsConfirmar(
+        `Excluir o arquivo "${a.nome}"? Ele é apagado do disco e esta tecla fica sem arquivo (pendente).` + (outras ? ` Outras ${outras} tecla(s) que usam o mesmo arquivo também ficam sem ele.` : ''),
+        { icone: '🗑️', nivel: 'perigo', ok: 'Excluir' });
+      if (!ok) return;
+      hub.send({ type: 'deleteMedia', name: a.name });
+      alvo.url = '';
+      mediaList = mediaList.filter((m) => m.name !== a.name);
+      renderTrilhasDeck();
+      renderTrilhaEditorCard();
+    };
+    w.append(enviar, excluir, input, status);
+    return w;
+  };
+  som.appendChild(ferramentasArquivo());
   const modo = document.createElement('select');
   for (const [v, r] of [['solo', 'Tocar / Parar (uma por vez)'], ['sobrepor', 'Sobrepor (toca por cima)'], ['recomecar', 'Recomeçar (por cima, do zero)'], ['loop', '🔁 Repetir / Parar (BGM)']]) {
     const op = document.createElement('option');
@@ -7969,6 +8035,7 @@ function montarEditorTecla(card, slot, idSel) {
   // DUAS telas (painel e overlay). O clique na tecla põe/tira da tela.
   const telaLinha = linha();
   const arqMidia = document.createElement('select');
+  arqMidia.className = 'tecla-arq-midia';
   arqMidia.style.flex = '1'; arqMidia.style.minWidth = '180px';
   const encherArqMidia = () => {
     const querVideo = tipoSel.value === 'video';
@@ -7990,7 +8057,8 @@ function montarEditorTecla(card, slot, idSel) {
     }
   };
   encherArqMidia();
-  telaLinha.appendChild(campo('Arquivo (enviado nas 🖼️ Mídias)', arqMidia));
+  telaLinha.appendChild(campo('Arquivo', arqMidia));
+  telaLinha.appendChild(ferramentasArquivo());
   const telaModoSel = document.createElement('select');
   for (const [v, r] of [['janela', '🪟 Janela redimensionável'], ['cheia', '⛶ Tela cheia']]) {
     const op = document.createElement('option');
@@ -8020,7 +8088,7 @@ function montarEditorTecla(card, slot, idSel) {
   const telaDica = document.createElement('span');
   telaDica.className = 'hint';
   telaDica.style.cssText = 'margin:0;flex:1 0 100%';
-  telaDica.textContent = 'O clique na tecla mostra a mídia no painel E no overlay (no overlay só a imagem/vídeo aparecem); clicar de novo tira. Na janela, o overlay contorna a mídia com a sombra dos overlays (a mesma do 🔍 mostrar avatar — ajuste em 🎨 Aparência). O vídeo sai sozinho quando termina. Envie imagens e vídeos pelo ⬆️ enviar arquivo da própria Mesa: a biblioteca dela é separada da dos overlays.';
+  telaDica.textContent = 'O clique na tecla mostra a mídia no painel E no overlay (no overlay só a imagem/vídeo aparecem); clicar de novo tira. Na janela, o overlay contorna a mídia com a sombra dos overlays (a mesma do 🔍 mostrar avatar — ajuste em 🎨 Aparência). O vídeo sai sozinho quando termina. Envie o arquivo pelo ⬆️ Enviar arquivo aqui ao lado — a biblioteca da Mesa é separada da dos overlays.';
   telaLinha.appendChild(telaDica);
   // 🎬 v0.53: a tecla que comanda o OBS. A ação vem do catálogo compartilhado
   // (render.js) e os alvos são as listas que o próprio OBS mandou — cena,
@@ -8849,44 +8917,6 @@ function criarTrilhaNova(pastaId, celula, tipo) {
 // v0.85: o ➕ da barra da grade PRINCIPAL cria na raiz (a grade da pasta ao
 // lado tem os próprios ➕ nos espaços vazios)
 document.getElementById('trilhaNovaBtn').onclick = (ev) => menuCriarTecla(ev, '', null); // 🧭 v0.89: escolhe o tipo
-document.getElementById('trilhaArquivo').onchange = async () => {
-  const input = document.getElementById('trilhaArquivo');
-  const st = document.getElementById('trilhaUploadStatus');
-  const file = input.files[0];
-  if (!file) return;
-  st.style.display = '';
-  st.textContent = `Enviando "${file.name}"...`;
-  try {
-    // 📚 v0.88: o arquivo da Mesa vai para a BIBLIOTECA DA MESA
-    const res = await fetch('/upload?pasta=trilhas&name=' + encodeURIComponent(file.name), { method: 'POST', body: file });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'falha no envio');
-    // v0.52.1: a tecla nasce numa casa LIVRE da visão de agora, e o deck pula
-    // para a página DELA. v0.88: imagem/vídeo viram tecla de MÍDIA na hora.
-    // v0.101: a mesma régua de tipos do editor de overlays — antes um vídeo
-    // .wmv (ou qualquer formato fora da listinha) virava tecla de trilha
-    const ehVid = tipoDoArquivo(file.name) === 'video';
-    const ehImg = tipoDoArquivo(file.name) === 'image';
-    const dentro = cfgPastaAberta || '';
-    const casa = celulaLivre(cfgTrilhas, dentro, primeiraCelulaDaVisao(dentro));
-    const nova = { id: 'tr-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nome: file.name.replace(/\.[^.]+$/, '').slice(0, 50), emoji: '', imagem: '', textoPos: 'baixo', cor: '', tipo: ehImg ? 'imagem' : ehVid ? 'video' : 'trilha', pastaId: dentro, espera: 0, url: data.url, volume: 70, modo: 'solo', fadeTipo: 'ambos', fade: 3, destino: 'live', telaModo: 'janela', telaEscala: 45, pos: casa };
-    cfgTrilhas.push(nova);
-    selecionarTecla(nova.id); // 🪟 v0.157
-    if (dentro) trilhaPaginaPasta = Math.floor(casa / trilhasPorPagina());
-    else trilhaPagina = Math.floor(casa / trilhasPorPagina());
-    enviarTrilhas();
-    renderTrilhasDeck();
-    renderTrilhaEditorCard();
-    st.textContent = ehImg || ehVid
-      ? `✅ "${file.name}" virou uma tecla de ${ehVid ? '🎞️ vídeo' : '🖼️ imagem'} — o clique mostra na tela.`
-      : `✅ "${file.name}" virou uma trilha — ajuste nome, pasta e destino aqui embaixo.`;
-    const aviso = await avisoDeFormato(data.url, file.name);
-    if (aviso) st.textContent = aviso;
-  } catch (err) {
-    st.textContent = `❌ Erro ao enviar: ${err.message}`;
-  }
-  input.value = '';
-};
 document.getElementById('sdBackupArquivo').onchange = async () => {
   const input = document.getElementById('sdBackupArquivo');
   const file = input.files[0];

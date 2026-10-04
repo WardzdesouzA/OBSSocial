@@ -1,4 +1,14 @@
 {
+  "0.180.0": {
+    "titulo": "🎵 Soundboard: the file lives on the key",
+    "itens": [
+      "⬆️ Upload file and 🗑️ Delete file now sit inside the Soundboard key editor — the «Choose file» at the top of the Soundboard is gone.",
+      "The key takes the type of the uploaded file: a sound becomes a 🎵 sound key, an image becomes 🖼️ image on screen and a video becomes 🎞️ video on screen — no need to switch the type by hand.",
+      "A key without a name takes the file name; images and videos start as a 45% window. Replacing a key’s file does not delete the previous ones from the Soundboard library.",
+      "🗑️ Delete file asks for confirmation, tells how many other keys use the same file and removes it from disk — the keys become pending instead of pointing to a missing file.",
+      "FAQ and editor texts updated in all 10 languages."
+    ]
+  },
   "0.179.2": {
     "titulo": "🎨 Soundboard in the light theme: menus and keys",
     "itens": [
