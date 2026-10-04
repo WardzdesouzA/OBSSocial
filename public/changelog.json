@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.179.1",
+    "titulo": "🎨 Listas suspensas legíveis no tema claro",
+    "itens": [
+      "🎨 No tema claro, as listas suspensas (o tipo da tecla da Mesa, os seletores das configurações e do painel) abriam com fundo escuro e texto escuro — ilegíveis. Os controles nativos (listas, setinhas dos números) agora acompanham o tema; o tema escuro já estava certo."
+    ]
+  },
+  {
     "version": "0.179.0",
     "titulo": "🛡️ Checagem geral, parte 2: painel, tela, rede, conectores e segurança",
     "itens": [

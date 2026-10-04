@@ -1,4 +1,10 @@
 {
+  "0.179.1": {
+    "titulo": "🎨 Listes déroulantes lisibles dans le thème clair",
+    "itens": [
+      "🎨 Dans le thème clair, les listes déroulantes (le type de touche de la Table des pistes, les sélecteurs des réglages et du panneau) s’ouvraient avec un fond sombre et un texte sombre — illisibles. Les contrôles natifs (listes, flèches des nombres) suivent maintenant le thème ; le thème sombre était déjà correct."
+    ]
+  },
   "0.179.0": {
     "titulo": "🛡️ Contrôle général, partie 2 : panneau, écran, réseau, connecteurs et sécurité",
     "itens": [

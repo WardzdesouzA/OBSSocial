@@ -1,4 +1,10 @@
 {
+  "0.179.1": {
+    "titulo": "🎨 Readable dropdowns in the light theme",
+    "itens": [
+      "🎨 In the light theme, dropdown lists (the Soundboard key type, the selectors in the settings and the panel) opened with a dark background and dark text — unreadable. Native controls (lists, number spinners) now follow the theme; the dark theme was already right."
+    ]
+  },
   "0.179.0": {
     "titulo": "🛡️ General check-up, part 2: dashboard, screen, network, connectors and security",
     "itens": [
