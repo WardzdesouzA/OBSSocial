@@ -1,4 +1,10 @@
 {
+  "0.179.1": {
+    "titulo": "🎨 Açık temada okunabilir açılır listeler",
+    "itens": [
+      "🎨 Açık temada açılır listeler (Parça masası tuş türü, ayarlardaki ve paneldeki seçiciler) koyu arka plan ve koyu metinle açılıyordu — okunmuyordu. Yerel denetimler (listeler, sayı okları) artık temayı izliyor; koyu tema zaten doğruydu."
+    ]
+  },
   "0.179.0": {
     "titulo": "🛡️ Genel kontrol, 2. bölüm: panel, ekran, ağ, bağlayıcılar ve güvenlik",
     "itens": [

@@ -1,4 +1,10 @@
 {
+  "0.179.1": {
+    "titulo": "🎨 Listas desplegables legibles en el tema claro",
+    "itens": [
+      "🎨 En el tema claro, las listas desplegables (el tipo de tecla de la Mesa de pistas, los selectores de la configuración y del panel) se abrían con fondo oscuro y texto oscuro — ilegibles. Los controles nativos (listas, flechitas de los números) ahora siguen el tema; el tema oscuro ya estaba bien."
+    ]
+  },
   "0.179.0": {
     "titulo": "🛡️ Revisión general, parte 2: panel, pantalla, red, conectores y seguridad",
     "itens": [

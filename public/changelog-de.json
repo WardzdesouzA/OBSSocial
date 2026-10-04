@@ -1,4 +1,10 @@
 {
+  "0.179.1": {
+    "titulo": "🎨 Lesbare Auswahllisten im hellen Thema",
+    "itens": [
+      "🎨 Im hellen Thema öffneten sich die Auswahllisten (der Tastentyp des Soundboards, die Auswahlfelder in den Einstellungen und im Panel) mit dunklem Hintergrund und dunklem Text — unlesbar. Native Steuerelemente (Listen, Zahlenpfeile) folgen jetzt dem Thema; das dunkle Thema war schon richtig."
+    ]
+  },
   "0.179.0": {
     "titulo": "🛡️ Generalcheck, Teil 2: Panel, Bildschirm, Netzwerk, Konnektoren und Sicherheit",
     "itens": [
