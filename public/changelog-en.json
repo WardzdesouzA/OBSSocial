@@ -1,4 +1,14 @@
 {
+  "0.180.1": {
+    "titulo": "📦 File uploads up to 4 GB, with progress",
+    "itens": [
+      "The media upload cap (Soundboard and 🖼️ Media) went from 300 MB to 4 GB per file on this computer and for anyone signed in with the password — a 311 MB FLAC track hit the old cap and the upload died without a word. Anonymous network devices stay at 300 MB.",
+      "A file over the limit is stopped BEFORE a single byte leaves, with its size and the limit in the message; if the server refuses, the answer arrives readable instead of becoming a \"network error\".",
+      "Uploads show progress (% and MB sent) and the message stays on the key even if the editor re-renders mid-way.",
+      "Long uploads are no longer cut at 5 minutes (Node’s default); what drops is an upload that sends nothing for 2 minutes.",
+      "The 512 MB free-disk reserve (the same as for clips) now applies to media uploads too."
+    ]
+  },
   "0.180.0": {
     "titulo": "🎵 Soundboard: the file lives on the key",
     "itens": [

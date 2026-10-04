@@ -1,4 +1,14 @@
 {
+  "0.180.1": {
+    "titulo": "📦 Envoi de fichiers jusqu’à 4 Go, avec progression",
+    "itens": [
+      "Le plafond d’envoi des médias (Table des pistes et 🖼️ Médias) passe de 300 Mo à 4 Go par fichier sur cet ordinateur et pour qui entre avec le mot de passe — une piste FLAC de 311 Mo butait sur l’ancien plafond et l’envoi mourait sans un mot. Les appareils anonymes du réseau restent à 300 Mo.",
+      "Un fichier au-dessus de la limite est bloqué AVANT qu’un seul octet ne parte, avec sa taille et la limite dans le message ; si le serveur refuse, la réponse arrive lisible au lieu de devenir une « erreur réseau ».",
+      "L’envoi affiche la progression (% et Mo envoyés) et le message reste sur la touche même si l’éditeur se remonte en cours de route.",
+      "Les envois longs ne sont plus coupés à 5 minutes (limite par défaut de Node) ; ce qui tombe, c’est un envoi qui n’envoie rien pendant 2 minutes.",
+      "La réserve de 512 Mo libres sur le disque (la même que pour les clips) vaut maintenant aussi pour l’envoi des médias."
+    ]
+  },
   "0.180.0": {
     "titulo": "🎵 Table des pistes : le fichier vit sur la touche",
     "itens": [

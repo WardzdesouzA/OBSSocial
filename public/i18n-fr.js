@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "Fichier trop volumineux (limite : 4 Go).",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Le disque est presque plein — libérez de l’espace avant d’envoyer des fichiers.",
+    "O envio parou no meio — tente de novo.": "L’envoi s’est arrêté en cours de route — réessayez.",
+    "a conexão caiu no meio do envio": "la connexion a coupé en plein envoi",
+    "arquivo grande demais para o servidor": "fichier trop volumineux pour le serveur",
+    "envio cancelado": "envoi annulé",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ Envoyer un fichier",
     "🗑️ Excluir arquivo": "🗑️ Supprimer le fichier",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.fr = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "Supprimer le fichier « $1 » ? Il est effacé du disque et cette touche reste sans fichier (en attente)."],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "Supprimer le fichier « $1 » ? Il est effacé du disque et cette touche reste sans fichier (en attente). $2 autre(s) touche(s) utilisant le même fichier le perdent aussi."],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "le serveur a répondu $1"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "Envoi de « $1 »... $2 % ($3 sur $4)"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ « $1 » fait $2 — la limite par fichier est de 4 Go."],
   ],
 };

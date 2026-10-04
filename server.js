@@ -216,7 +216,27 @@ const MAX_RECENT = 300;
 const MAX_RECENT_REDE = 300;
 const MAX_SAVED = 500;
 const SAVED_MAX_BYTES = 3 * 1024 * 1024; // 🔒 v0.177: teto de bytes da fila (vai inteira ao disco e às telas a cada mudança)
-const MAX_UPLOAD_BYTES = 300 * 1024 * 1024;
+// 📦 v0.180.1: 4 GB por arquivo no computador do streamer e para quem entrou com
+// a senha (uma trilha FLAC de 311 MB batia no teto antigo de 300 MB e o envio
+// morria sem recado). Quem entra anônimo pela rede continua em 300 MB.
+const MAX_UPLOAD_BYTES = Number(process.env.OBS_TESTE_UPLOAD_TETO) || 4 * 1024 * 1024 * 1024;
+const MAX_UPLOAD_REDE_BYTES = Math.min(300 * 1024 * 1024, MAX_UPLOAD_BYTES);
+const UPLOAD_PARADO_MS = 120000; // envio sem nenhum byte por 2 min = caiu
+// Responde a um envio recusado SEM derrubar a conexão na hora: o navegador
+// precisa de um instante para ler a resposta (um RST no meio do envio vira
+// "erro de rede" sem recado). O resto do corpo é descartado por até 1 s.
+function recusarEnvio(req, res, codigo, corpo) {
+  if (res.headersSent) { req.destroy(); return; }
+  req.removeAllListeners('data');
+  req.on('data', () => {});
+  req.resume();
+  res.writeHead(codigo, { 'Content-Type': 'application/json', 'Connection': 'close' });
+  res.end(corpo, () => { const t = setTimeout(() => req.destroy(), 1000); if (t.unref) t.unref(); req.on('close', () => clearTimeout(t)); });
+}
+function rotuloDeTamanho(bytes) {
+  if (bytes >= 1024 * 1024 * 1024) return `${Math.round(bytes / 1024 / 1024 / 1024 * 10) / 10} GB`.replace('.', ',');
+  return `${Math.round(bytes / 1024 / 1024)} MB`;
+}
 
 // Uma peça (do destaque ou de um widget desmontado): posição em % da caixa
 // e o ajuste fino completo — escala, rotação, opacidade, cor própria, sombra
@@ -2422,8 +2442,18 @@ const EXT_UPLOAD_OK = new Set([
   '.aif', '.aiff', '.wma', '.amr', '.mka',
 ]);
 
-function handleUpload(req, res) {
+function handleUpload(req, res, role) {
   const query = new URLSearchParams((req.url || '').split('?')[1] || '');
+  // 📦 v0.180.1: o teto depende de quem envia; o tamanho anunciado já é conferido
+  // antes de ler um byte, e o disco precisa ter a reserva livre (como nos clipes)
+  const teto = role === 'viewer' ? MAX_UPLOAD_REDE_BYTES : MAX_UPLOAD_BYTES;
+  const erroGrande = JSON.stringify({ ok: false, error: `Arquivo grande demais (limite: ${rotuloDeTamanho(teto)}).` });
+  const anunciado = Number(req.headers['content-length']);
+  if (Number.isFinite(anunciado) && anunciado > teto) { recusarEnvio(req, res, 413, erroGrande); return; }
+  if (espacoLivreAbaixoDaReserva()) {
+    recusarEnvio(req, res, 507, JSON.stringify({ ok: false, error: 'O disco está quase cheio — libere espaço antes de enviar arquivos.' }));
+    return;
+  }
   const rawName = query.get('name') || 'arquivo';
   const safeName = path.basename(rawName).replace(/[^\w.\-()\[\] À-ÿ]+/g, '_').slice(-80) || 'arquivo';
   if (!EXT_UPLOAD_OK.has(path.extname(safeName).toLowerCase())) {
@@ -2445,18 +2475,28 @@ function handleUpload(req, res) {
   const dest = fs.createWriteStream(destPath);
   let size = 0;
   let aborted = false;
-
+  let proximaChecagem = CLIP_CHECA_DISCO_A_CADA;
+  const abortar = (codigo, corpo) => {
+    if (aborted) return;
+    aborted = true;
+    req.unpipe(dest);
+    dest.destroy();
+    fs.unlink(destPath, () => {});
+    recusarEnvio(req, res, codigo, corpo);
+  };
+  // um envio de gigabytes pode levar mais que os 5 min do requestTimeout padrão;
+  // o que não pode é ficar PARADO: 2 min sem byte nenhum e a conexão cai
+  req.setTimeout(UPLOAD_PARADO_MS, () => abortar(408, JSON.stringify({ ok: false, error: 'O envio parou no meio — tente de novo.' })));
   req.on('data', (chunk) => {
     size += chunk.length;
-    if (size > MAX_UPLOAD_BYTES && !aborted) {
-      aborted = true;
-      dest.destroy();
-      fs.unlink(destPath, () => {});
-      res.writeHead(413, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: 'Arquivo grande demais (limite: 300 MB).' }));
-      req.destroy();
+    if (size > teto) { abortar(413, erroGrande); return; }
+    if (size >= proximaChecagem) {
+      proximaChecagem = size + CLIP_CHECA_DISCO_A_CADA;
+      if (espacoLivreAbaixoDaReserva()) abortar(507, JSON.stringify({ ok: false, error: 'O disco encheu durante o envio — o arquivo não foi guardado.' }));
     }
   });
+  req.on('aborted', () => { if (!aborted) { aborted = true; dest.destroy(); fs.unlink(destPath, () => {}); } });
+  req.on('error', () => { if (!aborted) { aborted = true; dest.destroy(); fs.unlink(destPath, () => {}); } });
   req.pipe(dest);
   dest.on('finish', () => {
     if (aborted) return;
@@ -3171,7 +3211,7 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ ok: false, error: 'Origem não permitida.' }));
       return;
     }
-    handleUpload(req, res);
+    handleUpload(req, res, role);
     return;
   }
 
@@ -3210,7 +3250,7 @@ const server = http.createServer((req, res) => {
     // mesmo teto dos outros envios: sem isto, uma requisição só (curl com
     // /dev/zero, sem navegador e sem Origin) enchia o disco no meio da live.
     const semTeto = role === 'local' || role === 'full';
-    const teto = semTeto ? Infinity : MAX_UPLOAD_BYTES;
+    const teto = semTeto ? Infinity : MAX_UPLOAD_REDE_BYTES;
     // O disco tem fim mesmo para o dono: encostou na reserva, o envio para.
     if (espacoLivreAbaixoDaReserva()) {
       res.writeHead(507, { 'Content-Type': 'application/json' });
@@ -3223,6 +3263,7 @@ const server = http.createServer((req, res) => {
     let semEspaco = false;
     let passouDoTeto = false;
     let proximaChecagem = CLIP_CHECA_DISCO_A_CADA;
+    req.setTimeout(UPLOAD_PARADO_MS, () => req.destroy(new Error('parado'))); // 📦 v0.180.1
     req.on('data', (c) => {
       tamanho += c.length;
       if (tamanho > teto && !passouDoTeto) {
@@ -14078,6 +14119,12 @@ server.on('error', (err) => {
   process.exit(1);
 });
 
+// 📦 v0.180.1: o Node corta qualquer pedido que leve mais de 5 min para chegar
+// inteiro (requestTimeout). Um envio de 3-4 GB pelo Wi-Fi leva mais que isso.
+// Os envios têm o próprio guarda de "parou no meio" (UPLOAD_PARADO_MS); os
+// cabeçalhos continuam com o prazo de 1 min.
+server.requestTimeout = 0;
+server.headersTimeout = 60000;
 server.listen(PORT, () => {
   // 💠 Pix ligado no Labs? A consulta ao banco arranca junto com o programa
   arrancarPix();

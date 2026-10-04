@@ -4301,10 +4301,11 @@ mediaFile.onchange = async () => {
   const file = mediaFile.files[0];
   if (!file) return;
   uploadStatus.style.display = '';
+  const grande = mensagemArquivoGrande(file);
+  if (grande) { uploadStatus.textContent = grande; mediaFile.value = ''; return; }
   uploadStatus.textContent = `Enviando "${file.name}"...`;
   try {
-    const res = await fetch('/upload?name=' + encodeURIComponent(file.name), { method: 'POST', body: file });
-    const data = await res.json();
+    const data = await enviarArquivo('/upload?name=' + encodeURIComponent(file.name), file, (feito, total) => { uploadStatus.textContent = textoDeProgresso(file.name, feito, total); });
     if (!data.ok) throw new Error(data.error || 'falha no envio');
     // Áudio não é arte: ele nunca aparece nos seletores de fundo — o lugar
     // dele é a 🎵 Mesa de trilhas e os sons do sorteio/timer
@@ -6743,6 +6744,37 @@ function controleLinha(a) {
 }
 
 const EXTS_TRILHA = /\.(mp3|wav|ogg|oga|weba|m4a|aac|flac|opus)$/i;
+// 📦 v0.180.1: teto por arquivo (o mesmo do servidor para este computador) —
+// conferido ANTES de sair um byte, com recado claro; e o envio sai por XHR, que
+// conta os bytes enviados (o fetch não mostra progresso de saída)
+const LIMITE_UPLOAD_BYTES = 4 * 1024 * 1024 * 1024;
+function tamanhoLegivel(bytes) {
+  if (bytes >= 1024 * 1024 * 1024) return (bytes / 1024 / 1024 / 1024).toFixed(1).replace('.', ',') + ' GB';
+  if (bytes >= 1024 * 1024) return Math.round(bytes / 1024 / 1024) + ' MB';
+  return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+}
+function mensagemArquivoGrande(file) {
+  return file && file.size > LIMITE_UPLOAD_BYTES ? `❌ "${file.name}" tem ${tamanhoLegivel(file.size)} — o limite por arquivo é 4 GB.` : '';
+}
+function enviarArquivo(url, file, aoProgredir) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && aoProgredir) aoProgredir(e.loaded, e.total); };
+    xhr.onload = () => {
+      let data = null;
+      try { data = JSON.parse(xhr.responseText); } catch { data = null; }
+      if (!data) return reject(new Error(xhr.status === 413 ? 'arquivo grande demais para o servidor' : `o servidor respondeu ${xhr.status}`));
+      resolve(data);
+    };
+    xhr.onerror = () => reject(new Error('a conexão caiu no meio do envio'));
+    xhr.onabort = () => reject(new Error('envio cancelado'));
+    xhr.send(file);
+  });
+}
+const textoDeProgresso = (nome, feito, total) => `Enviando "${nome}"... ${Math.min(99, Math.floor(feito / Math.max(1, total) * 100))}% (${tamanhoLegivel(feito)} de ${tamanhoLegivel(total)})`;
+// o recado do envio de cada tecla sobrevive à remontagem do editor
+const uploadsDaMesa = new Map();
 // ⬆️ v0.180: o que o ⬆️ Enviar arquivo do editor da tecla aceita (som, imagem ou vídeo)
 const ACEITA_MIDIA_MESA = 'audio/*,image/*,video/*,.mp3,.wav,.ogg,.oga,.m4a,.aac,.flac,.opus,.weba,.aif,.aiff,.wma,.amr,.mka,.png,.jpg,.jpeg,.jpe,.jfif,.gif,.webp,.avif,.bmp,.apng,.svg,.tif,.tiff,.heic,.heif,.jxl,.mp4,.webm,.ogv,.mov,.m4v,.avi,.mkv,.mpeg,.mpg,.vob,.wmv,.asf,.flv,.f4v,.3gp,.3g2,.ts,.mts,.m2ts';
 const EXTS_IMG_TRILHA = /\.(png|jpe?g|jfif|gif|webp|avif|bmp|apng)$/i;
@@ -7933,17 +7965,21 @@ function montarEditorTecla(card, slot, idSel) {
     excluir.textContent = '🗑️ Excluir arquivo';
     excluir.title = 'Apaga do disco o arquivo desta tecla — a tecla fica sem arquivo';
     const status = document.createElement('div'); status.className = 'hint'; status.style.cssText = 'margin:0;flex-basis:100%;display:none';
+    const recado = (txt) => { if (txt) uploadsDaMesa.set(t.id, txt); else uploadsDaMesa.delete(t.id); status.style.display = txt ? '' : 'none'; status.textContent = txt || ''; };
+    if (uploadsDaMesa.has(t.id)) recado(uploadsDaMesa.get(t.id));
     const atual = () => cfgTrilhas.find((x) => x.id === t.id) || t;
     const arquivoDe = (url) => { const m = /^\/uploads\/(trilhas\/)?([^/?#]+)$/.exec(String(url || '')); return m ? { name: (m[1] || '') + decodeURIComponent(m[2]), nome: decodeURIComponent(m[2]) } : null; };
     excluir.style.display = arquivoDe(atual().url) ? '' : 'none';
     input.onchange = async () => {
       const file = input.files[0]; input.value = '';
       if (!file) return;
-      status.style.display = ''; status.textContent = `Enviando "${file.name}"...`;
+      const grande = mensagemArquivoGrande(file);
+      if (grande) { recado(grande); return; }
+      recado(`Enviando "${file.name}"...`);
       try {
-        const res = await fetch('/upload?pasta=trilhas&name=' + encodeURIComponent(file.name), { method: 'POST', body: file });
-        const data = await res.json();
+        const data = await enviarArquivo('/upload?pasta=trilhas&name=' + encodeURIComponent(file.name), file, (feito, total) => recado(textoDeProgresso(file.name, feito, total)));
         if (!data.ok) throw new Error(data.error || 'falha no envio');
+        recado('');
         const k = tipoDoArquivo(file.name);
         const tipoNovo = k === 'video' ? 'video' : k === 'image' ? 'imagem' : 'trilha';
         const alvo = atual();
@@ -7958,7 +7994,7 @@ function montarEditorTecla(card, slot, idSel) {
         const aviso = await avisoDeFormato(data.url, file.name);
         if (aviso) obsAviso(aviso, 'Enviar arquivo', '⬆️');
       } catch (err) {
-        status.textContent = `❌ Erro ao enviar: ${err.message}`;
+        recado(`❌ Erro ao enviar: ${err.message}`);
       }
     };
     excluir.onclick = async () => {

@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "文件过大（上限：4 GB）。",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "磁盘快满了 —— 请先释放空间再上传文件。",
+    "O envio parou no meio — tente de novo.": "上传中途停住了 —— 请重试。",
+    "a conexão caiu no meio do envio": "上传中途连接断开",
+    "arquivo grande demais para o servidor": "文件对服务器来说太大",
+    "envio cancelado": "上传已取消",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ 发送文件",
     "🗑️ Excluir arquivo": "🗑️ 删除文件",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.zh = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "删除文件\"$1\"?它会从磁盘删除,这个按键将没有文件(待定)。"],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "删除文件\"$1\"?它会从磁盘删除,这个按键将没有文件(待定)。使用同一文件的另外 $2 个按键也会失去它。"],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "服务器返回了 $1"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "正在发送\"$1\"... $2%（$3 / $4）"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\"有 $2 —— 每个文件上限为 4 GB。"],
   ],
 };

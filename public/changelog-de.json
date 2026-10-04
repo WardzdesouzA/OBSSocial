@@ -1,4 +1,14 @@
 {
+  "0.180.1": {
+    "titulo": "📦 Datei-Uploads bis 4 GB, mit Fortschritt",
+    "itens": [
+      "Das Upload-Limit für Medien (Soundboard und 🖼️ Medien) stieg von 300 MB auf 4 GB pro Datei auf diesem Rechner und für alle mit Passwort — eine 311-MB-FLAC-Spur stieß ans alte Limit und der Upload starb wortlos. Anonyme Geräte im Netz bleiben bei 300 MB.",
+      "Eine Datei über dem Limit wird gestoppt, BEVOR ein Byte rausgeht, mit ihrer Größe und dem Limit in der Meldung; lehnt der Server ab, kommt die Antwort lesbar statt als „Netzwerkfehler“.",
+      "Der Upload zeigt den Fortschritt (% und gesendete MB), und die Meldung bleibt an der Taste, auch wenn der Editor zwischendurch neu aufgebaut wird.",
+      "Lange Uploads werden nicht mehr nach 5 Minuten abgebrochen (Node-Standard); abgebrochen wird ein Upload, der 2 Minuten lang nichts sendet.",
+      "Die Reserve von 512 MB freiem Plattenplatz (dieselbe wie bei Clips) gilt jetzt auch für Medien-Uploads."
+    ]
+  },
   "0.180.0": {
     "titulo": "🎵 Soundboard: die Datei wohnt auf der Taste",
     "itens": [

@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "Dosya çok büyük (sınır: 4 GB).",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Disk neredeyse dolu — dosya göndermeden önce yer açın.",
+    "O envio parou no meio — tente de novo.": "Gönderim yarıda durdu — yeniden deneyin.",
+    "a conexão caiu no meio do envio": "bağlantı gönderimin ortasında koptu",
+    "arquivo grande demais para o servidor": "dosya sunucu için çok büyük",
+    "envio cancelado": "gönderim iptal edildi",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ Dosya gönder",
     "🗑️ Excluir arquivo": "🗑️ Dosyayı sil",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.tr = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "\"$1\" dosyası silinsin mi? Diskten silinir ve bu tuş dosyasız kalır (beklemede)."],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "\"$1\" dosyası silinsin mi? Diskten silinir ve bu tuş dosyasız kalır (beklemede). Aynı dosyayı kullanan diğer $2 tuş da dosyasız kalır."],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "sunucu $1 yanıtı verdi"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "\"$1\" gönderiliyor... %$2 ($4 içinde $3)"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\" $2 boyutunda — dosya başına sınır 4 GB."],
   ],
 };

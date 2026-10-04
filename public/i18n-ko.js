@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "파일이 너무 커요(한도: 4 GB).",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "디스크가 거의 꽉 찼어요 — 파일을 보내기 전에 공간을 비워 주세요.",
+    "O envio parou no meio — tente de novo.": "보내기가 중간에 멈췄어요 — 다시 시도해 주세요.",
+    "a conexão caiu no meio do envio": "보내는 도중 연결이 끊겼어요",
+    "arquivo grande demais para o servidor": "서버에 비해 파일이 너무 커요",
+    "envio cancelado": "보내기 취소됨",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ 파일 보내기",
     "🗑️ Excluir arquivo": "🗑️ 파일 삭제",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.ko = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "파일 \"$1\"을(를) 삭제할까요? 디스크에서 지워지고 이 키는 파일 없이(대기) 남습니다."],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "파일 \"$1\"을(를) 삭제할까요? 디스크에서 지워지고 이 키는 파일 없이(대기) 남습니다. 같은 파일을 쓰는 다른 키 $2개도 파일이 없어집니다."],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "서버 응답: $1"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "\"$1\" 보내는 중... $2% ($4 중 $3)"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\"은(는) $2예요 — 파일당 한도는 4 GB예요."],
   ],
 };
