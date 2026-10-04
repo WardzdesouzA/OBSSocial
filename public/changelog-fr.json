@@ -1,4 +1,11 @@
 {
+  "0.179.2": {
+    "titulo": "🎨 Table des pistes dans le thème clair : menus et touches",
+    "itens": [
+      "🎨 Les menus flottants de la Table des pistes (le ➕ de type de touche, le clic droit, l’éditeur en fenêtre) et le message du panneau s’ouvraient toujours sur fond sombre — dans le thème clair, le texte était sombre sur sombre. Ils suivent maintenant le thème.",
+      "🎹 Dans le thème clair, les touches de la Table sont devenues claires : la couleur choisie teinte le fond et la bordure, et le nom a perdu l’ombre noire qui brouillait le texte. Le thème sombre n’a pas changé."
+    ]
+  },
   "0.179.1": {
     "titulo": "🎨 Listes déroulantes lisibles dans le thème clair",
     "itens": [

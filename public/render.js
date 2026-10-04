@@ -2721,6 +2721,17 @@ function montarBotaoTrilha(t, opts = {}) {
   }
   /* 📱 v0.163: o realce de passar o mouse só onde existe mouse — no toque ele
      grudava na tecla tocada e tapava o contorno de estado (tocando/verde/vermelho) */
+  /* 🎨 v0.179.2: no tema claro a tecla é clara — a cor escolhida tinge o fundo e a
+     borda (o degradê escuro de cima virava um cinza sujo sobre o painel branco) */
+  :where(body.light) .trilha-tecla {
+    --trilha-cor: #8e9ab0;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--trilha-cor) 9%, #ffffff), color-mix(in srgb, var(--trilha-cor) 28%, #e9edf3));
+    border-color: color-mix(in srgb, var(--trilha-cor) 75%, #5b6678);
+    box-shadow: 0 1px 2px rgba(30, 40, 60, 0.14);
+  }
+  :where(body.light) .trilha-slot-vazio { background: none; box-shadow: none; border-color: #9aa5b8; }
+  /* o nome da tecla ganha um halo claro (a sombra preta deixava o texto escuro borrado) */
+  :where(body.light) .trilha-rotulo { text-shadow: 0 0 2px rgba(255, 255, 255, 0.95), 0 1px 2px rgba(255, 255, 255, 0.7); }
   @media (hover: hover) { .trilha-tecla:hover { border-color: var(--accent, #7c4dff); box-shadow: 0 0 0 2px var(--accent, #7c4dff) inset; } }
   .trilha-tecla.tocando { border-color: var(--accent, #7c4dff); box-shadow: 0 0 0 2px var(--accent, #7c4dff); animation: trilhaTeclaPulsa 1.6s ease-in-out infinite; }
   body.a11y-sem-animacao .trilha-tecla.tocando { animation: none; }

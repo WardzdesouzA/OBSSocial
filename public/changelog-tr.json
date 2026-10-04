@@ -1,4 +1,11 @@
 {
+  "0.179.2": {
+    "titulo": "🎨 Açık temada Parça masası: menüler ve tuşlar",
+    "itens": [
+      "🎨 Parça masasının açılır menüleri (tuş türü ➕ menüsü, sağ tık, pencere editörü) ve panelin bildirimi her zaman koyu arka planla açılıyordu — açık temada metin koyu üstüne koyu kalıyordu. Artık temayı izliyorlar.",
+      "🎹 Açık temada masa tuşları açık renk oldu: seçilen renk arka planı ve kenarlığı boyuyor, ad ise metni bulanıklaştıran siyah gölgeden kurtuldu. Koyu tema değişmedi."
+    ]
+  },
   "0.179.1": {
     "titulo": "🎨 Açık temada okunabilir açılır listeler",
     "itens": [
