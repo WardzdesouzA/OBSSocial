@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.180.1",
+    "titulo": "📦 Envio de arquivos até 4 GB, com progresso",
+    "itens": [
+      "O teto de envio de mídias (Mesa de trilhas e 🖼️ Mídias) subiu de 300 MB para 4 GB por arquivo neste computador e para quem entra com a senha — uma trilha FLAC de 311 MB batia no teto antigo e o envio morria sem recado. Quem entra anônimo pela rede continua em 300 MB.",
+      "Arquivo acima do limite é barrado ANTES de sair um byte, com o tamanho dele e o limite no recado; se o servidor recusar, a resposta chega legível em vez de virar \"erro de rede\".",
+      "O envio mostra o progresso (% e MB enviados) e o recado fica na tecla mesmo que o editor remonte no meio.",
+      "Envios longos não são mais cortados aos 5 minutos (limite padrão do Node); o que cai é um envio que fica 2 minutos sem mandar nada.",
+      "A reserva de 512 MB livres do disco (a mesma dos clipes) agora vale também para o envio de mídias."
+    ]
+  },
+  {
     "version": "0.180.0",
     "titulo": "🎵 Mesa de trilhas: o arquivo mora na tecla",
     "itens": [

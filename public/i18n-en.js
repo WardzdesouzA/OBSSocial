@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "File too large (limit: 4 GB).",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "The disk is almost full — free up space before uploading files.",
+    "O envio parou no meio — tente de novo.": "The upload stalled — try again.",
+    "a conexão caiu no meio do envio": "the connection dropped mid-upload",
+    "arquivo grande demais para o servidor": "file too large for the server",
+    "envio cancelado": "upload cancelled",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ Upload file",
     "🗑️ Excluir arquivo": "🗑️ Delete file",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.en = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "Delete the file \"$1\"? It is removed from disk and this key is left without a file (pending)."],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "Delete the file \"$1\"? It is removed from disk and this key is left without a file (pending). $2 other key(s) using the same file also lose it."],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "the server answered $1"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "Uploading \"$1\"... $2% ($3 of $4)"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\" is $2 — the per-file limit is 4 GB."],
   ],
 };

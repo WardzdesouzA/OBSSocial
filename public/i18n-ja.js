@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "ファイルが大きすぎます（上限：4 GB）。",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "ディスクがほぼ満杯です — ファイルを送信する前に空きを作ってください。",
+    "O envio parou no meio — tente de novo.": "送信が途中で止まりました — もう一度お試しください。",
+    "a conexão caiu no meio do envio": "送信の途中で接続が切れました",
+    "arquivo grande demais para o servidor": "サーバーにはファイルが大きすぎます",
+    "envio cancelado": "送信をキャンセルしました",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ ファイルを送信",
     "🗑️ Excluir arquivo": "🗑️ ファイルを削除",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.ja = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "ファイル「$1」を削除しますか?ディスクから消え、このキーはファイルなし(保留)になります。"],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "ファイル「$1」を削除しますか?ディスクから消え、このキーはファイルなし(保留)になります。同じファイルを使う他の $2 個のキーもファイルなしになります。"],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "サーバーの応答：$1"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "「$1」を送信中... $2%（$4 中 $3）"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ 「$1」は $2 あります — 1 ファイルの上限は 4 GB です。"],
   ],
 };

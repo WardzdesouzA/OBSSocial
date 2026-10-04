@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "Datei zu groß (Limit: 4 GB).",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Die Platte ist fast voll — schaffe Platz, bevor du Dateien hochlädst.",
+    "O envio parou no meio — tente de novo.": "Der Upload ist stehen geblieben — versuch es noch einmal.",
+    "a conexão caiu no meio do envio": "die Verbindung ist mitten im Upload abgebrochen",
+    "arquivo grande demais para o servidor": "Datei zu groß für den Server",
+    "envio cancelado": "Upload abgebrochen",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ Datei hochladen",
     "🗑️ Excluir arquivo": "🗑️ Datei löschen",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.de = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "Datei \"$1\" löschen? Sie wird von der Platte entfernt und diese Taste bleibt ohne Datei (ausstehend)."],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "Datei \"$1\" löschen? Sie wird von der Platte entfernt und diese Taste bleibt ohne Datei (ausstehend). $2 weitere Taste(n) mit derselben Datei verlieren sie ebenfalls."],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "der Server antwortete $1"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "\"$1\" wird hochgeladen... $2 % ($3 von $4)"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\" hat $2 — das Limit pro Datei ist 4 GB."],
   ],
 };

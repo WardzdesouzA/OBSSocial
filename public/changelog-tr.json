@@ -1,4 +1,14 @@
 {
+  "0.180.1": {
+    "titulo": "📦 4 GB’a kadar dosya gönderimi, ilerlemeyle",
+    "itens": [
+      "Medya gönderim tavanı (Parça Masası ve 🖼️ Medya) bu bilgisayarda ve parolayla girenler için dosya başına 300 MB’tan 4 GB’a çıktı — 311 MB’lık bir FLAC parça eski tavana çarpıyor ve gönderim sessizce ölüyordu. Ağdan anonim girenler 300 MB’ta kalır.",
+      "Sınırı aşan dosya tek bayt çıkmadan ÖNCE, boyutu ve sınırı mesajda belirtilerek durdurulur; sunucu reddederse yanıt \"ağ hatası\"na dönüşmek yerine okunur gelir.",
+      "Gönderim ilerlemeyi gösterir (% ve gönderilen MB) ve düzenleyici ortada yeniden kurulsa bile mesaj tuşta kalır.",
+      "Uzun gönderimler artık 5 dakikada kesilmez (Node varsayılanı); düşen, 2 dakika boyunca hiçbir şey göndermeyen gönderimdir.",
+      "Diskteki 512 MB boş alan rezervi (kliplerdekiyle aynı) artık medya gönderimi için de geçerli."
+    ]
+  },
   "0.180.0": {
     "titulo": "🎵 Parça Masası: dosya tuşta yaşar",
     "itens": [

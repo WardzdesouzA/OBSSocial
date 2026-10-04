@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
+    "Arquivo grande demais (limite: 4 GB).": "Файл слишком большой (лимит: 4 ГБ).",
+    "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Диск почти заполнен — освободите место перед загрузкой файлов.",
+    "O envio parou no meio — tente de novo.": "Загрузка остановилась на полпути — попробуйте ещё раз.",
+    "a conexão caiu no meio do envio": "соединение оборвалось посреди загрузки",
+    "arquivo grande demais para o servidor": "файл слишком большой для сервера",
+    "envio cancelado": "загрузка отменена",
     // v0.180: ⬆️🗑️ enviar/excluir arquivo direto no editor da tecla da Mesa
     "⬆️ Enviar arquivo": "⬆️ Загрузить файл",
     "🗑️ Excluir arquivo": "🗑️ Удалить файл",
@@ -3562,5 +3569,9 @@ window.OBS_I18N_DICTS.ru = {
     // v0.180: confirmação do 🗑️ Excluir arquivo da tecla
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\.$/, "Удалить файл «$1»? Он стирается с диска, и эта клавиша остаётся без файла (ожидает)."],
     [/^Excluir o arquivo "(.+)"\? Ele é apagado do disco e esta tecla fica sem arquivo \(pendente\)\. Outras (\d+) tecla\(s\) que usam o mesmo arquivo também ficam sem ele\.$/, "Удалить файл «$1»? Он стирается с диска, и эта клавиша остаётся без файла (ожидает). Ещё $2 клавиш(и) с тем же файлом тоже останутся без него."],
+    // v0.180.1: progresso e limite do envio de arquivos
+    [/^o servidor respondeu (\d+)$/, "сервер ответил $1"],
+    [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "Загрузка «$1»... $2% ($3 из $4)"],
+    [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ «$1» весит $2 — лимит на файл 4 ГБ."],
   ],
 };

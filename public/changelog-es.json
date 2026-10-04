@@ -1,4 +1,14 @@
 {
+  "0.180.1": {
+    "titulo": "📦 Envío de archivos hasta 4 GB, con progreso",
+    "itens": [
+      "El tope de envío de medios (Mesa de pistas y 🖼️ Medios) pasó de 300 MB a 4 GB por archivo en este equipo y para quien entra con la contraseña — una pista FLAC de 311 MB chocaba con el tope antiguo y el envío moría sin aviso. Quien entra anónimo por la red sigue en 300 MB.",
+      "Un archivo por encima del límite se frena ANTES de salir un byte, con su tamaño y el límite en el aviso; si el servidor lo rechaza, la respuesta llega legible en vez de volverse \"error de red\".",
+      "El envío muestra el progreso (% y MB enviados) y el aviso se queda en la tecla aunque el editor se vuelva a montar a mitad.",
+      "Los envíos largos ya no se cortan a los 5 minutos (límite por defecto de Node); lo que cae es un envío que pasa 2 minutos sin mandar nada.",
+      "La reserva de 512 MB libres del disco (la misma de los clips) ahora vale también para el envío de medios."
+    ]
+  },
   "0.180.0": {
     "titulo": "🎵 Mesa de pistas: el archivo vive en la tecla",
     "itens": [
