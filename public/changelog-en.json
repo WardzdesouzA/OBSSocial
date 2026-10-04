@@ -1,4 +1,11 @@
 {
+  "0.179.2": {
+    "titulo": "🎨 Soundboard in the light theme: menus and keys",
+    "itens": [
+      "🎨 The Soundboard’s floating menus (the ➕ key-type menu, the right-click menu, the windowed editor) and the panel’s notice always opened with a dark background — in the light theme the text was dark on dark. They now follow the theme.",
+      "🎹 In the light theme the Soundboard keys are now light: the chosen color tints the background and border, and the name lost the black shadow that blurred the text. The dark theme is unchanged."
+    ]
+  },
   "0.179.1": {
     "titulo": "🎨 Readable dropdowns in the light theme",
     "itens": [

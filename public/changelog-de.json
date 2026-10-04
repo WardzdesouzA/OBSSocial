@@ -1,4 +1,11 @@
 {
+  "0.179.2": {
+    "titulo": "🎨 Soundboard im hellen Thema: Menüs und Tasten",
+    "itens": [
+      "🎨 Die schwebenden Menüs des Soundboards (das ➕ für den Tastentyp, das Rechtsklick-Menü, der Editor im Fenster) und die Meldung im Panel öffneten sich immer mit dunklem Hintergrund — im hellen Thema war der Text dunkel auf dunkel. Jetzt folgen sie dem Thema.",
+      "🎹 Im hellen Thema sind die Soundboard-Tasten jetzt hell: die gewählte Farbe tönt Hintergrund und Rand, und der Name hat den schwarzen Schatten verloren, der den Text verwischte. Das dunkle Thema ist unverändert."
+    ]
+  },
   "0.179.1": {
     "titulo": "🎨 Lesbare Auswahllisten im hellen Thema",
     "itens": [

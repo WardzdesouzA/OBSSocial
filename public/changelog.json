@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.179.2",
+    "titulo": "🎨 Mesa de trilhas no tema claro: menus e teclas",
+    "itens": [
+      "🎨 Os menus flutuantes da Mesa de trilhas (o ➕ de tipo de tecla, o botão direito, o editor em janela) e o recado do painel abriam sempre com fundo escuro — no tema claro o texto ficava escuro sobre escuro. Agora seguem o tema.",
+      "🎹 No tema claro as teclas da Mesa ficaram claras: a cor escolhida tinge o fundo e a borda, e o nome perdeu a sombra preta que deixava o texto borrado. O tema escuro não mudou."
+    ]
+  },
+  {
     "version": "0.179.1",
     "titulo": "🎨 Listas suspensas legíveis no tema claro",
     "itens": [

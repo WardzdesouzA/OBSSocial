@@ -1,4 +1,11 @@
 {
+  "0.179.2": {
+    "titulo": "🎨 Mesa de pistas en el tema claro: menús y teclas",
+    "itens": [
+      "🎨 Los menús flotantes de la Mesa de pistas (el ➕ de tipo de tecla, el botón derecho, el editor en ventana) y el aviso del panel se abrían siempre con fondo oscuro — en el tema claro el texto quedaba oscuro sobre oscuro. Ahora siguen el tema.",
+      "🎹 En el tema claro las teclas de la Mesa quedaron claras: el color elegido tiñe el fondo y el borde, y el nombre perdió la sombra negra que emborronaba el texto. El tema oscuro no cambió."
+    ]
+  },
   "0.179.1": {
     "titulo": "🎨 Listas desplegables legibles en el tema claro",
     "itens": [
