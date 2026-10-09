@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ Medidores de audio del OBS",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ Mostrar los medidores del OBS en los espacios vacíos de la Mesa",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "Cada espacio vacío se convierte en el medidor de una fuente de audio del OBS (verde → amarillo → rojo, como en su mezclador), para ver si está modulando. Solo muestra — no toca el volumen.",
+    "⏳ A gravação para em": "⏳ La grabación para en",
+    "⏳ A live encerra em": "⏳ La live termina en",
+    "toque na tecla para cancelar": "toca la tecla para cancelar",
+    "O OBS não tem fontes com áudio agora.": "El OBS no tiene fuentes con audio ahora.",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "Conecta el 🎬 OBS en el equipo para elegir las fuentes — sin conexión los espacios quedan vacíos.",
+    "encerrando… toque para cancelar": "terminando… toca para cancelar",
+    "⏳ Proteção ao encerrar (s)": "⏳ Protección al terminar (s)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "Segundos de cuenta atrás antes de TERMINAR (0 = al instante). Con la live al aire, tocar la tecla abre la cuenta — en el panel y en la 📱 Mini Mesa — y tocar de nuevo cancela. Iniciar nunca espera.",
+    "contagem cancelada — a live continua": "cuenta cancelada — la live sigue",
+    "contagem cancelada — a gravação continua": "cuenta cancelada — la grabación sigue",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "Archivo demasiado grande (límite: 4 GB).",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "El disco está casi lleno — libera espacio antes de subir archivos.",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.es = {
     [/^o servidor respondeu (\d+)$/, "el servidor respondió $1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "Enviando \"$1\"... $2% ($3 de $4)"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\" tiene $2 — el límite por archivo es 4 GB."],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "la live termina en $1 s — toca la tecla de nuevo para cancelar"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "la grabación para en $1 s — toca la tecla de nuevo para cancelar"],
   ],
 };

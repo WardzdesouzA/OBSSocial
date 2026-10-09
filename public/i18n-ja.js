@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ OBS の音量メーター",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ ボードの空きマスに OBS のメーターを表示",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "空きマスが OBS の音声ソースごとのメーターになります(ミキサーと同じく緑 → 黄 → 赤)。音が出ているかが分かります。表示だけで、音量には触れません。",
+    "⏳ A gravação para em": "⏳ 録画停止まで",
+    "⏳ A live encerra em": "⏳ 配信終了まで",
+    "toque na tecla para cancelar": "キーをタップでキャンセル",
+    "O OBS não tem fontes com áudio agora.": "OBS に音声のあるソースが今はありません。",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "ソースを選ぶにはパソコンで 🎬 OBS を接続してください — 接続がないとマスは空のままです。",
+    "encerrando… toque para cancelar": "終了中… タップでキャンセル",
+    "⏳ Proteção ao encerrar (s)": "⏳ 終了の保護(秒)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "終了する前のカウントダウン秒数(0 = すぐ)。配信中にキーをタップするとカウントダウンが始まり — パネルと 📱 ミニボードの両方で — もう一度タップでキャンセル。開始は待ちません。",
+    "contagem cancelada — a live continua": "カウントダウンをキャンセル — 配信は続きます",
+    "contagem cancelada — a gravação continua": "カウントダウンをキャンセル — 録画は続きます",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "ファイルが大きすぎます（上限：4 GB）。",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "ディスクがほぼ満杯です — ファイルを送信する前に空きを作ってください。",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.ja = {
     [/^o servidor respondeu (\d+)$/, "サーバーの応答：$1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "「$1」を送信中... $2%（$4 中 $3）"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ 「$1」は $2 あります — 1 ファイルの上限は 4 GB です。"],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "配信は $1 秒後に終了 — キャンセルはキーをもう一度タップ"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "録画は $1 秒後に停止 — キャンセルはキーをもう一度タップ"],
   ],
 };

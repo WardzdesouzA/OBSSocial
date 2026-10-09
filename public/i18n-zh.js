@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ OBS 音频电平表",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ 在音轨台的空位显示 OBS 电平表",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "每个空位变成一个 OBS 音频源的电平表(和它的混音器一样绿 → 黄 → 红),用来看是否有声音。只显示,不改音量。",
+    "⏳ A gravação para em": "⏳ 录制将在以下时间后停止:",
+    "⏳ A live encerra em": "⏳ 直播将在以下时间后结束:",
+    "toque na tecla para cancelar": "点按按键可取消",
+    "O OBS não tem fontes com áudio agora.": "OBS 目前没有带音频的来源。",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "在电脑上连接 🎬 OBS 以选择来源 — 没有连接时空位保持为空。",
+    "encerrando… toque para cancelar": "正在结束… 点按可取消",
+    "⏳ Proteção ao encerrar (s)": "⏳ 结束保护(秒)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "结束前的倒计时秒数(0 = 立即)。直播进行中时,点按按键会开始倒计时 — 在面板和 📱 迷你音轨台上都会显示 — 再点一次即取消。开始从不等待。",
+    "contagem cancelada — a live continua": "倒计时已取消 — 直播继续",
+    "contagem cancelada — a gravação continua": "倒计时已取消 — 录制继续",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "文件过大（上限：4 GB）。",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "磁盘快满了 —— 请先释放空间再上传文件。",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.zh = {
     [/^o servidor respondeu (\d+)$/, "服务器返回了 $1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "正在发送\"$1\"... $2%（$3 / $4）"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\"有 $2 —— 每个文件上限为 4 GB。"],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "直播将在 $1 秒后结束 — 再点一次按键可取消"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "录制将在 $1 秒后停止 — 再点一次按键可取消"],
   ],
 };

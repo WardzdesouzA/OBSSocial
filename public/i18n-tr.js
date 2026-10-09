@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ OBS ses göstergeleri",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ OBS göstergelerini Masa’nın boş yuvalarında göster",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "Her boş yuva, bir OBS ses kaynağının göstergesi olur (mikserindeki gibi yeşil → sarı → kırmızı); sinyal gelip gelmediğini görürsünüz. Sadece gösterir — ses seviyesine dokunmaz.",
+    "⏳ A gravação para em": "⏳ Kayıt şu kadar sonra durur:",
+    "⏳ A live encerra em": "⏳ Yayın şu kadar sonra biter:",
+    "toque na tecla para cancelar": "iptal için tuşa dokunun",
+    "O OBS não tem fontes com áudio agora.": "OBS’de şu an sesli kaynak yok.",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "Kaynakları seçmek için bilgisayarda 🎬 OBS’yi bağlayın — bağlantı olmadan yuvalar boş kalır.",
+    "encerrando… toque para cancelar": "bitiriliyor… iptal için dokunun",
+    "⏳ Proteção ao encerrar (s)": "⏳ Bitirme koruması (sn)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "BİTİRMEDEN önceki geri sayım saniyesi (0 = hemen). Yayın açıkken tuşa dokunmak geri sayımı başlatır — panelde ve 📱 Mini Masa’da — tekrar dokunmak iptal eder. Başlatma hiç beklemez.",
+    "contagem cancelada — a live continua": "geri sayım iptal edildi — yayın sürüyor",
+    "contagem cancelada — a gravação continua": "geri sayım iptal edildi — kayıt sürüyor",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "Dosya çok büyük (sınır: 4 GB).",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Disk neredeyse dolu — dosya göndermeden önce yer açın.",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.tr = {
     [/^o servidor respondeu (\d+)$/, "sunucu $1 yanıtı verdi"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "\"$1\" gönderiliyor... %$2 ($4 içinde $3)"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\" $2 boyutunda — dosya başına sınır 4 GB."],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "yayın $1 sn sonra biter — iptal için tuşa tekrar dokunun"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "kayıt $1 sn sonra durur — iptal için tuşa tekrar dokunun"],
   ],
 };

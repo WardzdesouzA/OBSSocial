@@ -2243,6 +2243,7 @@ const hub = connectHub((event) => {
       trilhaTelaPainel = event.trilhaTela || null; // 🖼️🎞️ v0.86
       obsInfo = event.obs || null; // antes do renderTrilhas: as teclas de cena 🎬 dependem dele
       vmixInfo = event.vmix || null; // 🎛️ v0.122
+      aplicarContagensObs(obsInfo && obsInfo.contagens); // ⏳ v0.181
       renderTrilhas();
       renderTrilhaTelaPainel();
       if (event.trilhaTocando) trilhaPlayNoPainel(event.trilhaTocando.id, event.trilhaTocando.desde, event.trilhaTocando.agora);
@@ -2479,9 +2480,13 @@ const hub = connectHub((event) => {
     case 'obsAviso':
       mostrarRecadoObs(event.ok, event.texto);
       break;
+    case 'obsContagem': // ⏳ v0.181: a contagem para encerrar (todas as telas veem a mesma)
+      aplicarContagensObs(event.contagens);
+      break;
     case 'obs': {
       const ligadoAntes = !!(obsInfo && obsInfo.conectado);
       obsInfo = event.obs || null;
+      aplicarContagensObs(obsInfo && obsInfo.contagens, true); // ⏳ v0.181 (o renderTrilhas vem logo abaixo)
       // 🖥️ v0.159: (re)conectou ou caiu → o monitor tenta de novo do zero
       if (!!(obsInfo && obsInfo.conectado) !== ligadoAntes) { monitorParado.obs = false; monitorEmVoo.obs = 0; }
       renderObs();
@@ -7990,7 +7995,8 @@ function renderTrilhas() {
     const b = montarBotaoTrilha(t, ehPasta
       ? { tocando: t.id === pastaTocandoId, filhos: trilhasLista.filter((x) => x.pastaId === t.id).length }
       // 🎬 A tecla de OBS acende (verde/vermelho) conforme o que ela controla
-      : t.tipo === 'obs' ? comEstado()
+      // ⏳ v0.181: e, em contagem para encerrar, mostra os segundos
+      : t.tipo === 'obs' ? { ...comEstado(), contagem: restanteContagemObs(t.obsAcao) }
         : t.tipo === 'vmix' ? comEstado() // 🎛️ v0.122
         // 🖼️🎞️ A tecla de mídia acende enquanto a mídia dela está na tela
         : (t.tipo === 'imagem' || t.tipo === 'video') ? { ligado: !!(trilhaTelaPainel && trilhaTelaPainel.id === t.id) }
@@ -8408,6 +8414,34 @@ TRILHA_PLAYER.quandoBloquear((preso) => {
 
 // ---------- 🎬 OBS Studio (Labs) ----------
 let obsInfo = null;
+// ⏳ v0.181: contagens para encerrar a live/gravação pela tecla — acao -> fim (relógio daqui)
+let obsContagens = {};
+let obsContagemTimer = null;
+function aplicarContagensObs(c, semRender) {
+  const agora = Date.now();
+  const antes = Object.keys(obsContagens).join(',');
+  obsContagens = {};
+  for (const [acao, ms] of Object.entries(c && typeof c === 'object' ? c : {})) if (Number(ms) > 0) obsContagens[acao] = agora + Number(ms);
+  const tem = Object.keys(obsContagens).length > 0;
+  if (tem && !obsContagemTimer) obsContagemTimer = setInterval(tiqueContagemObs, 250);
+  if (!tem && obsContagemTimer) { clearInterval(obsContagemTimer); obsContagemTimer = null; }
+  if (!semRender && antes !== Object.keys(obsContagens).join(',')) renderTrilhas();
+}
+function restanteContagemObs(acao) {
+  const fim = obsContagens[acao];
+  return fim ? Math.max(0, (fim - Date.now()) / 1000) : null;
+}
+function tiqueContagemObs() {
+  let venceu = false;
+  for (const [acao, fim] of Object.entries(obsContagens)) if (Date.now() - fim > 2500) { delete obsContagens[acao]; venceu = true; }
+  if (venceu) { aplicarContagensObs(Object.fromEntries(Object.entries(obsContagens).map(([a, f]) => [a, f - Date.now()]))); return; }
+  for (const b of document.querySelectorAll('#trilhasGrade .trilha-tecla.obs-contagem')) {
+    const t = trilhasLista.find((x) => x.id === b.dataset.trilha);
+    const r = t ? restanteContagemObs(t.obsAcao) : null;
+    const c = b.querySelector('.trilha-contagem');
+    if (c && r !== null) c.textContent = '⏳ ' + Math.ceil(r);
+  }
+}
 
 // 🎬 v0.53: um recado curtinho no canto quando o OBS responde algo que a
 // pessoa precisa saber (print salvo, replay gravado, recurso que a versão

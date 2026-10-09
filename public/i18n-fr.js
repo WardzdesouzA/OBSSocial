@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ Vumètres audio d’OBS",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ Afficher les vumètres d’OBS dans les cases vides de la Table",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "Chaque case vide devient le vumètre d’une source audio d’OBS (vert → jaune → rouge, comme dans son mixeur), pour voir si elle module. Affichage seulement — le volume n’est pas touché.",
+    "⏳ A gravação para em": "⏳ L’enregistrement s’arrête dans",
+    "⏳ A live encerra em": "⏳ Le live se termine dans",
+    "toque na tecla para cancelar": "touchez la touche pour annuler",
+    "O OBS não tem fontes com áudio agora.": "OBS n’a aucune source audio pour l’instant.",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "Connectez 🎬 OBS sur l’ordinateur pour choisir les sources — sans connexion, les cases restent vides.",
+    "encerrando… toque para cancelar": "fin en cours… touchez pour annuler",
+    "⏳ Proteção ao encerrar (s)": "⏳ Protection à l’arrêt (s)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "Secondes de compte à rebours avant d’ARRÊTER (0 = tout de suite). Avec le live à l’antenne, toucher la touche lance le compte — sur le panneau et sur la 📱 Mini Table — et toucher à nouveau annule. Démarrer n’attend jamais.",
+    "contagem cancelada — a live continua": "compte annulé — le live continue",
+    "contagem cancelada — a gravação continua": "compte annulé — l’enregistrement continue",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "Fichier trop volumineux (limite : 4 Go).",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Le disque est presque plein — libérez de l’espace avant d’envoyer des fichiers.",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.fr = {
     [/^o servidor respondeu (\d+)$/, "le serveur a répondu $1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "Envoi de « $1 »... $2 % ($3 sur $4)"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ « $1 » fait $2 — la limite par fichier est de 4 Go."],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "le live se termine dans $1 s — touchez à nouveau la touche pour annuler"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "l’enregistrement s’arrête dans $1 s — touchez à nouveau la touche pour annuler"],
   ],
 };

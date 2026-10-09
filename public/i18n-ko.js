@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ OBS 오디오 미터",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ 보드의 빈 칸에 OBS 미터 표시",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "빈 칸마다 OBS 오디오 소스 하나의 미터가 됩니다(믹서처럼 초록 → 노랑 → 빨강). 소리가 나오는지 볼 수 있습니다. 표시만 하고 볼륨은 건드리지 않습니다.",
+    "⏳ A gravação para em": "⏳ 녹화 정지까지",
+    "⏳ A live encerra em": "⏳ 방송 종료까지",
+    "toque na tecla para cancelar": "취소하려면 키를 터치",
+    "O OBS não tem fontes com áudio agora.": "지금 OBS에 오디오 소스가 없습니다.",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "소스를 고르려면 컴퓨터에서 🎬 OBS를 연결하세요 — 연결이 없으면 칸은 비어 있습니다.",
+    "encerrando… toque para cancelar": "종료 중… 터치하면 취소",
+    "⏳ Proteção ao encerrar (s)": "⏳ 종료 보호(초)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "종료하기 전 카운트다운 초(0 = 즉시). 방송 중에 키를 터치하면 카운트다운이 시작되고 — 패널과 📱 미니 보드 모두에서 — 다시 터치하면 취소됩니다. 시작은 기다리지 않습니다.",
+    "contagem cancelada — a live continua": "카운트다운 취소됨 — 방송은 계속됩니다",
+    "contagem cancelada — a gravação continua": "카운트다운 취소됨 — 녹화는 계속됩니다",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "파일이 너무 커요(한도: 4 GB).",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "디스크가 거의 꽉 찼어요 — 파일을 보내기 전에 공간을 비워 주세요.",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.ko = {
     [/^o servidor respondeu (\d+)$/, "서버 응답: $1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "\"$1\" 보내는 중... $2% ($4 중 $3)"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\"은(는) $2예요 — 파일당 한도는 4 GB예요."],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "방송이 $1초 후 종료됩니다 — 취소하려면 키를 다시 터치"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "녹화가 $1초 후 정지됩니다 — 취소하려면 키를 다시 터치"],
   ],
 };

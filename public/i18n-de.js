@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ Audio-Pegel aus OBS",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ Die OBS-Pegel in den leeren Feldern des Decks zeigen",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "Jedes leere Feld wird zum Pegelmesser einer OBS-Audioquelle (grün → gelb → rot wie im Mixer), damit du siehst, ob sie aussteuert. Nur Anzeige — die Lautstärke bleibt unberührt.",
+    "⏳ A gravação para em": "⏳ Die Aufnahme stoppt in",
+    "⏳ A live encerra em": "⏳ Der Livestream endet in",
+    "toque na tecla para cancelar": "tippe auf die Taste, um abzubrechen",
+    "O OBS não tem fontes com áudio agora.": "OBS hat gerade keine Audioquellen.",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "Verbinde 🎬 OBS am Computer, um die Quellen zu wählen — ohne Verbindung bleiben die Felder leer.",
+    "encerrando… toque para cancelar": "wird beendet… tippen zum Abbrechen",
+    "⏳ Proteção ao encerrar (s)": "⏳ Schutz beim Beenden (s)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "Sekunden Countdown vor dem BEENDEN (0 = sofort). Läuft der Stream, öffnet ein Tipp auf die Taste den Countdown — im Panel und auf dem 📱 Mini-Deck — und ein zweiter Tipp bricht ab. Starten wartet nie.",
+    "contagem cancelada — a live continua": "Countdown abgebrochen — der Livestream läuft weiter",
+    "contagem cancelada — a gravação continua": "Countdown abgebrochen — die Aufnahme läuft weiter",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "Datei zu groß (Limit: 4 GB).",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Die Platte ist fast voll — schaffe Platz, bevor du Dateien hochlädst.",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.de = {
     [/^o servidor respondeu (\d+)$/, "der Server antwortete $1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "\"$1\" wird hochgeladen... $2 % ($3 von $4)"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\" hat $2 — das Limit pro Datei ist 4 GB."],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "der Livestream endet in $1 s — tippe noch einmal auf die Taste, um abzubrechen"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "die Aufnahme stoppt in $1 s — tippe noch einmal auf die Taste, um abzubrechen"],
   ],
 };

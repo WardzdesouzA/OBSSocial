@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ Индикаторы звука OBS",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ Показывать индикаторы OBS в пустых ячейках Пульта",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "Каждая пустая ячейка становится индикатором одного аудиоисточника OBS (зелёный → жёлтый → красный, как в его микшере), чтобы видеть, идёт ли сигнал. Только показывает — громкость не трогает.",
+    "⏳ A gravação para em": "⏳ Запись остановится через",
+    "⏳ A live encerra em": "⏳ Эфир закончится через",
+    "toque na tecla para cancelar": "коснитесь клавиши, чтобы отменить",
+    "O OBS não tem fontes com áudio agora.": "У OBS сейчас нет источников со звуком.",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "Подключите 🎬 OBS на компьютере, чтобы выбрать источники — без подключения ячейки остаются пустыми.",
+    "encerrando… toque para cancelar": "завершение… коснитесь, чтобы отменить",
+    "⏳ Proteção ao encerrar (s)": "⏳ Защита при завершении (с)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "Секунды отсчёта перед ЗАВЕРШЕНИЕМ (0 = сразу). Когда эфир идёт, касание клавиши запускает отсчёт — на панели и на 📱 Мини-пульте — а повторное касание отменяет. Запуск никогда не ждёт.",
+    "contagem cancelada — a live continua": "отсчёт отменён — эфир продолжается",
+    "contagem cancelada — a gravação continua": "отсчёт отменён — запись продолжается",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "Файл слишком большой (лимит: 4 ГБ).",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "Диск почти заполнен — освободите место перед загрузкой файлов.",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.ru = {
     [/^o servidor respondeu (\d+)$/, "сервер ответил $1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "Загрузка «$1»... $2% ($3 из $4)"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ «$1» весит $2 — лимит на файл 4 ГБ."],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "эфир закончится через $1 с — коснитесь клавиши ещё раз, чтобы отменить"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "запись остановится через $1 с — коснитесь клавиши ещё раз, чтобы отменить"],
   ],
 };

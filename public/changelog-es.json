@@ -1,4 +1,14 @@
 {
+  "0.181.0": {
+    "titulo": "📱 Mini Mesa: medidores del OBS y protección al terminar la live",
+    "itens": [
+      "🎚️ Los espacios vacíos de la Mini Mesa pueden convertirse en los medidores de audio del OBS: cada fuente con audio gana un medidor (verde → amarillo → rojo, como en el mezclador del OBS, con pico sostenido) para ver si está modulando; una fuente muda muestra 🔇. Se activa en ⚙️ de la Mini Mesa, eligiendo qué fuentes aparecen.",
+      "Los medidores solo se piden al OBS mientras alguna pantalla los tiene abiertos (es un evento de 20 veces por segundo) y llegan 10 veces por segundo; con la Mesa en segundo plano no se gasta nada.",
+      "⏳ La tecla 📡 Transmitir (y ⏺ Grabar) de la Mesa ganó «Protección al terminar»: segundos de cuenta atrás antes de terminar, a tu elección (0 = al instante). Con la live al aire, el toque abre la cuenta en la tecla y en la barra — en la Mini Mesa y en el panel — y tocar de nuevo (en cualquier pantalla) cancela. Iniciar nunca espera.",
+      "La cuenta corre en el servidor: todas las pantallas ven la misma, y si la live cae por fuera la cuenta desaparece sola.",
+      "Traducciones en los 10 idiomas."
+    ]
+  },
   "0.180.1": {
     "titulo": "📦 Envío de archivos hasta 4 GB, con progreso",
     "itens": [

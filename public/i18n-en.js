@@ -10,6 +10,20 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    // v0.181: 🎚️ medidores do OBS no mini Mesa e ⏳ proteção ao encerrar a live/gravação
+    "🎚️ Medidores de áudio do OBS": "🎚️ OBS audio meters",
+    "🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa": "🎚️ Show the OBS meters in the empty slots of the Deck",
+    "Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.": "Each empty slot becomes the meter of one OBS audio source (green → yellow → red, like its mixer), so you can see whether it is modulating. Display only — it does not touch the volume.",
+    "⏳ A gravação para em": "⏳ Recording stops in",
+    "⏳ A live encerra em": "⏳ The live ends in",
+    "toque na tecla para cancelar": "tap the key to cancel",
+    "O OBS não tem fontes com áudio agora.": "OBS has no audio sources right now.",
+    "Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.": "Connect 🎬 OBS on the computer to choose the sources — without a connection the slots stay empty.",
+    "encerrando… toque para cancelar": "ending… tap to cancel",
+    "⏳ Proteção ao encerrar (s)": "⏳ Stop protection (s)",
+    "Segundos de contagem antes de ENCERRAR (0 = na hora). Com a live no ar, o toque na tecla abre a contagem — no painel e na 📱 Mini Mesa — e tocar de novo cancela. Iniciar nunca espera.": "Seconds of countdown before ENDING (0 = right away). With the live on air, tapping the key opens the countdown — on the panel and on the 📱 Mini Deck — and tapping again cancels. Starting never waits.",
+    "contagem cancelada — a live continua": "countdown cancelled — the live goes on",
+    "contagem cancelada — a gravação continua": "countdown cancelled — the recording goes on",
     // v0.180.1: envio de arquivos até 4 GB, com progresso e recusa legível
     "Arquivo grande demais (limite: 4 GB).": "File too large (limit: 4 GB).",
     "O disco está quase cheio — libere espaço antes de enviar arquivos.": "The disk is almost full — free up space before uploading files.",
@@ -3573,5 +3587,8 @@ window.OBS_I18N_DICTS.en = {
     [/^o servidor respondeu (\d+)$/, "the server answered $1"],
     [/^Enviando "(.+)"\.\.\. (\d+)% \((.+) de (.+)\)$/, "Uploading \"$1\"... $2% ($3 of $4)"],
     [/^❌ "(.+)" tem (.+) — o limite por arquivo é 4 GB\.$/, "❌ \"$1\" is $2 — the per-file limit is 4 GB."],
+    // v0.181: avisos da contagem para encerrar
+    [/^a live encerra em (\d+) s — toque de novo na tecla para cancelar$/, "the live ends in $1 s — tap the key again to cancel"],
+    [/^a gravação para em (\d+) s — toque de novo na tecla para cancelar$/, "the recording stops in $1 s — tap the key again to cancel"],
   ],
 };
