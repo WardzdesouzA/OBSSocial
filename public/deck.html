@@ -767,6 +767,9 @@ $('deckSoAqui').onchange = (e) => {
     gravar('obsDeckAjuste', null);
   }
   aplicarCara();
+  // 🎚️ v0.181: os medidores seguem o ajuste que passou a valer (local ou compartilhado)
+  renderDeck();
+  sincronizarMedidores();
 };
 $('deckMedidoresChk').onchange = (e) => {
   mudarCara({ medidores: e.target.checked });
