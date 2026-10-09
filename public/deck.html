@@ -695,14 +695,39 @@ function preencherFolha() {
   const segueObs = r.modo === 'obs' && (!efetivo.animacao || efetivo.animacao === 'tema');
   $('deckIntensidade').disabled = segueObs;
   $('deckIntensidade').parentElement.title = segueObs ? T('Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas') : '';
-  // 🎚️ v0.181: os medidores do OBS
+  preencherMedidoresFolha(true); // 🎚️ v0.181
+  $('deckSoAqui').checked = papel === 'viewer' || !!local.ajuste;
+  $('deckSoAqui').disabled = papel === 'viewer';
+  $('deckSoAquiHint').hidden = papel !== 'viewer';
+  $('deckSomChk').checked = local.som;
+  $('deckAcordadoChk').checked = local.acordado;
+  const podeCheia = !!document.documentElement.requestFullscreen && !(window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches);
+  $('deckCheiaLinha').hidden = !podeCheia;
+  $('deckCheiaChk').checked = !!document.fullscreenElement;
+  const instalado = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches);
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  $('deckInstalarHint').textContent = instalado ? T('✅ Instalado como aplicativo neste aparelho.')
+    : ios ? T('📲 Para abrir em tela cheia como um aplicativo: no Safari, toque em Compartilhar → «Adicionar à Tela de Início».')
+      : T('📲 Para ter um atalho: no menu do navegador, «Adicionar à tela inicial». (A instalação como aplicativo pede HTTPS; sem ele, use ⛶ Tela cheia.)');
+  $('deckVersao').textContent = versao ? 'OBS Social v' + versao : '';
+  $('deckEndereco').textContent = location.host;
+  $('deckPapel').textContent = papel === 'local' ? T('💻 este computador') : papel === 'full' ? T('🔓 rede: acesso total') : papel === 'viewer' ? T('🔒 rede: modo restrito') : '';
+}
+// 🎚️ v0.181: a seção dos medidores da folha — remontada só quando o que ela
+// mostra mudou (a lista acompanha o OBS com a folha aberta, sem engolir um
+// clique no meio)
+let medidoresFolhaAssinatura = '';
+function preencherMedidoresFolha(forcar) {
+  const conf = confMedidores();
+  const fontes = (obsInfo && obsInfo.conectado && Array.isArray(obsInfo.fontesAudio)) ? obsInfo.fontesAudio : [];
+  const assinatura = JSON.stringify([pode.obs, conf.ligado, conf.fontes, !!(obsInfo && obsInfo.conectado), fontes.map((f) => f.nome + (f.mudo ? '\u00001' : '\u00000'))]);
+  if (!forcar && assinatura === medidoresFolhaAssinatura) return;
+  medidoresFolhaAssinatura = assinatura;
   {
-    const conf = confMedidores();
     $('deckMedidoresSecao').hidden = !pode.obs;
     $('deckMedidoresChk').checked = conf.ligado;
     const lista = $('deckMedidoresFontes');
     lista.textContent = '';
-    const fontes = (obsInfo && obsInfo.conectado && Array.isArray(obsInfo.fontesAudio)) ? obsInfo.fontesAudio : [];
     if (!conf.ligado) { /* nada a escolher */ }
     else if (!fontes.length) {
       const h = document.createElement('div'); h.className = 'deck-hint';
@@ -725,22 +750,6 @@ function preencherFolha() {
       }
     }
   }
-  $('deckSoAqui').checked = papel === 'viewer' || !!local.ajuste;
-  $('deckSoAqui').disabled = papel === 'viewer';
-  $('deckSoAquiHint').hidden = papel !== 'viewer';
-  $('deckSomChk').checked = local.som;
-  $('deckAcordadoChk').checked = local.acordado;
-  const podeCheia = !!document.documentElement.requestFullscreen && !(window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches);
-  $('deckCheiaLinha').hidden = !podeCheia;
-  $('deckCheiaChk').checked = !!document.fullscreenElement;
-  const instalado = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches);
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  $('deckInstalarHint').textContent = instalado ? T('✅ Instalado como aplicativo neste aparelho.')
-    : ios ? T('📲 Para abrir em tela cheia como um aplicativo: no Safari, toque em Compartilhar → «Adicionar à Tela de Início».')
-      : T('📲 Para ter um atalho: no menu do navegador, «Adicionar à tela inicial». (A instalação como aplicativo pede HTTPS; sem ele, use ⛶ Tela cheia.)');
-  $('deckVersao').textContent = versao ? 'OBS Social v' + versao : '';
-  $('deckEndereco').textContent = location.host;
-  $('deckPapel').textContent = papel === 'local' ? T('💻 este computador') : papel === 'full' ? T('🔓 rede: acesso total') : papel === 'viewer' ? T('🔒 rede: modo restrito') : '';
 }
 function abrirFolha() { preencherFolha(); $('deckFolha').hidden = false; }
 function fecharFolha() { $('deckFolha').hidden = true; }
@@ -904,6 +913,7 @@ const hub = connectHub((event) => {
       aplicarContagens(obsInfo && obsInfo.contagens);
       renderDeck();
       sincronizarMedidores();
+      if (!$('deckFolha').hidden) preencherMedidoresFolha(false); // a lista de fontes acompanha o OBS
       break;
     case 'obsMedidores': // 🎚️ v0.181
       aplicarNiveis(event.niveis);

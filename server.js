@@ -10226,11 +10226,18 @@ async function obsExecutarAcao(acao, alvo, quem) {
   // ⏳ v0.181: tecla com proteção ao encerrar — se a ação vai ENCERRAR (parar,
   // ou alternar com a saída ligada), abre/cancela a contagem em vez de parar
   if (acao === 'transmitir' || acao === 'gravar') {
-    // qualquer toque na mesma saída durante a contagem (parar, alternar ou
-    // até «iniciar» — quem quer a live no ar não quer que ela encerre) cancela
-    if (obsRt.contagens.has(acao)) { obsContagemCancelar(acao, 'tecla'); return; }
-    const ligado = acao === 'transmitir' ? obsRt.transmitindo : obsRt.gravando;
-    if ((a.modo === 'parar' || (a.modo === 'alternar' && ligado)) && Number(a.atraso) > 0 && obsContagemIniciar(acao, a, quem)) return;
+    // gravação pausada ainda é gravação: parar aí também merece a contagem
+    const ligado = acao === 'transmitir' ? obsRt.transmitindo : (obsRt.gravando || obsRt.gravandoPausado);
+    const protegido = Number(a.atraso) > 0;
+    if (obsRt.contagens.has(acao)) {
+      // Um «parar» SEM proteção (o botão 🎬 do painel depois de confirmar, uma
+      // tecla «parar agora», o controle externo) é um encerrar de verdade:
+      // cancela a contagem e encerra na hora. Qualquer outro toque na mesma
+      // saída (a tecla protegida de novo, alternar, até «iniciar» — quem quer
+      // a live no ar não quer que ela encerre) cancela a contagem.
+      if (a.modo === 'parar' && !protegido) obsContagemCancelar(acao, 'silencio');
+      else { obsContagemCancelar(acao, 'tecla'); return; }
+    } else if ((a.modo === 'parar' || (a.modo === 'alternar' && ligado)) && protegido && obsContagemIniciar(acao, a, quem)) return;
   }
   // Alternar é LER e depois ESCREVER: dois cliques rápidos na mesma tecla
   // leriam o mesmo estado e mandariam a mesma coisa duas vezes (o segundo
@@ -10450,11 +10457,13 @@ function obsTrataEvento(ev, dados) {
       break;
     case 'StreamStateChanged':
       obsRt.transmitindo = dados.outputActive === true;
-      if (!obsRt.transmitindo) obsContagemCancelar('transmitir', 'silencio'); // ⏳ já encerrou por outro caminho
+      // ⏳ v0.181: a live encerrou por outro caminho — a contagem não tem mais o que parar
+      if (/STOPP/.test(String(dados.outputState || ''))) obsContagemCancelar('transmitir', 'silencio');
       break;
     case 'RecordStateChanged':
       obsRt.gravando = dados.outputActive === true;
-      if (!obsRt.gravando) obsContagemCancelar('gravar', 'silencio');
+      // (PAUSED também vem com outputActive=false — pausar não cancela a contagem)
+      if (/STOPP/.test(String(dados.outputState || ''))) obsContagemCancelar('gravar', 'silencio');
       // O OBS avisa a pausa pelo MESMO evento, no campo outputState
       if (dados.outputState === 'OBS_WEBSOCKET_OUTPUT_PAUSED') obsRt.gravandoPausado = true;
       else if (dados.outputState === 'OBS_WEBSOCKET_OUTPUT_RESUMED') obsRt.gravandoPausado = false;
@@ -10684,12 +10693,16 @@ function conectarObs() {
       }
       try { socket.send(JSON.stringify({ op: 1, d: ident })); } catch {}
     } else if (m.op === 2) {
+      // 🎚️ v0.181: o OBS responde TODO Reidentify (op 3) com um Identified
+      // novo — não é uma conexão nova: nada de varrer o OBS inteiro de novo
+      if (obsRt.conectado) { obsAjustarAssinaturaMedidores(); return; }
       // Identified: conectado de verdade
       obsRt.conectado = true;
       obsRt.erro = null;
       console.log('  🎬 Conectado ao OBS Studio (' + obsConfig.host + ':' + obsConfig.port + ')');
       broadcastObs();
       obsAtualizarTudo();
+      obsAjustarAssinaturaMedidores(); // quem pediu entre o Hello e o Identified (ou desistiu) acerta aqui
     } else if (m.op === 7) {
       const p = obsRt.pedidos.get(d.requestId);
       if (p) {
