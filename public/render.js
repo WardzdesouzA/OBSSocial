@@ -2315,9 +2315,10 @@ function chegouDepois(a, b) {
 // ---------------------------------------------------------------------------
 const OBS_ACOES_INFO = [
   // — Saídas —
-  { id: 'transmitir', emoji: '📡', rotulo: 'Transmitir (live)', grupo: 'Saídas',
+  // ⏳ v0.181: `atraso` = proteção ao encerrar (segundos de contagem, com cancelar)
+  { id: 'transmitir', emoji: '📡', rotulo: 'Transmitir (live)', grupo: 'Saídas', atraso: true,
     modos: [['alternar', 'Alternar'], ['iniciar', 'Iniciar'], ['parar', 'Encerrar']] },
-  { id: 'gravar', emoji: '⏺', rotulo: 'Gravar', grupo: 'Saídas',
+  { id: 'gravar', emoji: '⏺', rotulo: 'Gravar', grupo: 'Saídas', atraso: true,
     modos: [['alternar', 'Alternar'], ['iniciar', 'Começar'], ['parar', 'Parar']] },
   { id: 'gravarPausa', emoji: '⏸', rotulo: 'Pausar a gravação', grupo: 'Saídas',
     modos: [['alternar', 'Alternar'], ['pausar', 'Pausar'], ['continuar', 'Continuar']] },
@@ -2375,6 +2376,8 @@ function obsAcaoTexto(acao, alvo) {
   if (a.fonte) partes.push(a.fonte);
   if (a.filtro) partes.push(a.filtro);
   if (info.db && Number.isFinite(Number(a.db))) partes.push((a.modo === 'ajustar' && a.db > 0 ? '+' : '') + a.db + ' dB');
+  // ⏳ v0.181: a proteção ao encerrar aparece no resumo («⏳ 10 s»)
+  if (info.atraso && Number(a.atraso) > 0 && a.modo !== 'iniciar') partes.push('⏳ ' + Math.round(Number(a.atraso)) + ' s');
   return obsT(info.emoji + ' ' + info.rotulo) + (partes.length ? ' · ' + partes.join(' · ') : '');
 }
 
@@ -2701,7 +2704,81 @@ function montarBotaoTrilha(t, opts = {}) {
     nm.textContent = t.nome || t.origem;
     b.appendChild(nm);
   }
+  // ⏳ v0.181: a contagem para encerrar (segundos) — a tecla pisca em vermelho
+  // e o toque cancela
+  if (Number.isFinite(Number(opts.contagem)) && opts.contagem !== null) {
+    b.classList.add('obs-contagem');
+    const c = document.createElement('span');
+    c.className = 'trilha-contagem';
+    c.textContent = '⏳ ' + Math.max(0, Math.ceil(Number(opts.contagem)));
+    b.appendChild(c);
+    b.title = (t.nome || '') + ' — ' + obsT('encerrando… toque para cancelar');
+  }
   return b;
+}
+
+// ---------------------------------------------------------------------------
+// 🎚️ v0.181: o medidor de áudio de uma fonte do OBS, do tamanho de uma tecla —
+// nos espaços vazios da 📱 mini Mesa. Nome em cima, duas barras (canal 1 e 2,
+// verde → amarelo → vermelho como no mixer do OBS, com o pico segurado por um
+// instante) e o dB embaixo; fonte muda ganha o 🔇.
+// `atualizarMedidorObs(el, dbs)` só mexe nas barras — nada é remontado.
+// ---------------------------------------------------------------------------
+const MEDIDOR_CHAO_DB = -60;
+const medidorPct = (db) => Math.max(0, Math.min(100, (Number(db) - MEDIDOR_CHAO_DB) / -MEDIDOR_CHAO_DB * 100));
+function montarMedidorObs(fonte) {
+  const el = document.createElement('div');
+  el.className = 'trilha-tecla trilha-medidor' + (fonte.mudo ? ' mudo' : '');
+  el.dataset.fonte = fonte.nome;
+  el.title = fonte.nome + (fonte.mudo ? ' · 🔇' : '') + (Number.isFinite(Number(fonte.db)) ? ' · ' + fonte.db + ' dB' : '');
+  const nome = document.createElement('span');
+  nome.className = 'medidor-nome';
+  nome.textContent = fonte.nome;
+  el.appendChild(nome);
+  const barras = document.createElement('div');
+  barras.className = 'medidor-barras';
+  for (let i = 0; i < 2; i++) {
+    const barra = document.createElement('div');
+    barra.className = 'medidor-barra';
+    const nivel = document.createElement('div');
+    nivel.className = 'medidor-nivel';
+    const pico = document.createElement('i');
+    pico.className = 'medidor-pico';
+    barra.append(nivel, pico);
+    barras.appendChild(barra);
+  }
+  el.appendChild(barras);
+  const db = document.createElement('span');
+  db.className = 'medidor-db';
+  db.textContent = '—';
+  el.appendChild(db);
+  const mudo = document.createElement('span');
+  mudo.className = 'medidor-mudo';
+  mudo.textContent = '🔇';
+  el.appendChild(mudo);
+  el._picos = [{ v: -100, em: 0 }, { v: -100, em: 0 }];
+  return el;
+}
+// dbs = [dB canal 1, dB canal 2] (null/vazio = fonte inativa: barras vazias)
+function atualizarMedidorObs(el, dbs, agora) {
+  const t = agora || Date.now();
+  const barras = el.querySelectorAll('.medidor-barra');
+  let maior = -100;
+  for (let i = 0; i < barras.length; i++) {
+    const db = Array.isArray(dbs) && Number.isFinite(Number(dbs[i])) ? Number(dbs[i]) : (Array.isArray(dbs) && dbs.length === 1 && i === 1 ? Number(dbs[0]) : -100);
+    if (db > maior) maior = db;
+    const pct = medidorPct(db);
+    barras[i].querySelector('.medidor-nivel').style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    // pico: segura 1,2 s no maior valor, depois acompanha
+    const p = el._picos[i];
+    if (db >= p.v || t - p.em > 1200) { p.v = db; p.em = t; }
+    const ppct = medidorPct(p.v);
+    const pico = barras[i].querySelector('.medidor-pico');
+    pico.style.left = `calc(${ppct}% - 2px)`;
+    pico.style.opacity = ppct > 0 ? '1' : '0';
+  }
+  el.querySelector('.medidor-db').textContent = maior > MEDIDOR_CHAO_DB ? String(Math.round(maior)) : '—';
+  el.classList.toggle('ativo', maior > MEDIDOR_CHAO_DB);
 }
 
 // O CSS das teclas, injetado uma vez por página (painel e configurações usam
@@ -2792,6 +2869,29 @@ function montarBotaoTrilha(t, opts = {}) {
   .trilha-rotulo.pos-baixo { bottom: 4px; }
   .trilha-rotulo.pos-cima { top: 4px; }
   .trilha-rotulo.pos-meio { top: 50%; transform: translateY(-50%); }
+  /* ⏳ v0.181: a tecla em contagem para encerrar — pisca em vermelho; o toque cancela */
+  .trilha-obs.obs-contagem { border-color: #e53935; box-shadow: inset 0 0 0 2px rgba(229, 57, 53, 0.8), 0 0 0 2px rgba(229, 57, 53, 0.6); animation: trilhaContagemPisca 0.9s ease-in-out infinite; }
+  @keyframes trilhaContagemPisca { 0%, 100% { box-shadow: inset 0 0 0 2px rgba(229, 57, 53, 0.9), 0 0 0 2px rgba(229, 57, 53, 0.7); } 50% { box-shadow: inset 0 0 0 2px rgba(229, 57, 53, 0.35), 0 0 0 6px rgba(229, 57, 53, 0.15); } }
+  body.a11y-sem-animacao .trilha-obs.obs-contagem { animation: none; }
+  .trilha-contagem {
+    position: absolute; left: 4px; top: 4px; font-size: clamp(11px, 20%, 18px); font-weight: 700; line-height: 1;
+    padding: 3px 6px; border-radius: 8px; background: #e53935; color: #fff; pointer-events: none;
+    font-variant-numeric: tabular-nums;
+  }
+  /* 🎚️ v0.181: o medidor de áudio do OBS (mini Mesa) */
+  .trilha-medidor { pointer-events: none; cursor: default; border-style: solid; opacity: 0.92; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 6px 7px; box-sizing: border-box; aspect-ratio: 1 / 1; }
+  .trilha-medidor.mudo { opacity: 0.6; }
+  .medidor-nome { font-size: var(--trilha-txt-tam, 11px); font-weight: 700; line-height: 1.15; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .medidor-barras { display: flex; flex-direction: column; gap: 3px; }
+  .medidor-barra { position: relative; height: 8px; border-radius: 3px; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
+  :where(body.light) .medidor-barra { background: rgba(0, 0, 0, 0.14); }
+  .medidor-nivel { position: absolute; inset: 0; background: linear-gradient(90deg, #43a047 0 66.6%, #fdd835 66.6% 85%, #e53935 85% 100%); clip-path: inset(0 100% 0 0); transition: clip-path 90ms linear; }
+  body.a11y-sem-animacao .medidor-nivel { transition: none; }
+  .medidor-pico { position: absolute; top: 0; bottom: 0; width: 2px; left: 0; background: #fff; opacity: 0; }
+  .trilha-medidor.mudo .medidor-nivel { filter: grayscale(1); opacity: 0.5; }
+  .medidor-db { font-size: 10px; line-height: 1; text-align: center; opacity: 0.8; font-variant-numeric: tabular-nums; }
+  .medidor-mudo { display: none; position: absolute; right: 4px; top: 3px; font-size: 13px; line-height: 1; }
+  .trilha-medidor.mudo .medidor-mudo { display: block; }
   `;
   document.head && document.head.appendChild(css);
 })();

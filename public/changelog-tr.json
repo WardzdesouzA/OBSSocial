@@ -1,4 +1,14 @@
 {
+  "0.181.0": {
+    "titulo": "📱 Mini Masa: OBS göstergeleri ve yayını bitirme koruması",
+    "itens": [
+      "🎚️ Mini Masa’nın boş yuvaları OBS ses göstergelerine dönüşebilir: sesli her kaynak bir gösterge alır (OBS mikserindeki gibi yeşil → sarı → kırmızı, tepe tutmalı); sinyal gelip gelmediği görülür; sessize alınmış kaynak 🔇 gösterir. Mini Masa’nın ⚙️ menüsünden açılır, hangi kaynakların görüneceği seçilir.",
+      "Göstergeler yalnızca bir ekran onları açık tuttuğu sürece OBS’den istenir (saniyede 20 kez gelen bir olaydır) ve saniyede 10 kez gelir; Masa arka plandayken hiçbir şey harcanmaz.",
+      "⏳ Masa’nın 📡 Yayınla (ve ⏺ Kaydet) tuşuna «Bitirme koruması» eklendi: bitirmeden önce seçtiğiniz saniyelerde geri sayım (0 = hemen). Yayın açıkken dokunmak tuşta ve çubukta geri sayımı başlatır — Mini Masa’da ve panelde — tekrar dokunmak (herhangi bir ekranda) iptal eder. Başlatma hiç beklemez.",
+      "Geri sayım sunucuda çalışır: tüm ekranlar aynısını görür; yayın kendiliğinden düşerse geri sayım kaybolur.",
+      "10 dilde çeviriler."
+    ]
+  },
   "0.180.1": {
     "titulo": "📦 4 GB’a kadar dosya gönderimi, ilerlemeyle",
     "itens": [

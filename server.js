@@ -550,6 +550,8 @@ const DEFAULT_SETTINGS = {
     animacao: 'tema',       // 'tema' = a que o tema traz | 'nenhuma' | aurora | estrelas | neve | bolhas | grade | confete
     intensidade: 60,        // força da animação (10 a 100 %)
     cores: { fundo: '', tecla: '', texto: '', destaque: '' }, // por cima do tema próprio (vazio = a do tema)
+    medidores: false,       // 🎚️ v0.181: medidores de áudio do OBS nos espaços vazios
+    medidoresFontes: [],    // quais fontes (vazio = todas as que têm áudio)
   },
   // ♿ Acessibilidade da interface (painel + configurações). Cada recurso é um
   // liga/desliga próprio; os overlays do OBS (conteúdo para o público) ficam
@@ -892,9 +894,14 @@ function sanitizeDeck(bruto) {
   if (obs.animSol === false) temaObs.animSol = false;
   if (['retangulos', 'circulos', 'estrelas', 'fitas'].includes(obs.animFormas)) temaObs.animFormas = obs.animFormas;
   const proprio = DECK_TEMAS_ANTIGOS[d.temaProprio] || d.temaProprio;
+  // 🎚️ v0.181: medidores de áudio do OBS nos espaços vazios do mini Mesa —
+  // ligado/desligado e quais fontes (vazio = todas as fontes com áudio)
+  const medFontes = (Array.isArray(d.medidoresFontes) ? d.medidoresFontes : []).map((x) => String(x || '').slice(0, 200)).filter(Boolean).slice(0, 60);
   return {
     tema: d.tema === 'proprio' ? 'proprio' : 'obs',
     temaProprio: DECK_TEMAS_IDS.includes(proprio) ? proprio : 'padrao',
+    medidores: d.medidores === true,
+    medidoresFontes: [...new Set(medFontes)],
     temaObs,
     animacao: DECK_ANIMACOES_IDS.includes(d.animacao) ? d.animacao : 'tema',
     intensidade: Math.max(10, Math.min(100, Math.round(Number(d.intensidade)) || 60)),
@@ -4124,6 +4131,8 @@ const OP_CATEGORY = {
   vmixAcao: 'obs', vmixAtualizar: 'obs',
   // 🖥️ v0.159: ver o monitor pela rede também é do seletor 🎬
   obsMonitor: 'obs', vmixMonitor: 'obs',
+  // 🎚️ v0.181: medidores de áudio do OBS (mini Mesa) e cancelar a contagem de encerrar
+  obsMedidores: 'obs', obsContagemCancelar: 'obs',
 };
 
 // 📺 v0.179: avisos de RETORNO da tela — a tela do OBS conta que o vídeo da
@@ -7898,10 +7907,11 @@ const AUDIO_EXTS = new Set(['.mp3', '.wav', '.ogg', '.oga', '.weba', '.m4a', '.a
 // ---------------------------------------------------------------------------
 const OBS_ACOES = {
   // saídas
-  gravar: { modos: ['alternar', 'iniciar', 'parar'] },
+  // ⏳ v0.181: `atraso` = segundos de espera (com cancelar) ANTES de encerrar
+  gravar: { modos: ['alternar', 'iniciar', 'parar'], atraso: true },
   gravarPausa: { modos: ['alternar', 'pausar', 'continuar'] },
   capitulo: { texto: true },
-  transmitir: { modos: ['alternar', 'iniciar', 'parar'] },
+  transmitir: { modos: ['alternar', 'iniciar', 'parar'], atraso: true },
   camVirtual: { modos: ['alternar', 'iniciar', 'parar'] },
   replay: { modos: ['alternar', 'iniciar', 'parar'] },
   salvarReplay: {},
@@ -7947,6 +7957,8 @@ function sanitizeObsAlvo(acao, bruto) {
   if (spec.db) alvo.db = Math.round(numeroEntre(a.db, -100, 26, 0) * 10) / 10;
   // Duração da transição em ms (0 = não mexe na que já está lá)
   if (spec.duracao) alvo.duracao = Math.round(numeroEntre(a.duracao, 0, 20000, 0));
+  // ⏳ v0.181: proteção ao encerrar — segundos de contagem (0 = na hora, até 2 min)
+  if (spec.atraso) alvo.atraso = Math.round(numeroEntre(a.atraso, 0, 120, 0));
   return alvo;
 }
 
@@ -9773,6 +9785,13 @@ const obsRt = {
   filtros: [],          // [{ fonte, nome, ligado }]
   atalhos: [],          // ⌨️ v0.83: nomes dos atalhos do OBS (GetHotkeyList)
   stats: null,          // 📊 v0.83: saúde do OBS (fps, cpu, disco, quadros, tempos)
+  // 🎚️ v0.181: medidores de áudio (InputVolumeMeters) — assinados só enquanto
+  // alguma tela pede (é um evento de alto volume: 20 por segundo)
+  medidoresAssinados: false,
+  niveis: {},           // { nome: [dB canal 1, dB canal 2] } do último evento
+  niveisEm: 0,
+  // ⏳ v0.181: contagens para encerrar (transmitir/gravar) — { ate, timer, alvo, quem }
+  contagens: new Map(),
 };
 
 function obsResumo() {
@@ -9817,7 +9836,15 @@ function obsResumo() {
     filtros: obsRt.filtros,
     atalhos: obsRt.atalhos, // ⌨️ v0.83
     stats: obsRt.stats,     // 📊 v0.83
+    contagens: obsContagensResumo(), // ⏳ v0.181
   };
+}
+// ⏳ v0.181: as contagens em andamento, em ms RESTANTES (relógio de quem lê é
+// outro: nada de horário absoluto)
+function obsContagensResumo() {
+  const r = {};
+  for (const [acao, c] of obsRt.contagens) r[acao] = Math.max(0, c.ate - Date.now());
+  return r;
 }
 // Arrastar UM fader no OBS dispara dezenas de eventos por segundo. Sem uma
 // contenção, cada um deles redesenharia a ferramenta 🎬 e a Mesa inteira em
@@ -10196,6 +10223,22 @@ async function obsExecutarAcao(acao, alvo, quem) {
     return;
   }
   const a = alvo || {};
+  // ⏳ v0.181: tecla com proteção ao encerrar — se a ação vai ENCERRAR (parar,
+  // ou alternar com a saída ligada), abre/cancela a contagem em vez de parar
+  if (acao === 'transmitir' || acao === 'gravar') {
+    // gravação pausada ainda é gravação: parar aí também merece a contagem
+    const ligado = acao === 'transmitir' ? obsRt.transmitindo : (obsRt.gravando || obsRt.gravandoPausado);
+    const protegido = Number(a.atraso) > 0;
+    if (obsRt.contagens.has(acao)) {
+      // Um «parar» SEM proteção (o botão 🎬 do painel depois de confirmar, uma
+      // tecla «parar agora», o controle externo) é um encerrar de verdade:
+      // cancela a contagem e encerra na hora. Qualquer outro toque na mesma
+      // saída (a tecla protegida de novo, alternar, até «iniciar» — quem quer
+      // a live no ar não quer que ela encerre) cancela a contagem.
+      if (a.modo === 'parar' && !protegido) obsContagemCancelar(acao, 'silencio');
+      else { obsContagemCancelar(acao, 'tecla'); return; }
+    } else if ((a.modo === 'parar' || (a.modo === 'alternar' && ligado)) && protegido && obsContagemIniciar(acao, a, quem)) return;
+  }
   // Alternar é LER e depois ESCREVER: dois cliques rápidos na mesma tecla
   // leriam o mesmo estado e mandariam a mesma coisa duas vezes (o segundo
   // clique não desfaria o primeiro). Enquanto uma alternância do mesmo alvo
@@ -10402,6 +10445,9 @@ function obsVarrerLogo() {
 }
 
 function obsTrataEvento(ev, dados) {
+  // 🎚️ v0.181: os medidores chegam 20× por segundo e NÃO passam pelo retrato
+  // (obsResumo) — vão em mensagem própria, 10× por segundo, só a quem pediu
+  if (ev === 'InputVolumeMeters') { obsReceberMedidores(dados); return; }
   switch (ev) {
     case 'CurrentProgramSceneChanged': obsRt.cenaPrograma = String(dados.sceneName || '') || null; break;
     case 'CurrentPreviewSceneChanged': obsRt.cenaPreview = String(dados.sceneName || '') || null; break;
@@ -10409,9 +10455,15 @@ function obsTrataEvento(ev, dados) {
       obsRt.estudio = dados.studioModeEnabled === true;
       if (!obsRt.estudio) obsRt.cenaPreview = null;
       break;
-    case 'StreamStateChanged': obsRt.transmitindo = dados.outputActive === true; break;
+    case 'StreamStateChanged':
+      obsRt.transmitindo = dados.outputActive === true;
+      // ⏳ v0.181: a live encerrou por outro caminho — a contagem não tem mais o que parar
+      if (/STOPP/.test(String(dados.outputState || ''))) obsContagemCancelar('transmitir', 'silencio');
+      break;
     case 'RecordStateChanged':
       obsRt.gravando = dados.outputActive === true;
+      // (PAUSED também vem com outputActive=false — pausar não cancela a contagem)
+      if (/STOPP/.test(String(dados.outputState || ''))) obsContagemCancelar('gravar', 'silencio');
       // O OBS avisa a pausa pelo MESMO evento, no campo outputState
       if (dados.outputState === 'OBS_WEBSOCKET_OUTPUT_PAUSED') obsRt.gravandoPausado = true;
       else if (dados.outputState === 'OBS_WEBSOCKET_OUTPUT_RESUMED') obsRt.gravandoPausado = false;
@@ -10493,6 +10545,88 @@ function obsTrataEvento(ev, dados) {
   broadcastObs();
 }
 
+// ===========================================================================
+// 🎚️ v0.181: medidores de áudio do OBS para a 📱 mini Mesa (e quem mais pedir).
+// O obs-websocket só manda InputVolumeMeters para quem assina o evento de alto
+// volume (bit 16) — e manda 20 vezes por segundo. Então: assina quando a
+// primeira tela pede (Reidentify), desassina quando a última some, e repassa
+// uma foto a cada 100 ms (o olho não vê mais que isso) só para quem pediu.
+// ===========================================================================
+const OBS_EVENTOS_PADRAO = 0x7ff;                 // EventSubscription::All (sem os de alto volume)
+const OBS_EVENTOS_COM_MEDIDORES = 0x7ff | (1 << 16); // + InputVolumeMeters
+const OBS_MEDIDORES_CADA_MS = 100;
+function obsAlguemQuerMedidores() {
+  for (const c of wss.clients) if (c.readyState === 1 && c.medidoresObs) return true;
+  return false;
+}
+function obsAjustarAssinaturaMedidores() {
+  if (!obsRt.conectado || !obsRt.ws) return;
+  const quer = obsAlguemQuerMedidores();
+  if (quer === obsRt.medidoresAssinados) return;
+  obsRt.medidoresAssinados = quer;
+  try { obsRt.ws.send(JSON.stringify({ op: 3, d: { eventSubscriptions: quer ? OBS_EVENTOS_COM_MEDIDORES : OBS_EVENTOS_PADRAO } })); } catch { /* o close cuida */ }
+  if (!quer) { obsRt.niveis = {}; obsRt.niveisEm = 0; }
+}
+// multiplicador linear → dB (teto 0, chão -100 = silêncio)
+const obsDb = (v) => { const n = Number(v); return n > 0 ? Math.max(-100, Math.min(0, Math.round(20 * Math.log10(n) * 10) / 10)) : -100; };
+let obsMedidoresTimer = null;
+function obsReceberMedidores(dados) {
+  const niveis = {};
+  for (const i of (Array.isArray(dados.inputs) ? dados.inputs : []).slice(0, 60)) {
+    const nome = String(i.inputName || '');
+    if (!nome) continue;
+    const canais = Array.isArray(i.inputLevelsMul) ? i.inputLevelsMul.slice(0, 2) : [];
+    // [magnitude, pico, pico de entrada] por canal — o PICO é o que o OBS desenha
+    niveis[nome] = canais.map((c) => obsDb(Array.isArray(c) ? c[1] : c));
+  }
+  obsRt.niveis = niveis;
+  obsRt.niveisEm = Date.now();
+  if (obsMedidoresTimer) return; // uma foto já está a caminho
+  obsMedidoresTimer = setTimeout(() => {
+    obsMedidoresTimer = null;
+    const msg = JSON.stringify({ type: 'obsMedidores', niveis: obsRt.niveis });
+    for (const c of wss.clients) {
+      if (c.readyState !== 1 || !c.medidoresObs) continue;
+      if (c.bufferedAmount > 256 * 1024) continue; // tela lenta: pula esta foto
+      try { c.send(msg); } catch { /* fechou */ }
+    }
+  }, OBS_MEDIDORES_CADA_MS);
+}
+
+// ===========================================================================
+// ⏳ v0.181: proteção ao ENCERRAR a live/gravação pela tecla da Mesa. A tecla
+// com `atraso` não encerra na hora: abre uma contagem (no servidor, para todas
+// as telas verem a mesma) e só encerra quando ela zera. Tocar de novo na tecla
+// — em qualquer tela — cancela. Iniciar nunca espera.
+// ===========================================================================
+function obsContagemAviso() {
+  broadcast({ type: 'obsContagem', contagens: obsContagensResumo() });
+  broadcastObs();
+}
+function obsContagemCancelar(acao, origem) {
+  const c = obsRt.contagens.get(acao);
+  if (!c) return false;
+  clearTimeout(c.timer);
+  obsRt.contagens.delete(acao);
+  if (origem !== 'silencio') obsAviso(true, acao === 'gravar' ? 'contagem cancelada — a gravação continua' : 'contagem cancelada — a live continua');
+  obsContagemAviso();
+  return true;
+}
+function obsContagemIniciar(acao, alvo, quem) {
+  const segundos = Math.round(numeroEntre(alvo.atraso, 1, 120, 0));
+  if (!segundos) return false;
+  const c = { ate: Date.now() + segundos * 1000, alvo: { ...alvo, modo: 'parar', atraso: 0 }, quem, timer: null };
+  c.timer = setTimeout(() => {
+    obsRt.contagens.delete(acao);
+    obsContagemAviso();
+    obsExecutarAcao(acao, c.alvo, c.quem);
+  }, segundos * 1000);
+  obsRt.contagens.set(acao, c);
+  obsAviso(true, (acao === 'gravar' ? `a gravação para em ${segundos} s` : `a live encerra em ${segundos} s`) + ' — toque de novo na tecla para cancelar');
+  obsContagemAviso();
+  return true;
+}
+
 function desligarObs(motivo) {
   if (obsRt.timerReconectar) { clearTimeout(obsRt.timerReconectar); obsRt.timerReconectar = null; }
   if (obsVarrerTimer) { clearTimeout(obsVarrerTimer); obsVarrerTimer = null; }
@@ -10515,6 +10649,9 @@ function desligarObs(motivo) {
   obsRt.transicoes = []; obsRt.transicaoAtual = null; obsRt.transicaoDuracao = null; obsRt.transicaoFixa = false;
   obsRt.itens = []; obsRt.midias = []; obsRt.filtros = [];
   obsRt.atalhos = []; obsRt.stats = null; // ⌨️📊 v0.83
+  obsRt.medidoresAssinados = false; obsRt.niveis = {}; obsRt.niveisEm = 0; // 🎚️ v0.181
+  if (obsMedidoresTimer) { clearTimeout(obsMedidoresTimer); obsMedidoresTimer = null; }
+  for (const acao of [...obsRt.contagens.keys()]) obsContagemCancelar(acao, 'silencio'); // ⏳ v0.181
   if (mudou) broadcastObs();
 }
 
@@ -10544,6 +10681,8 @@ function conectarObs() {
     if (m.op === 0) {
       // Hello: identifica (com a resposta do desafio, se o OBS tem senha)
       const ident = { rpcVersion: 1 };
+      // 🎚️ v0.181: alguma tela já pediu os medidores? Assina desde a entrada
+      if (obsAlguemQuerMedidores()) { ident.eventSubscriptions = OBS_EVENTOS_COM_MEDIDORES; obsRt.medidoresAssinados = true; }
       if (d.authentication) {
         if (!obsConfig.password) {
           desligarObs('o OBS pede senha — copie a senha em Ferramentas → Configurações do Servidor WebSocket');
@@ -10554,12 +10693,16 @@ function conectarObs() {
       }
       try { socket.send(JSON.stringify({ op: 1, d: ident })); } catch {}
     } else if (m.op === 2) {
+      // 🎚️ v0.181: o OBS responde TODO Reidentify (op 3) com um Identified
+      // novo — não é uma conexão nova: nada de varrer o OBS inteiro de novo
+      if (obsRt.conectado) { obsAjustarAssinaturaMedidores(); return; }
       // Identified: conectado de verdade
       obsRt.conectado = true;
       obsRt.erro = null;
       console.log('  🎬 Conectado ao OBS Studio (' + obsConfig.host + ':' + obsConfig.port + ')');
       broadcastObs();
       obsAtualizarTudo();
+      obsAjustarAssinaturaMedidores(); // quem pediu entre o Hello e o Identified (ou desistiu) acerta aqui
     } else if (m.op === 7) {
       const p = obsRt.pedidos.get(d.requestId);
       if (p) {
@@ -11088,6 +11231,7 @@ wss.on('connection', (ws, req) => {
     // 🔒 v0.179: a busca agendada ou em andamento desta conexão morre com ela
     if (ws.buscaTimer) { clearTimeout(ws.buscaTimer); ws.buscaTimer = null; }
     if (ws.buscaCorrente) { ws.buscaCorrente.cancelado = true; ws.buscaCorrente = null; }
+    if (ws.medidoresObs) { ws.medidoresObs = false; obsAjustarAssinaturaMedidores(); } // 🎚️ v0.181
     broadcastClients(); kickNavegadorCaiu(ws);
   });
   // Sem este ouvinte, QUALQUER erro de protocolo do WebSocket (um quadro
@@ -12866,6 +13010,20 @@ function tratarMensagem(ws, raw) {
     case 'obsAtualizar':
       if (state.settings.labs?.obs === true) obsAtualizarTudo();
       break;
+    // 🎚️ v0.181: a tela quer (ou não quer mais) os medidores de áudio do OBS
+    case 'obsMedidores':
+      if (!podeObs(ws)) break;
+      ws.medidoresObs = msg.ligado === true && state.settings.labs?.obs === true;
+      obsAjustarAssinaturaMedidores();
+      // quem acabou de ligar recebe a última foto na hora (se houver)
+      if (ws.medidoresObs && obsRt.niveisEm && Date.now() - obsRt.niveisEm < 2000) { try { ws.send(JSON.stringify({ type: 'obsMedidores', niveis: obsRt.niveis })); } catch { /* fechou */ } }
+      break;
+    // ⏳ v0.181: cancelar a contagem de encerrar (de qualquer tela)
+    case 'obsContagemCancelar': {
+      const acao = String(msg.acao || '');
+      if (acao === 'transmitir' || acao === 'gravar') obsContagemCancelar(acao, 'tecla');
+      break;
+    }
     case 'obsMonitor':
       // 🖥️ v0.159: a imagem do monitor vai SÓ para quem pediu (e só para quem
       // pode mexer no OBS — pela rede, no modo restrito, é o seletor 🎬)

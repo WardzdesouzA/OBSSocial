@@ -99,6 +99,9 @@ main { flex: 1; min-height: 0; position: relative; z-index: 1; }
 .deck-tema-amostra { height: 24px; border-radius: 6px; margin-bottom: 4px; display: flex; gap: 3px; padding: 3px; box-sizing: border-box; }
 .deck-tema-amostra i { flex: 1; border-radius: 3px; }
 .deck-hint { font-size: 11px; color: var(--muted); line-height: 1.35; margin: 4px 0 0; }
+.deck-fontes { display: flex; flex-direction: column; margin-top: 4px; }
+.deck-fontes label.linha { padding: 3px 0; }
+#deckTitulo .contagem { flex: 1; min-width: 0; color: #ff8a80; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .deck-rodape { margin-top: 12px; font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; }
 #deckAcordado { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; left: -10px; top: -10px; }
 /* ♿ sem animação: nada se mexe (o fundo animado nem desenha) */
@@ -144,6 +147,12 @@ body.a11y-contraste { --muted: var(--text); --border: #98a4b5; }
     <label class="linha" style="display:block;padding-top:8px">Intensidade <input type="range" id="deckIntensidade" min="10" max="100" step="5"></label>
     <label class="linha"><input type="checkbox" id="deckSoAqui"> Só neste aparelho (não muda a cara nos outros)</label>
     <div class="deck-hint" id="deckSoAquiHint" hidden>🔒 Pela rede no modo restrito, as escolhas de tema ficam só neste aparelho.</div>
+    <div id="deckMedidoresSecao">
+      <h4>🎚️ Medidores de áudio do OBS</h4>
+      <label class="linha"><input type="checkbox" id="deckMedidoresChk"> 🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa</label>
+      <div class="deck-hint">Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.</div>
+      <div class="deck-fontes" id="deckMedidoresFontes"></div>
+    </div>
     <h4>📲 Este aparelho</h4>
     <label class="linha"><input type="checkbox" id="deckSomChk"> 🔊 Ouvir as trilhas neste aparelho (monitorar)</label>
     <div class="deck-hint">Desligado, o celular fica mudo: o som sai só onde cada tecla manda (na live e/ou no painel). Ligado, toca aqui também — bom com fone.</div>
@@ -203,6 +212,14 @@ let pode = { mesa: true, obs: true };
 let versao = '';
 let lanUrl = '';
 const teclaEstadoAnterior = new Map();
+// 🎚️ v0.181: medidores de áudio do OBS nos espaços vazios
+let niveisObs = {};            // { fonte: [dB, dB] } da última foto do servidor
+let niveisEm = 0;
+const medidorEls = new Map();  // fonte -> o medidor montado na grade
+let medidoresPedidos = false;  // o que já foi dito ao servidor (liga/desliga)
+// ⏳ v0.181: contagens para encerrar (transmitir/gravar) — acao -> fim (relógio daqui)
+let contagensObs = {};
+let contagemTimer = null;
 const local = {
   som: ler('obsDeckSom') === '1',
   acordado: ler('obsDeckAcordado') !== '0',
@@ -276,6 +293,9 @@ function renderDeck() {
 
   trilho.textContent = '';
   const temAlgo = trilhasLista.some((t) => t.url || t.obsAcao || t.vmixAcao || trilhaEhPasta(t));
+  // 🎚️ v0.181: os medidores entram nos espaços vazios, na ordem das fontes do OBS
+  medidorEls.clear();
+  const filaMedidores = fontesDosMedidores();
   for (let p = 0; p < paginas; p++) {
     const pag = document.createElement('div');
     pag.className = 'deck-pagina';
@@ -294,13 +314,22 @@ function renderDeck() {
     for (let cel = inicio; cel < inicio + porPag; cel++) {
       const t = celulas.get(cel);
       if (!t) {
+        const f = filaMedidores.shift();
+        if (f) {
+          const m = montarMedidorObs(f);
+          medidorEls.set(f.nome, m);
+          atualizarMedidorObs(m, niveisFrescos() ? niveisObs[f.nome] : null);
+          grade.appendChild(m);
+          continue;
+        }
         const vazio = document.createElement('div');
         vazio.className = 'trilha-tecla trilha-slot-vazio inerte';
         grade.appendChild(vazio);
         continue;
       }
       const ehPasta = trilhaEhPasta(t);
-      const comEstado = () => estadosAgora.get(t.id) || { estado: null, trocou: false };
+      // ⏳ v0.181: a tecla de live/gravação em contagem mostra os segundos
+      const comEstado = () => ({ ...(estadosAgora.get(t.id) || { estado: null, trocou: false }), contagem: t.tipo === 'obs' ? restanteContagem(t.obsAcao) : null });
       const b = montarBotaoTrilha(t, ehPasta
         ? { tocando: t.id === pastaTocandoId, filhos: trilhasLista.filter((x) => x.pastaId === t.id).length }
         : t.tipo === 'obs' || t.tipo === 'vmix' ? comEstado()
@@ -315,6 +344,66 @@ function renderDeck() {
   trilho.scrollLeft = pagina * trilho.clientWidth;
   renderPontos(paginas);
   renderBarra();
+}
+
+// ---------- 🎚️ v0.181: medidores de áudio do OBS ----------
+function confMedidores() {
+  const c = { ...((settings && settings.deck) || {}), ...(local.ajuste || {}) };
+  return { ligado: c.medidores === true, fontes: Array.isArray(c.medidoresFontes) ? c.medidoresFontes : [] };
+}
+// as fontes que viram medidor, na ordem do OBS (lista vazia = todas)
+function fontesDosMedidores() {
+  const conf = confMedidores();
+  if (!conf.ligado || !pode.obs || !obsInfo || !obsInfo.conectado) return [];
+  const todas = Array.isArray(obsInfo.fontesAudio) ? obsInfo.fontesAudio : [];
+  return conf.fontes.length ? todas.filter((f) => conf.fontes.includes(f.nome)) : todas.slice();
+}
+const niveisFrescos = () => niveisEm && Date.now() - niveisEm < 1500;
+// diz ao servidor se esta tela quer as fotos dos medidores (só com a Mesa
+// visível: no fundo não gasta rede nem bateria)
+function sincronizarMedidores() {
+  const quer = confMedidores().ligado && pode.obs && conectado && hub.aberto() && !document.hidden
+    && !!(settings && settings.labs && settings.labs.obs);
+  if (quer === medidoresPedidos) return;
+  medidoresPedidos = quer;
+  hub.send({ type: 'obsMedidores', ligado: quer });
+}
+function aplicarNiveis(niveis) {
+  niveisObs = niveis && typeof niveis === 'object' ? niveis : {};
+  niveisEm = Date.now();
+  for (const [nome, el] of medidorEls) atualizarMedidorObs(el, niveisObs[nome], niveisEm);
+}
+// sem foto nova há 1,5 s (OBS quieto, nada ativo): as barras esvaziam
+setInterval(() => { if (medidorEls.size && niveisEm && !niveisFrescos()) { niveisEm = 0; for (const el of medidorEls.values()) atualizarMedidorObs(el, null); } }, 700);
+document.addEventListener('visibilitychange', sincronizarMedidores);
+
+// ---------- ⏳ v0.181: contagem para encerrar ----------
+function aplicarContagens(c) {
+  const agora = Date.now();
+  const antes = Object.keys(contagensObs).join(',');
+  contagensObs = {};
+  for (const [acao, ms] of Object.entries(c && typeof c === 'object' ? c : {})) if (Number(ms) > 0) contagensObs[acao] = agora + Number(ms);
+  const tem = Object.keys(contagensObs).length > 0;
+  if (tem && !contagemTimer) contagemTimer = setInterval(tiqueContagem, 250);
+  if (!tem && contagemTimer) { clearInterval(contagemTimer); contagemTimer = null; }
+  if (antes !== Object.keys(contagensObs).join(',')) renderDeck();
+  renderTocando();
+}
+function restanteContagem(acao) {
+  const fim = contagensObs[acao];
+  return fim ? Math.max(0, (fim - Date.now()) / 1000) : null;
+}
+function tiqueContagem() {
+  let venceu = false;
+  for (const [acao, fim] of Object.entries(contagensObs)) if (Date.now() - fim > 2500) { delete contagensObs[acao]; venceu = true; }
+  if (venceu) { aplicarContagens(Object.fromEntries(Object.entries(contagensObs).map(([a, f]) => [a, f - Date.now()]))); return; }
+  for (const b of document.querySelectorAll('#deckTrilho .trilha-tecla.obs-contagem')) {
+    const t = trilhasLista.find((x) => x.id === b.dataset.trilha);
+    const r = t ? restanteContagem(t.obsAcao) : null;
+    const c = b.querySelector('.trilha-contagem');
+    if (c && r !== null) c.textContent = '⏳ ' + Math.ceil(r);
+  }
+  renderTocando();
 }
 
 // O que cada toque faz — o mesmo do painel; a diferença é o «segurar» das
@@ -475,6 +564,16 @@ function tempoDe(ms) {
 }
 function renderTocando() {
   const el = $('deckTocando');
+  // ⏳ v0.181: a contagem para encerrar manda na barra
+  const acaoEmContagem = ['transmitir', 'gravar'].find((a) => contagensObs[a]);
+  if (acaoEmContagem) {
+    const seg = Math.ceil(restanteContagem(acaoEmContagem));
+    el.textContent = '';
+    el.className = 'contagem';
+    el.append((acaoEmContagem === 'gravar' ? T('⏳ A gravação para em') : T('⏳ A live encerra em')) + ' ' + seg + ' s — ' + T('toque na tecla para cancelar'));
+    return;
+  }
+  el.className = 'tocando';
   const t = trilhasLista.find((x) => x.id === trilhaTocandoId);
   if (!t) { el.textContent = ''; return; }
   el.textContent = '';
@@ -596,6 +695,7 @@ function preencherFolha() {
   const segueObs = r.modo === 'obs' && (!efetivo.animacao || efetivo.animacao === 'tema');
   $('deckIntensidade').disabled = segueObs;
   $('deckIntensidade').parentElement.title = segueObs ? T('Seguindo o tema do OBS Social: a animação e a intensidade são as da aba 🎨 Temas') : '';
+  preencherMedidoresFolha(true); // 🎚️ v0.181
   $('deckSoAqui').checked = papel === 'viewer' || !!local.ajuste;
   $('deckSoAqui').disabled = papel === 'viewer';
   $('deckSoAquiHint').hidden = papel !== 'viewer';
@@ -612,6 +712,44 @@ function preencherFolha() {
   $('deckVersao').textContent = versao ? 'OBS Social v' + versao : '';
   $('deckEndereco').textContent = location.host;
   $('deckPapel').textContent = papel === 'local' ? T('💻 este computador') : papel === 'full' ? T('🔓 rede: acesso total') : papel === 'viewer' ? T('🔒 rede: modo restrito') : '';
+}
+// 🎚️ v0.181: a seção dos medidores da folha — remontada só quando o que ela
+// mostra mudou (a lista acompanha o OBS com a folha aberta, sem engolir um
+// clique no meio)
+let medidoresFolhaAssinatura = '';
+function preencherMedidoresFolha(forcar) {
+  const conf = confMedidores();
+  const fontes = (obsInfo && obsInfo.conectado && Array.isArray(obsInfo.fontesAudio)) ? obsInfo.fontesAudio : [];
+  const assinatura = JSON.stringify([pode.obs, conf.ligado, conf.fontes, !!(obsInfo && obsInfo.conectado), fontes.map((f) => f.nome + (f.mudo ? '\u00001' : '\u00000'))]);
+  if (!forcar && assinatura === medidoresFolhaAssinatura) return;
+  medidoresFolhaAssinatura = assinatura;
+  {
+    $('deckMedidoresSecao').hidden = !pode.obs;
+    $('deckMedidoresChk').checked = conf.ligado;
+    const lista = $('deckMedidoresFontes');
+    lista.textContent = '';
+    if (!conf.ligado) { /* nada a escolher */ }
+    else if (!fontes.length) {
+      const h = document.createElement('div'); h.className = 'deck-hint';
+      h.textContent = obsInfo && obsInfo.conectado ? T('O OBS não tem fontes com áudio agora.') : T('Conecte o 🎬 OBS no computador para escolher as fontes — sem conexão os espaços ficam vazios.');
+      lista.appendChild(h);
+    } else {
+      for (const f of fontes) {
+        const l = document.createElement('label'); l.className = 'linha';
+        const c = document.createElement('input'); c.type = 'checkbox';
+        c.checked = !conf.fontes.length || conf.fontes.includes(f.nome);
+        c.onchange = () => {
+          const marcadas = [...lista.querySelectorAll('input[type="checkbox"]')].filter((x) => x.checked).map((x) => x.dataset.fonte);
+          // todas marcadas = lista vazia (= todas, inclusive as que o OBS ganhar depois)
+          mudarCara({ medidoresFontes: marcadas.length === fontes.length ? [] : marcadas });
+          if (soAqui()) { renderDeck(); }
+        };
+        c.dataset.fonte = f.nome;
+        l.append(c, (f.mudo ? '🔇 ' : '🎙️ ') + f.nome);
+        lista.appendChild(l);
+      }
+    }
+  }
 }
 function abrirFolha() { preencherFolha(); $('deckFolha').hidden = false; }
 function fecharFolha() { $('deckFolha').hidden = true; }
@@ -638,6 +776,14 @@ $('deckSoAqui').onchange = (e) => {
     gravar('obsDeckAjuste', null);
   }
   aplicarCara();
+  // 🎚️ v0.181: os medidores seguem o ajuste que passou a valer (local ou compartilhado)
+  renderDeck();
+  sincronizarMedidores();
+};
+$('deckMedidoresChk').onchange = (e) => {
+  mudarCara({ medidores: e.target.checked });
+  if (soAqui()) { renderDeck(); sincronizarMedidores(); }
+  preencherFolha();
 };
 $('deckSomChk').onchange = (e) => {
   local.som = e.target.checked;
@@ -710,10 +856,13 @@ const hub = connectHub((event) => {
       trilhaTela = event.trilhaTela || null;
       obsInfo = event.obs || null;
       vmixInfo = event.vmix || null;
+      medidoresPedidos = false; // conexão nova: o servidor não sabe de nada
       aplicarSettings();
+      aplicarContagens(obsInfo && obsInfo.contagens);
       renderDeck();
       medir();
       atualizarAviso();
+      sincronizarMedidores();
       {
         // reconectou: o que toca AQUI tem de bater com o que o servidor diz —
         // um ⏹ perdido enquanto a conexão caiu não pode deixar o fone tocando
@@ -731,6 +880,7 @@ const hub = connectHub((event) => {
       renderDeck();
       medir();
       atualizarAviso();
+      sincronizarMedidores();
       break;
     case 'trilhas':
       trilhasLista = Array.isArray(event.trilhas) ? event.trilhas : [];
@@ -760,7 +910,16 @@ const hub = connectHub((event) => {
       break;
     case 'obs':
       obsInfo = event.obs || null;
+      aplicarContagens(obsInfo && obsInfo.contagens);
       renderDeck();
+      sincronizarMedidores();
+      if (!$('deckFolha').hidden) preencherMedidoresFolha(false); // a lista de fontes acompanha o OBS
+      break;
+    case 'obsMedidores': // 🎚️ v0.181
+      aplicarNiveis(event.niveis);
+      break;
+    case 'obsContagem': // ⏳ v0.181
+      aplicarContagens(event.contagens);
       break;
     case 'vmix':
       vmixInfo = event.vmix || null;
@@ -769,6 +928,8 @@ const hub = connectHub((event) => {
     case 'deckPode': // os seletores 🧰/🎬 da rede mudaram no computador
       pode = { mesa: event.mesa === true, obs: event.obs === true };
       atualizarAviso();
+      renderDeck();
+      sincronizarMedidores();
       break;
     default:
       break;

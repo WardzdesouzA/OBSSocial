@@ -1,4 +1,14 @@
 {
+  "0.181.0": {
+    "titulo": "📱 Mini Deck: OBS meters and stop protection for the live",
+    "itens": [
+      "🎚️ The Mini Deck’s empty slots can become OBS audio meters: every audio source gets a meter (green → yellow → red like the OBS mixer, with peak hold) to see whether it is modulating; a muted source shows 🔇. Turn it on in the Mini Deck’s ⚙️ and pick which sources appear.",
+      "Meters are only requested from OBS while some screen has them open (it is a 20-per-second event) and arrive 10 times per second; with the Deck in the background nothing is spent.",
+      "⏳ The Deck’s 📡 Stream (and ⏺ Record) key gained “Stop protection”: seconds of countdown before stopping, your choice (0 = right away). With the live on air, a tap opens the countdown on the key and the bar — on the Mini Deck and on the panel — and tapping again (on any screen) cancels. Starting never waits.",
+      "The countdown runs on the server: every screen sees the same one, and if the live drops by itself the countdown disappears.",
+      "Translations in all 10 languages."
+    ]
+  },
   "0.180.1": {
     "titulo": "📦 File uploads up to 4 GB, with progress",
     "itens": [

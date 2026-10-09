@@ -1,4 +1,14 @@
 {
+  "0.181.0": {
+    "titulo": "📱 Mini Table : vumètres d’OBS et protection à l’arrêt du live",
+    "itens": [
+      "🎚️ Les cases vides de la Mini Table peuvent devenir les vumètres audio d’OBS : chaque source audio reçoit un vumètre (vert → jaune → rouge comme le mixeur d’OBS, avec maintien de crête) pour voir si elle module ; une source coupée affiche 🔇. À activer dans ⚙️ de la Mini Table, en choisissant les sources affichées.",
+      "Les vumètres ne sont demandés à OBS que tant qu’un écran les affiche (c’est un événement 20 fois par seconde) et arrivent 10 fois par seconde ; Table en arrière-plan, rien n’est consommé.",
+      "⏳ La touche 📡 Diffuser (et ⏺ Enregistrer) de la Table gagne une « Protection à l’arrêt » : des secondes de compte à rebours avant d’arrêter, à votre choix (0 = tout de suite). Live à l’antenne, un toucher lance le compte sur la touche et la barre — sur la Mini Table et sur le panneau — et toucher à nouveau (sur n’importe quel écran) annule. Démarrer n’attend jamais.",
+      "Le compte tourne sur le serveur : tous les écrans voient le même, et si le live tombe de lui-même le compte disparaît.",
+      "Traductions dans les 10 langues."
+    ]
+  },
   "0.180.1": {
     "titulo": "📦 Envoi de fichiers jusqu’à 4 Go, avec progression",
     "itens": [

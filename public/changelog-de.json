@@ -1,4 +1,14 @@
 {
+  "0.181.0": {
+    "titulo": "📱 Mini-Deck: OBS-Pegel und Schutz beim Beenden des Livestreams",
+    "itens": [
+      "🎚️ Die leeren Felder des Mini-Decks können zu OBS-Audiopegeln werden: jede Audioquelle bekommt einen Pegelmesser (grün → gelb → rot wie im OBS-Mixer, mit gehaltener Spitze), um zu sehen, ob sie aussteuert; eine stummgeschaltete Quelle zeigt 🔇. Einschalten im ⚙️ des Mini-Decks, mit Auswahl der Quellen.",
+      "Die Pegel werden nur von OBS angefordert, solange ein Bildschirm sie offen hat (ein Ereignis 20-mal pro Sekunde), und kommen 10-mal pro Sekunde; mit dem Deck im Hintergrund wird nichts verbraucht.",
+      "⏳ Die Taste 📡 Streamen (und ⏺ Aufnehmen) des Decks hat jetzt einen „Schutz beim Beenden“: Sekunden Countdown vor dem Beenden, nach Wahl (0 = sofort). Läuft der Stream, öffnet ein Tipp den Countdown auf der Taste und in der Leiste — auf dem Mini-Deck und im Panel — und ein zweiter Tipp (auf jedem Bildschirm) bricht ab. Starten wartet nie.",
+      "Der Countdown läuft auf dem Server: alle Bildschirme sehen denselben, und fällt der Stream von selbst weg, verschwindet der Countdown.",
+      "Übersetzungen in allen 10 Sprachen."
+    ]
+  },
   "0.180.1": {
     "titulo": "📦 Datei-Uploads bis 4 GB, mit Fortschritt",
     "itens": [
