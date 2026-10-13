@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.182.0",
+    "titulo": "🟢 Kick: o chat voltou (novo servidor da Kick) · 🎚️ medidores nas laterais da Mini Mesa",
+    "itens": [
+      "🟢 O chat da Kick parou de chegar em outubro de 2026: a Kick desligou o serviço antigo (Pusher) e passou a usar um servidor próprio (Centrifugo) com token de conexão. O programa agora faz como o site: pede o servidor e o token à Kick, entra na sala e renova o token antes de vencer. Mensagens, emotes, selos e histórico seguem iguais.",
+      "Se a Kick trocar de servidor de novo, o programa segue o que a API dela indicar (e tem o endereço atual como reserva); as mesmas reservas contra o Cloudflare (curl, PowerShell, navegador aberto) continuam valendo nessas consultas.",
+      "🎚️ Os medidores de áudio do OBS da Mini Mesa saíram dos espaços vazios da grade e foram para as LATERAIS da tela, no espaço que sobra ao lado das teclas — a grade fica como era. Com a tela estreita (celular em pé) não sobra lateral e eles não aparecem.",
+      "Traduções nos 10 idiomas."
+    ]
+  },
+  {
     "version": "0.181.0",
     "titulo": "📱 Mini Mesa: medidores do OBS e proteção ao encerrar a live",
     "itens": [

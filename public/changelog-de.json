@@ -1,4 +1,13 @@
 {
+  "0.182.0": {
+    "titulo": "🟢 Kick: der Chat ist zurück (neuer Kick-Server) · 🎚️ Pegel an den Seiten des Mini-Decks",
+    "itens": [
+      "🟢 Der Kick-Chat kam seit Oktober 2026 nicht mehr an: Kick hat den alten Dienst (Pusher) abgeschaltet und nutzt einen eigenen Server (Centrifugo) mit Verbindungstoken. Das Programm macht es jetzt wie die Website: es fragt Kick nach Server und Token, betritt den Raum und erneuert das Token vor Ablauf. Nachrichten, Emotes, Abzeichen und Verlauf bleiben gleich.",
+      "Wechselt Kick erneut den Server, folgt das Programm dem, was die API sagt (und behält die aktuelle Adresse als Reserve); dieselben Cloudflare-Reserven (curl, PowerShell, offener Browser) gelten weiter für diese Anfragen.",
+      "🎚️ Die OBS-Audiopegel des Mini-Decks verließen die leeren Rasterfelder und sitzen nun an den SEITEN des Bildschirms, im Platz neben den Tasten — das Raster bleibt wie es war. Auf einem schmalen Bildschirm (Handy hochkant) bleibt kein Seitenplatz und sie erscheinen nicht.",
+      "Übersetzungen in allen 10 Sprachen."
+    ]
+  },
   "0.181.0": {
     "titulo": "📱 Mini-Deck: OBS-Pegel und Schutz beim Beenden des Livestreams",
     "itens": [

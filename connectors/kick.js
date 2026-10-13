@@ -2,13 +2,36 @@
 // O chat do Kick e distribuido por um servico publico (Pusher). Para entrar na sala
 // precisamos do numero interno do chat (chatroom id), que buscamos na API do site.
 const WebSocket = require('ws');
-const { criarCaminhos } = require('./caminhos');
+const crypto = require('crypto');
+const { criarCaminhos, UA_CHROME } = require('./caminhos');
 
 // Chaves publicas do Pusher usadas pelo site do Kick (a mais nova primeiro).
+// 🟢 v0.182: a Kick DESLIGOU as duas em outubro de 2026 («App key … not in
+// this cluster»); ficam só como reserva, caso o descritor de tempo real volte
+// a apontar um Pusher (com a chave e o cluster que ele mandar).
 const PUSHER_KEYS = ['32cbd69e4b950bf97679', 'eb1d5f283081a78b932c'];
 const PUSHER_CLUSTER = 'us2';
 // Gancho de teste: um Pusher de mentira (ws://127.0.0.1:...) no lugar do real
+// — com ele ligado, o conector fala o Pusher antigo (os testes 1693/1720 vivem aí)
 const PUSHER_BASE = process.env.OBS_TESTE_KICK_PUSHER || `wss://ws-${PUSHER_CLUSTER}.pusher.com`;
+const SO_PUSHER_DE_TESTE = !!process.env.OBS_TESTE_KICK_PUSHER;
+
+// ---------------------------------------------------------------------------
+// 🟢 v0.182: o chat da Kick saiu do Pusher e foi para um servidor Centrifugo
+// da própria Kick. O site faz assim, e o programa faz igual:
+//   1. POST web.kick.com/api/v1/realtime/connection  → o descritor: provedor
+//      ('centrifugo') e o endereço do servidor (wss://realtime….kick.com/…)
+//   2. POST web.kick.com/api/v1/realtime/auth/connection { client_id } → um
+//      token JWT de conexão (~45 min), renovado por «refresh» antes de vencer
+//   3. no socket: { connect: { token } } → { subscribe: { channel:
+//      'chatrooms.<id>.v2' } }; o servidor manda {} de ping, o cliente devolve {}
+// Cada publicação traz o MESMO envelope de antes ({ event: 'App\\Events\\…',
+// data: '<json>' }) — o parser das mensagens não mudou nada.
+// ---------------------------------------------------------------------------
+const KICK_WEB_API = process.env.OBS_SOCIAL_KICK_WEB_API || 'https://web.kick.com/api/';
+// Se o descritor não vier (API barrada, formato novo), o endereço que o site usava
+// em outubro de 2026 — melhor tentar do que ficar sem chat
+const KICK_REALTIME_PADRAO = process.env.OBS_TESTE_KICK_REALTIME || 'wss://realtime.us-west-2.platform.kick.com/connection/websocket';
 
 // Quantas páginas de histórico buscar (o Kick devolve 25 por página).
 // 8 páginas = até 200 comentários recuperados de uma vez.
@@ -201,6 +224,10 @@ class KickConnector {
     this.arteAssinante = null;  // desenhos de assinante do canal
     this.jaBuscouHistorico = false; // a 1ª busca vai fundo; as seguintes, só o recente
     this.buscando = false;          // nunca duas buscas ao mesmo tempo
+    // 🟢 v0.182: a identidade desta conexão de tempo real (o token é dela)
+    this.clientId = crypto.randomUUID();
+    this.geracao = 0;               // cada open() é uma geração: a anterior, se ainda rodando, desiste
+    this.refreshTimer = null;
   }
 
   async start() {
@@ -245,8 +272,151 @@ class KickConnector {
 
   open() {
     if (this.stopped) return;
-    const key = PUSHER_KEYS[this.keyIndex % PUSHER_KEYS.length];
-    const url = `${PUSHER_BASE}/app/${key}?protocol=7&client=js&version=8.4.0&flash=false`;
+    if (SO_PUSHER_DE_TESTE) { this.abrirPusher(PUSHER_KEYS[this.keyIndex % PUSHER_KEYS.length], PUSHER_BASE); return; }
+    this.abrirRealtime();
+  }
+
+  // ---------- 🟢 v0.182: o caminho de hoje (descritor → token → Centrifugo) ----------
+  async realtimePost(caminho, corpo) {
+    return kickApi(KICK_WEB_API + caminho, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: 'https://kick.com' },
+      body: JSON.stringify(corpo),
+    });
+  }
+  // O descritor: { provedor: 'centrifugo', url } ou { provedor: 'pusher', key, base }
+  async descritorRealtime() {
+    try {
+      const res = await this.realtimePost('v1/realtime/connection', {
+        client: { id: this.clientId, type: 'web' },
+        capabilities: { accepted_providers: [{ provider: 'centrifugo' }, { provider: 'pusher' }] },
+      });
+      const lista = res.ok && res.json && res.json.data && Array.isArray(res.json.data.connections) ? res.json.data.connections : [];
+      const cf = lista.find((c) => c && c.provider === 'centrifugo' && c.credentials && /^wss?:\/\/[A-Za-z0-9._\-]+(:\d+)?\/[A-Za-z0-9._\-\/]*$/.test(String(c.credentials.url || '')));
+      if (cf) return { provedor: 'centrifugo', url: String(cf.credentials.url) };
+      const pu = lista.find((c) => c && c.provider === 'pusher' && c.credentials && /^[a-f0-9]{20}$/i.test(String(c.credentials.app_key || c.credentials.key || '')));
+      if (pu) {
+        const cluster = String(pu.credentials.cluster || PUSHER_CLUSTER).replace(/[^a-z0-9-]/gi, '') || PUSHER_CLUSTER;
+        return { provedor: 'pusher', key: String(pu.credentials.app_key || pu.credentials.key), base: `wss://ws-${cluster}.pusher.com` };
+      }
+    } catch (err) {
+      if (err && err.barrado) throw err; // barrado é barrado: o token também não viria
+    }
+    return { provedor: 'centrifugo', url: KICK_REALTIME_PADRAO, adivinhado: true };
+  }
+  async tokenRealtime() {
+    const res = await this.realtimePost('v1/realtime/auth/connection', { client_id: this.clientId });
+    const token = res.ok && res.json && res.json.data ? res.json.data.token : null;
+    if (typeof token !== 'string' || !token) {
+      throw new Error(res.ok ? 'o Kick não devolveu o token do chat.' : `Kick respondeu com erro ${res.status} ao pedir o token do chat.`);
+    }
+    return token;
+  }
+  async abrirRealtime() {
+    const geracao = ++this.geracao;
+    let desc, token;
+    try {
+      desc = await this.descritorRealtime();
+      if (this.stopped || geracao !== this.geracao) return;
+      if (desc.provedor === 'pusher') { this.abrirPusher(desc.key, desc.base); return; }
+      token = await this.tokenRealtime();
+    } catch (err) {
+      if (this.stopped || geracao !== this.geracao) return;
+      this.falhaRealtime(err);
+      return;
+    }
+    if (this.stopped || geracao !== this.geracao) return;
+    this.abrirCentrifugo(desc.url, token);
+  }
+  // Sem descritor/token (API barrada, rede fora): espera crescente e tenta de
+  // novo sozinho — o mesmo jeito do start(), sem o streamer clicar em 🔄
+  falhaRealtime(err) {
+    this.connectRetryMs = Math.min((this.connectRetryMs || 15000) * 2, 300000);
+    const s = Math.round(this.connectRetryMs / 1000);
+    const texto = err && err.barrado ? `${err.message} ${explicacaoBarrado(err)}` : ((err && err.message) || 'Não consegui abrir o chat do Kick.');
+    this.handlers.onStatus('error', `${texto} Nova tentativa sozinha em ${s}s.`, { insiste: true });
+    this.connectTimer = setTimeout(() => { this.connectTimer = null; if (!this.stopped) this.open(); }, this.connectRetryMs);
+  }
+  abrirCentrifugo(url, token) {
+    if (this.stopped) return;
+    const ws = new WebSocket(url, { headers: { Origin: 'https://kick.com', 'User-Agent': UA_CHROME } });
+    this.ws = ws;
+    let established = false;
+    let seq = 0;
+    const idConnect = ++seq;
+    let idSub = 0;
+    const limparRefresh = () => { if (this.refreshTimer) { clearTimeout(this.refreshTimer); this.refreshTimer = null; } };
+    // O token vence (ttl em segundos): pede outro e manda «refresh» um minuto antes
+    const agendarRefresh = (ttl) => {
+      limparRefresh();
+      const segundos = Math.max(5, Math.min(Number(ttl) || 2700, 86400) - 60);
+      this.refreshTimer = setTimeout(async () => {
+        this.refreshTimer = null;
+        if (this.ws !== ws || ws.readyState !== WebSocket.OPEN) return;
+        try {
+          const novo = await this.tokenRealtime();
+          if (this.ws !== ws || ws.readyState !== WebSocket.OPEN) return;
+          ws.send(JSON.stringify({ refresh: { token: novo }, id: ++seq }));
+        } catch {
+          try { ws.close(); } catch {} // sem token novo: reconecta do zero (o close cuida)
+        }
+      }, segundos * 1000);
+    };
+    const tratar = (m) => {
+      if (!m || typeof m !== 'object') return;
+      if (m.id === idConnect && m.connect) {
+        this.retryMs = 2000;
+        this.connectRetryMs = 0;
+        if (m.connect.expires !== false) agendarRefresh(m.connect.ttl);
+        idSub = ++seq;
+        ws.send(JSON.stringify({ subscribe: { channel: `chatrooms.${this.chatroomId}.v2` }, id: idSub }));
+        return;
+      }
+      if (idSub && m.id === idSub && m.subscribe) {
+        established = true;
+        this.handlers.onStatus('connected', `Lendo o chat de ${this.channel}`);
+        this.fetchHistory();
+        return;
+      }
+      if (m.refresh) { if (m.refresh.expires !== false) agendarRefresh(m.refresh.ttl); return; }
+      if (m.error) {
+        const e = m.error || {};
+        console.log(`  ⚠️ Kick: o servidor do chat recusou (${e.code || '?'}${e.message ? ': ' + String(e.message).slice(0, 80) : ''}).`);
+        if (!established) { try { ws.close(); } catch {} }
+        return;
+      }
+      if (m.disconnect) { try { ws.close(); } catch {} return; }
+      // a publicação: o envelope { event, data } de sempre
+      if (m.push && m.push.pub && m.push.pub.data && typeof m.push.pub.data === 'object') {
+        this.handlePusher(JSON.stringify(m.push.pub.data));
+      }
+    };
+    ws.on('open', () => { try { ws.send(JSON.stringify({ connect: { token, name: 'js' }, id: idConnect })); } catch {} });
+    ws.on('message', (raw) => {
+      try {
+        // várias respostas podem vir no mesmo quadro, uma por linha
+        for (const linha of raw.toString().split('\n')) {
+          const texto = linha.trim();
+          if (!texto) continue;
+          if (texto === '{}') { ws.send('{}'); continue; } // ping do servidor → pong
+          let m; try { m = JSON.parse(texto); } catch { continue; }
+          tratar(m);
+        }
+      } catch (err) {
+        if (!this.avisouPacote) {
+          this.avisouPacote = true;
+          console.log('  ⚠️ Kick: pacote fora do padrão ignorado (' + String(err && err.message || err).slice(0, 80) + ').');
+        }
+      }
+    });
+    ws.on('close', () => { limparRefresh(); if (this.ws === ws) this.scheduleReconnect(); });
+    ws.on('error', () => { /* o evento close cuida da reconexao */ });
+  }
+
+  // ---------- o caminho antigo (Pusher), para o teste e para o caso de a Kick voltar a ele ----------
+  abrirPusher(key, base) {
+    if (this.stopped) return;
+    const url = `${base}/app/${key}?protocol=7&client=js&version=8.4.0&flash=false`;
     const ws = new WebSocket(url, { headers: { Origin: 'https://kick.com' } });
     this.ws = ws;
     let established = false;
@@ -501,6 +671,7 @@ class KickConnector {
   stop() {
     this.stopped = true;
     if (this.connectTimer) clearTimeout(this.connectTimer);
+    if (this.refreshTimer) { clearTimeout(this.refreshTimer); this.refreshTimer = null; } // 🟢 v0.182
     if (this.ws) try { this.ws.close(); } catch {}
   }
 }

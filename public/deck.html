@@ -40,7 +40,13 @@ body {
   background: var(--panel); border: 1px solid var(--border); font-size: 12px; line-height: 1.35;
 }
 .deck-aviso.travado { border-color: #e53935; }
-main { flex: 1; min-height: 0; position: relative; z-index: 1; }
+main { flex: 1; min-height: 0; position: relative; z-index: 1; display: flex; flex-direction: row; align-items: stretch; }
+/* 🎚️ v0.182: as laterais ficam com o que sobra ao lado da grade; sem medidores (ou sem espaço) a esteira ocupa tudo */
+.deck-trilho { flex: 1 1 auto; min-width: 0; }
+main.com-laterais .deck-trilho { flex: 0 0 var(--grade-largura); width: var(--grade-largura); }
+.deck-lateral { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--gap); padding: var(--gap); box-sizing: border-box; overflow: hidden; }
+.deck-lateral .trilha-medidor { width: 100%; height: auto; min-height: 46px; aspect-ratio: auto; touch-action: auto; padding: 5px 7px; flex: 0 0 auto; }
+.deck-lateral .medidor-nome { font-size: max(10px, var(--trilha-txt-tam, 11px)); }
 .deck-trilho {
   height: 100%; display: flex; overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
@@ -120,7 +126,10 @@ body.a11y-contraste { --muted: var(--text); --border: #98a4b5; }
 <canvas id="deckFundo"></canvas>
 <div class="deck-aviso" id="deckAviso" hidden></div>
 <main>
+  <!-- 🎚️ v0.182: os medidores de áudio do OBS moram nas LATERAIS (o espaço que sobra ao lado da grade) -->
+  <aside class="deck-lateral" id="deckLateralEsq" hidden></aside>
   <div class="deck-trilho" id="deckTrilho"></div>
+  <aside class="deck-lateral" id="deckLateralDir" hidden></aside>
 </main>
 <footer id="deckBarra">
   <button class="deck-btn" id="deckVoltar" title="Voltar (sair da pasta)" hidden>⬅</button>
@@ -149,8 +158,8 @@ body.a11y-contraste { --muted: var(--text); --border: #98a4b5; }
     <div class="deck-hint" id="deckSoAquiHint" hidden>🔒 Pela rede no modo restrito, as escolhas de tema ficam só neste aparelho.</div>
     <div id="deckMedidoresSecao">
       <h4>🎚️ Medidores de áudio do OBS</h4>
-      <label class="linha"><input type="checkbox" id="deckMedidoresChk"> 🎚️ Mostrar os medidores do OBS nos espaços vazios da Mesa</label>
-      <div class="deck-hint">Cada espaço vazio vira o medidor de uma fonte de áudio do OBS (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume.</div>
+      <label class="linha"><input type="checkbox" id="deckMedidoresChk"> 🎚️ Mostrar os medidores do OBS nas laterais da Mesa</label>
+      <div class="deck-hint">Cada fonte de áudio do OBS ganha um medidor nas laterais da tela, no espaço que sobra ao lado da grade (verde → amarelo → vermelho, como no mixer dele), para ver se está modulando. Só mostra — não mexe no volume. Com a tela estreita (celular em pé) não sobra lateral e eles não aparecem.</div>
       <div class="deck-fontes" id="deckMedidoresFontes"></div>
     </div>
     <h4>📲 Este aparelho</h4>
@@ -245,6 +254,8 @@ function medir() {
   const virada = cabe(R, C);
   const [cols, tecla] = virada > normal ? [R, virada] : [C, normal];
   const raiz = document.documentElement.style;
+  // 🎚️ v0.182: a esteira com laterais tem a largura da grade (+ a folga dos dois lados)
+  medidasGrade = { largura: cols * Math.max(28, tecla) + (cols - 1) * gap + folga * 2, gap };
   raiz.setProperty('--tecla', Math.max(28, tecla) + 'px');
   raiz.setProperty('--cols', String(cols));
   raiz.setProperty('--gap', gap + 'px');
@@ -256,6 +267,7 @@ function medir() {
   raiz.setProperty('--trilha-txt-peso', tx.negrito === false ? '400' : '700');
   raiz.setProperty('--trilha-txt-cor', /^#[0-9a-f]{6}$/i.test(tx.cor || '') ? tx.cor : 'inherit');
   // recoloca a página atual no lugar (a largura pode ter mudado)
+  if (typeof renderLaterais === 'function' && settings) renderLaterais(); // 🎚️ v0.182: o espaço das laterais mudou junto
   const trilho = $('deckTrilho');
   trilho.scrollLeft = pagina * trilho.clientWidth;
 }
@@ -293,9 +305,6 @@ function renderDeck() {
 
   trilho.textContent = '';
   const temAlgo = trilhasLista.some((t) => t.url || t.obsAcao || t.vmixAcao || trilhaEhPasta(t));
-  // 🎚️ v0.181: os medidores entram nos espaços vazios, na ordem das fontes do OBS
-  medidorEls.clear();
-  const filaMedidores = fontesDosMedidores();
   for (let p = 0; p < paginas; p++) {
     const pag = document.createElement('div');
     pag.className = 'deck-pagina';
@@ -314,14 +323,6 @@ function renderDeck() {
     for (let cel = inicio; cel < inicio + porPag; cel++) {
       const t = celulas.get(cel);
       if (!t) {
-        const f = filaMedidores.shift();
-        if (f) {
-          const m = montarMedidorObs(f);
-          medidorEls.set(f.nome, m);
-          atualizarMedidorObs(m, niveisFrescos() ? niveisObs[f.nome] : null);
-          grade.appendChild(m);
-          continue;
-        }
         const vazio = document.createElement('div');
         vazio.className = 'trilha-tecla trilha-slot-vazio inerte';
         grade.appendChild(vazio);
@@ -341,12 +342,46 @@ function renderDeck() {
     pag.appendChild(grade);
     trilho.appendChild(pag);
   }
+  renderLaterais(); // 🎚️ v0.182: os medidores nas laterais (ajusta a largura da esteira antes do scroll)
   trilho.scrollLeft = pagina * trilho.clientWidth;
   renderPontos(paginas);
   renderBarra();
 }
 
-// ---------- 🎚️ v0.181: medidores de áudio do OBS ----------
+// ---------- 🎚️ v0.181/v0.182: medidores de áudio do OBS, nas LATERAIS ----------
+// A grade é medida para caber na tela; o que sobra dos dois lados vira duas
+// colunas de medidores (um por fonte, alternando esquerda/direita, na ordem
+// do OBS). Sem fontes, sem OBS ou sem espaço (tela estreita, em pé), as
+// laterais somem e a esteira volta a ocupar a largura toda — a grade nunca
+// encolhe por causa deles.
+const LATERAL_MIN = 72;      // largura mínima de cada lateral (px)
+const LATERAL_LINHA = 46;    // altura mínima de um medidor (px)
+let medidasGrade = { largura: 0, gap: 8 };
+function renderLaterais() {
+  const main = document.querySelector('main');
+  const esq = $('deckLateralEsq'), dir = $('deckLateralDir');
+  medidorEls.clear();
+  esq.textContent = ''; dir.textContent = '';
+  const fontes = fontesDosMedidores();
+  const largura = main.clientWidth;
+  const sobra = (largura - medidasGrade.largura) / 2;
+  const cabe = fontes.length > 0 && medidasGrade.largura > 0 && sobra >= LATERAL_MIN;
+  main.classList.toggle('com-laterais', cabe);
+  esq.hidden = !cabe; dir.hidden = !cabe;
+  if (!cabe) return;
+  document.documentElement.style.setProperty('--grade-largura', medidasGrade.largura + 'px');
+  const porLado = Math.max(1, Math.floor((main.clientHeight - medidasGrade.gap) / (LATERAL_LINHA + medidasGrade.gap)));
+  let nEsq = 0, nDir = 0;
+  fontes.forEach((f, i) => {
+    const lado = i % 2 === 0 ? esq : dir;
+    if ((lado === esq ? nEsq : nDir) >= porLado) return; // não cabe mais: fica de fora
+    if (lado === esq) nEsq++; else nDir++;
+    const m = montarMedidorObs(f);
+    medidorEls.set(f.nome, m);
+    atualizarMedidorObs(m, niveisFrescos() ? niveisObs[f.nome] : null);
+    lado.appendChild(m);
+  });
+}
 function confMedidores() {
   const c = { ...((settings && settings.deck) || {}), ...(local.ajuste || {}) };
   return { ligado: c.medidores === true, fontes: Array.isArray(c.medidoresFontes) ? c.medidoresFontes : [] };
