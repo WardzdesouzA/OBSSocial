@@ -1,4 +1,13 @@
 {
+  "0.182.0": {
+    "titulo": "🟢 Kick: sohbet geri döndü (Kick’in yeni sunucusu) · 🎚️ göstergeler Mini Masa’nın yanlarında",
+    "itens": [
+      "🟢 Kick sohbeti Ekim 2026’da gelmez oldu: Kick eski servisi (Pusher) kapatıp bağlantı belirteci kullanan kendi sunucusuna (Centrifugo) geçti. Program artık sitenin yaptığını yapar: Kick’ten sunucuyu ve belirteci ister, odaya girer ve belirteci dolmadan yeniler. Mesajlar, emote’lar, rozetler ve geçmiş aynı.",
+      "Kick sunucuyu yine değiştirirse program API’nin söylediğini izler (güncel adresi yedek olarak tutar); Cloudflare’a karşı aynı yedekler (curl, PowerShell, açık tarayıcı) bu isteklerde geçerli kalır.",
+      "🎚️ Mini Masa’nın OBS ses göstergeleri ızgaranın boş yuvalarından çıkıp ekranın YANLARINA, tuşların yanında kalan boşluğa taşındı — ızgara olduğu gibi kalır. Dar ekranda (telefon dik) yan boşluk kalmaz ve görünmezler.",
+      "10 dilde çeviriler."
+    ]
+  },
   "0.181.0": {
     "titulo": "📱 Mini Masa: OBS göstergeleri ve yayını bitirme koruması",
     "itens": [

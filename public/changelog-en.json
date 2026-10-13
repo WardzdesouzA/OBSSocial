@@ -1,4 +1,13 @@
 {
+  "0.182.0": {
+    "titulo": "🟢 Kick: chat is back (Kick’s new server) · 🎚️ meters on the sides of the Mini Deck",
+    "itens": [
+      "🟢 Kick chat stopped arriving in October 2026: Kick shut down the old service (Pusher) and moved to its own server (Centrifugo) with a connection token. The program now does what the site does: asks Kick for the server and the token, joins the room and renews the token before it expires. Messages, emotes, badges and history are unchanged.",
+      "If Kick changes servers again, the program follows what its API says (and keeps the current address as a fallback); the same Cloudflare fallbacks (curl, PowerShell, open browser) still apply to those requests.",
+      "🎚️ The Mini Deck’s OBS audio meters left the empty grid slots and moved to the SIDES of the screen, in the space left beside the keys — the grid stays as it was. On a narrow screen (phone upright) there is no side room and they do not appear.",
+      "Translations in all 10 languages."
+    ]
+  },
   "0.181.0": {
     "titulo": "📱 Mini Deck: OBS meters and stop protection for the live",
     "itens": [

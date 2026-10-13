@@ -1,4 +1,13 @@
 {
+  "0.182.0": {
+    "titulo": "🟢 Kick : le chat est de retour (nouveau serveur de Kick) · 🎚️ vumètres sur les côtés de la Mini Table",
+    "itens": [
+      "🟢 Le chat Kick n’arrivait plus depuis octobre 2026 : Kick a coupé l’ancien service (Pusher) et utilise son propre serveur (Centrifugo) avec un jeton de connexion. Le programme fait maintenant comme le site : il demande le serveur et le jeton à Kick, entre dans la salle et renouvelle le jeton avant expiration. Messages, emotes, badges et historique sont inchangés.",
+      "Si Kick change encore de serveur, le programme suit ce que son API indique (et garde l’adresse actuelle en réserve) ; les mêmes réserves contre Cloudflare (curl, PowerShell, navigateur ouvert) valent toujours pour ces requêtes.",
+      "🎚️ Les vumètres audio d’OBS de la Mini Table ont quitté les cases vides de la grille pour les CÔTÉS de l’écran, dans l’espace restant à côté des touches — la grille reste telle quelle. Sur un écran étroit (téléphone à la verticale) il ne reste pas de côté et ils n’apparaissent pas.",
+      "Traductions dans les 10 langues."
+    ]
+  },
   "0.181.0": {
     "titulo": "📱 Mini Table : vumètres d’OBS et protection à l’arrêt du live",
     "itens": [
