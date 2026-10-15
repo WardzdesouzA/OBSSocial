@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Doğrudan bankadan Pix: 16 banka ve platformlu seçici",
+    "itens": [
+      "💠 Doğrudan bankadan Pix (🧪 Labs), Bankalar, Kooperatifler, Fintech’ler ve Ödeme platformları olarak gruplanmış bir banka seçici kazandı: Banco do Brasil, Bradesco, Itaú, Santander, Inter, C6, Banrisul, BS2, Safra, Banco do Nordeste, Sicoob, Sicredi, Ailos, Efí, Cora, OpenPix/Woovi, Asaas ve Mercado Pago — ayrıca Merkez Bankası Pix API’sini izleyen başka herhangi bir banka için özel profil.",
+      "Her banka yalnızca kullandığı alanları gösterir (sertifika, uygulama anahtarı, test ortamı, elle girilen adresler), kimlik bilgilerinin portalında nereden alınacağını, bireysel (PF) mi kurumsal (PJ) mi hizmet verdiğini açıklar ve portal bağlantısını verir. Kimlik bilgilerini farklı isteyen profiller (Authorization: Basic, özel alan adları, JSON gövde, client_secret’sız) önceden ayarlı gelir.",
+      "Listede dürüstlük: Nubank, BTG, PagBank, PicPay ve Unicred nedeniyle birlikte devre dışı görünür — alınan Pix’leri okumak için açık API’leri yok (Nubank yalnızca katılımcı bir kurum gerektiren Open Finance üzerinden).",
+      "Inter’de okuma zenginleştirilmiş hesap özetine (extrato.read kapsamı) geçti: standart Pix sorgusu yalnızca API ile oluşturulan tahsilatları listeler — anahtarınıza düşen Pix, ödeyenin adı ve mesajıyla, hesap özetinden gelir. Inter’i zaten kullananlar entegrasyonda «Hesap özeti: sorgula»yı işaretlemeli.",
+      "Uygulama anahtarı (BB, Caixa) ve kimlik bilgileri eskisi gibi bilgisayarda şifreli kalır ve ekranlara asla gitmez; program yalnızca okur — tahsilat oluşturmaz, para hareket ettirmez.",
+      "10 dilde çeviriler; SSS ve README güncellendi."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick: sohbet geri döndü (Kick’in yeni sunucusu) · 🎚️ göstergeler Mini Masa’nın yanlarında",
     "itens": [

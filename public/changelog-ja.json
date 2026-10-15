@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 銀行直結 Pix:16 の銀行・プラットフォームから選べる",
+    "itens": [
+      "💠 銀行直結 Pix(🧪 Labs)に銀行の選択が付き、銀行・協同組合・フィンテック・決済プラットフォームに分かれています:Banco do Brasil、Bradesco、Itaú、Santander、Inter、C6、Banrisul、BS2、Safra、Banco do Nordeste、Sicoob、Sicredi、Ailos、Efí、Cora、OpenPix/Woovi、Asaas、Mercado Pago に加え、中央銀行の Pix API に従う他の銀行向けのカスタムプロファイルも。",
+      "各銀行は使う項目だけを表示し(証明書、アプリケーションキー、テスト環境、手入力のアドレス)、ポータルでの認証情報の取得先、個人(PF)か法人(PJ)かを説明し、ポータルへのリンクを示します。認証情報の渡し方が異なるプロファイル(Authorization: Basic、独自のフィールド名、JSON 本文、client_secret なし)は調整済みです。",
+      "一覧は正直です:Nubank、BTG、PagBank、PicPay、Unicred は理由付きで無効表示されます — 受け取った Pix を読む公開 API がありません(Nubank は参加機関が必要な Open Finance のみ)。",
+      "Inter では読み取りが詳細明細(スコープ extrato.read)に移りました:標準の Pix 照会は API で作った請求しか返さず、あなたのキーに届いた Pix(支払った人の名前とメッセージ付き)は明細から取れます。すでに Inter を使っていた人は連携で「明細:照会」にチェックを。",
+      "アプリケーションキー(BB、Caixa)と認証情報は従来どおりコンピューターに暗号化保存され、画面には届きません。プログラムは読むだけで、請求の作成も送金も行いません。",
+      "10 言語の翻訳。FAQ と README を更新。"
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick:チャットが復活(Kick の新サーバー) · 🎚️ メーターはミニボードの両脇に",
     "itens": [

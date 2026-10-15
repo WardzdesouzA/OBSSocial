@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Pix direct de la banque : sélecteur avec 16 banques et plateformes",
+    "itens": [
+      "💠 Le Pix direct de la banque (🧪 Labs) a reçu un sélecteur de banques, groupé en Banques, Coopératives, Fintechs et Plateformes de paiement : Banco do Brasil, Bradesco, Itaú, Santander, Inter, C6, Banrisul, BS2, Safra, Banco do Nordeste, Sicoob, Sicredi, Ailos, Efí, Cora, OpenPix/Woovi, Asaas et Mercado Pago — plus le profil personnalisé pour toute autre banque qui suit l’API Pix de la Banque centrale.",
+      "Chaque banque n’affiche que les champs qu’elle utilise (certificat, clé d’application, environnement de test, adresses manuelles), explique où obtenir les identifiants sur son portail, si elle accepte les particuliers (PF) ou les entreprises (PJ), et donne le lien du portail. Les profils qui demandent les identifiants autrement (Authorization: Basic, noms de champs propres, corps JSON, sans client_secret) sont déjà réglés.",
+      "Honnêteté dans la liste : Nubank, BTG, PagBank, PicPay et Unicred apparaissent désactivés, avec la raison — ils n’ont pas d’API ouverte pour lire les Pix reçus (Nubank seulement via l’Open Finance, qui exige une institution participante).",
+      "Pour Inter, la lecture passe au relevé enrichi (portée extrato.read) : la requête Pix du standard ne liste que les encaissements créés par l’API — le Pix qui arrive sur votre clé, avec le nom du payeur et le message, vient du relevé. Ceux qui utilisaient déjà Inter doivent cocher « Relevé : consulter » dans l’intégration.",
+      "La clé d’application (BB, Caixa) et les identifiants restent chiffrés sur l’ordinateur, comme avant, et n’atteignent jamais les écrans ; le programme ne fait que lire — il ne crée aucun encaissement et ne déplace rien.",
+      "Traductions dans les 10 langues ; FAQ et README mis à jour."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick : le chat est de retour (nouveau serveur de Kick) · 🎚️ vumètres sur les côtés de la Mini Table",
     "itens": [

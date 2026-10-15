@@ -2618,29 +2618,238 @@ function formatDonationValue(raw) {
 // o modo personalizado aceita qualquer banco que siga a especificação.
 const PIX_FILE = path.join(DATA_DIR, 'pix-config.json');
 const PIX_VISTOS_FILE = path.join(DATA_DIR, 'pix-vistos.json');
+// 💠 v0.183: um perfil por banco/fintech. Campos:
+//   grupo     'banco' | 'cooperativa' | 'fintech' | 'outro' (só agrupa o seletor)
+//   tipo      'bacen' = API Pix padrão do Banco Central (OAuth2 + certificado, GET /pix)
+//             'gateway' = API própria com chave fixa (sem certificado), consulta própria
+//             'indisponivel' = aparece no seletor só para explicar que não dá
+//   auth      'form' (client_id/secret no corpo do pedido de token) | 'basic' (Authorization: Basic)
+//   appKey    { onde: 'query'|'header', nome, rotulo, ajuda } — chave extra do portal (ex.: BB)
+//   cert      precisa de certificado mTLS? (true nos bancos; false nos gateways)
+//   pf/pj     a API é liberada para pessoa física / jurídica? (null = não documentado)
+//   sandbox   { urlToken, urlPix } do ambiente de testes, se o banco tiver
+//   ajuda     onde criar as credenciais (1-2 linhas) · portal: link do portal
 const PIX_BANCOS = {
-  inter: {
-    nome: 'Banco Inter',
-    urlToken: 'https://cdpj.partners.bancointer.com.br/oauth/v2/token',
-    urlPix: 'https://cdpj.partners.bancointer.com.br/pix/v2/pix',
+  // ----- bancos -----
+  bb: {
+    nome: 'Banco do Brasil', grupo: 'banco', tipo: 'bacen', auth: 'basic', cert: true, pf: false, pj: true,
+    appKey: { onde: 'query', nome: 'gw-dev-app-key', noToken: false, rotulo: 'Chave do aplicativo (developer_application_key)', ajuda: 'A chave do aplicativo (gw-dev-app-key) está em Credenciais, no portal BB Developers.' },
+    urlToken: 'https://oauth.bb.com.br/oauth/token',
+    urlPix: 'https://api-pix.bb.com.br/pix/v2/pix',
     escopo: 'pix.read',
+    sandbox: { urlToken: 'https://oauth.hm.bb.com.br/oauth/token', urlPix: 'https://api-pix.hm.bb.com.br/pix/v2/pix' },
+    portal: 'https://app.developers.bb.com.br/',
+    ajuda: 'Portal Developers BB → aplicação com a API Pix (v2) → Credenciais: Client ID, Client Secret e a chave do aplicativo (uma por ambiente). Para produção: Termo de Adesão e certificado mTLS (A1 ICP-Brasil) enviados no portal. Conta PJ com chave Pix no BB.',
   },
+  itau: {
+    nome: 'Itaú (Itaú Empresas)', grupo: 'banco', tipo: 'bacen', auth: 'form', semScope: true, cert: true, pf: false, pj: true,
+    clientIdHeader: 'x-itau-apikey', correlationHeader: 'x-itau-correlationID',
+    urlToken: 'https://sts.itau.com.br/api/oauth/token',
+    urlPix: 'https://secure.gateway.api.itau/pix_recebimentos/v2/pix',
+    portal: 'https://devportal.itau.com.br/',
+    ajuda: 'Contrate «Pix Recebimentos» com o gerente Itaú Empresas: chegam o Client ID e um token temporário; com ele você pede o certificado dinâmico (CSR) no STS do Itaú e recebe o Client Secret e o .crt (vale 1 ano). Token do Itaú dura 5 min — o programa renova sozinho.',
+    aviso: 'O Itaú mudou o endereço da API para secure.gateway.api.itau em 2026; se a consulta falhar, confira no portal o endereço atual e use o perfil personalizado.',
+  },
+  bradesco: {
+    nome: 'Bradesco', grupo: 'banco', tipo: 'bacen', auth: 'basic', cert: true, pf: false, pj: true,
+    urlToken: 'https://qrpix.bradesco.com.br/auth/server/oauth/token',
+    urlPix: 'https://qrpix.bradesco.com.br/v2/pix',
+    escopo: 'pix.read',
+    sandbox: { urlToken: 'https://qrpix-h.bradesco.com.br/auth/server/oauth/token', urlPix: 'https://qrpix-h.bradesco.com.br/v2/pix' },
+    portal: 'https://developers.bradesco.com.br/',
+    ajuda: 'Bradesco Developers (CNPJ) → produto «Pix – geração de QR Code» → plano Produção (cliente PJ) → aplicação → Request Credential com o certificado público (A1 de AC) → Client ID e Client Secret (visíveis por 3 dias).',
+  },
+  santander: {
+    nome: 'Santander (Empresas)', grupo: 'banco', tipo: 'bacen', auth: 'form', authEscolhivel: true, semGrantType: true, cert: true, pf: false, pj: true,
+    urlToken: 'https://trust-pix.santander.com.br/oauth/token?grant_type=client_credentials',
+    urlPix: 'https://trust-pix.santander.com.br/api/v1/pix',
+    escopo: 'pix.read',
+    sandbox: { urlToken: 'https://trust-pix-h.santander.com.br/oauth/token?grant_type=client_credentials', urlPix: 'https://trust-pix-h.santander.com.br/api/v1/pix' },
+    portal: 'https://developer.santander.com.br/',
+    ajuda: 'Portal do Desenvolvedor Santander (login do Internet Banking empresarial, usuário Master) → Aplicações → Produção → anexe o certificado A1 (cadeia completa) e escolha o produto Pix → Client ID e Client Secret. A chave Pix precisa estar no mesmo CNPJ.',
+    aviso: 'A consulta do Santander só devolve os Pix liquidados no dia da consulta — perfeito para a live, mas não para recuperar dias anteriores.',
+  },
+  caixa: {
+    nome: 'Caixa Econômica Federal', grupo: 'banco', tipo: 'bacen', auth: 'form', authEscolhivel: true, cert: true, pf: false, pj: true, urlsManuais: true,
+    appKey: { onde: 'header', nome: 'apikey', noToken: false, rotulo: 'API Key do convênio (apikey)', ajuda: 'A Caixa entrega uma API Key por convênio; ela vai no cabeçalho apikey de cada consulta.' },
+    escopo: 'pix.read', urlToken: '', urlPix: '',
+    ajuda: 'Pelo gerente: contrate o convênio e peça Client ID, Client Secret e API Key. Token: https://loginservicos.caixa.gov.br/auth/realms/internet/protocol/openid-connect/token (testes: logindes.caixa.gov.br). Cole também o endereço da consulta de Pix recebidos que a Caixa informar.',
+    aviso: 'A Caixa só publica a documentação do Pix Automático; a consulta de Pix recebidos (GET /pix) depende do que o banco liberar no seu convênio.',
+  },
+  inter: {
+    nome: 'Banco Inter (Inter Empresas)', grupo: 'banco', tipo: 'bacen', auth: 'form', cert: true, pf: false, pj: true,
+    // 💠 v0.183: o GET /pix do Inter só lista Pix de cobranças geradas pela API; o Pix
+    // que cai na chave aparece no extrato enriquecido — com nome do pagador e a mensagem
+    consulta: 'interExtrato', escopo: 'extrato.read',
+    urlToken: 'https://cdpj.partners.bancointer.com.br/oauth/v2/token',
+    urlPix: 'https://cdpj.partners.bancointer.com.br/banking/v2/extrato/completo',
+    sandbox: { urlToken: 'https://cdpj-sandbox.partners.uatinter.co/oauth/v2/token', urlPix: 'https://cdpj-sandbox.partners.uatinter.co/banking/v2/extrato/completo' },
+    portal: 'https://developers.inter.co/',
+    ajuda: 'Internet Banking Inter Empresas → Soluções para sua empresa → Nova Integração → marque «Extrato: consultar (extrato.read)» → baixe o certificado (.crt + .key) e copie Client ID e Client Secret. Conta PJ (MEI serve).',
+    aviso: 'Já usava o Inter aqui? Entre na integração do Internet Banking e marque «Extrato: consultar (extrato.read)» — sem isso o banco recusa o token. É do extrato que vêm os Pix recebidos na chave, com nome e mensagem.',
+  },
+  c6: {
+    nome: 'C6 Bank (C6 Empresas)', grupo: 'banco', tipo: 'bacen', auth: 'form', cert: true, pf: false, pj: true, semScope: true,
+    urlToken: 'https://baas-api.c6bank.info/v1/auth/',
+    urlPix: 'https://baas-api.c6bank.info/v2/pix/pix',
+    sandbox: { urlToken: 'https://baas-api-sandbox.c6bank.info/v1/auth/', urlPix: 'https://baas-api-sandbox.c6bank.info/v2/pix/pix' },
+    portal: 'https://developers.c6bank.com.br/',
+    ajuda: 'Cadastre a empresa no portal do desenvolvedor (homologação); as credenciais de produção (Client ID, Client Secret e certificado) saem do Internet Banking C6 Empresas, por um usuário Master.',
+  },
+  banrisul: {
+    nome: 'Banrisul', grupo: 'banco', tipo: 'bacen', auth: 'basic', cert: true, pf: null, pj: true,
+    urlToken: 'https://mtls-api.banrisul.com.br/auth/oauth/v2/token',
+    urlPix: 'https://mtls-api.banrisul.com.br/pix/api-mtls/pix',
+    escopo: 'pix.read',
+    sandbox: { urlToken: 'https://mtls-api-h.banrisul.com.br/auth/oauth/v2/token', urlPix: 'https://mtls-api-h.banrisul.com.br/pix/api-mtls/pix' },
+    portal: 'https://developers.banrisul.com.br/',
+    ajuda: 'Contrate Pix Cobrança + API Pix na sua agência (ou api@banrisul.com.br): ela gera as credenciais e libera o portal do desenvolvedor. Certificado digital (e-CNPJ/e-CPF).',
+  },
+  bs2: {
+    nome: 'Banco BS2 (BS2 Empresas)', grupo: 'banco', tipo: 'bacen', auth: 'basic', cert: false, pf: null, pj: true, urlsManuais: true, authEscolhivel: true,
+    escopo: 'pix.read', query: { inicio: 'Inicio', fim: 'Fim', itens: 'Paginacao.ItensPorPagina' },
+    urlToken: '', urlPix: '',
+    portal: 'https://devs.bs2.com/docs/pix-direto',
+    ajuda: 'BS2 Empresas → API Banking → Aplicações → Novo (API Key e Secret, IPs liberados). O BS2 informa o endereço das APIs: cole aqui o do token (…/auth/oauth/v2/token) e o da consulta (…/pix/direto/forintegration/v1/pix).',
+  },
+  safra: {
+    nome: 'Banco Safra', grupo: 'banco', tipo: 'bacen', auth: 'basic', cert: true, pf: null, pj: true, urlsManuais: true, authEscolhivel: true,
+    escopo: 'pix.read', urlToken: '', urlPix: '',
+    ajuda: 'Peça ao seu gerente o manual «API de Recebimento Pix Safra», o Client ID, o Client Secret e o certificado. Cole os endereços do token e da consulta que vêm no manual.',
+  },
+  bnb: {
+    nome: 'Banco do Nordeste (BNB)', grupo: 'banco', tipo: 'bacen', auth: 'form', cert: true, pf: false, pj: true, urlsManuais: true, authEscolhivel: true,
+    escopo: 'pix.read', urlToken: '', urlPix: '',
+    portal: 'https://portal.dev.bnb.gov.br/product/api-pix-cobranca',
+    ajuda: 'Credencie a empresa no portal do desenvolvedor (API Pix Cobrança): o BNB entrega o Client ID, os endereços de token e de produção e vincula o certificado ICP-Brasil. Cole os endereços aqui.',
+  },
+  // ----- cooperativas -----
   sicoob: {
-    nome: 'Sicoob',
+    nome: 'Sicoob', grupo: 'cooperativa', tipo: 'bacen', auth: 'form', semSecret: true, cert: true, pf: null, pj: true,
     urlToken: 'https://auth.sicoob.com.br/auth/realms/cooperado/protocol/openid-connect/token',
     urlPix: 'https://api.sicoob.com.br/pix/api/v2/pix',
     escopo: 'pix.read',
+    portal: 'https://developers.sicoob.com.br/portal/',
+    ajuda: 'Portal do desenvolvedor Sicoob → Meus Aplicativos → Novo → API «Pix Recebimentos» → envie o certificado ICP-Brasil (e-CNPJ ou e-CPF A1) → aprove no Internet Banking → copie o Client ID. Não há Client Secret: o certificado faz a autenticação.',
   },
-  personalizado: { nome: 'Personalizado', urlToken: '', urlPix: '', escopo: 'pix.read' },
+  sicredi: {
+    nome: 'Sicredi', grupo: 'cooperativa', tipo: 'bacen', auth: 'basic', cert: true, pf: false, pj: true,
+    urlToken: 'https://api-pix.sicredi.com.br/oauth/token',
+    urlPix: 'https://api-pix.sicredi.com.br/api/v2/pix',
+    escopo: 'pix.read',
+    sandbox: { urlToken: 'https://api-pix-h.sicredi.com.br/oauth/token', urlPix: 'https://api-pix-h.sicredi.com.br/api/v2/pix' },
+    portal: 'https://developer.sicredi.com.br/',
+    ajuda: 'Adesão à API Pix na cooperativa → cadastro no portal do desenvolvedor → chamado «Acesso à API Pix» → Certificados e Credenciais → Registrar CSR → gere Client ID e Client Secret.',
+  },
+  ailos: {
+    nome: 'Ailos (Viacredi, Credcrea, Acredi, Unilos…)', grupo: 'cooperativa', tipo: 'bacen', auth: 'form', cert: true, pf: null, pj: true, urlsManuais: true,
+    tokenCampos: { clientId: 'Client_Id', clientSecret: 'Client_Secret' }, semGrantType: true, escopo: 'pix.read',
+    urlToken: '', urlPix: '',
+    sandbox: { urlToken: 'https://pixcobranca-h.ailos.coop.br/qa/ailos/pix-cobranca/api/v1/client/connect/token', urlPix: 'https://pixcobranca-h.ailos.coop.br/qa/ailos/pix-cobranca/api/v1/pix' },
+    portal: 'https://www.ailos.coop.br/',
+    ajuda: 'A cooperativa entrega o Client_Id, o Client_Secret e o endereço de produção (…/api/v1/client/connect/token e …/api/v1/pix) — cole aqui. O certificado A1 precisa estar cadastrado na Ailos (impressão digital por e-mail). O ambiente de testes já vem preenchido.',
+  },
+  // ----- fintechs e contas digitais -----
+  efi: {
+    nome: 'Efí (antiga Gerencianet)', grupo: 'fintech', tipo: 'bacen', auth: 'basic', tokenCorpo: 'json', semScope: true, cert: true, pf: true, pj: true,
+    urlToken: 'https://pix.api.efipay.com.br/oauth/token',
+    urlPix: 'https://pix.api.efipay.com.br/v2/pix',
+    escopo: 'pix.read',
+    sandbox: { urlToken: 'https://pix-h.api.efipay.com.br/oauth/token', urlPix: 'https://pix-h.api.efipay.com.br/v2/pix' },
+    portal: 'https://dev.efipay.com.br/',
+    ajuda: 'app.sejaefi.com.br → API → Criar aplicação → ative «API Pix» com o escopo de consulta → copie Client ID e Client Secret; em «Meus Certificados» gere o .p12 (baixa uma vez só). Pessoa física: conta Efí Pro (CPF).',
+    aviso: 'A lista da Efí não traz o nome de quem pagou — só valor e mensagem.',
+  },
+  cora: {
+    nome: 'Cora', grupo: 'fintech', tipo: 'bacen', auth: 'form', semSecret: true, semScope: true, cert: true, pf: false, pj: true, consulta: 'coraExtrato',
+    urlToken: 'https://matls-clients.api.cora.com.br/token',
+    urlPix: 'https://matls-clients.api.cora.com.br/bank-statement/statement',
+    sandbox: { urlToken: 'https://matls-clients.api.stage.cora.com.br/token', urlPix: 'https://matls-clients.api.stage.cora.com.br/bank-statement/statement' },
+    portal: 'https://developers.cora.com.br/docs/instrucoes-iniciais',
+    ajuda: 'App ou Cora Web → Conta → Integrações via APIs → Integração Direta → gere o certificado (.pem), a chave (.key) e o Client ID (um conjunto para testes, outro para produção). Não há Client Secret. Plano Cora Pro.',
+    aviso: 'A Cora não devolve o endToEndId nem a mensagem do Pix em campo próprio — o programa mostra a descrição do lançamento.',
+  },
+  // ----- plataformas de pagamento (chave fixa, sem certificado) -----
+  openpix: {
+    nome: 'OpenPix / Woovi', grupo: 'gateway', tipo: 'gateway', auth: 'form', cert: false, pf: null, pj: true, credenciais: 'chave', consulta: 'openpix',
+    rotuloSegredo: 'AppID (Api/Plugins → Nova API)',
+    urlToken: '', urlPix: 'https://api.openpix.com.br/api/v1/transaction',
+    sandbox: { urlPix: 'https://api.woovi-sandbox.com/api/v1/transaction' },
+    portal: 'https://app.woovi.com/',
+    ajuda: 'app.woovi.com → Api/Plugins → Nova API/Plugin → tipo API → copie o AppID (precisa ser administrador). Taxa da plataforma por Pix recebido.',
+  },
+  asaas: {
+    nome: 'Asaas', grupo: 'gateway', tipo: 'gateway', auth: 'form', cert: false, pf: true, pj: true, credenciais: 'chave', consulta: 'asaas',
+    rotuloSegredo: 'Chave de API (Integrações → Chaves de API)',
+    urlToken: '', urlPix: 'https://api.asaas.com/v3/pix/transactions',
+    sandbox: { urlPix: 'https://api-sandbox.asaas.com/v3/pix/transactions' },
+    portal: 'https://www.asaas.com/customerApiAccessToken/index',
+    ajuda: 'asaas.com (pelo site, como administrador) → Integrações → Chaves de API → gerar (aparece uma vez só). A chave desativa depois de 3 meses sem uso.',
+  },
+  mercadopago: {
+    nome: 'Mercado Pago', grupo: 'gateway', tipo: 'gateway', auth: 'form', cert: false, pf: null, pj: true, credenciais: 'chave', consulta: 'mercadopago',
+    rotuloSegredo: 'Access Token de produção (APP_USR-…)',
+    urlToken: '', urlPix: 'https://api.mercadopago.com/v1/payments/search',
+    portal: 'https://www.mercadopago.com.br/developers/panel/app',
+    ajuda: 'mercadopago.com.br/developers → Suas integrações → sua aplicação → Credenciais de produção → copie o Access Token.',
+    aviso: 'O Mercado Pago só lista as cobranças Pix criadas nele (QR do app, checkout, maquininha) — transferência direta para a chave não aparece, e não há mensagem do pagador.',
+  },
+  // ----- sem API para isto (ficam na lista para explicar) -----
+  nubank: {
+    nome: 'Nubank', grupo: 'banco', tipo: 'indisponivel', auth: 'form', cert: false, pf: false, pj: false,
+    ajuda: 'O Nubank não tem API aberta para ler Pix recebidos (nem PF nem Nu Empresas); o único caminho oficial é o Open Finance, por uma instituição participante.',
+  },
+  btg: {
+    nome: 'BTG Pactual Empresas', grupo: 'banco', tipo: 'indisponivel', auth: 'form', cert: false, pf: false, pj: true,
+    ajuda: 'O BTG exige o fluxo de consentimento com login do usuário (Authorization Code) para ler o extrato — este programa só usa credenciais de aplicação.',
+  },
+  pagbank: {
+    nome: 'PagBank (PagSeguro)', grupo: 'gateway', tipo: 'indisponivel', auth: 'form', cert: false, pf: null, pj: true,
+    ajuda: 'A API pública do PagBank não lista os Pix recebidos (só consulta cobrança por id; extrato EDI só no dia seguinte).',
+  },
+  picpay: {
+    nome: 'PicPay Empresas', grupo: 'gateway', tipo: 'indisponivel', auth: 'form', cert: false, pf: false, pj: true,
+    ajuda: 'A API do PicPay é só de checkout (criar e consultar uma cobrança por id) — não lista os Pix recebidos na conta.',
+  },
+  unicred: {
+    nome: 'Unicred', grupo: 'cooperativa', tipo: 'indisponivel', auth: 'form', cert: false, pf: null, pj: null,
+    ajuda: 'A Unicred ainda não publica API Pix (só Open Finance e cobrança por boleto).',
+  },
+  // ----- qualquer outro banco do padrão -----
+  personalizado: {
+    nome: 'Personalizado (outro banco)', grupo: 'outro', tipo: 'bacen', auth: 'form', cert: true, pf: null, pj: null,
+    urlToken: '', urlPix: '', escopo: 'pix.read',
+    ajuda: 'Qualquer banco que siga a API Pix do Banco Central: cole os endereços do token e da consulta (GET /pix) que o portal dele informa e escolha como ele pede as credenciais.',
+  },
 };
+// O que as telas recebem do registro (nada de segredo; é só o catálogo)
+function pixCatalogo() {
+  return Object.entries(PIX_BANCOS).map(([id, b]) => ({
+    id, nome: b.nome, grupo: b.grupo || 'outro', tipo: b.tipo || 'bacen', auth: b.auth || 'form',
+    cert: b.cert !== false, pf: b.pf ?? null, pj: b.pj ?? null,
+    appKey: b.appKey ? { rotulo: b.appKey.rotulo || b.appKey.nome, ajuda: b.appKey.ajuda || '' } : null,
+    sandbox: !!(b.sandbox && (b.sandbox.urlToken || b.sandbox.urlPix)),
+    urlsManuais: b.urlsManuais === true,
+    authEscolhivel: b.authEscolhivel === true || id === 'personalizado',
+    semClientId: b.credenciais === 'chave',
+    semSecret: b.semSecret === true,
+    aviso: b.aviso || '',
+    rotuloId: b.rotuloId || null, rotuloSegredo: b.rotuloSegredo || null,
+    ajuda: b.ajuda || '', portal: b.portal || '',
+  }));
+}
 
 function limparPixConfig(raw) {
   const b = (raw && typeof raw === 'object') ? raw : {};
   const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
   return {
-    banco: ['inter', 'sicoob', 'personalizado'].includes(b.banco) ? b.banco : 'inter',
-    clientId: texto(b.clientId, 200),
-    clientSecret: texto(b.clientSecret, 200),
+    banco: Object.hasOwn(PIX_BANCOS, b.banco) && PIX_BANCOS[b.banco].tipo !== 'indisponivel' ? b.banco
+      : (typeof b._bancoAtual === 'string' && Object.hasOwn(PIX_BANCOS, b._bancoAtual) ? b._bancoAtual : 'inter'),
+    ambiente: b.ambiente === 'sandbox' ? 'sandbox' : 'producao', // 💠 v0.183: produção ou ambiente de testes do banco
+    appKey: texto(b.appKey, 600),                                 // 💠 v0.183: chave extra do portal (ex.: BB)
+    auth: b.auth === 'basic' || b.auth === 'form' ? b.auth : '',  // 💠 v0.183: só vale no personalizado/endereços manuais
+    clientId: texto(b.clientId, 300),
+    clientSecret: texto(b.clientSecret, 600),  // chaves fixas (Asaas, OpenPix) passam de 200 letras
     certArquivo: texto(b.certArquivo, 500),   // .crt/.pem ou .pfx/.p12
     chaveArquivo: texto(b.chaveArquivo, 500), // .key (quando separada do .crt)
     certSenha: texto(b.certSenha, 200),       // senha do .pfx, se tiver
@@ -2658,12 +2867,14 @@ function loadPixConfig() {
     if (raw && typeof raw === 'object') {
       const cs = abrirSegredo(raw.clientSecret);
       const senha = abrirSegredo(raw.certSenha);
+      const ak = raw.appKey ? abrirSegredo(raw.appKey) : ''; // 💠 v0.183: chave de app também cifrada
       // 🔑 v0.179: o que não abriu (chave trocada por um restauro) fica guardado
       // cifrado como veio e volta intacto ao disco na próxima gravação — antes
       // virava '' e mexer em qualquer campo do Pix apagava o segredo do banco
-      const cfg = limparPixConfig({ ...raw, clientSecret: cs ?? '', certSenha: senha ?? '' });
+      const cfg = limparPixConfig({ ...raw, clientSecret: cs ?? '', certSenha: senha ?? '', appKey: ak ?? '' });
       cfg._clientSecretCifrado = cs === null ? String(raw.clientSecret || '') : null;
       cfg._certSenhaCifrada = senha === null ? String(raw.certSenha || '') : null;
+      cfg._appKeyCifrada = ak === null ? String(raw.appKey || '') : null;
       return cfg;
     }
     return limparPixConfig(raw);
@@ -2677,22 +2888,35 @@ function savePixConfig() {
       ...pixConfig,
       clientSecret: pixConfig._clientSecretCifrado || guardarSegredo(pixConfig.clientSecret),
       certSenha: pixConfig._certSenhaCifrada || guardarSegredo(pixConfig.certSenha),
-      _clientSecretCifrado: undefined, _certSenhaCifrada: undefined, // (só em memória)
+      appKey: pixConfig._appKeyCifrada || (pixConfig.appKey ? guardarSegredo(pixConfig.appKey) : ''),
+      _clientSecretCifrado: undefined, _certSenhaCifrada: undefined, _appKeyCifrada: undefined, // (só em memória)
     }, null, 2));
   } catch (err) { console.error('Não consegui salvar a configuração do Pix:', err.message); }
 }
 // Pix já mostrados (endToEndId): sobrevivem ao reiniciar para não repetir
 // apoio na tela — e para os recebidos com o programa fechado entrarem depois
+// 💠 v0.183: a lista é de UM provedor — trocar de banco/ambiente/jeito de
+// consultar zera a lista (senão a 1ª consulta do novo provedor inundava o
+// painel com Pix antigos). O arquivo guarda de quem é; o formato antigo
+// (só a lista) vale apenas para quem segue consultando pelo padrão BACEN.
+function pixAssinaturaVistos() {
+  const perfil = PIX_BANCOS[pixConfig.banco] || PIX_BANCOS.personalizado;
+  return { banco: pixConfig.banco, ambiente: pixConfig.ambiente, consulta: perfil.consulta || 'bacen' };
+}
 function loadPixVistos() {
   try {
-    const lista = JSON.parse(fs.readFileSync(PIX_VISTOS_FILE, 'utf8'));
-    return new Set(Array.isArray(lista) ? lista.slice(-1000).map(String) : []);
+    const raw = JSON.parse(fs.readFileSync(PIX_VISTOS_FILE, 'utf8'));
+    const atual = pixAssinaturaVistos();
+    if (Array.isArray(raw)) return new Set(atual.consulta === 'bacen' ? raw.slice(-1000).map(String) : []);
+    if (!raw || typeof raw !== 'object' || !Array.isArray(raw.ids)) return new Set();
+    if (raw.banco !== atual.banco || raw.ambiente !== atual.ambiente || raw.consulta !== atual.consulta) return new Set();
+    return new Set(raw.ids.slice(-1000).map(String));
   } catch { return new Set(); }
 }
 function savePixVistos() {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(PIX_VISTOS_FILE, JSON.stringify([...pixRt.vistos].slice(-1000)));
+    fs.writeFileSync(PIX_VISTOS_FILE, JSON.stringify({ ...pixAssinaturaVistos(), ids: [...pixRt.vistos].slice(-1000) }));
   } catch { /* o proximo tick tenta de novo */ }
 }
 
@@ -2718,6 +2942,10 @@ function pixResumo(ws) {
     detalhe: pixRt.detalhe,
     banco: pixConfig.banco,
     ...(completo ? {
+      bancos: pixCatalogo(), // 💠 v0.183: o seletor da tela de ajustes é montado daqui
+      ambiente: pixConfig.ambiente,
+      auth: pixConfig.auth,
+      temAppKey: !!pixConfig.appKey,
       clientId: pixConfig.clientId,
       certArquivo: pixConfig.certArquivo,
       chaveArquivo: pixConfig.chaveArquivo,
@@ -2728,7 +2956,7 @@ function pixResumo(ws) {
       temSegredo: !!pixConfig.clientSecret,
       temSenhaCert: !!pixConfig.certSenha,
       // 🔑 v0.179: há segredo gravado, mas a chave local desta máquina não o abre
-      segredoIlegivel: !!(pixConfig._clientSecretCifrado || pixConfig._certSenhaCifrada),
+      segredoIlegivel: !!(pixConfig._clientSecretCifrado || pixConfig._certSenhaCifrada || pixConfig._appKeyCifrada),
     } : {}),
   };
 }
@@ -2743,16 +2971,37 @@ function pixStatus(estado, detalhe) {
   pixRt.detalhe = detalhe || '';
   broadcastPix();
 }
+function pixPerfil() { return PIX_BANCOS[pixConfig.banco] || PIX_BANCOS.personalizado; }
+// Como mandar as credenciais no pedido de token: o perfil decide; no personalizado
+// (e nos bancos de endereços manuais) a pessoa pode escolher
+function pixAuth(perfil) {
+  const escolhivel = pixConfig.banco === 'personalizado' || perfil.authEscolhivel === true;
+  return (escolhivel && pixConfig.auth) || perfil.auth || 'form';
+}
 function pixUrls() {
-  const perfil = PIX_BANCOS[pixConfig.banco] || PIX_BANCOS.personalizado;
+  const perfil = pixPerfil();
+  // 💠 v0.183: ambiente de testes do banco, quando ele tem e a pessoa escolheu
+  const sb = pixConfig.ambiente === 'sandbox' && perfil.sandbox && (perfil.sandbox.urlToken || perfil.sandbox.urlPix) ? perfil.sandbox : null;
+  // Personalizado — e os bancos que só entregam os endereços de produção depois do credenciamento (urlsManuais)
+  if (pixConfig.banco === 'personalizado' || (perfil.urlsManuais && !sb)) return { urlToken: pixConfig.urlToken, urlPix: pixConfig.urlPix, escopo: pixConfig.escopo || perfil.escopo || 'pix.read' };
   return {
-    urlToken: pixConfig.banco === 'personalizado' ? pixConfig.urlToken : perfil.urlToken,
-    urlPix: pixConfig.banco === 'personalizado' ? pixConfig.urlPix : perfil.urlPix,
-    escopo: pixConfig.escopo || perfil.escopo,
+    urlToken: sb ? sb.urlToken : perfil.urlToken,
+    urlPix: sb ? (sb.urlPix || perfil.urlPix) : perfil.urlPix,
+    escopo: perfil.escopo || 'pix.read',
   };
+}
+// 💠 v0.183 (teste): OBS_TESTE_PIX_REESCREVER=http://127.0.0.1:porta manda TODO
+// endereço https de banco para um banco de mentira local, com o host na frente
+// do caminho (…/api.sicoob.com.br/pix/api/v2/pix) — assim o falso sabe quem é
+const PIX_REESCREVER = process.env.OBS_TESTE_PIX_REESCREVER || '';
+function pixEndereco(urlTexto) {
+  if (!PIX_REESCREVER || !/^https:\/\//.test(urlTexto)) return urlTexto;
+  const u = new URL(urlTexto);
+  return PIX_REESCREVER.replace(/\/$/, '') + '/' + u.host + u.pathname + u.search;
 }
 // Certificado do banco (mTLS): .crt+.key em PEM ou .pfx com senha
 function pixAgentNovo() {
+  if (pixPerfil().cert === false) return null; // gateway com chave fixa: sem certificado
   if (!pixConfig.certArquivo) return null;
   const opts = { keepAlive: true };
   if (/\.(pfx|p12)$/i.test(pixConfig.certArquivo)) {
@@ -2769,7 +3018,7 @@ function pixAgentNovo() {
 function pixRequest(urlTexto, { method = 'GET', headers = {}, body = null } = {}) {
   return new Promise((resolve, reject) => {
     let u;
-    try { u = new URL(urlTexto); } catch { reject(new Error('endereço inválido: ' + urlTexto)); return; }
+    try { u = new URL(pixEndereco(urlTexto)); } catch { reject(new Error('endereço inválido: ' + urlTexto)); return; }
     const mod = u.protocol === 'http:' ? http : https;
     const opcoes = { method, headers, timeout: 15000 };
     if (u.protocol === 'https:' && pixRt.agent) opcoes.agent = pixRt.agent;
@@ -2786,36 +3035,152 @@ function pixRequest(urlTexto, { method = 'GET', headers = {}, body = null } = {}
 }
 async function pixToken() {
   if (pixRt.token && Date.now() < pixRt.tokenExpira - 30000) return pixRt.token;
+  const perfil = pixPerfil();
   const { urlToken, escopo } = pixUrls();
-  const form = new URLSearchParams({ grant_type: 'client_credentials', client_id: pixConfig.clientId, scope: escopo });
-  if (pixConfig.clientSecret) form.set('client_secret', pixConfig.clientSecret);
-  const r = await pixRequest(urlToken, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
-  });
-  if (r.status !== 200) throw new Error(`o banco recusou as credenciais (HTTP ${r.status})`);
-  const json = JSON.parse(r.corpo);
+  const headers = { ...(perfil.headers || {}) };
+  // 💠 v0.183: cada banco pede as credenciais de um jeito — no cabeçalho
+  // (Authorization: Basic) ou no corpo do formulário; alguns com nomes de
+  // campo próprios (Ailos: Client_Id), sem grant_type, sem scope, ou em JSON (Efí)
+  const campos = { clientId: 'client_id', clientSecret: 'client_secret', ...(perfil.tokenCampos || {}) };
+  const corpo = {};
+  if (!perfil.semGrantType) corpo.grant_type = 'client_credentials';
+  if (!perfil.semScope && escopo) corpo.scope = escopo;
+  if (pixAuth(perfil) === 'basic') {
+    headers.Authorization = 'Basic ' + Buffer.from(`${pixConfig.clientId}:${pixConfig.clientSecret}`).toString('base64');
+  } else {
+    corpo[campos.clientId] = pixConfig.clientId;
+    if (pixConfig.clientSecret && !perfil.semSecret) corpo[campos.clientSecret] = pixConfig.clientSecret; // Sicoob/Cora: o certificado autentica
+  }
+  let body;
+  if (perfil.tokenCorpo === 'json') { headers['Content-Type'] = 'application/json'; body = JSON.stringify(corpo); }
+  else { headers['Content-Type'] = 'application/x-www-form-urlencoded'; body = new URLSearchParams(corpo).toString(); }
+  if (perfil.appKey && perfil.appKey.onde === 'header' && perfil.appKey.noToken !== false) headers[perfil.appKey.nome] = pixConfig.appKey;
+  let alvo = urlToken;
+  if (perfil.appKey && perfil.appKey.onde === 'query' && perfil.appKey.noToken !== false) alvo += (alvo.includes('?') ? '&' : '?') + encodeURIComponent(perfil.appKey.nome) + '=' + encodeURIComponent(pixConfig.appKey);
+  const r = await pixRequest(alvo, { method: 'POST', headers, body });
+  let json = null;
+  try { json = JSON.parse(r.corpo); } catch { json = null; }
+  if (r.status !== 200) {
+    const motivo = json && typeof json === 'object' ? String(json.error_description || json.error || json.message || json.title || '').slice(0, 90) : '';
+    throw new Error(`o banco recusou as credenciais (HTTP ${r.status}${motivo ? ': ' + motivo : ''})`);
+  }
+  if (!json || typeof json !== 'object') throw new Error('a resposta do token não veio em JSON');
   if (!json.access_token) throw new Error('o banco não devolveu o token de acesso');
   pixRt.token = json.access_token;
   pixRt.tokenExpira = Date.now() + Math.max(60, Number(json.expires_in) || 300) * 1000;
   return pixRt.token;
 }
+// A consulta devolve a lista no formato do Banco Central:
+//   [{ endToEndId, valor, horario, infoPagador, pagador: { nome } }]
+// Os gateways (API própria) são traduzidos para esse mesmo formato em pixGateway().
 async function pixConsultar() {
-  const token = await pixToken();
-  const { urlPix } = pixUrls();
+  const perfil = pixPerfil();
   const fim = new Date();
   const inicio = new Date(fim.getTime() - 40 * 60 * 1000); // janela de 40 min
-  const sep = urlPix.includes('?') ? '&' : '?';
-  const url = `${urlPix}${sep}inicio=${encodeURIComponent(inicio.toISOString())}&fim=${encodeURIComponent(fim.toISOString())}&paginacao.itensPorPagina=100`;
-  const r = await pixRequest(url, {
-    headers: { Authorization: `Bearer ${token}`, client_id: pixConfig.clientId, Accept: 'application/json' },
-  });
-  if (r.status === 401 || r.status === 403) { pixRt.token = null; throw new Error(`o banco recusou o acesso (HTTP ${r.status})`); }
-  if (r.status !== 200) throw new Error(`consulta de Pix falhou (HTTP ${r.status})`);
-  const json = JSON.parse(r.corpo);
-  return Array.isArray(json.pix) ? json.pix : [];
+  const consulta = PIX_CONSULTAS[perfil.consulta || 'bacen'];
+  if (!consulta) throw new Error('este provedor ainda não tem consulta implementada');
+  return consulta(perfil, inicio, fim);
 }
+const enc = encodeURIComponent;
+const dataLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const centavos = (v) => (Number.isFinite(Number(v)) ? (Number(v) / 100).toFixed(2) : '');
+const nomeDe = (...xs) => xs.map((x) => String(x || '').trim()).find(Boolean) || '';
+function pixRecusa(r, oque) {
+  if (r.status === 401 || r.status === 403) { pixRt.token = null; throw new Error(`o banco recusou o acesso (HTTP ${r.status})`); }
+  if (r.status !== 200 && r.status !== 204) throw new Error(`${oque} falhou (HTTP ${r.status})`);
+  if (r.status === 204) return {};
+  try { return JSON.parse(r.corpo); } catch { throw new Error(`${oque}: a resposta do banco não veio em JSON`); }
+}
+function pixAddQuery(url, pares) {
+  const partes = Object.entries(pares).filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `${enc(k)}=${enc(v)}`);
+  return partes.length ? url + (url.includes('?') ? '&' : '?') + partes.join('&') : url;
+}
+// 💠 v0.183: cada jeito de consultar devolve a lista NO FORMATO DO BANCO CENTRAL
+//   [{ endToEndId, valor, horario, infoPagador, pagador: { nome } }]
+// — o resto do conector (dedup, apoio no painel) não precisa saber de quem veio.
+const PIX_CONSULTAS = {
+  // Padrão BACEN: GET /pix?inicio&fim (a maioria dos bancos)
+  async bacen(perfil, inicio, fim) {
+    const token = await pixToken();
+    const { urlPix } = pixUrls();
+    const q = { inicio: 'inicio', fim: 'fim', itens: 'paginacao.itensPorPagina', ...(perfil.query || {}) };
+    let url = pixAddQuery(urlPix, { [q.inicio]: inicio.toISOString(), [q.fim]: fim.toISOString(), [q.itens]: '100' });
+    const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json', ...(perfil.headers || {}) };
+    if (perfil.clientIdHeader !== false) headers[typeof perfil.clientIdHeader === 'string' ? perfil.clientIdHeader : 'client_id'] = pixConfig.clientId; // Sicoob exige client_id; Itaú usa x-itau-apikey; os outros ignoram
+    if (perfil.correlationHeader) headers[perfil.correlationHeader] = crypto.randomUUID();
+    // a chave extra do portal (ex.: gw-dev-app-key do BB) vai na query ou no cabeçalho
+    if (perfil.appKey && pixConfig.appKey) {
+      if (perfil.appKey.onde === 'header') headers[perfil.appKey.nome] = pixConfig.appKey;
+      else url = pixAddQuery(url, { [perfil.appKey.nome]: pixConfig.appKey });
+    }
+    const json = pixRecusa(await pixRequest(url, { headers }), 'consulta de Pix');
+    return Array.isArray(json.pix) ? json.pix : [];
+  },
+  // Inter: o GET /pix só lista Pix de cobranças geradas pela API; o que cai na
+  // chave aparece no extrato enriquecido (escopo extrato.read), com nome e mensagem
+  async interExtrato(perfil, inicio, fim) {
+    const token = await pixToken();
+    const { urlPix } = pixUrls();
+    const url = pixAddQuery(urlPix, { dataInicio: dataLocal(inicio), dataFim: dataLocal(fim), tipoOperacao: 'C', tipoTransacao: 'PIX', pagina: '0', tamanhoPagina: '1000' });
+    const json = pixRecusa(await pixRequest(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }), 'consulta do extrato');
+    return (Array.isArray(json.transacoes) ? json.transacoes : [])
+      .filter((t) => (!t.tipoOperacao || t.tipoOperacao === 'C') && (!t.tipoTransacao || /PIX/i.test(t.tipoTransacao)))
+      .map((t) => ({
+        endToEndId: nomeDe(t.detalhes?.endToEndId, t.idTransacao && 'inter-' + t.idTransacao),
+        valor: t.valor, horario: t.dataInclusao || t.dataTransacao,
+        infoPagador: t.detalhes?.descricaoPix || '',
+        pagador: { nome: nomeDe(t.detalhes?.nomePagador, t.detalhes?.nomeEmpresaPagador) },
+      }));
+  },
+  // Cora: extrato próprio (entradas Pix), valores em centavos, sem endToEndId
+  async coraExtrato(perfil, inicio, fim) {
+    const token = await pixToken();
+    const { urlPix } = pixUrls();
+    const url = pixAddQuery(urlPix, { start: dataLocal(inicio), end: dataLocal(fim), type: 'CREDIT', transaction_type: 'PIX', perPage: '500' });
+    const json = pixRecusa(await pixRequest(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }), 'consulta do extrato');
+    return (Array.isArray(json.entries) ? json.entries : [])
+      .filter((e) => !e.type || e.type === 'CREDIT')
+      .map((e) => ({
+        endToEndId: e.id ? 'cora-' + e.id : '', valor: centavos(e.amount), horario: e.createdAt,
+        infoPagador: e.transaction?.description || '',
+        pagador: { nome: nomeDe(e.transaction?.counterParty?.name) },
+      }));
+  },
+  // OpenPix/Woovi: chave fixa (AppID) no Authorization, sem Bearer; valores em centavos
+  async openpix(perfil, inicio, fim) {
+    const { urlPix } = pixUrls();
+    const url = pixAddQuery(urlPix, { start: inicio.toISOString(), end: fim.toISOString(), type: 'PAYMENT', skip: '0', limit: '100' });
+    const json = pixRecusa(await pixRequest(url, { headers: { Authorization: pixConfig.clientSecret, Accept: 'application/json' } }), 'consulta de Pix');
+    return (Array.isArray(json.transactions) ? json.transactions : []).map((t) => ({
+      endToEndId: nomeDe(t.endToEndId, t.transactionID && 'openpix-' + t.transactionID), valor: centavos(t.value), horario: t.time,
+      infoPagador: t.infoPagador || '',
+      pagador: { nome: nomeDe(t.payer?.name, t.customer?.name) },
+    }));
+  },
+  // Asaas: chave fixa no cabeçalho access_token; GET sem corpo; sem filtro de data (o dedup resolve)
+  async asaas(perfil) {
+    const { urlPix } = pixUrls();
+    const url = pixAddQuery(urlPix, { type: 'CREDIT', status: 'DONE', limit: '100', offset: '0' });
+    const json = pixRecusa(await pixRequest(url, { headers: { access_token: pixConfig.clientSecret, Accept: 'application/json', 'User-Agent': 'OBSSocial/' + APP_VERSION } }), 'consulta de Pix');
+    return (Array.isArray(json.data) ? json.data : []).map((d) => ({
+      endToEndId: nomeDe(d.endToEndIdentifier, d.id && 'asaas-' + d.id), valor: d.value, horario: d.effectiveDate || d.dateCreated,
+      infoPagador: d.description || '',
+      pagador: { nome: nomeDe(d.externalAccount?.name) },
+    }));
+  },
+  // Mercado Pago: token fixo da aplicação; lista as cobranças Pix pagas (QR/checkout do MP)
+  async mercadopago(perfil, inicio, fim) {
+    const { urlPix } = pixUrls();
+    const data = (d) => d.toISOString().replace('Z', '-00:00');
+    const url = pixAddQuery(urlPix, { sort: 'date_approved', criteria: 'desc', range: 'date_approved', begin_date: data(inicio), end_date: data(fim), status: 'approved', payment_method_id: 'pix', limit: '50' });
+    const json = pixRecusa(await pixRequest(url, { headers: { Authorization: `Bearer ${pixConfig.clientSecret}`, Accept: 'application/json' } }), 'consulta de Pix');
+    return (Array.isArray(json.results) ? json.results : []).map((r) => ({
+      endToEndId: r.id !== undefined ? 'mp-' + r.id : '', valor: r.transaction_amount, horario: r.date_approved || r.date_created,
+      infoPagador: '',
+      pagador: { nome: nomeDe([r.payer?.first_name, r.payer?.last_name].filter(Boolean).join(' ')) },
+    }));
+  },
+};
 async function pixTick() {
   try {
     const lista = await pixConsultar();
@@ -3053,9 +3418,15 @@ function arrancarPix() {
   // só marca o que encontrar (senão o painel inundava com Pix antigos)
   pixRt.primeira = pixRt.vistos.size === 0;
   if (state.settings.labs?.pix !== true) { pixStatus('desligado', ''); return; }
+  const perfil = pixPerfil();
   const { urlToken, urlPix } = pixUrls();
-  if (!pixConfig.clientId || !urlToken || !urlPix) {
-    pixStatus('erro', 'faltam dados: preencha as credenciais do banco e salve');
+  if (perfil.tipo === 'indisponivel') { pixStatus('erro', 'este provedor não oferece a API Pix — escolha outro'); return; }
+  const faltam = perfil.credenciais === 'chave'
+    ? (!pixConfig.clientSecret || !urlPix)
+    : (!pixConfig.clientId || (!perfil.semSecret && !pixConfig.clientSecret) || !urlToken || !urlPix);
+  if (faltam || (perfil.appKey && !pixConfig.appKey)) {
+    if (pixConfig._clientSecretCifrado || pixConfig._appKeyCifrada) pixStatus('erro', 'o segredo guardado não abre nesta máquina (chave local trocada) — digite de novo e salve');
+    else pixStatus('erro', perfil.appKey && !pixConfig.appKey ? `faltam dados: preencha também «${perfil.appKey.rotulo || perfil.appKey.nome}» e salve` : 'faltam dados: preencha as credenciais do banco e salve');
     return;
   }
   try { pixRt.agent = pixAgentNovo(); } catch (err) {
@@ -12811,14 +13182,20 @@ function tratarMensagem(ws, raw) {
     // Segredos em branco na mensagem NÃO apagam os guardados (o formulário
     // nunca recebe os segredos de volta — mandar vazio = "não mexi")
     case 'pixConfig': {
-      const novo = limparPixConfig({ ...pixConfig, ...msg.config });
+      const novo = limparPixConfig({ ...pixConfig, ...msg.config, _bancoAtual: pixConfig.banco });
+      // 💠 v0.183: outro banco/ambiente = outra lista de Pix já vistos (a 1ª consulta volta a só marcar)
+      const antes = pixAssinaturaVistos();
+      const trocou = novo.banco !== antes.banco || novo.ambiente !== antes.ambiente;
       if (msg.config && typeof msg.config === 'object') {
         if (!String(msg.config.clientSecret || '').trim()) novo.clientSecret = pixConfig.clientSecret;
         else pixConfig._clientSecretCifrado = null; // 🔑 v0.179: segredo novo digitado substitui o ilegível
         if (!String(msg.config.certSenha || '').trim()) novo.certSenha = pixConfig.certSenha;
         else pixConfig._certSenhaCifrada = null;
+        if (!String(msg.config.appKey || '').trim()) novo.appKey = pixConfig.appKey;
+        else pixConfig._appKeyCifrada = null;
       }
       Object.assign(pixConfig, novo);
+      if (trocou) { pixRt.vistos.clear(); savePixVistos(); }
       savePixConfig();
       arrancarPix();
       break;

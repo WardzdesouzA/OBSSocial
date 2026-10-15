@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Pix directo del banco: selector con 16 bancos y plataformas",
+    "itens": [
+      "💠 El Pix directo del banco (🧪 Labs) ganó un selector de bancos, agrupado en Bancos, Cooperativas, Fintechs y Plataformas de pago: Banco do Brasil, Bradesco, Itaú, Santander, Inter, C6, Banrisul, BS2, Safra, Banco do Nordeste, Sicoob, Sicredi, Ailos, Efí, Cora, OpenPix/Woovi, Asaas y Mercado Pago — además del perfil personalizado para cualquier otro que siga la API Pix del Banco Central.",
+      "Cada banco muestra solo los campos que usa (certificado, clave de la aplicación, entorno de pruebas, direcciones manuales), explica dónde conseguir las credenciales en su portal, si atiende persona física (PF) o empresa (PJ) y trae el enlace del portal. Los perfiles que piden credenciales de otra forma (Authorization: Basic, campos con nombre propio, cuerpo JSON, sin client_secret) ya vienen ajustados.",
+      "Honestidad en la lista: Nubank, BTG, PagBank, PicPay y Unicred aparecen desactivados, con el motivo — no tienen API abierta para leer los Pix recibidos (Nubank solo por Open Finance, que exige una institución participante).",
+      "En Inter, la lectura pasó al extracto enriquecido (alcance extrato.read): la consulta de Pix del estándar solo lista cobros generados por la API — el Pix que cae en tu clave, con nombre de quien pagó y mensaje, viene del extracto. Quien ya usaba Inter debe marcar «Extracto: consultar» en la integración.",
+      "La clave de la aplicación (BB, Caixa) y las credenciales quedan cifradas en la computadora, como antes, y nunca van a las pantallas; el programa solo lee — nunca crea cobros ni mueve nada.",
+      "Traducciones en los 10 idiomas; FAQ y README actualizados."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick: el chat volvió (nuevo servidor de Kick) · 🎚️ medidores en los laterales de la Mini Mesa",
     "itens": [

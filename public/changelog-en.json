@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Pix straight from the bank: picker with 16 banks and platforms",
+    "itens": [
+      "💠 Pix straight from the bank (🧪 Labs) got a bank picker, grouped into Banks, Credit unions, Fintechs and Payment platforms: Banco do Brasil, Bradesco, Itaú, Santander, Inter, C6, Banrisul, BS2, Safra, Banco do Nordeste, Sicoob, Sicredi, Ailos, Efí, Cora, OpenPix/Woovi, Asaas and Mercado Pago — plus the custom profile for any other that follows the Central Bank’s Pix API.",
+      "Each bank shows only the fields it uses (certificate, application key, test environment, manual addresses), explains where to get the credentials in its portal, whether it serves individuals (PF) or companies (PJ), and links to the portal. Profiles that ask for credentials differently (Authorization: Basic, custom field names, JSON body, no client_secret) come pre-adjusted.",
+      "Honesty in the list: Nubank, BTG, PagBank, PicPay and Unicred appear disabled, with the reason — they have no open API to read received Pix (Nubank only through Open Finance, which requires a participating institution).",
+      "For Inter, reading moved to the enriched statement (extrato.read scope): the standard Pix query only lists charges created through the API — the Pix that lands on your key, with the payer’s name and message, comes from the statement. Existing Inter users need to tick «Statement: query» in their integration.",
+      "The application key (BB, Caixa) and the credentials stay encrypted on the computer, as before, and never reach the screens; the program only reads — it never creates charges or moves money.",
+      "Translations in all 10 languages; FAQ and README updated."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick: chat is back (Kick’s new server) · 🎚️ meters on the sides of the Mini Deck",
     "itens": [
