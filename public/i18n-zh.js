@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // v0.186 — componentes do sistema
+    "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ 随系统提供并随系统更新(Windows Update、App Store、包管理器)",
     // v0.185 — whisper.cpp sem zip para o sistema
     "Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.": "有更新的版本,但没有为此系统准备好的安装包;保留当前版本。",
     // v0.185 — 🧩 Componentes (Sobre + faixa do painel)
@@ -52,7 +54,7 @@ window.OBS_I18N_DICTS.zh = {
     "whisper.cpp (transcrição)": "whisper.cpp(转写)",
     "ffmpeg (conversor de áudio/vídeo)": "ffmpeg(音视频转换器)",
     "Biblioteca do WhatsApp (Baileys)": "WhatsApp 库(Baileys)",
-    "curl (caminho de reserva)": "curl(备用路径)",
+    "curl (ferramenta do sistema; caminho de reserva quando um site bloqueia o programa)": "curl(系统工具;网站拦截程序时的备用路径)",
     "🧩 Componentes com versão nova:": "🧩 有新版本的组件:",
     "Ver em Configurações → Sobre": "在 设置 → 关于 中查看",
     // v0.184 — extrator: sem yt-dlp pronto para a arquitetura

@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.186 — componentes do sistema
+    "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ sistemle gelir ve onunla güncellenir (Windows Update, App Store, paket yöneticisi)",
     // v0.185 — whisper.cpp sem zip para o sistema
     "Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.": "Daha yeni bir sürüm var, ancak bu sistem için hazır paketi yok; mevcut sürüm kalır.",
     // v0.185 — 🧩 Componentes (Sobre + faixa do painel)
@@ -52,7 +54,7 @@ window.OBS_I18N_DICTS.tr = {
     "whisper.cpp (transcrição)": "whisper.cpp (yazıya dökme)",
     "ffmpeg (conversor de áudio/vídeo)": "ffmpeg (ses/video dönüştürücü)",
     "Biblioteca do WhatsApp (Baileys)": "WhatsApp kitaplığı (Baileys)",
-    "curl (caminho de reserva)": "curl (yedek yol)",
+    "curl (ferramenta do sistema; caminho de reserva quando um site bloqueia o programa)": "curl (sistem aracı; bir site programı engellediğinde yedek yol)",
     "🧩 Componentes com versão nova:": "🧩 Yeni sürümü olan bileşenler:",
     "Ver em Configurações → Sobre": "Ayarlar → Hakkında’da gör",
     // v0.184 — extrator: sem yt-dlp pronto para a arquitetura

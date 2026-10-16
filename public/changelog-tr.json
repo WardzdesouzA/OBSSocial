@@ -1,4 +1,11 @@
 {
+  "0.186.0": {
+    "titulo": "🧩 Bileşenler güncel: ws 8.22.0 ve lottie-web 5.13.0; sisteme ait olanlar açıklandı",
+    "itens": [
+      "ZIP’te gelen kitaplıklar, bileşen envanterinin işaret ettiği sürümlere güncellendi: ws 8.22.0 (WebSocket) ve lottie-web 5.13.0 (animasyonlar). Bunlar böyle güncellenir — OBS Social ile birlikte, asla dışarıdan, böylece tek tıkla güncelleme bütün kalır.",
+      "🧩 Bileşenler tablosunda sisteme ait olan (curl) artık «denetlenmedi» olarak görünmüyor: sistemle geldiğini ve onunla güncellendiğini söylüyor (Windows Update, App Store, paket yöneticisi) ve adı ne işe yaradığını açıklıyor — bir site programı engellediğinde yedek yol olarak kullanılan sistem aracı."
+    ]
+  },
   "0.185.0": {
     "titulo": "🧩 Bileşenler: programın kullandığı her şeyin sürümü, mimarisi ve yeni sürüm uyarısı",
     "itens": [

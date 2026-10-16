@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.186 — componentes do sistema
+    "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ 시스템과 함께 제공되며 시스템과 함께 업데이트됩니다(Windows Update, App Store, 패키지 관리자)",
     // v0.185 — whisper.cpp sem zip para o sistema
     "Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.": "더 새로운 버전이 있지만 이 시스템용 준비된 패키지가 없어 현재 버전이 유지됩니다.",
     // v0.185 — 🧩 Componentes (Sobre + faixa do painel)
@@ -52,7 +54,7 @@ window.OBS_I18N_DICTS.ko = {
     "whisper.cpp (transcrição)": "whisper.cpp(전사)",
     "ffmpeg (conversor de áudio/vídeo)": "ffmpeg(오디오/비디오 변환기)",
     "Biblioteca do WhatsApp (Baileys)": "WhatsApp 라이브러리(Baileys)",
-    "curl (caminho de reserva)": "curl(예비 경로)",
+    "curl (ferramenta do sistema; caminho de reserva quando um site bloqueia o programa)": "curl(시스템 도구; 사이트가 프로그램을 차단할 때의 예비 경로)",
     "🧩 Componentes com versão nova:": "🧩 새 버전이 있는 구성 요소:",
     "Ver em Configurações → Sobre": "설정 → 정보에서 보기",
     // v0.184 — extrator: sem yt-dlp pronto para a arquitetura

@@ -14388,6 +14388,7 @@ function renderComponentes(dados) {
       sit.push(compTexto('span', '⛔ linha sem suporte desde'), ' ' + ((it.extra && it.extra.fimSuporte) || ''));
       if (it.extra && it.extra.ltsAtual) sit.push(' · ', compTexto('span', 'LTS atual:'), ' ' + it.extra.ltsAtual);
     } else if (it.estado === 'desconhecido') sit.push(compTexto('span', '❓ não foi possível verificar'));
+    else if (it.estado === 'sistema') sit.push(compTexto('span', '🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)'));
     else sit.push(compTexto('span', 'não verificado'));
     if (it.nota === 'semVersao') sit.push(compTexto('div', 'O whisper-cli instalado no sistema não informa a versão.', 'color:var(--muted)'));
     if (it.nota === 'semZip') sit.push(compTexto('div', 'Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.', 'color:var(--muted)'), it.extra && it.extra.semZip ? ' (' + it.extra.semZip + ')' : '');
