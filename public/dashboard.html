@@ -1413,13 +1413,14 @@
           <button id="mdCarregarBtn" class="icon-btn" style="width:auto;padding:0 10px;white-space:nowrap" title="Carregar a mídia (a tela fica como está: use o 👁️ para mostrar)">Carregar</button>
           <button id="mdMostrarBtn" class="icon-btn" style="width:auto;padding:0 10px;white-space:nowrap" title="Carregar e já mostrar na tela do público">Mostrar</button>
         </div>
-        <div class="hint" id="mdStatus" style="display:none;margin:-4px 0 8px"></div>
         <!-- 🍪 v0.187: a fonte dos cookies do extrator (só com o 🧪 Extrator ligado).
              Espelha o seletor de Configurações → 🔌 Conexões → 🎬 Extrator: é a
              MESMA configuração (settings.ytdlp.cookiesNavegador), trocada daqui
              para não ter que sair do painel. O arquivo cookies.txt continua
-             sendo enviado lá. (a lista é a mesma do NAVEGADORES_COOKIES do ytdlp.js) -->
-        <div class="pop-row" id="mdCookiesRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+             sendo enviado lá. Fica ACIMA do #mdStatus porque o aviso de «site só
+             entrega logado» manda escolher o navegador «acima».
+             (a lista é a mesma do NAVEGADORES_COOKIES do ytdlp.js) -->
+        <div class="pop-row" id="mdCookiesRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
           <span style="font-size:13px" title="Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações">🍪 Cookies</span>
           <select id="mdNavSel" title="Navegador em que você está logado nos sites — o extrator lê os cookies dele">
             <option value="">Sem navegador</option>
@@ -1433,8 +1434,9 @@
             <option value="safari">Safari</option>
           </select>
           <span id="mdCookiesEstado" style="font-size:12px;color:var(--muted)">— nenhum (sem login)</span>
-          <a href="/config#sec-conexoes" target="_blank" rel="noopener" class="tool-info" style="margin-left:auto;font-size:12px" title="Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador">📄 cookies.txt…</a>
+          <a href="/config#sec-conexoes/cardYtDlp" target="_blank" rel="noopener" class="tool-info" style="margin-left:auto;font-size:12px" title="Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador">📄 cookies.txt…</a>
         </div>
+        <div class="hint" id="mdStatus" style="display:none;margin:-4px 0 8px"></div>
         <div class="field" id="mdPcBloco" style="margin-top:2px">
           <label>📂 Do computador (o arquivo fica onde está — nada sobe para a biblioteca)</label>
           <div class="pop-row" style="margin-bottom:4px">
@@ -7050,6 +7052,11 @@ document.getElementById('mdMostrarBtn').addEventListener('click', () => mdCarreg
 // o servidor valida o nome, esquece a fila do extrator e devolve «settings» a
 // todos os painéis — o cartão de Configurações e esta cartela andam juntos.
 // A linha só aparece com o 🧪 Extrator ligado (sem ele os cookies não servem).
+// Só o computador do streamer troca (regra v0.166: o yt-dlp lê o perfil do
+// navegador DESSA máquina; o servidor ignora o pedido vindo da rede) — pela
+// rede, o painel só mostra qual é a fonte.
+const MD_COOKIES_TITULO = 'Navegador em que você está logado nos sites — o extrator lê os cookies dele';
+const MD_COOKIES_SO_LOCAL = 'Só no computador do streamer: o extrator lê o perfil do navegador que está lá';
 function renderMdCookies() {
   const row = document.getElementById('mdCookiesRow');
   const sel = document.getElementById('mdNavSel');
@@ -7060,8 +7067,10 @@ function renderMdCookies() {
   const conf = (settings && settings.ytdlp) || {};
   const nav = [...sel.options].some((o) => o.value === conf.cookiesNavegador) ? (conf.cookiesNavegador || '') : '';
   if (sel.value !== nav) sel.value = nav; // o eco do próprio ajuste vem igual: não mexe
-  // 👀 quem só assiste vê qual é a fonte, mas não troca (o servidor também descarta)
-  sel.disabled = papelDaConexao === 'viewer';
+  // 🏠 pela rede (full ou viewer) só se vê: o seletor explica por quê
+  sel.disabled = !mdRoleLocal;
+  const titulo = mdRoleLocal ? MD_COOKIES_TITULO : MD_COOKIES_SO_LOCAL;
+  if (sel.title !== titulo && sel.title !== OBS_I18N.t(titulo)) sel.title = titulo;
   const ck = (mdYdEstado && mdYdEstado.cookies) || {};
   const estado = document.getElementById('mdCookiesEstado');
   // o mesmo resumo do cartão de Configurações: o arquivo vale na frente do navegador

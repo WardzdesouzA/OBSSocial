@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "Only on the streamer’s computer: the extractor reads the browser profile that lives there",
     // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
     "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Sites like Instagram and TikTok only deliver the video to logged-in users — the extractor uses the cookies of the chosen browser (read from your computer) or the cookies.txt uploaded in Settings",
     "📄 cookies.txt…": "📄 cookies.txt…",

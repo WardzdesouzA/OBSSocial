@@ -2,7 +2,7 @@
   "0.187.0": {
     "titulo": "🍪 Las cookies del extractor en la tarjeta 🎞️ Medio directo",
     "itens": [
-      "La tarjeta 🎞️ Medio directo ganó la fila 🍪 Cookies: el selector «Sin navegador / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari» ahora está ahí, para cambiar sin salir del panel. Es la misma configuración de la tarjeta 🎬 Extractor en Configuración — las dos van juntas — y la fila solo aparece con el 🧪 Extractor encendido.",
+      "La tarjeta 🎞️ Medio directo ganó la fila 🍪 Cookies: el selector «Sin navegador / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari» ahora está ahí, para cambiar sin salir del panel. Es la misma configuración de la tarjeta 🎬 Extractor en Configuración — las dos van juntas — y la fila solo aparece con el 🧪 Extractor encendido. El cambio se hace en la computadora del streamer — por la red, el panel solo muestra cuál es la fuente.",
       "Al lado del selector, el resumen dice lo que está valiendo (📄 cookies.txt con N sitios, 🌐 del navegador X, o — ninguno), y el atajo 📄 cookies.txt… lleva a la tarjeta de Configuración, donde el archivo se sigue enviando o borrando. El aviso «este sitio solo entrega el video a quien está logueado» pasa a apuntar al selector de arriba."
     ]
   },

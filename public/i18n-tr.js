@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "Yalnızca yayıncının bilgisayarında: çıkarıcı oradaki tarayıcı profilini okur",
     // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
     "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Instagram ve TikTok gibi siteler videoyu yalnızca oturum açmış kullanıcılara verir — çıkarıcı seçilen tarayıcının çerezlerini (bilgisayarınızdan okunur) ya da Ayarlar’da yüklenen cookies.txt’yi kullanır",
     "📄 cookies.txt…": "📄 cookies.txt…",

@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "Nur am Computer des Streamers: der Extraktor liest das Browserprofil, das dort liegt",
     // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
     "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Seiten wie Instagram und TikTok liefern das Video nur an angemeldete Nutzer — der Extraktor nutzt die Cookies des gewählten Browsers (von Ihrem Computer gelesen) oder die unter Einstellungen hochgeladene cookies.txt",
     "📄 cookies.txt…": "📄 cookies.txt…",

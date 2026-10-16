@@ -2,7 +2,7 @@
   "0.187.0": {
     "titulo": "🍪 The extractor’s cookies in the 🎞️ Direct media card",
     "itens": [
-      "The 🎞️ Direct media card gained the 🍪 Cookies row: the «No browser / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari» selector now lives there, to switch without leaving the panel. It is the same setting as the 🎬 Extractor card in Settings — the two move together — and the row only appears with the 🧪 Extractor on.",
+      "The 🎞️ Direct media card gained the 🍪 Cookies row: the «No browser / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari» selector now lives there, to switch without leaving the panel. It is the same setting as the 🎬 Extractor card in Settings — the two move together — and the row only appears with the 🧪 Extractor on. The switch is made on the streamer’s computer — over the network, the panel only shows which source is in use.",
       "Next to the selector, the summary says what is in effect (📄 cookies.txt with N sites, 🌐 from browser X, or — none), and the 📄 cookies.txt… shortcut leads to the Settings card, where the file is still uploaded or deleted. The «this site only delivers the video to logged-in users» notice now points to the selector right above."
     ]
   },

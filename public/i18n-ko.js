@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "스트리머의 컴퓨터에서만: 추출기는 거기에 있는 브라우저 프로필을 읽습니다",
     // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
     "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Instagram, TikTok 같은 사이트는 로그인한 사용자에게만 동영상을 줍니다 — 추출기는 선택한 브라우저의 쿠키(내 컴퓨터에서 읽음) 또는 설정에서 올린 cookies.txt를 사용합니다",
     "📄 cookies.txt…": "📄 cookies.txt…",
