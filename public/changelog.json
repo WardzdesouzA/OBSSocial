@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.187.0",
+    "titulo": "🍪 Os cookies do extrator na cartela 🎞️ Mídia direta",
+    "itens": [
+      "A cartela 🎞️ Mídia direta ganhou a linha 🍪 Cookies: o seletor «Sem navegador / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari» agora fica ali, para trocar sem sair do painel. É a mesma configuração do cartão 🎬 Extrator em Configurações — os dois andam juntos — e a linha só aparece com o 🧪 Extrator ligado.",
+      "Ao lado do seletor, o resumo diz o que está valendo (📄 cookies.txt com N sites, 🌐 do navegador X, ou — nenhum), e o atalho 📄 cookies.txt… leva ao cartão de Configurações, onde o arquivo continua sendo enviado ou apagado. O aviso «este site só entrega o vídeo para quem está logado» passa a apontar para o seletor logo acima."
+    ]
+  },
+  {
     "version": "0.186.0",
     "titulo": "🧩 Componentes em dia: ws 8.22.0 e lottie-web 5.13.0; o que é do sistema fica explicado",
     "itens": [

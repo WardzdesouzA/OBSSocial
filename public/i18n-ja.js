@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Instagram や TikTok などのサイトはログイン中のユーザーにしか動画を渡しません — 抽出ツールは選んだブラウザーの Cookie(お使いのコンピューターから読み取り)か、設定で送った cookies.txt を使います",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "cookies.txt ファイル(Netscape 形式)を送る・削除する — ブラウザーより優先されます",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ システムに付属し、システムと一緒に更新されます(Windows Update、App Store、パッケージマネージャー)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +681,7 @@ window.OBS_I18N_DICTS.ja = {
     "📍 Cidade": "📍 都市",
     "📋 Detalhes": "📋 詳細",
     "Como funciona o 🌤️ Clima na tela?": "画面の 🌤️ 天気はどう動きますか？",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 このサイトはログイン中のユーザーにしか動画を渡しません。設定 → 🔌 接続 → 🎬 抽出ツールでブラウザーの 🍪 Cookie を使ってください。今はサイトの枠のままです。",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 このサイトはログイン中のユーザーにしか動画を渡しません。上でログインしている 🍪 ブラウザーを選んでください(または 設定 → 🔌 接続 → 🎬 抽出ツール で cookies.txt を送ってください)。今はサイトの枠のままです。",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 非公開または制限付きのコンテンツです。抽出ツールでは取得できません。サイトの枠のままです。",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 抽出ツールはこの動画を見つけられませんでした（削除済み、利用不可、またはリンク誤り）。",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ 抽出ツールはこのサイトに対応していません。サイトの枠のままです。",

@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Sitios como Instagram y TikTok solo entregan el video a quien está logueado — el extractor usa las cookies del navegador elegido (leídas de tu computadora) o el cookies.txt enviado en Configuración",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "Enviar o borrar el archivo cookies.txt (formato Netscape) — vale por delante del navegador",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ viene con el sistema y se actualiza con él (Windows Update, App Store, gestor de paquetes)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +681,7 @@ window.OBS_I18N_DICTS.es = {
     "📍 Cidade": "📍 Ciudad",
     "📋 Detalhes": "📋 Detalles",
     "Como funciona o 🌤️ Clima na tela?": "¿Cómo funciona el 🌤️ Clima en pantalla?",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 Este sitio solo entrega el video a quien está logueado. En Configuración → 🔌 Conexiones → 🎬 Extractor, usa las 🍪 cookies de tu navegador. Por ahora queda el marco del sitio.",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 Este sitio solo entrega el video a quien está logueado. Elige arriba el 🍪 navegador en el que estás logueado (o envía un cookies.txt en Configuración → 🔌 Conexiones → 🎬 Extractor). Por ahora queda el marco del sitio.",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 Contenido privado o restringido — el extractor no alcanza. Queda el marco del sitio.",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 El extractor no encontró este video (borrado, no disponible o enlace equivocado).",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ El extractor no conoce este sitio — queda el marco del sitio.",

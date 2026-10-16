@@ -1414,6 +1414,27 @@
           <button id="mdMostrarBtn" class="icon-btn" style="width:auto;padding:0 10px;white-space:nowrap" title="Carregar e já mostrar na tela do público">Mostrar</button>
         </div>
         <div class="hint" id="mdStatus" style="display:none;margin:-4px 0 8px"></div>
+        <!-- 🍪 v0.187: a fonte dos cookies do extrator (só com o 🧪 Extrator ligado).
+             Espelha o seletor de Configurações → 🔌 Conexões → 🎬 Extrator: é a
+             MESMA configuração (settings.ytdlp.cookiesNavegador), trocada daqui
+             para não ter que sair do painel. O arquivo cookies.txt continua
+             sendo enviado lá. (a lista é a mesma do NAVEGADORES_COOKIES do ytdlp.js) -->
+        <div class="pop-row" id="mdCookiesRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span style="font-size:13px" title="Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações">🍪 Cookies</span>
+          <select id="mdNavSel" title="Navegador em que você está logado nos sites — o extrator lê os cookies dele">
+            <option value="">Sem navegador</option>
+            <option value="firefox">Firefox</option>
+            <option value="chrome">Chrome</option>
+            <option value="edge">Edge</option>
+            <option value="brave">Brave</option>
+            <option value="chromium">Chromium</option>
+            <option value="opera">Opera</option>
+            <option value="vivaldi">Vivaldi</option>
+            <option value="safari">Safari</option>
+          </select>
+          <span id="mdCookiesEstado" style="font-size:12px;color:var(--muted)">— nenhum (sem login)</span>
+          <a href="/config#sec-conexoes" target="_blank" rel="noopener" class="tool-info" style="margin-left:auto;font-size:12px" title="Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador">📄 cookies.txt…</a>
+        </div>
         <div class="field" id="mdPcBloco" style="margin-top:2px">
           <label>📂 Do computador (o arquivo fica onde está — nada sobe para a biblioteca)</label>
           <div class="pop-row" style="margin-bottom:4px">
@@ -2230,7 +2251,9 @@ const hub = connectHub((event) => {
       // 🎞️ v0.129: mídia direta (servidor antigo não manda → null); os
       // arquivos do computador só valem no painel LOCAL
       mdRoleLocal = (event.security?.role ?? 'local') === 'local';
+      mdYdEstado = event.ytdlpEstado || null; // 🍪 v0.187: o resumo dos cookies do extrator
       updateMidiaDireta(event.midiaDireta || null);
+      renderMdCookies(); // 🍪 v0.187
       updateRelogio(event.relogio);
       updateClima(event.clima || null); // 🌤️ v0.167
       updateParticipants(event.participantCount || 0, event.fichasTotais || 0);
@@ -2453,6 +2476,11 @@ const hub = connectHub((event) => {
       renderTrilhas(); // grade/fonte/cenas da Mesa acompanham as configurações na hora
       renderObs();     // 🎬 e os blocos do controle do OBS obedecem aos seletores
       renderVmix();    // 🎛️ v0.122: idem para o vMix
+      renderMdCookies(); // 🍪 v0.187: o seletor de cookies da Mídia direta
+      break;
+    case 'ytdlpEstado': // 🍪 v0.187: só o RESUMO dos cookies (arquivo sim/não e quantos sites)
+      mdYdEstado = event.estado || null;
+      renderMdCookies();
       break;
     case 'trilhas':
       trilhasLista = Array.isArray(event.trilhas) ? event.trilhas : [];
@@ -6502,6 +6530,7 @@ document.getElementById('avisoRemoveBtn').onclick = async () => {
 // (midiaDiretaInfo) e avisa o fim (midiaDiretaFim), como o espelho da Mesa.
 let midiaDiretaState = null;
 let mdRoleLocal = true;      // 📂 arquivos do computador: só no painel LOCAL
+let mdYdEstado = null;       // 🍪 v0.187: estado do extrator (só o resumo dos cookies interessa aqui)
 let mdPreviewChave = null;   // id|url do item cuja prévia está montada
 let mdInfoEnviada = null;    // id do item cuja duração já foi reportada
 let mdFimMandado = false;    // já avisei o fim desta tocada (não repete)
@@ -6551,7 +6580,8 @@ let mdSondaTimer = null;
 // 🧭 v0.166: quando nem o extrator acha, ele conta o porquê — e o recado
 // fica até trocar de mídia (o quadro do site continua na tela)
 const MD_MOTIVOS = {
-  login: '🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.',
+  // 🍪 v0.187: o seletor do navegador agora está aqui na cartela; o arquivo cookies.txt continua em Configurações
+  login: '🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.',
   privado: '🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.',
   naoExiste: '🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).',
   naoSuportado: 'ℹ️ O extrator não conhece esse site — fica o quadro do site.',
@@ -7014,6 +7044,34 @@ async function mdCarregarUrl(mostrar) {
 }
 document.getElementById('mdCarregarBtn').addEventListener('click', () => mdCarregarUrl(false));
 document.getElementById('mdMostrarBtn').addEventListener('click', () => mdCarregarUrl(true));
+
+// ---- 🍪 v0.187: a fonte dos cookies do extrator, aqui mesmo na cartela ----
+// É a MESMA configuração do cartão 🎬 Extrator (settings.ytdlp.cookiesNavegador):
+// o servidor valida o nome, esquece a fila do extrator e devolve «settings» a
+// todos os painéis — o cartão de Configurações e esta cartela andam juntos.
+// A linha só aparece com o 🧪 Extrator ligado (sem ele os cookies não servem).
+function renderMdCookies() {
+  const row = document.getElementById('mdCookiesRow');
+  const sel = document.getElementById('mdNavSel');
+  if (!row || !sel) return;
+  const ligado = !!(settings && settings.labs && settings.labs.ytdlp === true);
+  row.style.display = ligado ? 'flex' : 'none';
+  if (!ligado) return;
+  const conf = (settings && settings.ytdlp) || {};
+  const nav = [...sel.options].some((o) => o.value === conf.cookiesNavegador) ? (conf.cookiesNavegador || '') : '';
+  if (sel.value !== nav) sel.value = nav; // o eco do próprio ajuste vem igual: não mexe
+  // 👀 quem só assiste vê qual é a fonte, mas não troca (o servidor também descarta)
+  sel.disabled = papelDaConexao === 'viewer';
+  const ck = (mdYdEstado && mdYdEstado.cookies) || {};
+  const estado = document.getElementById('mdCookiesEstado');
+  // o mesmo resumo do cartão de Configurações: o arquivo vale na frente do navegador
+  estado.textContent = ck.arquivo
+    ? '📄 cookies.txt · ' + (ck.sites || 0) + ' ' + OBS_I18N.t('site(s)')
+    : (nav ? '🌐 ' + OBS_I18N.t('do navegador') + ' ' + nav : '— ' + OBS_I18N.t('nenhum (sem login)'));
+}
+document.getElementById('mdNavSel').addEventListener('input', (e) => {
+  hub.send({ type: 'settings', settings: { ytdlp: { cookiesNavegador: e.target.value } } });
+});
 document.getElementById('mdUrl').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); mdCarregarUrl(false); }
 });

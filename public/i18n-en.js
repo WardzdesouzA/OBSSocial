@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Sites like Instagram and TikTok only deliver the video to logged-in users — the extractor uses the cookies of the chosen browser (read from your computer) or the cookies.txt uploaded in Settings",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "Upload or delete the cookies.txt file (Netscape format) — it takes precedence over the browser",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ comes with the system and updates with it (Windows Update, App Store, package manager)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +681,7 @@ window.OBS_I18N_DICTS.en = {
     "📍 Cidade": "📍 City",
     "📋 Detalhes": "📋 Details",
     "Como funciona o 🌤️ Clima na tela?": "How does the 🌤️ Weather on screen work?",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 This site only delivers the video to logged-in users. In Settings → 🔌 Connections → 🎬 Extractor, use your browser’s 🍪 cookies. For now the site’s frame stays.",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 This site only delivers the video to logged-in users. Choose above the 🍪 browser you are logged in with (or upload a cookies.txt in Settings → 🔌 Connections → 🎬 Extractor). For now the site’s frame stays.",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 Private or restricted content — the extractor cannot reach it. The site’s frame stays.",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 The extractor did not find this video (deleted, unavailable or wrong link).",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ The extractor does not know this site — the site’s frame stays.",

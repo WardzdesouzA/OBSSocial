@@ -1,4 +1,11 @@
 {
+  "0.187.0": {
+    "titulo": "🍪 Çıkarıcının çerezleri 🎞️ Doğrudan medya kartında",
+    "itens": [
+      "🎞️ Doğrudan medya kartına 🍪 Çerezler satırı eklendi: «Tarayıcı yok / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari» seçici artık orada, panelden çıkmadan değiştirmek için. Ayarlar’daki 🎬 Çıkarıcı kartıyla aynı ayar — ikisi birlikte hareket eder — ve satır yalnızca 🧪 Çıkarıcı açıkken görünür.",
+      "Seçicinin yanında özet, neyin geçerli olduğunu söyler (N siteli 📄 cookies.txt, 🌐 X tarayıcısından ya da — hiçbiri) ve 📄 cookies.txt… kısayolu, dosyanın yüklenmeye ya da silinmeye devam ettiği Ayarlar kartına götürür. «Bu site videoyu yalnızca oturum açmış kullanıcılara veriyor» uyarısı artık hemen üstteki seçiciyi gösterir."
+    ]
+  },
   "0.186.0": {
     "titulo": "🧩 Bileşenler güncel: ws 8.22.0 ve lottie-web 5.13.0; sisteme ait olanlar açıklandı",
     "itens": [

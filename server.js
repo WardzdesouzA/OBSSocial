@@ -12240,6 +12240,9 @@ function tratarMensagem(ws, raw) {
       // streamer (local) ou de quem entrou com a senha (full)
       if (ws.role === 'viewer') {
         delete incoming.labs;
+        // 🍪 v0.187: a fonte dos cookies do extrator (qual navegador do streamer o
+        // yt-dlp lê) agora tem seletor na cartela do painel — quem só assiste não troca
+        delete incoming.ytdlp;
         if (!security.permissions.logs) { delete incoming.logRetentionDays; delete incoming.backup; }
       }
       // 📱 v0.163: a cópia do tema que o mini Mesa veste é a do STREAMER — só

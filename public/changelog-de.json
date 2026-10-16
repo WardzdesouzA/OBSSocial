@@ -1,4 +1,11 @@
 {
+  "0.187.0": {
+    "titulo": "🍪 Die Cookies des Extraktors in der Karte 🎞️ Direktmedien",
+    "itens": [
+      "Die Karte 🎞️ Direktmedien hat die Zeile 🍪 Cookies bekommen: der Wähler «Kein Browser / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari» sitzt jetzt dort, zum Umschalten ohne das Panel zu verlassen. Es ist dieselbe Einstellung wie in der Karte 🎬 Extraktor in den Einstellungen — beide laufen zusammen — und die Zeile erscheint nur bei eingeschaltetem 🧪 Extraktor.",
+      "Neben dem Wähler sagt die Zusammenfassung, was gilt (📄 cookies.txt mit N Seiten, 🌐 vom Browser X, oder — keine), und die Abkürzung 📄 cookies.txt… führt zur Einstellungskarte, wo die Datei weiterhin hochgeladen oder gelöscht wird. Der Hinweis «diese Seite liefert das Video nur an angemeldete Nutzer» zeigt jetzt auf den Wähler direkt darüber."
+    ]
+  },
   "0.186.0": {
     "titulo": "🧩 Komponenten aktuell: ws 8.22.0 und lottie-web 5.13.0; was zum System gehört, wird erklärt",
     "itens": [

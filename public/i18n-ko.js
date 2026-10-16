@@ -10,6 +10,10 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Instagram, TikTok 같은 사이트는 로그인한 사용자에게만 동영상을 줍니다 — 추출기는 선택한 브라우저의 쿠키(내 컴퓨터에서 읽음) 또는 설정에서 올린 cookies.txt를 사용합니다",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "cookies.txt 파일(Netscape 형식) 올리기 또는 삭제 — 브라우저보다 우선합니다",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ 시스템과 함께 제공되며 시스템과 함께 업데이트됩니다(Windows Update, App Store, 패키지 관리자)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +681,7 @@ window.OBS_I18N_DICTS.ko = {
     "📍 Cidade": "📍 도시",
     "📋 Detalhes": "📋 세부",
     "Como funciona o 🌤️ Clima na tela?": "화면의 🌤️ 날씨는 어떻게 작동하나요?",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 이 사이트는 로그인한 사용자에게만 동영상을 줍니다. 설정 → 🔌 연결 → 🎬 추출기에서 브라우저의 🍪 쿠키를 사용하세요. 지금은 사이트 프레임이 남습니다.",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 이 사이트는 로그인한 사용자에게만 동영상을 줍니다. 위에서 로그인한 🍪 브라우저를 선택하세요(또는 설정 → 🔌 연결 → 🎬 추출기에서 cookies.txt를 올리세요). 지금은 사이트 프레임이 남습니다.",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 비공개 또는 제한된 콘텐츠라 추출기가 닿지 않습니다. 사이트 프레임이 남습니다.",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 추출기가 이 동영상을 찾지 못했습니다(삭제됨, 이용 불가 또는 잘못된 링크).",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ 추출기가 이 사이트를 모릅니다. 사이트 프레임이 남습니다.",
