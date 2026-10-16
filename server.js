@@ -2618,6 +2618,10 @@ function formatDonationValue(raw) {
 // o modo personalizado aceita qualquer banco que siga a especificação.
 const PIX_FILE = path.join(DATA_DIR, 'pix-config.json');
 const PIX_VISTOS_FILE = path.join(DATA_DIR, 'pix-vistos.json');
+// 💠 v0.183: o último Pix que virou apoio, do jeito que o provedor devolveu
+// (só neste computador, 0600) — serve para descobrir onde cada banco põe o
+// nome e a mensagem quando o apoio chega sem eles
+const PIX_ULTIMO_FILE = path.join(DATA_DIR, 'pix-ultimo.json');
 // 💠 v0.183: um perfil por banco/fintech. Campos:
 //   grupo     'banco' | 'cooperativa' | 'fintech' | 'outro' (só agrupa o seletor)
 //   tipo      'bacen' = API Pix padrão do Banco Central (OAuth2 + certificado, GET /pix)
@@ -2792,7 +2796,7 @@ const PIX_BANCOS = {
     urlToken: '', urlPix: 'https://api.mercadopago.com/v1/payments/search',
     portal: 'https://www.mercadopago.com.br/developers/panel/app',
     ajuda: 'mercadopago.com.br/developers → Suas integrações → sua aplicação → Credenciais de produção → copie o Access Token.',
-    aviso: 'O Mercado Pago só lista pagamentos de cobranças criadas nele (QR da loja, checkout), pagos por Pix ou com saldo do Mercado Pago — transferência direta para a chave Pix não aparece, e não há mensagem do pagador. Cole o Access Token (não a Public Key: os dois começam com APP_USR).',
+    aviso: 'Cole o Access Token (não a Public Key: os dois começam com APP_USR). Entram os Pix recebidos na chave e os pagamentos de cobranças do Mercado Pago (QR, checkout) por Pix ou saldo; cartão fica de fora. A mensagem do pagador vem; o nome dele a API do Mercado Pago não entrega (aparece «Apoiador Pix»).',
   },
   // ----- sem API para isto (ficam na lista para explicar) -----
   nubank: {
@@ -3181,11 +3185,25 @@ const PIX_CONSULTAS = {
     const data = (d) => d.toISOString().replace('Z', '-00:00');
     const url = pixAddQuery(urlPix, { sort: 'date_approved', criteria: 'desc', range: 'date_approved', begin_date: data(inicio), end_date: data(fim), status: 'approved', limit: '50' });
     const json = pixRecusa(await pixRequest(url, { headers: { Authorization: `Bearer ${pixConfig.clientSecret}`, Accept: 'application/json' } }), 'consulta de Pix');
-    return (Array.isArray(json.results) ? json.results : []).filter((r) => r.payment_method_id === 'pix' || r.payment_type_id === 'account_money' || r.payment_method_id === 'account_money').map((r) => ({
-      endToEndId: r.id !== undefined ? 'mp-' + r.id : '', valor: r.transaction_amount, horario: r.date_approved || r.date_created,
-      infoPagador: '',
-      pagador: { nome: nomeDe([r.payer?.first_name, r.payer?.last_name].filter(Boolean).join(' ')) },
-    }));
+    return (Array.isArray(json.results) ? json.results : []).filter((r) => r.payment_method_id === 'pix' || r.payment_type_id === 'account_money' || r.payment_method_id === 'account_money').map((r) => {
+      // Conferido numa conta real (out/2026): o Pix recebido na chave vem como
+      // point_of_interaction.type 'PSP_TRANSFER', a mensagem do pagador em
+      // `description`, o EndToEnd em transaction_details.transaction_id ('PIXE…')
+      // e o NOME de quem pagou não vem (payer.first_name nulo; bank_info.payer.long_name
+      // é o nome do BANCO dele) — fica «Apoiador Pix».
+      const td = r.point_of_interaction?.transaction_data || {};
+      const banco = td.bank_info?.payer || {};
+      const nomeCompleto = (p) => (p ? [p.first_name, p.last_name].filter(Boolean).join(' ') : '');
+      // transferência recebida (não é cobrança criada pela API): a descrição é o que o pagador escreveu
+      const transferencia = r.point_of_interaction?.type === 'PSP_TRANSFER' || (!r.order?.id && !r.external_reference && !td.qr_code);
+      return {
+        endToEndId: nomeDe(td.e2e_id, td.transaction_id, r.transaction_details?.transaction_id, r.id !== undefined ? 'mp-' + r.id : ''),
+        valor: r.transaction_amount, horario: r.date_approved || r.date_created,
+        infoPagador: transferencia ? String(r.description || '').trim() : '',
+        pagador: { nome: nomeDe(banco.account_holder_name, nomeCompleto(r.payer), nomeCompleto(r.additional_info?.payer)) },
+        _bruto: r,
+      };
+    });
   },
 };
 async function pixTick() {
@@ -3199,6 +3217,7 @@ async function pixTick() {
       if (pixRt.primeira) continue; // o que já existia antes de ligar não vira apoio
       novos += 1;
       const nome = String(item?.pagador?.nome || item?.devedor?.nome || '').trim().slice(0, 60);
+      try { gravarPrivado(PIX_ULTIMO_FILE, JSON.stringify({ banco: pixConfig.banco, em: new Date().toISOString(), item: item?._bruto || item }, null, 2)); } catch { /* diagnóstico; sem ele nada muda */ }
       emitDonation({
         name: nome || 'Apoiador Pix',
         amountText: formatDonationValue(item?.valor),
