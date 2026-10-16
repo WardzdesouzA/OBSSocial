@@ -6238,9 +6238,18 @@ function renderYtDlp() {
     }
   } else {
     estado.textContent = '— não baixado';
-    botoes.push(trBotao('⬇️', 'Baixar o extrator agora (~30 MB, um arquivo só)', () => hub.send({ type: 'ytdlpMotor', acao: 'baixar' })));
+    // v0.184: sem executável pronto para este sistema/arquitetura (ex.: Linux
+    // ARM de 32 bits) não se oferece um download que não rodaria
+    if (ydEstado.baixavel !== false) botoes.push(trBotao('⬇️', 'Baixar o extrator agora (~30 MB, um arquivo só)', () => hub.send({ type: 'ytdlpMotor', acao: 'baixar' })));
   }
   alvo.appendChild(trLinha(rotulo, estado, botoes));
+  if (!ydEstado.pronto && ydEstado.baixavel === false) {
+    const dica = document.createElement('div');
+    dica.className = 'hint';
+    dica.style.marginBottom = '0';
+    dica.textContent = 'Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.';
+    alvo.appendChild(dica);
+  }
   if (ydEstado.trabalhando) {
     const dica = document.createElement('div');
     dica.className = 'hint';

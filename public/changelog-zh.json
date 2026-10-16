@@ -3,7 +3,7 @@
     "titulo": "📦 安装包:ZIP 里有什么、要安装什么、如何运行 —— 全在 README 开头;会解释 Node.js 的启动脚本",
     "itens": [
       "README 现在从新手最关心的内容开始:「从这里开始」(需要准备什么,以及安装和运行的 3 步 —— ZIP 里唯一没有的是 Node.js)、「安装包里有什么、各在何处」(ZIP 中的每个文件和文件夹、程序首次打开时创建的内容,以及只有在你开启时才下载的可选组件的位置 —— yt-dlp、whisper.cpp、ffmpeg、语音模型、WhatsApp 库),然后是「如何使用」,之后才是功能列表。常见问题新增:为什么 Node.js 不在安装包里,以及在 Mac 上打开 .command 时的警告。",
-      "启动脚本(「Iniciar (Windows).bat」和「iniciar-mac-linux.command」)现在会检查程序的引擎 Node.js:如果未安装,或版本低于 18,就用简单的话说明缺什么、该怎么做,并提议按一个键打开官方下载页(nodejs.org)。不能安装程序的人可以把 Node.js 的便携副本放进启动脚本旁边的 node-portable/ 文件夹,脚本会自动使用。启动脚本有意不从互联网下载或运行任何东西 —— 正是这种行为会让杀毒软件拦截程序。",
+      "启动脚本(「Iniciar (Windows).bat」和「iniciar-mac-linux.command」)现在会检查程序的引擎 Node.js:如果未安装,或版本低于 18,就用简单的话说明缺什么、该怎么做,并提议按一个键打开官方下载页(nodejs.org)。不能安装程序的人可以把 Node.js 的便携副本放进启动脚本旁边的 node-portable/ 文件夹,脚本会自动使用。启动脚本有意不从互联网下载或运行程序 —— 正是这种行为会让杀毒软件拦截程序(唯一的网络访问是随 Node.js 附带的 npm,仅在 node_modules/ 文件夹被删除时用来恢复那两个组件)。",
       "架构:OBS Social 是纯 JavaScript,可在 Windows、macOS 和 Linux 的 x64 或 ARM 上运行(配合 Node.js 22 也支持 32 位)—— README 现已写明。可选组件会按你的处理器下载正确的版本:yt-dlp 提供 Windows x64、x86 和 ARM64、macOS(通用)以及 Linux x64 和 ARM64;whisper.cpp 提供 x64 或 32 位;Windows 的 ffmpeg 提供 x64 或 ARM64。没有现成下载时(32 位 ARM Linux;32 位 Windows 上的 ffmpeg),面板会提示通过系统安装,而不是提供一个无法运行的文件。",
       "安装包整理:package-lock.json 带有程序的真实版本(此前停在 0.2.0),node-portable/ 文件夹不进入仓库。程序本身没有任何改动。"
     ]

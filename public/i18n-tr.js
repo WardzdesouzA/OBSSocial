@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "Bu sistem için hazır bir yt-dlp yok: sisteminizin paket yöneticisiyle kurun (pip, apt, brew…) — OBS Social onu kendiliğinden bulur.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "kurumsal (bireysel doğrulanmadı)",
     "PF (PJ não confirmado)": "bireysel (kurumsal doğrulanmadı)",

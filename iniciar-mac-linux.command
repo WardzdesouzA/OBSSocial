@@ -6,8 +6,9 @@ cd "$(dirname "$0")" || exit 1
 # ZIP: é instalado pelo instalador oficial do nodejs.org (ou pelo gerenciador
 # de pacotes do sistema). Este script só confere se ele existe e serve (versão
 # 18 ou mais nova) e, se não, explica o que fazer. De propósito, ele NÃO baixa
-# nem executa nada da internet: esse é justamente o comportamento que faz
-# antivírus bloquearem um programa.
+# nem executa programas da internet: esse é justamente o comportamento que faz
+# antivírus bloquearem um programa. (A única rede que ele usa é o npm, que vem
+# com o Node.js, para repor os dois componentes se a pasta node_modules sumir.)
 # Quem não pode instalar programas pode usar uma cópia portátil: a pasta
 # "node-portable" (com bin/node dentro), ao lado deste arquivo.
 # ---------------------------------------------------------------------------

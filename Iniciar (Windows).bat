@@ -8,8 +8,10 @@ rem ---------------------------------------------------------------------------
 rem Node.js e o motor que executa o programa — e a unica coisa que nao vem no
 rem ZIP: e instalado pelo instalador oficial do nodejs.org. Este script so
 rem confere se ele existe e serve (versao 18 ou mais nova) e, se nao, explica o
-rem que fazer. De proposito, ele NAO baixa nem executa nada da internet: esse e
-rem justamente o comportamento que faz antivirus bloquearem um programa.
+rem que fazer. De proposito, ele NAO baixa nem executa programas da internet:
+rem esse e justamente o comportamento que faz antivirus bloquearem um programa.
+rem (A unica rede que ele usa e o npm, que vem com o Node.js, para repor os
+rem dois componentes se a pasta node_modules tiver sumido.)
 rem Quem nao pode instalar programas pode usar uma copia portatil: a pasta
 rem "node-portable" (com o node.exe dentro), ao lado deste arquivo.
 rem ---------------------------------------------------------------------------

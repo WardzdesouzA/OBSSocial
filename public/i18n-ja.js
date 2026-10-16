@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "このシステム向けの用意された yt-dlp はありません。システムのパッケージマネージャー(pip、apt、brew など)でインストールしてください — OBS Social が自動で見つけます。",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "法人(個人は未確認)",
     "PF (PJ não confirmado)": "個人(法人は未確認)",
