@@ -26,9 +26,23 @@ const MODELOS = {
   large: { arquivo: 'ggml-large-v3-turbo.bin', mb: 1550 }, // large-v3-turbo: o mais preciso que ainda roda bem
 };
 const BASE_MODELOS = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/';
-// Motor e conversor para Windows x64 (a maioria dos streamers do OBS)
-const URL_MOTOR_WIN = 'https://github.com/ggml-org/whisper.cpp/releases/download/v1.8.2/whisper-bin-x64.zip';
-const URL_FFMPEG_WIN = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip';
+// Motor e conversor prontos para Windows (a maioria dos streamers do OBS), por
+// arquitetura (v0.184) — um zip x64 não serve num Windows de 32 bits:
+//   • o whisper.cpp publica x64 e Win32 (32 bits); não publica ARM64 — o
+//     Windows 11 ARM roda o x64 pela emulação dele;
+//   • o ffmpeg (BtbN) publica win64 e winarm64; não publica 32 bits — aí o
+//     ffmpeg tem que vir instalado no sistema (null = sem download pronto).
+const MOTOR_WIN = {
+  x64: 'https://github.com/ggml-org/whisper.cpp/releases/download/v1.8.2/whisper-bin-x64.zip',
+  arm64: 'https://github.com/ggml-org/whisper.cpp/releases/download/v1.8.2/whisper-bin-x64.zip',
+  ia32: 'https://github.com/ggml-org/whisper.cpp/releases/download/v1.8.2/whisper-bin-Win32.zip',
+};
+const FFMPEG_WIN = {
+  x64: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
+  arm64: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-winarm64-gpl.zip',
+};
+const URL_MOTOR_WIN = MOTOR_WIN[process.arch] || null;
+const URL_FFMPEG_WIN = FFMPEG_WIN[process.arch] || null;
 // Formatos que o whisper-cli lê sozinho; o resto passa antes pelo ffmpeg
 const EXT_DIRETA = new Set(['wav', 'mp3', 'flac']);
 const LIMITE_TEXTO = 20000;      // rascunho não precisa ser um livro
@@ -75,9 +89,11 @@ class Transcritor {
     const df = this.downloads.get('ffmpeg');
     return {
       modelos,
-      motor: { pronto: !!motor, origem: motor ? motor.origem : null, baixandoPct: dm ? dm.pct : null },
-      ffmpeg: { pronto: !!ffmpeg, origem: ffmpeg ? ffmpeg.origem : null, baixandoPct: df ? df.pct : null },
+      // v0.184: baixavel = existe um zip pronto para este sistema/arquitetura
+      motor: { pronto: !!motor, origem: motor ? motor.origem : null, baixandoPct: dm ? dm.pct : null, baixavel: !!this.urlMotor },
+      ffmpeg: { pronto: !!ffmpeg, origem: ffmpeg ? ffmpeg.origem : null, baixandoPct: df ? df.pct : null, baixavel: !!this.urlFfmpeg },
       plataformaWin: process.platform === 'win32',
+      arquitetura: process.arch,
       fila: this.fila.length + (this.rodando ? 1 : 0),
     };
   }
@@ -220,11 +236,16 @@ class Transcritor {
   baixarMotor(alvo) {
     const chave = alvo === 'ffmpeg' ? 'ffmpeg' : 'motor';
     if (this.downloads.has(chave)) return;
+    const url = chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor;
+    if (!url) {
+      // v0.184: sem zip pronto para esta arquitetura (ex.: ffmpeg no Windows de 32 bits)
+      this.aoEvento({ type: 'transcricaoAviso', chave, erro: `não existe um ${chave === 'ffmpeg' ? 'ffmpeg' : 'whisper.cpp'} pronto para baixar neste sistema (${process.platform}/${process.arch}); instale-o você mesmo e o OBS Social o encontra sozinho` });
+      return;
+    }
     fs.mkdirSync(this.dirMotor, { recursive: true });
     this.downloads.set(chave, { pct: 0, req: null });
     this._avisaEstado();
     const part = path.join(this.dirMotor, chave + '.zip.part');
-    const url = chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor;
     this._baixar(chave, url, part, () => {
       if (this.downloads.get(chave)?.cancelado) { try { fs.unlinkSync(part); } catch {} this._terminaDownload(chave); return; }
       try {

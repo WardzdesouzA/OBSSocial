@@ -6,6 +6,90 @@
 
 A browser dashboard for putting your streams' comments on screen, right inside OBS — similar to vMix Social, but free and made for OBS Studio.
 
+## 🚀 Start here: install and run in 3 steps
+
+OBS Social is a program that runs **on your own computer** (it is not a website): you open it, it creates the control dashboard at `http://localhost:3000` and the screens that OBS shows. The package (the ZIP from GitHub) **already comes with everything the program uses**. The only thing you install is **Node.js**, the engine that runs it — from its official site, once.
+
+**What you need:**
+
+| | What for | Where to get it |
+|---|---|---|
+| **Windows 10/11, macOS or Linux** — x64 or ARM; 32-bit too (Windows x86, Linux ARMv7) | the computer the program runs on (preferably the one you stream from). The program is pure JavaScript, with no native components: it runs wherever Node.js runs | — |
+| **Node.js 18 or newer** (the engine that runs the program) | it's what executes `server.js` — the one thing to install | https://nodejs.org → green **"LTS"** button (the official installer, signed by the Node.js foundation, for Windows x64/ARM64, macOS Intel/Apple Silicon and Linux x64/ARM64; **32-bit** Windows and 32-bit ARM Linux: pick the **Node.js 22** LTS line, the last one with those builds; on Linux your distribution's package manager also works, as long as it gives version 18 or newer) |
+| **OBS Studio** (or Streamlabs, vMix, any program with a "Browser" source) | showing the overlays on the stream | https://obsproject.com |
+| **A browser** (Chrome, Edge, Firefox…) | opening the control dashboard | already on the system |
+| **Internet** | reading the platforms' chats (the program itself works offline once installed) | — |
+
+**Step 1 — Install Node.js** (once; skip it if you already have it). Go to https://nodejs.org, click the green **"LTS"** button and install it like any other program (next, next, finish). No restart needed.
+
+**Step 2 — Download the package.** Click the green **"Code" → "Download ZIP"** button here on GitHub and extract the ZIP into a folder that's easy to find (e.g. Documents\OBS Social). *(Windows: before extracting, right-click the ZIP → Properties → check "Unblock" → OK, so Windows doesn't ask anything when you open the program.)* No `npm install` needed: the components are already in the `node_modules/` folder.
+
+**Step 3 — Open the program.** In the extracted folder, **double-click**:
+- **Windows:** `Iniciar (Windows).bat`
+- **Mac/Linux:** `iniciar-mac-linux.command` *(on a Mac, the first time: right-click → Open; if it says you don't have permission, see the questions at the end)*
+
+A black window opens, checks Node.js and says **"✅ OBS Social is running!"**. **Leave that window open** during the stream (to quit the program, close it). If Node.js is missing or too old, the same window says so and offers to open the download page. Then open your browser at **http://localhost:3000** (the control dashboard), connect the chats under the gear ⚙️ and, in OBS, add a **Browser** source with the URL `http://localhost:3000/overlay` (featured comment) and/or `http://localhost:3000/chat` (fixed chat), 1920×1080. The detailed walkthrough is right below, in [How to use](#how-to-use-every-time-you-go-live).
+
+**Why doesn't Node.js come inside the ZIP?** Because of size (≈90 MB, more than the whole program) and for safety: you get the official installer straight from the Node.js foundation, signed by them — and OBS Social's launcher, on purpose, **never downloads or runs anything from the internet**, which is exactly the kind of behaviour that makes antivirus software block a program.
+
+## 📦 What's in the package and where everything lives
+
+Everything stays inside the folder you extracted — nothing is installed anywhere else on the computer (Node.js is a separate program, installed by its own installer). To uninstall OBS Social, delete the folder.
+
+| File / folder | What it is | In the ZIP? |
+|---|---|---|
+| `Iniciar (Windows).bat` · `iniciar-mac-linux.command` | the launchers (double-click and the program opens); they check Node.js and the components before starting | ✅ |
+| `server.js` | the program itself (a local server: dashboard, overlays, connections to the chats) | ✅ |
+| `clima.js`, `currency.js`, `midiadireta.js`, `transcricao.js`, `vmix.js`, `ytdlp.js` | parts of the program (weather, currencies, direct media, transcription, vMix, extractor) | ✅ |
+| `connectors/` | one file per network: YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, LivePix, PixGG | ✅ |
+| `public/` | the pages the browser and OBS open (dashboard, overlay, chat, settings, mini soundboard), the 10 languages, the version history, the factory sounds, the icons and the Lottie library | ✅ |
+| `node_modules/` | the two external components the program uses (`ws` — WebSocket — and `qrcode-generator`), already included — no need to run `npm install` | ✅ |
+| `package.json`, `package-lock.json` | the program's ID card (name, version, components) | ✅ |
+| `README.md`, `docs/` | this manual and the technical studies | ✅ |
+| `data/` | **created the first time you open it**: your settings, connections, password, encryption key (`chave-local.key`), stream logs, uploaded media, backups. It's yours only: updates never touch it. To move the program to another computer, take this folder along (or use 🗄️ Logs and data → Backup) | created |
+| `node-portable/` | **optional, advanced**: if you can't install programs on the computer, download the LTS **"Binary"** from nodejs.org (ZIP on Windows; .tar.gz on Mac/Linux), extract it and rename the extracted folder to `node-portable`, inside the program's folder — the launcher uses that copy when there's no Node.js installed | yours (optional) |
+
+### Optional components, downloaded only when you turn them on
+
+None of these come in the ZIP and none is needed for normal use — the program downloads them (one click, showing the progress, from the official sources) only when you turn the feature on in 🧪 Labs, and keeps them inside `data/`:
+
+| Component | What for | Where it lives | Source |
+|---|---|---|---|
+| **yt-dlp** | the 🎬 extractor of 🎞️ Direct media (Instagram, TikTok and sites that hide the video file) | `data/ytdlp/` | the official yt-dlp release on GitHub, in the build for your system: Windows x64, x86 or ARM64, macOS (universal), Linux x64 or ARM64 (32-bit ARM Linux: install yt-dlp through the system) — or the yt-dlp already installed on the computer |
+| **whisper.cpp** (engine) + **ffmpeg** (converter) | 🎙️ Local transcription of your viewers' voice notes and videos | `data/motor-transcricao/` | the official releases, for Windows: whisper.cpp x64 or 32-bit (ARM64 runs the x64 one through Windows' emulation), ffmpeg x64 or ARM64 (no 32-bit build: on 32-bit Windows install ffmpeg yourself); on Mac/Linux it uses what's installed on the system |
+| **Voice models** (GGML, 75 MB to 1.5 GB) | same — the quality of the transcription | `data/modelos-transcricao/` | the official whisper.cpp Hugging Face |
+| **WhatsApp local library** (Baileys) | 💬 WhatsApp without a paid gateway (QR pairing) | `data/whatsapp-lib/` | npm (comes with Node.js) |
+
+The program also makes use of tools that already come with the system, when they exist: **curl** and **PowerShell** (Windows) as fallback paths when a site blocks the normal connection, and a **browser open** on the same computer for Kick.
+
+## How to use (every time you go live)
+
+1. Open the project folder and **double-click**:
+   - **Windows:** `Iniciar (Windows).bat`
+   - **Mac/Linux:** `iniciar-mac-linux.command`
+   - A black window will open saying *"OBS Social is running!"* — **leave it open** during the stream.
+2. Open your browser at **http://localhost:3000** → that's your **control dashboard**.
+3. Click the **gear ⚙️** (top right corner) and connect the chats — the program **remembers the connections**: the fields come already filled in with what you used last time and, when you open the program, it **reconnects on its own** whatever was connected when you closed it (if you disconnect manually, it respects that and doesn't reconnect). And if one of the networks **freezes or breaks in the middle of the stream**, each card has a **🔄 button to restart the connection** — plus a button to **reconnect all of them at once** — without retyping anything:
+   - **YouTube:** paste the link to your stream (or your channel's @) and click *Connect*.
+   - **Twitch:** type the channel name (the one that shows up in `twitch.tv/name`).
+   - **Kick:** type the channel name (the one that shows up in `kick.com/name`).
+   - **Bilibili:** type the room number.
+4. Set up OBS (only the first time). Under the dashboard's gear ⚙️, on the **🔗 URLs for OBS** page, the URLs come with a 📋 copy button (click the eye 👁 to reveal each one):
+   - **Featured comment** (`http://localhost:3000/overlay`): stays invisible until you send a comment to the screen.
+   - **Fixed live chat** (`http://localhost:3000/chat`): shows the chat scrolling on the screen the whole time, with each person's picture — use it if you want to leave the chat fixed on screen, like most streamers do.
+   - **Vertical overlay** (`http://localhost:3000/overlay?tela=vertical`): the same content as the featured comment, laid out for a 9:16 phone stream — only if you use the vertical or "both together" mode.
+   - For each one you want to use: in OBS, under **Sources**, click the **+** → **Browser** (*Browser Source*), paste the URL, **Width** 1920 and **Height** 1080. You can use several at the same time, in separate sources.
+5. During the stream: comments from every platform show up in the **🔴 Live** tab. **Left-click one** to open its window (avatar, name, text, media, network and time) with the buttons **📺 Send to the screen**, **📥 Send to the queue** and Cancel — nothing goes on air until you choose. Or **right-click** to open the menu: **📺 Send to the screen**, **📥 Send to the queue** or **🔍 Enlarge avatar**. The comment shows up on stream at the bottom center, by default.
+   - A queued comment gets the **"📥 queued"** tag in the feed and waits in the **📥 Queue** tab (persisted to disk). There, right-clicking offers **send to the screen** or **remove from the queue**.
+   - Every comment that **has already gone to the screen** gets the **"✓ read" tag with the time it was shown** (e.g. `✓ read 14:32`) and looks slightly dimmed in every tab and column — that way you never show the same comment twice by accident. The tag survives restarts.
+   - **💰 Super Chats**, YouTube **👑 Members** comments and the donations (**💜 LivePix**, **💠 Pix**, **💚 PixGG**) also show up separately, in their own tabs — and every one of them can also go to the 📥 Queue, just like a regular comment.
+
+💡 **Tip:** use the **💬 "Send test comment"** button at the top of the dashboard to test how the overlay looks without being live — each click brings a different sample (owner, moderator, member levels, Super Chat in every color, Twitch tiers, Kick badges, Telegram/WhatsApp media…). When you're done, the **🧹** next to it removes every test comment at once, including the giveaway tickets they created.
+
+---
+
+## ✨ Everything OBS Social does
+
 - Brings together the chats from **YouTube**, **Twitch**, **Kick** and **Bilibili** (experimental — turned on in 🧪 Labs), the messages from **📨 Telegram** and **💬 WhatsApp** (experimental, 🧪 Labs) and the donations from **💜 LivePix**, **💚 PixGG** and **💠 Pix straight from your bank** into a single feed, with **each person's photo** (or a colored initial, when there's no photo).
 - You **right-click the comment → 📺 Send to the screen** (left-click opens its window, with the same buttons) and it appears on the live screen, in its **network's color** (Twitch purple, YouTube red, Kick green, Bilibili blue, LivePix purple, PixGG green…).
 - **YouTube Super Chats** show up with the real Super Chat color, both in the dashboard and on the live screen — and when they come in a foreign currency, they also show the **amount converted into the local currency** (reais, in this Brazilian example: `$5.00 ≈ R$ 25,00`). The converter covers **every currency in the world** (all the ISO codes and dozens of symbols: $, €, £, ¥, ₩, ₹, ₽, ₺, zł, Rp, RM, S/, ₦, ₲ and many others), understands number formats from various countries and uses a public exchange rate that updates on its own. YouTube **🎟️ Super Stickers** (the paid stickers) come in as a Super Chat with the amount and the big image, and Twitch's **🎞️ chat GIFs** (GIPHY) show up large and animated in the dashboard, in the featured comment and in the fixed chat, mixed with text and emotes in the right order.
@@ -63,42 +147,6 @@ A browser dashboard for putting your streams' comments on screen, right inside O
 - **♿ Accessibility and ❓ FAQ** pages in the settings: stronger contrast, reduced animations, visible focus and shapes besides color on the connection status — and a built-in list of questions and answers, no need to come back to this README.
 
 > About **Twitter/X**: unfortunately they closed off free access to comments — these days it's only possible if you pay for their API. That's why it isn't included.
-
----
-
-## How to install (you only need to do this once)
-
-1. **Install Node.js** (it's the engine that makes the program work):
-   - Go to https://nodejs.org
-   - Click the green **"LTS"** button and install it like any other program (next, next, finish).
-2. **Download this project**:
-   - Click the green **"Code"** button here on GitHub → **"Download ZIP"**.
-   - **Tip (Windows):** before extracting, right-click the downloaded ZIP → **Properties** → check **"Unblock"** at the bottom → **OK**. That way all the files come out already cleared and Windows won't show the *"The publisher could not be verified"* warning when you open the program. (If you forget, no problem: you can sort it out later — see the questions at the end.)
-   - Extract the ZIP into a folder that's easy to find (e.g. Documents).
-
-## How to use (every time you go live)
-
-1. Open the project folder and **double-click**:
-   - **Windows:** `Iniciar (Windows).bat`
-   - **Mac/Linux:** `iniciar-mac-linux.command`
-   - A black window will open saying *"OBS Social is running!"* — **leave it open** during the stream.
-2. Open your browser at **http://localhost:3000** → that's your **control dashboard**.
-3. Click the **gear ⚙️** (top right corner) and connect the chats — the program **remembers the connections**: the fields come already filled in with what you used last time and, when you open the program, it **reconnects on its own** whatever was connected when you closed it (if you disconnect manually, it respects that and doesn't reconnect). And if one of the networks **freezes or breaks in the middle of the stream**, each card has a **🔄 button to restart the connection** — plus a button to **reconnect all of them at once** — without retyping anything:
-   - **YouTube:** paste the link to your stream (or your channel's @) and click *Connect*.
-   - **Twitch:** type the channel name (the one that shows up in `twitch.tv/name`).
-   - **Kick:** type the channel name (the one that shows up in `kick.com/name`).
-   - **Bilibili:** type the room number.
-4. Set up OBS (only the first time). Under the dashboard's gear ⚙️, on the **🔗 URLs for OBS** page, the URLs come with a 📋 copy button (click the eye 👁 to reveal each one):
-   - **Featured comment** (`http://localhost:3000/overlay`): stays invisible until you send a comment to the screen.
-   - **Fixed live chat** (`http://localhost:3000/chat`): shows the chat scrolling on the screen the whole time, with each person's picture — use it if you want to leave the chat fixed on screen, like most streamers do.
-   - **Vertical overlay** (`http://localhost:3000/overlay?tela=vertical`): the same content as the featured comment, laid out for a 9:16 phone stream — only if you use the vertical or "both together" mode.
-   - For each one you want to use: in OBS, under **Sources**, click the **+** → **Browser** (*Browser Source*), paste the URL, **Width** 1920 and **Height** 1080. You can use several at the same time, in separate sources.
-5. During the stream: comments from every platform show up in the **🔴 Live** tab. **Left-click one** to open its window (avatar, name, text, media, network and time) with the buttons **📺 Send to the screen**, **📥 Send to the queue** and Cancel — nothing goes on air until you choose. Or **right-click** to open the menu: **📺 Send to the screen**, **📥 Send to the queue** or **🔍 Enlarge avatar**. The comment shows up on stream at the bottom center, by default.
-   - A queued comment gets the **"📥 queued"** tag in the feed and waits in the **📥 Queue** tab (persisted to disk). There, right-clicking offers **send to the screen** or **remove from the queue**.
-   - Every comment that **has already gone to the screen** gets the **"✓ read" tag with the time it was shown** (e.g. `✓ read 14:32`) and looks slightly dimmed in every tab and column — that way you never show the same comment twice by accident. The tag survives restarts.
-   - **💰 Super Chats**, YouTube **👑 Members** comments and the donations (**💜 LivePix**, **💠 Pix**, **💚 PixGG**) also show up separately, in their own tabs — and every one of them can also go to the 📥 Queue, just like a regular comment.
-
-💡 **Tip:** use the **💬 "Send test comment"** button at the top of the dashboard to test how the overlay looks without being live — each click brings a different sample (owner, moderator, member levels, Super Chat in every color, Twitch tiers, Kick badges, Telegram/WhatsApp media…). When you're done, the **🧹** next to it removes every test comment at once, including the giveaway tickets they created.
 
 ## Customizing the look
 
@@ -184,6 +232,10 @@ Everything is on the **🔗 URLs for OBS** page in the settings. The rules, in s
 - **Permanent:** right-click the file → **Properties** → check **"Unblock"** at the bottom → **OK**. Tip: doing this on the **ZIP** before extracting means all the files come out already unblocked.
 - **Bonus:** when you update using the button on the **About** tab, the program itself rewrites the files already unblocked — so, after the first update, this warning usually doesn't come back.
 
+**Do I have to install Node.js?** Yes — it's the one thing that doesn't come in the ZIP, and it's installed once, from https://nodejs.org (green "LTS" button; version 18 or newer). It doesn't come inside the package because of its size (≈90 MB) and for safety: you get the installer straight from the Node.js foundation, signed, and OBS Social's launcher never downloads or runs anything from the internet on its own (that's the behaviour antivirus software blocks). The launcher checks the version when it opens; if Node.js is missing or too old, it explains and offers to open the download page. If you can't install programs on the computer, there's a portable option: download the LTS "Binary" from nodejs.org, extract it and rename the folder to `node-portable`, inside the program's folder — the launcher uses it by itself.
+
+**My Mac says `iniciar-mac-linux.command` "cannot be opened because it is from an unidentified developer", or that I don't have permission.** Both are standard macOS behaviours for a file downloaded from the internet. For the first one, right-click the file → **Open** (or System Settings → Privacy & Security → **Open Anyway**) — it only asks once. For the permission one, open the Terminal, type `chmod +x ` (with a space at the end), drag the `iniciar-mac-linux.command` file into the window and press Enter; then double-click it again.
+
 **Can I let someone else (a mod) control the dashboard?** You can, as long as they're on the same network/Wi-Fi: copy the "👥 Dashboard for other people" address on the 🔗 URLs for OBS page and choose what they can do: restricted (better yet, with a password — whoever enters it controls everything) or full freedom, where nobody needs a password. Nobody outside your network can get in — OBS Social refuses connections from outside, always.
 
 **My antivirus (Kaspersky, Defender...) flagged OBS Social. Is it a virus?** No — it's a behavioral false positive, common in programs that update themselves: OBS Social downloads the new version, swaps out its own files and reopens itself, and some antivirus programs think that pattern is "suspicious". The code is 100% open on GitHub for anyone to audit. To fix it: open the antivirus → Quarantine → **restore** the file (e.g.: `server.js`) → and add the **OBS Social folder to the antivirus's exceptions/exclusions**. In v0.9.2 the behavior that scared antivirus programs the most was removed.
@@ -219,6 +271,90 @@ Everything is on the **🔗 URLs for OBS** page in the settings. The rules, in s
 [English](#english) · **Português**
 
 Um painel no navegador para mostrar comentários das suas lives na tela, direto no OBS — parecido com o vMix Social, mas gratuito e feito para o OBS Studio.
+
+## 🚀 Comece aqui: instalar e rodar em 3 passos
+
+O OBS Social é um programa que roda **no seu próprio computador** (não é um site): você abre, ele cria o painel de controle em `http://localhost:3000` e as telas que o OBS mostra. O pacote (o ZIP do GitHub) **já vem com tudo o que o programa usa**. A única coisa que você instala é o **Node.js**, o motor que o executa — do site oficial, uma vez só.
+
+**O que você precisa ter:**
+
+| | Para quê | Onde conseguir |
+|---|---|---|
+| **Windows 10/11, macOS ou Linux** — x64 ou ARM; 32 bits também (Windows x86, Linux ARMv7) | o computador onde o programa roda (de preferência o mesmo da live). O programa é JavaScript puro, sem componentes nativos: roda onde o Node.js rodar | — |
+| **Node.js 18 ou mais novo** (o motor que executa o programa) | é ele que executa o `server.js` — a única coisa a instalar | https://nodejs.org → botão verde **«LTS»** (o instalador oficial, assinado pela fundação do Node.js, para Windows x64/ARM64, macOS Intel/Apple Silicon e Linux x64/ARM64; **Windows 32 bits** e Linux ARM 32 bits: escolha a linha **Node.js 22** LTS, a última com essas versões; no Linux também serve o gerenciador de pacotes da distribuição, desde que entregue a versão 18 ou mais nova) |
+| **OBS Studio** (ou Streamlabs, vMix, qualquer programa com fonte «Navegador») | mostrar os overlays na live | https://obsproject.com |
+| **Um navegador** (Chrome, Edge, Firefox…) | abrir o painel de controle | já vem no sistema |
+| **Internet** | ler os chats das plataformas (o programa em si funciona sem internet depois de instalado) | — |
+
+**Passo 1 — Instale o Node.js** (uma vez só; pule se já tiver). Entre em https://nodejs.org, clique no botão verde **«LTS»** e instale como qualquer programa (avançar, avançar, concluir). Não precisa reiniciar o computador.
+
+**Passo 2 — Baixe o pacote.** Clique no botão verde **«Code» → «Download ZIP»** aqui no GitHub e extraia o ZIP numa pasta fácil de achar (ex.: Documentos\OBS Social). *(Windows: antes de extrair, botão direito no ZIP → Propriedades → marque «Desbloquear» → OK, para o Windows não perguntar nada ao abrir o programa.)* Não precisa de `npm install`: os componentes já estão na pasta `node_modules/`.
+
+**Passo 3 — Abra o programa.** Na pasta extraída, dê **dois cliques** em:
+- **Windows:** `Iniciar (Windows).bat`
+- **Mac/Linux:** `iniciar-mac-linux.command` *(no Mac, na primeira vez: botão direito → Abrir; se disser que você não tem permissão, veja as dúvidas no fim)*
+
+Uma janela preta abre, confere o Node.js e diz **«✅ OBS Social está rodando!»**. **Deixe essa janela aberta** durante a live (para encerrar o programa, feche-a). Se o Node.js estiver faltando ou for antigo demais, a mesma janela avisa e oferece abrir a página de download. Depois abra o navegador em **http://localhost:3000** (o painel de controle), conecte os chats na engrenagem ⚙️ e, no OBS, adicione uma fonte **Navegador** com a URL `http://localhost:3000/overlay` (comentário em destaque) e/ou `http://localhost:3000/chat` (chat fixo), 1920×1080. O passo a passo detalhado está logo abaixo, em [Como usar](#como-usar-toda-vez-que-for-fazer-live).
+
+**Por que o Node.js não vem dentro do ZIP?** Pelo tamanho (≈90 MB, mais que o programa inteiro) e por segurança: você pega o instalador oficial direto da fundação do Node.js, assinado por ela — e o iniciador do OBS Social, de propósito, **nunca baixa nem executa nada da internet**, que é justamente o tipo de comportamento que faz antivírus bloquearem um programa.
+
+## 📦 O que vem no pacote e onde fica cada coisa
+
+Tudo fica dentro da pasta que você extraiu — nada é instalado em outro lugar do computador (o Node.js é um programa à parte, instalado pelo instalador dele). Para desinstalar o OBS Social, apague a pasta.
+
+| Arquivo / pasta | O que é | Vem no ZIP? |
+|---|---|---|
+| `Iniciar (Windows).bat` · `iniciar-mac-linux.command` | os iniciadores (dois cliques e o programa abre); conferem o Node.js e os componentes antes de abrir | ✅ |
+| `server.js` | o programa em si (um servidor local: painel, overlays, conexões com os chats) | ✅ |
+| `clima.js`, `currency.js`, `midiadireta.js`, `transcricao.js`, `vmix.js`, `ytdlp.js` | partes do programa (clima, moedas, mídia direta, transcrição, vMix, extrator) | ✅ |
+| `connectors/` | um arquivo por rede: YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp, LivePix, PixGG | ✅ |
+| `public/` | as páginas que o navegador e o OBS abrem (painel, overlay, chat, configurações, mini mesa), os 10 idiomas, o histórico de versões, os sons de fábrica, os ícones e a biblioteca Lottie | ✅ |
+| `node_modules/` | os dois componentes externos que o programa usa (`ws` — WebSocket — e `qrcode-generator`), já incluídos — não precisa rodar `npm install` | ✅ |
+| `package.json`, `package-lock.json` | a ficha do programa (nome, versão, componentes) | ✅ |
+| `README.md`, `docs/` | este manual e os estudos técnicos | ✅ |
+| `data/` | **criada na primeira abertura**: suas configurações, conexões, senha, chave de cifragem (`chave-local.key`), logs das lives, mídias enviadas, backups. É só sua: a atualização nunca mexe nela. Para levar o programa para outro computador, leve esta pasta junto (ou use 🗄️ Logs e dados → Backup) | criada |
+| `node-portable/` | **opcional, avançado**: se você não pode instalar programas no computador, baixe no nodejs.org o **«Binário»** da LTS (ZIP no Windows; .tar.gz no Mac/Linux), extraia e renomeie a pasta extraída para `node-portable`, dentro da pasta do programa — o iniciador usa essa cópia quando não há Node.js instalado | sua (opcional) |
+
+### Componentes opcionais, baixados só quando você liga
+
+Nenhum destes vem no ZIP e nenhum é necessário para o uso normal — o programa baixa (com um clique, mostrando o progresso, das fontes oficiais) só quando você liga a função no 🧪 Labs, e guarda dentro de `data/`:
+
+| Componente | Para quê | Onde fica | Origem |
+|---|---|---|---|
+| **yt-dlp** | o 🎬 extrator da 🎞️ Mídia direta (Instagram, TikTok e sites que escondem o arquivo do vídeo) | `data/ytdlp/` | o release oficial do yt-dlp no GitHub, na versão do seu sistema: Windows x64, x86 ou ARM64, macOS (universal), Linux x64 ou ARM64 (Linux ARM 32 bits: instale o yt-dlp pelo sistema) — ou o yt-dlp já instalado no computador |
+| **whisper.cpp** (motor) + **ffmpeg** (conversor) | 🎙️ Transcrição local dos áudios e vídeos dos inscritos | `data/motor-transcricao/` | os releases oficiais, para Windows: whisper.cpp x64 ou 32 bits (o ARM64 roda o x64 pela emulação do Windows), ffmpeg x64 ou ARM64 (não existe de 32 bits: no Windows 32 bits instale o ffmpeg você mesmo); no Mac/Linux usa o que estiver instalado no sistema |
+| **Modelos de voz** (GGML, 75 MB a 1,5 GB) | idem — a qualidade da transcrição | `data/modelos-transcricao/` | o Hugging Face oficial do whisper.cpp |
+| **Biblioteca local do WhatsApp** (Baileys) | 💬 WhatsApp sem gateway pago (pareamento por QR) | `data/whatsapp-lib/` | npm (vem junto do Node.js) |
+
+O programa também aproveita, quando existem, ferramentas que já vêm no sistema: o **curl** e o **PowerShell** (Windows) como caminhos de reserva quando um site bloqueia a conexão normal, e um **navegador aberto** no mesmo computador para a Kick.
+
+## Como usar (toda vez que for fazer live)
+
+1. Abra a pasta do projeto e dê **dois cliques** em:
+   - **Windows:** `Iniciar (Windows).bat`
+   - **Mac/Linux:** `iniciar-mac-linux.command`
+   - Vai abrir uma janela preta escrita *"OBS Social está rodando!"* — **deixe ela aberta** durante a live.
+2. Abra o navegador em **http://localhost:3000** → esse é o seu **painel de controle**.
+3. Clique na **engrenagem ⚙️** (canto superior direito) e conecte os chats — o programa **lembra as conexões**: os campos já vêm preenchidos com o que você usou da última vez e, ao abrir o programa, ele **reconecta sozinho** o que estava ligado quando você fechou (se você desconectar manualmente, ele respeita e não reconecta). E se alguma rede **travar ou quebrar no meio da live**, cada cartão tem um botão **🔄 de reiniciar a conexão** — mais um botão para **reconectar todas de uma vez** — sem redigitar nada:
+   - **YouTube:** cole o link da sua live (ou o @ do seu canal) e clique em *Conectar*.
+   - **Twitch:** digite o nome do canal (o que aparece em `twitch.tv/nome`).
+   - **Kick:** digite o nome do canal (o que aparece em `kick.com/nome`).
+   - **Bilibili:** digite o número da sala.
+4. Configure o OBS (só na primeira vez). Na engrenagem ⚙️ do painel, na página **🔗 URLs para o OBS**, as URLs vêm com um botão 📋 de copiar (clique no olho 👁 para revelar cada uma):
+   - **Comentário em destaque** (`http://localhost:3000/overlay`): fica invisível até você mandar um comentário para a tela.
+   - **Chat ao vivo fixo** (`http://localhost:3000/chat`): mostra o chat rolando na tela o tempo todo, com a foto de cada pessoa — use se quiser deixar o chat fixo, como a maioria dos streamers.
+   - **Overlay vertical** (`http://localhost:3000/overlay?tela=vertical`): o mesmo conteúdo do destaque, arrumado para live de celular 9:16 — só se você usar o modo vertical ou «os dois juntos».
+   - Para cada uma que quiser usar: no OBS, em **Fontes**, clique no **+** → **Navegador** (*Browser Source*), cole a URL, **Largura** 1920 e **Altura** 1080. Pode usar várias ao mesmo tempo, em fontes separadas.
+5. Durante a live: os comentários de todas as plataformas aparecem na aba **🔴 Ao vivo**. **Clique com o botão esquerdo** em um para abrir a janela dele (avatar, nome, texto, mídia, rede e horário) com os botões **📺 Enviar para a tela**, **📥 Enviar para a fila** e Cancelar — nada vai ao ar sem você mandar. Ou clique com o **botão direito** para abrir o menu: **📺 Enviar para a tela**, **📥 Enviar para a fila** ou **🔍 Ampliar avatar**. O comentário aparece na live no centro inferior, por padrão.
+   - Comentário na fila ganha a marcação **"📥 na fila"** no feed e fica aguardando na aba **📥 Fila** (persistida em disco). Lá, o botão direito oferece **enviar para a tela** ou **remover da fila**.
+   - Todo comentário que **já foi para a tela** ganha a marcação **"✓ lido" com o horário em que foi mostrado** (ex.: `✓ lido 14:32`) e fica levemente apagado em todas as abas e colunas — assim você nunca mostra o mesmo comentário duas vezes sem querer. A marcação sobrevive a reinícios.
+   - Os **💰 Super Chats**, os comentários de **👑 Membros** do YouTube e as doações (**💜 LivePix**, **💠 Pix**, **💚 PixGG**) também aparecem separados nas suas próprias abas — e todos eles também podem ir para a 📥 Fila, como qualquer comentário comum.
+
+💡 **Dica:** use o botão **💬 "Enviar comentário de teste"** no topo do painel para testar o visual do overlay sem estar ao vivo — cada clique traz uma amostra diferente (dono, moderador, níveis de membro, Super Chat em todas as cores, tiers da Twitch, selos da Kick, mídia do Telegram/WhatsApp…). Quando terminar, o **🧹** ao lado apaga todos os comentários de teste de uma vez, inclusive as fichas que eles criaram no sorteio.
+
+---
+
+## ✨ Tudo o que o OBS Social faz
 
 - Junta os chats do **YouTube**, **Twitch**, **Kick** e **Bilibili** (experimental — ativada no 🧪 Labs), as mensagens do **📨 Telegram** e do **💬 WhatsApp** (experimentais, 🧪 Labs) e as doações da **💜 LivePix**, da **💚 PixGG** e do **💠 Pix direto do banco** num feed único, com **foto de cada pessoa** (ou a inicial colorida, quando não há foto).
 - Você **clica com o botão direito no comentário → 📺 Enviar para a tela** (o clique esquerdo abre a janela dele, com os mesmos botões) e ele aparece na tela da live, com a **cor da rede social** dele (roxo Twitch, vermelho YouTube, verde Kick, azul Bilibili, roxo LivePix, verde PixGG…).
@@ -277,42 +413,6 @@ Um painel no navegador para mostrar comentários das suas lives na tela, direto 
 - **♿ Acessibilidade e ❓ FAQ** nas configurações: contraste reforçado, reduzir animações, foco visível e formas além de cor no status das conexões — e uma lista de perguntas e respostas dentro do programa, sem precisar voltar a este README.
 
 > Sobre o **Twitter/X**: infelizmente eles fecharam o acesso gratuito aos comentários — hoje só é possível pagando a API deles. Por isso não está incluído.
-
----
-
-## Como instalar (só precisa fazer 1 vez)
-
-1. **Instale o Node.js** (é o motor que faz o programa funcionar):
-   - Entre em https://nodejs.org
-   - Clique no botão verde **"LTS"** e instale como qualquer programa (avançar, avançar, concluir).
-2. **Baixe este projeto**:
-   - Clique no botão verde **"Code"** aqui no GitHub → **"Download ZIP"**.
-   - **Dica (Windows):** antes de extrair, clique com o botão direito no ZIP baixado → **Propriedades** → marque **"Desbloquear"** na parte de baixo → **OK**. Assim todos os arquivos já saem liberados e o Windows não mostra o aviso *"O fornecedor não pôde ser verificado"* ao abrir o programa. (Se esquecer, sem problema: dá para resolver depois — veja as dúvidas no fim.)
-   - Extraia o ZIP numa pasta fácil de achar (ex.: Documentos).
-
-## Como usar (toda vez que for fazer live)
-
-1. Abra a pasta do projeto e dê **dois cliques** em:
-   - **Windows:** `Iniciar (Windows).bat`
-   - **Mac/Linux:** `iniciar-mac-linux.command`
-   - Vai abrir uma janela preta escrita *"OBS Social está rodando!"* — **deixe ela aberta** durante a live.
-2. Abra o navegador em **http://localhost:3000** → esse é o seu **painel de controle**.
-3. Clique na **engrenagem ⚙️** (canto superior direito) e conecte os chats — o programa **lembra as conexões**: os campos já vêm preenchidos com o que você usou da última vez e, ao abrir o programa, ele **reconecta sozinho** o que estava ligado quando você fechou (se você desconectar manualmente, ele respeita e não reconecta). E se alguma rede **travar ou quebrar no meio da live**, cada cartão tem um botão **🔄 de reiniciar a conexão** — mais um botão para **reconectar todas de uma vez** — sem redigitar nada:
-   - **YouTube:** cole o link da sua live (ou o @ do seu canal) e clique em *Conectar*.
-   - **Twitch:** digite o nome do canal (o que aparece em `twitch.tv/nome`).
-   - **Kick:** digite o nome do canal (o que aparece em `kick.com/nome`).
-   - **Bilibili:** digite o número da sala.
-4. Configure o OBS (só na primeira vez). Na engrenagem ⚙️ do painel, na página **🔗 URLs para o OBS**, as URLs vêm com um botão 📋 de copiar (clique no olho 👁 para revelar cada uma):
-   - **Comentário em destaque** (`http://localhost:3000/overlay`): fica invisível até você mandar um comentário para a tela.
-   - **Chat ao vivo fixo** (`http://localhost:3000/chat`): mostra o chat rolando na tela o tempo todo, com a foto de cada pessoa — use se quiser deixar o chat fixo, como a maioria dos streamers.
-   - **Overlay vertical** (`http://localhost:3000/overlay?tela=vertical`): o mesmo conteúdo do destaque, arrumado para live de celular 9:16 — só se você usar o modo vertical ou «os dois juntos».
-   - Para cada uma que quiser usar: no OBS, em **Fontes**, clique no **+** → **Navegador** (*Browser Source*), cole a URL, **Largura** 1920 e **Altura** 1080. Pode usar várias ao mesmo tempo, em fontes separadas.
-5. Durante a live: os comentários de todas as plataformas aparecem na aba **🔴 Ao vivo**. **Clique com o botão esquerdo** em um para abrir a janela dele (avatar, nome, texto, mídia, rede e horário) com os botões **📺 Enviar para a tela**, **📥 Enviar para a fila** e Cancelar — nada vai ao ar sem você mandar. Ou clique com o **botão direito** para abrir o menu: **📺 Enviar para a tela**, **📥 Enviar para a fila** ou **🔍 Ampliar avatar**. O comentário aparece na live no centro inferior, por padrão.
-   - Comentário na fila ganha a marcação **"📥 na fila"** no feed e fica aguardando na aba **📥 Fila** (persistida em disco). Lá, o botão direito oferece **enviar para a tela** ou **remover da fila**.
-   - Todo comentário que **já foi para a tela** ganha a marcação **"✓ lido" com o horário em que foi mostrado** (ex.: `✓ lido 14:32`) e fica levemente apagado em todas as abas e colunas — assim você nunca mostra o mesmo comentário duas vezes sem querer. A marcação sobrevive a reinícios.
-   - Os **💰 Super Chats**, os comentários de **👑 Membros** do YouTube e as doações (**💜 LivePix**, **💠 Pix**, **💚 PixGG**) também aparecem separados nas suas próprias abas — e todos eles também podem ir para a 📥 Fila, como qualquer comentário comum.
-
-💡 **Dica:** use o botão **💬 "Enviar comentário de teste"** no topo do painel para testar o visual do overlay sem estar ao vivo — cada clique traz uma amostra diferente (dono, moderador, níveis de membro, Super Chat em todas as cores, tiers da Twitch, selos da Kick, mídia do Telegram/WhatsApp…). Quando terminar, o **🧹** ao lado apaga todos os comentários de teste de uma vez, inclusive as fichas que eles criaram no sorteio.
 
 ## Personalizando o visual
 
@@ -397,6 +497,10 @@ Tudo fica na página **🔗 URLs para o OBS** das configurações. As regras, em
 - **Rápido:** desmarque a caixinha **"Sempre perguntar antes de abrir este arquivo"** e clique em **Executar** — o aviso não volta mais.
 - **Definitivo:** clique com o botão direito no arquivo → **Propriedades** → marque **"Desbloquear"** na parte de baixo → **OK**. Dica: fazendo isso no **ZIP** antes de extrair, todos os arquivos já saem liberados.
 - **Bônus:** quando você atualiza pelo botão da aba **Sobre**, o próprio programa reescreve os arquivos já liberados — então, depois da primeira atualização, esse aviso costuma não voltar mais.
+
+**Preciso instalar o Node.js?** Sim — é a única coisa que não vem no ZIP, e se instala uma vez só, pelo https://nodejs.org (botão verde «LTS»; versão 18 ou mais nova). Ele não vem dentro do pacote pelo tamanho (≈90 MB) e por segurança: você pega o instalador direto da fundação do Node.js, assinado, e o iniciador do OBS Social nunca baixa nem executa nada da internet por conta própria (é o comportamento que os antivírus bloqueiam). O iniciador confere a versão ao abrir; se o Node.js estiver faltando ou for antigo demais, ele explica e oferece abrir a página de download. Se você não pode instalar programas no computador, há a opção portátil: baixe no nodejs.org o «Binário» da LTS, extraia e renomeie a pasta para `node-portable`, dentro da pasta do programa — o iniciador usa ela sozinho.
+
+**O Mac diz que o `iniciar-mac-linux.command` «não pode ser aberto porque é de um desenvolvedor não identificado», ou que não tenho permissão.** Os dois são comportamentos padrão do macOS para um arquivo baixado da internet. Para o primeiro, clique com o botão direito no arquivo → **Abrir** (ou Ajustes do Sistema → Privacidade e Segurança → **Abrir Mesmo Assim**) — ele só pergunta uma vez. Para o da permissão, abra o Terminal, digite `chmod +x ` (com um espaço no fim), arraste o arquivo `iniciar-mac-linux.command` para dentro da janela e aperte Enter; depois dê dois cliques nele de novo.
 
 **Posso deixar outra pessoa (um mod) controlando o painel?** Pode, desde que esteja na mesma rede/Wi-Fi: copie o endereço "👥 Painel para outras pessoas" na página 🔗 URLs para o OBS e escolha o que ela pode fazer: restrito (melhor ainda, com uma senha — quem entra com ela controla tudo) ou liberdade total, em que ninguém precisa de senha. Quem está fora da sua rede não consegue entrar — o OBS Social recusa conexões de fora, sempre.
 
