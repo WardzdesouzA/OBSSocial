@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "Nur am Computer des Streamers: der Extraktor liest das Browserprofil, das dort liegt",
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Seiten wie Instagram und TikTok liefern das Video nur an angemeldete Nutzer — der Extraktor nutzt die Cookies des gewählten Browsers (von Ihrem Computer gelesen) oder die unter Einstellungen hochgeladene cookies.txt",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "Die Datei cookies.txt hochladen oder löschen (Netscape-Format) — sie geht dem Browser vor",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ kommt mit dem System und wird mit ihm aktualisiert (Windows Update, App Store, Paketverwaltung)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +683,7 @@ window.OBS_I18N_DICTS.de = {
     "📍 Cidade": "📍 Stadt",
     "📋 Detalhes": "📋 Details",
     "Como funciona o 🌤️ Clima na tela?": "Wie funktioniert das 🌤️ Wetter auf dem Bildschirm?",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 Diese Seite liefert das Video nur an angemeldete Nutzer. Unter Einstellungen → 🔌 Verbindungen → 🎬 Extraktor die 🍪 Cookies deines Browsers verwenden. Vorerst bleibt der Rahmen der Seite.",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 Diese Seite liefert das Video nur an angemeldete Nutzer. Wählen Sie oben den 🍪 Browser, in dem Sie angemeldet sind (oder laden Sie eine cookies.txt unter Einstellungen → 🔌 Verbindungen → 🎬 Extraktor hoch). Vorerst bleibt der Rahmen der Seite.",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 Privater oder eingeschränkter Inhalt — der Extraktor kommt nicht heran. Der Rahmen der Seite bleibt.",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 Der Extraktor hat dieses Video nicht gefunden (gelöscht, nicht verfügbar oder falscher Link).",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ Der Extraktor kennt diese Seite nicht — der Rahmen der Seite bleibt.",

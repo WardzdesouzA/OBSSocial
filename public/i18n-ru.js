@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "Только на компьютере стримера: экстрактор читает профиль браузера, который находится там",
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Сайты вроде Instagram и TikTok отдают видео только вошедшим пользователям — экстрактор использует cookies выбранного браузера (прочитанные с вашего компьютера) или cookies.txt, загруженный в Настройках",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "Загрузить или удалить файл cookies.txt (формат Netscape) — он имеет приоритет над браузером",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ поставляется с системой и обновляется вместе с ней (Windows Update, App Store, менеджер пакетов)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +683,7 @@ window.OBS_I18N_DICTS.ru = {
     "📍 Cidade": "📍 Город",
     "📋 Detalhes": "📋 Детали",
     "Como funciona o 🌤️ Clima na tela?": "Как работает 🌤️ Погода на экране?",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 Этот сайт отдаёт видео только вошедшим пользователям. В Настройки → 🔌 Подключения → 🎬 Экстрактор используйте 🍪 cookies вашего браузера. Пока остаётся рамка сайта.",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 Этот сайт отдаёт видео только вошедшим пользователям. Выберите выше 🍪 браузер, в котором вы вошли (или загрузите cookies.txt в Настройки → 🔌 Подключения → 🎬 Экстрактор). Пока остаётся рамка сайта.",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 Приватный или ограниченный контент — экстрактору недоступен. Остаётся рамка сайта.",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 Экстрактор не нашёл это видео (удалено, недоступно или неверная ссылка).",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ Экстрактор не знает этот сайт — остаётся рамка сайта.",

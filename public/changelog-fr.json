@@ -1,4 +1,11 @@
 {
+  "0.187.0": {
+    "titulo": "🍪 Les cookies de l’extracteur dans la carte 🎞️ Média direct",
+    "itens": [
+      "La carte 🎞️ Média direct gagne la ligne 🍪 Cookies : le sélecteur « Sans navigateur / Firefox / Chrome / Edge / Brave / Chromium / Opera / Vivaldi / Safari » s’y trouve désormais, pour changer sans quitter le panneau. C’est le même réglage que la carte 🎬 Extracteur dans Réglages — les deux vont ensemble — et la ligne n’apparaît qu’avec l’🧪 Extracteur activé. Le changement se fait sur l’ordinateur du streamer — par le réseau, le panneau montre seulement quelle est la source.",
+      "À côté du sélecteur, le résumé dit ce qui est en vigueur (📄 cookies.txt avec N sites, 🌐 du navigateur X, ou — aucun), et le raccourci 📄 cookies.txt… mène à la carte des Réglages, où le fichier continue d’être envoyé ou supprimé. L’avis « ce site ne livre la vidéo qu’aux utilisateurs connectés » renvoie désormais au sélecteur juste au-dessus."
+    ]
+  },
   "0.186.0": {
     "titulo": "🧩 Composants à jour : ws 8.22.0 et lottie-web 5.13.0 ; ce qui appartient au système est expliqué",
     "itens": [

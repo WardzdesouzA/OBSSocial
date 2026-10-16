@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "仅在主播的电脑上:提取器读取那台电脑上的浏览器配置文件",
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Instagram、TikTok 等网站只向已登录用户提供视频 —— 提取器使用所选浏览器的 Cookie(从你的电脑读取)或在设置中上传的 cookies.txt",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "上传或删除 cookies.txt 文件(Netscape 格式)—— 它优先于浏览器",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ 随系统提供并随系统更新(Windows Update、App Store、包管理器)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +683,7 @@ window.OBS_I18N_DICTS.zh = {
     "📍 Cidade": "📍 城市",
     "📋 Detalhes": "📋 详情",
     "Como funciona o 🌤️ Clima na tela?": "屏幕上的 🌤️ 天气是怎么运作的？",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 此网站只向已登录用户提供视频。在 设置 → 🔌 连接 → 🎬 提取器 中使用浏览器的 🍪 Cookie。目前保留网站的框架。",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 此网站只向已登录用户提供视频。请在上方选择你已登录的 🍪 浏览器(或在 设置 → 🔌 连接 → 🎬 提取器 中上传 cookies.txt)。目前保留网站的框架。",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 私密或受限内容——提取器无法获取。保留网站的框架。",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 提取器没有找到这个视频（已删除、不可用或链接错误）。",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ 提取器不认识这个网站——保留网站的框架。",

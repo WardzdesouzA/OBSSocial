@@ -3526,6 +3526,10 @@ const hub = connectHub((event) => {
         // 🧩 v0.185: o inventário de componentes também é só do computador local (LOCAL_ONLY_OPS)
         const compBloco = document.getElementById('compVerificarBtn');
         if (compBloco && compBloco.closest('.field')) compBloco.closest('.field').style.display = 'none';
+        // 🍪 v0.187: a fonte dos cookies do extrator (o perfil do navegador DESTA máquina)
+        // também é só do computador local — o servidor ignora o pedido vindo da rede (v0.166)
+        const ydNav = document.getElementById('ydNavSel');
+        if (ydNav) { ydNav.disabled = true; ydNav.title = 'Só no computador do streamer: o extrator lê o perfil do navegador que está lá'; }
         // 🔒 v0.179: o card de segurança em 🔗 URLs também é só do computador local
         // (LOCAL_ONLY_OPS): pela rede os seletores e a senha ficam travados em vez
         // de aceitar o clique e mentir na tela depois da recusa do servidor
@@ -4769,6 +4773,7 @@ function fillSettingsForm() {
   // 🎬 v0.134: o card do extrator segue o Labs dele
   const ydCard = document.getElementById('cardYtDlp');
   if (ydCard) ydCard.classList.toggle('cardOculto', (settings.labs || {}).ytdlp !== true);
+  cfgRolarPendente(); // 🍪 v0.187: quem chegou por «#sec-conexoes/cardYtDlp» rola até o cartão agora que ele apareceu
   if (document.activeElement !== logRetentionInput) logRetentionInput.value = settings.logRetentionDays ?? 366;
   applyPanel();
   {
@@ -14048,8 +14053,31 @@ function showCfgPage(name) {
   if (name === 'logs' && typeof hub !== 'undefined') { try { hub.send({ type: 'dadosPedir' }); } catch {} }
 }
 
-window.addEventListener('hashchange', () => showCfgPage(location.hash.replace('#sec-', '')));
-showCfgPage(location.hash.replace('#sec-', ''));
+// 🍪 v0.187: «#sec-pagina/idDoCartao» abre a página E rola até o cartão (o atalho
+// 📄 cookies.txt… da cartela 🎞️ Mídia direta chega em #sec-conexoes/cardYtDlp).
+// Os cards dos Labs nascem .cardOculto até as settings chegarem: a rolagem fica
+// pendente e acontece assim que o cartão aparecer (fillSettings → cfgRolarPendente).
+let cfgCartaoPendente = null;
+function cfgRolarAte(id) {
+  const card = id && /^[A-Za-z0-9_-]{1,60}$/.test(id) ? document.getElementById(id) : null;
+  if (!card || !card.classList.contains('card')) { cfgCartaoPendente = null; return; }
+  if (card.classList.contains('cardOculto') || card.style.display === 'none') { cfgCartaoPendente = id; return; }
+  cfgCartaoPendente = null;
+  if (card.classList.contains('recolhido')) card.querySelector(':scope > h3')?.click();
+  // rolagem direta (não suave) e repetida uma vez: os cards acima ainda crescem
+  // com os estados que chegam logo depois do init, e empurrariam o alvo para baixo
+  const rolar = () => card.scrollIntoView({ block: 'start' });
+  rolar();
+  setTimeout(rolar, 500);
+}
+function cfgRolarPendente() { if (cfgCartaoPendente) cfgRolarAte(cfgCartaoPendente); }
+function irPeloHash() {
+  const [pagina, cartao] = location.hash.replace('#sec-', '').split('/');
+  showCfgPage(pagina);
+  cfgRolarAte(cartao);
+}
+window.addEventListener('hashchange', irPeloHash);
+irPeloHash();
 
 // ---------- 🧲 Organizar o painel (arrastar ícones e abas) ----------
 const TOOL_META = { qr: '📱 QR Code', raffle: '🎁 Sorteio', likemeter: '📊 Likômetro', aud: '👥 Audiência', ws: '🏆 Winstreak', aviso: '📢 Avisos', midiaDireta: '🎞️ Mídia direta', trilhas: '🎵 Mesa de trilhas', obs: '🎬 OBS Studio', vmix: '🎛️ vMix', clip: '📋 Área de transf.' };

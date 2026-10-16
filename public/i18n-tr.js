@@ -10,6 +10,12 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.187 — seletor de cookies pela rede
+    "Só no computador do streamer: o extrator lê o perfil do navegador que está lá": "Yalnızca yayıncının bilgisayarında: çıkarıcı oradaki tarayıcı profilini okur",
+    // v0.187 — 🍪 cookies do extrator na cartela Mídia direta
+    "Sites como Instagram e TikTok só entregam o vídeo para quem está logado — o extrator usa os cookies do navegador escolhido (lidos do seu computador) ou o cookies.txt enviado em Configurações": "Instagram ve TikTok gibi siteler videoyu yalnızca oturum açmış kullanıcılara verir — çıkarıcı seçilen tarayıcının çerezlerini (bilgisayarınızdan okunur) ya da Ayarlar’da yüklenen cookies.txt’yi kullanır",
+    "📄 cookies.txt…": "📄 cookies.txt…",
+    "Enviar ou apagar o arquivo cookies.txt (formato Netscape) — ele vale na frente do navegador": "cookies.txt dosyasını yükle ya da sil (Netscape biçimi) — tarayıcının önüne geçer",
     // v0.186 — componentes do sistema
     "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ sistemle gelir ve onunla güncellenir (Windows Update, App Store, paket yöneticisi)",
     // v0.185 — whisper.cpp sem zip para o sistema
@@ -677,7 +683,7 @@ window.OBS_I18N_DICTS.tr = {
     "📍 Cidade": "📍 Şehir",
     "📋 Detalhes": "📋 Ayrıntılar",
     "Como funciona o 🌤️ Clima na tela?": "Ekrandaki 🌤️ Hava durumu nasıl çalışır?",
-    "🔒 Este site só entrega o vídeo para quem está logado. Em Configurações → 🔌 Conexões → 🎬 Extrator, use os 🍪 cookies do seu navegador. Por enquanto fica o quadro do site.": "🔒 Bu site videoyu yalnızca oturum açmış kullanıcılara veriyor. Ayarlar → 🔌 Bağlantılar → 🎬 Çıkarıcı’da tarayıcınızın 🍪 çerezlerini kullanın. Şimdilik sitenin çerçevesi kalıyor.",
+    "🔒 Este site só entrega o vídeo para quem está logado. Escolha acima o 🍪 navegador em que você está logado (ou envie um cookies.txt em Configurações → 🔌 Conexões → 🎬 Extrator). Por enquanto fica o quadro do site.": "🔒 Bu site videoyu yalnızca oturum açmış kullanıcılara veriyor. Yukarıdan oturum açtığınız 🍪 tarayıcıyı seçin (ya da Ayarlar → 🔌 Bağlantılar → 🎬 Çıkarıcı’da bir cookies.txt yükleyin). Şimdilik sitenin çerçevesi kalıyor.",
     "🔒 Conteúdo privado ou restrito — o extrator não alcança. Fica o quadro do site.": "🔒 Özel veya kısıtlı içerik — çıkarıcı ulaşamıyor. Sitenin çerçevesi kalıyor.",
     "🚫 O extrator não achou esse vídeo (apagado, indisponível ou link errado).": "🚫 Çıkarıcı bu videoyu bulamadı (silinmiş, kullanılamıyor ya da yanlış bağlantı).",
     "ℹ️ O extrator não conhece esse site — fica o quadro do site.": "ℹ️ Çıkarıcı bu siteyi tanımıyor — sitenin çerçevesi kalıyor.",
