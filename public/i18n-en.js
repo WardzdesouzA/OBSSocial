@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "There is no ready-made yt-dlp for this system: install it through your system’s package manager (pip, apt, brew…) — OBS Social finds it on its own.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "companies (individuals not confirmed)",
     "PF (PJ não confirmado)": "individuals (companies not confirmed)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.en = {
     "Cancelar este download": "Cancel this download",
     "Apagar este modelo do disco": "Delete this model from disk",
     "Baixar este modelo agora": "Download this model now",
-    "Baixar agora (Windows x64)": "Download now (Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "Outside Windows, install whisper.cpp (whisper-cli) and ffmpeg with your system package manager — OBS Social finds both by itself.",
+    "Baixar agora (Windows)": "Download now (Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "Without a ready-made download for this system, install whisper.cpp (whisper-cli) and ffmpeg yourself (package manager or official site) — OBS Social finds both on its own.",
     "⏳ Transcrevendo…": "⏳ Transcribing…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ the model has not been downloaded yet (Settings → Connections) — click to try again",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ the transcription engine is not ready yet (Settings → Connections) — click to try again",

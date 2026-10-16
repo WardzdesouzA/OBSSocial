@@ -1,4 +1,13 @@
 {
+  "0.184.0": {
+    "titulo": "📦 Paquete: qué viene en el ZIP, qué instalar y cómo ejecutar — todo al comienzo del README; iniciadores que explican Node.js",
+    "itens": [
+      "El README ahora empieza por lo que importa a quien está llegando: «Empieza aquí» (lo que necesitas tener y los 3 pasos para instalar y ejecutar — Node.js es lo único que no viene en el ZIP), «Qué viene en el paquete y dónde está cada cosa» (cada archivo y carpeta del ZIP, lo que el programa crea en la primera apertura y dónde quedan los componentes opcionales que descarga solo cuando los activas — yt-dlp, whisper.cpp, ffmpeg, modelos de voz, biblioteca de WhatsApp), después «Cómo usar» y solo entonces la lista de funciones. En las dudas: por qué Node.js no viene en el paquete y el aviso del Mac al abrir el .command.",
+      "Los iniciadores («Iniciar (Windows).bat» e «iniciar-mac-linux.command») pasan a verificar Node.js, el motor del programa: si no está instalado — o es más antiguo que la versión 18 — explican con palabras simples qué falta y qué hacer, y ofrecen abrir la página oficial de descarga (nodejs.org) con una tecla. Quien no puede instalar programas puede poner una copia portátil de Node.js en la carpeta node-portable/, junto al iniciador, y él la usa por sí solo. A propósito, el iniciador no descarga ni ejecuta programas de internet — es justamente el comportamiento que hace que los antivirus bloqueen un programa (la única red que usa es npm, que viene con Node.js, para reponer los dos componentes si la carpeta node_modules/ fue borrada).",
+      "Arquitecturas: OBS Social es JavaScript puro y funciona en Windows, macOS y Linux, x64 o ARM (y 32 bits, con Node.js 22) — el README ahora lo dice. Los componentes opcionales pasan a descargarse en la versión correcta para tu procesador: yt-dlp para Windows x64, x86 y ARM64, macOS (universal) y Linux x64 y ARM64; whisper.cpp x64 o 32 bits; ffmpeg x64 o ARM64 de Windows. Cuando no existe una descarga lista (Linux ARM 32 bits; ffmpeg en Windows 32 bits), el panel pide instalarlo por el sistema en vez de ofrecer un archivo que no funcionaría.",
+      "Orden en el paquete: el package-lock.json trae la versión correcta del programa (estaba parado en la 0.2.0) y la carpeta node-portable/ queda fuera del repositorio. Nada cambió en el programa en sí."
+    ]
+  },
   "0.183.0": {
     "titulo": "💠 Pix directo del banco: selector con 8 bancos y fintechs que entregan nombre y mensaje",
     "itens": [

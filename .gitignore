@@ -4,6 +4,10 @@ data/
 # pode ser commitada de novo — este repositório é público.
 public/artes/
 
+# 🧩 Cópia portátil do Node.js que a pessoa pode colocar ao lado do iniciador
+# quando não pode instalar programas — fica só naquela máquina, nunca aqui.
+node-portable/
+
 # Pastas de trabalho da ferramenta de desenvolvimento e arquivos de PID de testes
 .claude/
 *.pid

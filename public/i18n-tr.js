@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "Bu sistem için hazır bir yt-dlp yok: sisteminizin paket yöneticisiyle kurun (pip, apt, brew…) — OBS Social onu kendiliğinden bulur.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "kurumsal (bireysel doğrulanmadı)",
     "PF (PJ não confirmado)": "bireysel (kurumsal doğrulanmadı)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.tr = {
     "Cancelar este download": "Bu indirmeyi iptal et",
     "Apagar este modelo do disco": "Bu modeli diskten sil",
     "Baixar este modelo agora": "Bu modeli şimdi indir",
-    "Baixar agora (Windows x64)": "Şimdi indir (Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "Windows dışında whisper.cpp (whisper-cli) ve ffmpeg’i sisteminizin paket yöneticisiyle kurun — OBS Social ikisini de kendisi bulur.",
+    "Baixar agora (Windows)": "Şimdi indir (Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "Bu sistem için hazır bir indirme yoksa whisper.cpp (whisper-cli) ve ffmpeg’i kendiniz kurun (paket yöneticisi ya da resmi site) — OBS Social ikisini de kendiliğinden bulur.",
     "⏳ Transcrevendo…": "⏳ Çözümleniyor…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ model henüz indirilmedi (Ayarlar → Bağlantılar) — yeniden denemek için tıklayın",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ transkripsiyon motoru henüz hazır değil (Ayarlar → Bağlantılar) — yeniden denemek için tıklayın",

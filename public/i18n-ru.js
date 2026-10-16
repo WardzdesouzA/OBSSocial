@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "Для этой системы нет готового yt-dlp: установите его через менеджер пакетов вашей системы (pip, apt, brew…) — OBS Social найдёт его самостоятельно.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "юр. лица (физ. лица не подтверждены)",
     "PF (PJ não confirmado)": "физ. лица (юр. лица не подтверждены)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.ru = {
     "Cancelar este download": "Отменить эту загрузку",
     "Apagar este modelo do disco": "Удалить эту модель с диска",
     "Baixar este modelo agora": "Скачать эту модель сейчас",
-    "Baixar agora (Windows x64)": "Скачать сейчас (Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "Вне Windows установите whisper.cpp (whisper-cli) и ffmpeg через пакетный менеджер системы — OBS Social найдёт оба сам.",
+    "Baixar agora (Windows)": "Скачать сейчас (Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "Если для этой системы нет готовой загрузки, установите whisper.cpp (whisper-cli) и ffmpeg сами (менеджер пакетов или официальный сайт) — OBS Social найдёт оба самостоятельно.",
     "⏳ Transcrevendo…": "⏳ Расшифровка…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ модель ещё не скачана (Настройки → Подключения) — нажмите, чтобы повторить",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ движок транскрипции ещё не готов (Настройки → Подключения) — нажмите, чтобы повторить",

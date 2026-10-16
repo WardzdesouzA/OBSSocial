@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "没有为此系统准备好的 yt-dlp:请用系统的包管理器(pip、apt、brew 等)安装 —— OBS Social 会自动找到它。",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "企业(个人未确认)",
     "PF (PJ não confirmado)": "个人(企业未确认)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.zh = {
     "Cancelar este download": "取消此下载",
     "Apagar este modelo do disco": "从磁盘删除此模型",
     "Baixar este modelo agora": "立即下载此模型",
-    "Baixar agora (Windows x64)": "立即下载(Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "在 Windows 之外,请用系统的包管理器安装 whisper.cpp(whisper-cli)和 ffmpeg — OBS Social 会自动找到它们。",
+    "Baixar agora (Windows)": "立即下载(Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "如果没有为此系统准备好的下载,请自行安装 whisper.cpp(whisper-cli)和 ffmpeg(包管理器或官方网站)—— OBS Social 会自动找到两者。",
     "⏳ Transcrevendo…": "⏳ 转写中…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ 模型尚未下载(设置 → 连接)— 点击重试",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ 转写引擎尚未就绪(设置 → 连接)— 点击重试",

@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "이 시스템용으로 준비된 yt-dlp가 없습니다. 시스템의 패키지 관리자(pip, apt, brew 등)로 설치하세요 — OBS Social이 알아서 찾습니다.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "법인(개인은 미확인)",
     "PF (PJ não confirmado)": "개인(법인은 미확인)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.ko = {
     "Cancelar este download": "이 다운로드 취소",
     "Apagar este modelo do disco": "이 모델을 디스크에서 삭제",
     "Baixar este modelo agora": "이 모델 지금 내려받기",
-    "Baixar agora (Windows x64)": "지금 내려받기 (Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "윈도우 밖에서는 시스템 패키지 관리자로 whisper.cpp(whisper-cli)와 ffmpeg를 설치하세요 — OBS Social이 둘 다 알아서 찾습니다.",
+    "Baixar agora (Windows)": "지금 내려받기 (Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "이 시스템용으로 준비된 다운로드가 없으면 whisper.cpp(whisper-cli)와 ffmpeg를 직접 설치하세요(패키지 관리자 또는 공식 사이트). OBS Social이 둘을 알아서 찾습니다.",
     "⏳ Transcrevendo…": "⏳ 필사 중…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ 모델이 아직 내려받아지지 않았습니다(설정 → 연결) — 클릭하면 다시 시도",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ 필사 엔진이 아직 준비되지 않았습니다(설정 → 연결) — 클릭하면 다시 시도",

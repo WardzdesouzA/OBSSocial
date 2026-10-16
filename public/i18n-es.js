@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "No hay un yt-dlp listo para este sistema: instálalo con el gestor de paquetes de tu sistema (pip, apt, brew…) — OBS Social lo encuentra por sí solo.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "PJ (PF no confirmada)",
     "PF (PJ não confirmado)": "PF (PJ no confirmada)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.es = {
     "Cancelar este download": "Cancelar esta descarga",
     "Apagar este modelo do disco": "Borrar este modelo del disco",
     "Baixar este modelo agora": "Descargar este modelo ahora",
-    "Baixar agora (Windows x64)": "Descargar ahora (Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "Fuera de Windows, instala whisper.cpp (whisper-cli) y ffmpeg con el gestor de tu sistema — OBS Social encuentra los dos solo.",
+    "Baixar agora (Windows)": "Descargar ahora (Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "Sin una descarga lista para este sistema, instala whisper.cpp (whisper-cli) y ffmpeg tú mismo (gestor de paquetes o sitio oficial) — OBS Social encuentra los dos por sí solo.",
     "⏳ Transcrevendo…": "⏳ Transcribiendo…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ el modelo aún no fue descargado (Configuración → Conexiones) — haz clic para intentar de nuevo",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ el motor de transcripción aún no está listo (Configuración → Conexiones) — haz clic para intentar de nuevo",

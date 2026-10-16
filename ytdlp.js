@@ -21,16 +21,25 @@ const http = require('http');
 const https = require('https');
 const { spawn, spawnSync } = require('child_process');
 
-// Os executáveis prontos do projeto (um arquivo só, sem instalador)
+// Os executáveis prontos do projeto (um arquivo só, sem instalador), por
+// sistema E arquitetura (v0.184) — um binário x64 não roda num Windows de
+// 32 bits nem num Linux ARM. Sem entrada = o projeto não publica um arquivo
+// único para a combinação (ex.: Linux ARM de 32 bits): vale o yt-dlp
+// instalado no sistema (pip, apt, brew…), que o programa encontra sozinho.
 const BASE_YTDLP = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/';
-const ARQUIVOS = { win32: 'yt-dlp.exe', darwin: 'yt-dlp_macos', linux: 'yt-dlp_linux' };
+const ARQUIVOS = {
+  win32: { x64: 'yt-dlp.exe', ia32: 'yt-dlp_x86.exe', arm64: 'yt-dlp_arm64.exe' },
+  darwin: { x64: 'yt-dlp_macos', arm64: 'yt-dlp_macos' }, // universal: Intel e Apple Silicon
+  linux: { x64: 'yt-dlp_linux', arm64: 'yt-dlp_linux_aarch64' },
+};
 const LIMITE_BYTES = 60 * 1024 * 1024;   // o executável tem ~30 MB
 const LIMITE_SAIDA = 8 * 1024 * 1024;    // o JSON de um vídeo cabe folgado
 const TEMPO_MAX_MS = 45 * 1000;          // o site demora? paciência tem limite
 const CACHE_MS = 8 * 60 * 1000;          // o endereço achado vale por um tempo
 const MAX_CACHE = 40;
 
-const nomeDoArquivo = () => ARQUIVOS[process.platform] || 'yt-dlp';
+// null = não há executável pronto para este sistema/arquitetura
+const nomeDoArquivo = (plataforma = process.platform, arq = process.arch) => (ARQUIVOS[plataforma] || {})[arq] || null;
 
 class Extrator {
   // opcoes: { dir, aoEvento(evento), ehPublico(hostname)->Promise<bool>, base? }
@@ -63,8 +72,11 @@ class Extrator {
 
   // 1) o que baixamos aqui  2) o que já estava instalado na máquina
   onde() {
-    const baixado = path.join(this.dir, nomeDoArquivo());
-    if (this._temArquivo(baixado)) return { comando: baixado, origem: 'baixado' };
+    const nome = nomeDoArquivo();
+    if (nome) {
+      const baixado = path.join(this.dir, nome);
+      if (this._temArquivo(baixado)) return { comando: baixado, origem: 'baixado' };
+    }
     const s = this._noSistema();
     if (s) return { comando: s, origem: 'sistema' };
     return null;
@@ -94,6 +106,9 @@ class Extrator {
       baixandoPct: this.download ? this.download.pct : null,
       trabalhando: this.rodando > 0,
       arquivo: nomeDoArquivo(),
+      // v0.184: false quando o yt-dlp não publica um executável para este
+      // sistema/arquitetura — o painel não oferece um download que não rodaria
+      baixavel: !!nomeDoArquivo(),
       // 🍪 v0.166: só o RESUMO — o conteúdo dos cookies nunca sai daqui
       cookies: { arquivo: this._temArquivo(this.arquivoCookies()), sites: this.sitesDosCookies() },
     };
@@ -155,12 +170,17 @@ class Extrator {
   // ---------- baixar sob demanda ----------
   baixar() {
     if (this.download) return;
+    const nome = nomeDoArquivo();
+    if (!nome) {
+      this.aoEvento({ type: 'ytdlpAviso', erro: `o yt-dlp não publica um executável pronto para este sistema (${process.platform}/${process.arch}); instale-o pelo gerenciador do seu sistema (pip, apt, brew…) e o OBS Social o encontra sozinho` });
+      return;
+    }
     try { fs.mkdirSync(this.dir, { recursive: true }); } catch { /* já existe */ }
     this.download = { pct: 0, req: null, cancelado: false };
     this._avisaEstado();
-    const destino = path.join(this.dir, nomeDoArquivo());
+    const destino = path.join(this.dir, nome);
     const part = destino + '.part';
-    this._buscar(this.base + nomeDoArquivo(), part, () => {
+    this._buscar(this.base + nome, part, () => {
       if (this.download && this.download.cancelado) { this._limpar(part); this._fim(); return; }
       try {
         fs.renameSync(part, destino);
@@ -189,7 +209,8 @@ class Extrator {
   }
 
   apagar() {
-    this._limpar(path.join(this.dir, nomeDoArquivo()));
+    const nome = nomeDoArquivo();
+    if (nome) this._limpar(path.join(this.dir, nome));
     this._versao = null;
     this.cache.clear();
     this._avisaEstado();

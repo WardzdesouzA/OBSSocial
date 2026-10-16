@@ -3,14 +3,17 @@
 // Nada de nuvem: o áudio/vídeo que o inscrito mandou não sai da máquina.
 // TUDO é baixado sob demanda (nada vem embutido no programa):
 //   • os modelos GGML (tiny → large) direto do Hugging Face oficial;
-//   • o motor (whisper-cli) do release oficial do whisper.cpp (Windows x64);
+//   • o motor (whisper-cli) do release oficial do whisper.cpp (Windows x64,
+//     32 bits ou ARM64, conforme a arquitetura — ver MOTOR_WIN);
 //   • o conversor ffmpeg (para voz do Telegram/opus e vídeos) do build
-//     estável do projeto BtbN — também só se precisar.
+//     estável do projeto BtbN (x64 ou ARM64 — ver FFMPEG_WIN), também só se
+//     precisar.
 // Em outros sistemas o motor/ffmpeg instalados na máquina são usados
 // automaticamente (ou um caminho que o streamer configurar).
 // A fila processa UM arquivo por vez para não derrubar a live.
 // ---------------------------------------------------------------------------
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const https = require('https');
 const http = require('http');
@@ -26,9 +29,28 @@ const MODELOS = {
   large: { arquivo: 'ggml-large-v3-turbo.bin', mb: 1550 }, // large-v3-turbo: o mais preciso que ainda roda bem
 };
 const BASE_MODELOS = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/';
-// Motor e conversor para Windows x64 (a maioria dos streamers do OBS)
-const URL_MOTOR_WIN = 'https://github.com/ggml-org/whisper.cpp/releases/download/v1.8.2/whisper-bin-x64.zip';
-const URL_FFMPEG_WIN = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip';
+// Motor e conversor prontos para Windows (a maioria dos streamers do OBS), por
+// arquitetura (v0.184) — um zip x64 não serve num Windows de 32 bits:
+//   • o whisper.cpp publica x64 e Win32 (32 bits); não publica ARM64 — o
+//     Windows 11 ARM (build 22000+) roda o x64 pela emulação dele; o Windows
+//     10 ARM só emula x86, então ali vai o de 32 bits;
+//   • o ffmpeg (BtbN) publica win64 e winarm64; não publica 32 bits — aí o
+//     ffmpeg tem que vir instalado no sistema (null = sem download pronto).
+const WHISPER_X64 = 'https://github.com/ggml-org/whisper.cpp/releases/download/v1.8.2/whisper-bin-x64.zip';
+const WHISPER_WIN32 = 'https://github.com/ggml-org/whisper.cpp/releases/download/v1.8.2/whisper-bin-Win32.zip';
+const WIN_BUILD = process.platform === 'win32' ? Number(String(os.release()).split('.')[2]) || 0 : 0;
+const MOTOR_WIN = {
+  x64: WHISPER_X64,
+  arm64: WIN_BUILD >= 22000 ? WHISPER_X64 : WHISPER_WIN32,
+  ia32: WHISPER_WIN32,
+};
+const FFMPEG_WIN = {
+  x64: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
+  arm64: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-winarm64-gpl.zip',
+};
+// Fora do Windows não há zip pronto (null): o motor e o ffmpeg vêm do sistema
+const URL_MOTOR_WIN = process.platform === 'win32' ? MOTOR_WIN[process.arch] || null : null;
+const URL_FFMPEG_WIN = process.platform === 'win32' ? FFMPEG_WIN[process.arch] || null : null;
 // Formatos que o whisper-cli lê sozinho; o resto passa antes pelo ffmpeg
 const EXT_DIRETA = new Set(['wav', 'mp3', 'flac']);
 const LIMITE_TEXTO = 20000;      // rascunho não precisa ser um livro
@@ -75,9 +97,11 @@ class Transcritor {
     const df = this.downloads.get('ffmpeg');
     return {
       modelos,
-      motor: { pronto: !!motor, origem: motor ? motor.origem : null, baixandoPct: dm ? dm.pct : null },
-      ffmpeg: { pronto: !!ffmpeg, origem: ffmpeg ? ffmpeg.origem : null, baixandoPct: df ? df.pct : null },
+      // v0.184: baixavel = existe um zip pronto para este sistema/arquitetura
+      motor: { pronto: !!motor, origem: motor ? motor.origem : null, baixandoPct: dm ? dm.pct : null, baixavel: !!this.urlMotor },
+      ffmpeg: { pronto: !!ffmpeg, origem: ffmpeg ? ffmpeg.origem : null, baixandoPct: df ? df.pct : null, baixavel: !!this.urlFfmpeg },
       plataformaWin: process.platform === 'win32',
+      arquitetura: process.arch,
       fila: this.fila.length + (this.rodando ? 1 : 0),
     };
   }
@@ -215,16 +239,21 @@ class Transcritor {
     this._avisaEstado();
   }
 
-  // Motor (whisper-cli) e ffmpeg para Windows x64: zip oficial → só os
-  // executáveis/DLLs necessários caem em dirMotor
+  // Motor (whisper-cli) e ffmpeg para Windows (o zip da arquitetura, ver
+  // MOTOR_WIN/FFMPEG_WIN): só os executáveis/DLLs necessários caem em dirMotor
   baixarMotor(alvo) {
     const chave = alvo === 'ffmpeg' ? 'ffmpeg' : 'motor';
     if (this.downloads.has(chave)) return;
+    const url = chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor;
+    if (!url) {
+      // v0.184: sem zip pronto para esta arquitetura (ex.: ffmpeg no Windows de 32 bits)
+      this.aoEvento({ type: 'transcricaoAviso', chave, erro: `não existe um ${chave === 'ffmpeg' ? 'ffmpeg' : 'whisper.cpp'} pronto para baixar neste sistema (${process.platform}/${process.arch}); instale-o você mesmo e o OBS Social o encontra sozinho` });
+      return;
+    }
     fs.mkdirSync(this.dirMotor, { recursive: true });
     this.downloads.set(chave, { pct: 0, req: null });
     this._avisaEstado();
     const part = path.join(this.dirMotor, chave + '.zip.part');
-    const url = chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor;
     this._baixar(chave, url, part, () => {
       if (this.downloads.get(chave)?.cancelado) { try { fs.unlinkSync(part); } catch {} this._terminaDownload(chave); return; }
       try {

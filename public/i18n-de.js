@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "Für dieses System gibt es kein fertiges yt-dlp: installiere es über die Paketverwaltung deines Systems (pip, apt, brew…) — OBS Social findet es von selbst.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "Unternehmen (Privatpersonen nicht bestätigt)",
     "PF (PJ não confirmado)": "Privatpersonen (Unternehmen nicht bestätigt)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.de = {
     "Cancelar este download": "Diesen Download abbrechen",
     "Apagar este modelo do disco": "Dieses Modell von der Festplatte löschen",
     "Baixar este modelo agora": "Dieses Modell jetzt herunterladen",
-    "Baixar agora (Windows x64)": "Jetzt herunterladen (Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "Außerhalb von Windows installieren Sie whisper.cpp (whisper-cli) und ffmpeg über den Paketmanager Ihres Systems — OBS Social findet beide selbst.",
+    "Baixar agora (Windows)": "Jetzt herunterladen (Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "Gibt es keinen fertigen Download für dieses System, installiere whisper.cpp (whisper-cli) und ffmpeg selbst (Paketverwaltung oder offizielle Seite) — OBS Social findet beide von selbst.",
     "⏳ Transcrevendo…": "⏳ Transkribiere…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ das Modell wurde noch nicht heruntergeladen (Einstellungen → Verbindungen) — zum erneuten Versuch klicken",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ die Transkriptions-Engine ist noch nicht bereit (Einstellungen → Verbindungen) — zum erneuten Versuch klicken",

@@ -6188,17 +6188,20 @@ function renderTranscricao() {
         : '✔ pronto (instalado no computador)';
     } else {
       estado.textContent = '❌ não encontrado';
-      if (trEstado.plataformaWin) {
-        botoes.push(trBotao('⬇️', 'Baixar agora (Windows x64)', () => hub.send({ type: 'transcricaoMotor', alvo, acao: 'baixar' })));
+      // v0.184: só oferece o download quando existe um zip para esta
+      // arquitetura (o ffmpeg não tem versão para Windows de 32 bits)
+      if (trEstado.plataformaWin && !(info && info.baixavel === false)) {
+        botoes.push(trBotao('⬇️', 'Baixar agora (Windows)', () => hub.send({ type: 'transcricaoMotor', alvo, acao: 'baixar' })));
       }
     }
     alvoMotores.appendChild(trLinha(rotulo, estado, botoes));
   }
-  if (!trEstado.plataformaWin && !(trEstado.motor && trEstado.motor.pronto)) {
+  const semDownload = (x) => x && !x.pronto && (!trEstado.plataformaWin || x.baixavel === false);
+  if (semDownload(trEstado.motor) || semDownload(trEstado.ffmpeg)) {
     const dica = document.createElement('div');
     dica.className = 'hint';
     dica.style.marginBottom = '0';
-    dica.textContent = 'Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.';
+    dica.textContent = 'Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.';
     alvoMotores.appendChild(dica);
   }
 }
@@ -6235,9 +6238,18 @@ function renderYtDlp() {
     }
   } else {
     estado.textContent = '— não baixado';
-    botoes.push(trBotao('⬇️', 'Baixar o extrator agora (~30 MB, um arquivo só)', () => hub.send({ type: 'ytdlpMotor', acao: 'baixar' })));
+    // v0.184: sem executável pronto para este sistema/arquitetura (ex.: Linux
+    // ARM de 32 bits) não se oferece um download que não rodaria
+    if (ydEstado.baixavel !== false) botoes.push(trBotao('⬇️', 'Baixar o extrator agora (~30 MB, um arquivo só)', () => hub.send({ type: 'ytdlpMotor', acao: 'baixar' })));
   }
   alvo.appendChild(trLinha(rotulo, estado, botoes));
+  if (!ydEstado.pronto && ydEstado.baixavel === false) {
+    const dica = document.createElement('div');
+    dica.className = 'hint';
+    dica.style.marginBottom = '0';
+    dica.textContent = 'Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.';
+    alvo.appendChild(dica);
+  }
   if (ydEstado.trabalhando) {
     const dica = document.createElement('div');
     dica.className = 'hint';

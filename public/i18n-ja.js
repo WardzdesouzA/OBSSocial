@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "このシステム向けの用意された yt-dlp はありません。システムのパッケージマネージャー(pip、apt、brew など)でインストールしてください — OBS Social が自動で見つけます。",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "法人(個人は未確認)",
     "PF (PJ não confirmado)": "個人(法人は未確認)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.ja = {
     "Cancelar este download": "このダウンロードをキャンセル",
     "Apagar este modelo do disco": "このモデルをディスクから削除",
     "Baixar este modelo agora": "このモデルを今ダウンロード",
-    "Baixar agora (Windows x64)": "今ダウンロード(Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "Windows以外では、whisper.cpp(whisper-cli)とffmpegをシステムのパッケージマネージャーでインストールしてください — OBS Socialが自動で見つけます。",
+    "Baixar agora (Windows)": "今ダウンロード(Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "このシステム向けの用意されたダウンロードがない場合は、whisper.cpp(whisper-cli)と ffmpeg を自分でインストールしてください(パッケージマネージャーまたは公式サイト)。OBS Social が両方を自動で見つけます。",
     "⏳ Transcrevendo…": "⏳ 文字起こし中…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ モデルがまだダウンロードされていません(設定 → 接続)— クリックで再試行",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ 文字起こしエンジンがまだ準備できていません(設定 → 接続)— クリックで再試行",

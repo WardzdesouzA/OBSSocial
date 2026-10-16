@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    // v0.184 — extrator: sem yt-dlp pronto para a arquitetura
+    "Não há um yt-dlp pronto para este sistema: instale-o pelo gerenciador do seu sistema (pip, apt, brew…) — o OBS Social encontra sozinho.": "Il n’existe pas de yt-dlp prêt pour ce système : installez-le avec le gestionnaire de paquets de votre système (pip, apt, brew…) — OBS Social le trouve tout seul.",
     // 💠 v0.183: PF/PJ não confirmado
     "PJ (PF não confirmado)": "entreprises (particuliers non confirmés)",
     "PF (PJ não confirmado)": "particuliers (entreprises non confirmées)",
@@ -2944,8 +2946,8 @@ window.OBS_I18N_DICTS.fr = {
     "Cancelar este download": "Annuler ce téléchargement",
     "Apagar este modelo do disco": "Supprimer ce modèle du disque",
     "Baixar este modelo agora": "Télécharger ce modèle maintenant",
-    "Baixar agora (Windows x64)": "Télécharger maintenant (Windows x64)",
-    "Fora do Windows, instale o whisper.cpp (whisper-cli) e o ffmpeg pelo gerenciador do seu sistema — o OBS Social encontra os dois sozinho.": "Hors Windows, installez whisper.cpp (whisper-cli) et ffmpeg via le gestionnaire de votre système — OBS Social les trouve tout seul.",
+    "Baixar agora (Windows)": "Télécharger maintenant (Windows)",
+    "Sem um download pronto para este sistema, instale o whisper.cpp (whisper-cli) e o ffmpeg você mesmo (gerenciador de pacotes ou site oficial) — o OBS Social encontra os dois sozinho.": "Sans téléchargement prêt pour ce système, installez vous-même whisper.cpp (whisper-cli) et ffmpeg (gestionnaire de paquets ou site officiel) — OBS Social trouve les deux tout seul.",
     "⏳ Transcrevendo…": "⏳ Transcription…",
     "⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo": "⚠️ le modèle n’a pas encore été téléchargé (Paramètres → Connexions) — cliquez pour réessayer",
     "⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo": "⚠️ le moteur de transcription n’est pas encore prêt (Paramètres → Connexions) — cliquez pour réessayer",
