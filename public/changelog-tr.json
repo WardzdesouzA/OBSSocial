@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Doğrudan bankadan Pix: ad ve mesaj veren 8 banka ve fintech’li seçici",
+    "itens": [
+      "💠 Doğrudan bankadan Pix (🧪 Labs) bir banka seçici kazandı. Yalnızca resmi API’si ödeyenin adını ve mesajını döndüren sağlayıcılar girer: Banco do Brasil, Bradesco, Santander, Inter ve BS2 (bankalar), Sicoob (kooperatif), OpenPix/Woovi ve Asaas (fintech’ler) — ayrıca Merkez Bankası Pix API’sini izleyen başka herhangi bir banka için özel profil.",
+      "Her banka yalnızca kullandığı alanları gösterir (sertifika, uygulama anahtarı, test ortamı, elle girilen adresler), kimlik bilgilerinin portalında nereden alınacağını, bireysel (PF) mi kurumsal (PJ) mi hizmet verdiğini açıklar ve portal bağlantısını verir. Kimlik bilgilerini farklı isteyen profiller (Authorization: Basic, client_secret’sız) önceden ayarlı gelir.",
+      "Listede dürüstlük: bireysel müşteriler için bugün yalnızca Asaas ödeyenin adını döndürür. API üzerinden ödeyenin adını vermediği için dışarıda kalanlar: Itaú, Sicredi, C6, Banrisul, Banco do Nordeste, Ailos, Efí ve Mercado Pago (gerçek bir hesapta doğrulandı: mesajı getiriyor, adı getirmiyor). Caixa ve Safra belge yayımlamıyor; Nubank, BTG, PagBank, PicPay ve Unicred’in bunun için API’si yok.",
+      "Her bankanın kendi yolu var ve program bunu biliyor: Inter’de zenginleştirilmiş hesap özetini okur (extrato.read kapsamı — zaten kullananlar entegrasyonda «Hesap özeti: sorgula»yı işaretlemeli); BB’de ödeyeni getiren bankaya özgü /pix-bb sorgusunu kullanır; Santander’de günün alınan Pix sorgusunu. Bir banka Pix’i adsız gönderir ve kişi «Ad: mesaj» yazdıysa program adı ayırır.",
+      "Banka ya da ortam değiştirmek görülen Pix listesini sıfırlar (ilk sorgu yine yalnızca işaretler); uygulama anahtarı ve kimlik bilgileri bilgisayarda şifreli kalır ve ekranlara asla gitmez; program yalnızca okur — tahsilat oluşturmaz, para hareket ettirmez. Son ham Pix, tanı için yalnızca bilgisayarınızda data/pix-ultimo.json dosyasında tutulur.",
+      "10 dilde çeviriler; SSS ve README güncellendi."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick: sohbet geri döndü (Kick’in yeni sunucusu) · 🎚️ göstergeler Mini Masa’nın yanlarında",
     "itens": [

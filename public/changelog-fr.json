@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Pix direct de la banque : sélecteur avec 8 banques et fintechs qui fournissent nom et message",
+    "itens": [
+      "💠 Le Pix direct de la banque (🧪 Labs) a reçu un sélecteur de banques. N’y entrent que les fournisseurs dont l’API officielle renvoie le nom du payeur et le message : Banco do Brasil, Bradesco, Santander, Inter et BS2 (banques), Sicoob (coopérative), OpenPix/Woovi et Asaas (fintechs) — plus le profil personnalisé pour toute autre banque qui suit l’API Pix de la Banque centrale.",
+      "Chaque banque n’affiche que les champs qu’elle utilise (certificat, clé d’application, environnement de test, adresses manuelles), explique où obtenir les identifiants sur son portail, si elle accepte les particuliers (PF) ou les entreprises (PJ), et donne le lien du portail. Les profils qui demandent les identifiants autrement (Authorization: Basic, sans client_secret) sont déjà réglés.",
+      "Honnêteté dans la liste : pour les particuliers, seule Asaas renvoie aujourd’hui le nom du payeur. Écartés faute de fournir le nom du payeur par l’API : Itaú, Sicredi, C6, Banrisul, Banco do Nordeste, Ailos, Efí et Mercado Pago (vérifié sur un vrai compte : il donne le message mais pas le nom). Caixa et Safra ne publient pas de documentation ; Nubank, BTG, PagBank, PicPay et Unicred n’ont pas d’API pour cela.",
+      "Chaque banque a sa façon et le programme la connaît déjà : chez Inter il lit le relevé enrichi (portée extrato.read — ceux qui l’utilisaient déjà doivent cocher « Relevé : consulter » dans l’intégration) ; chez BB il utilise la requête propre /pix-bb, qui apporte le payeur ; chez Santander, la requête des Pix reçus du jour. Si une banque envoie un Pix sans nom et que la personne a écrit « Nom : message », le programme sépare le nom.",
+      "Changer de banque ou d’environnement vide la liste des Pix déjà vus (la première requête se contente de nouveau de marquer) ; la clé d’application et les identifiants restent chiffrés sur l’ordinateur et n’atteignent jamais les écrans ; le programme ne fait que lire — il ne crée aucun encaissement et ne déplace rien. Le dernier Pix brut est gardé dans data/pix-ultimo.json, sur votre ordinateur seulement, pour diagnostic.",
+      "Traductions dans les 10 langues ; FAQ et README mis à jour."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick : le chat est de retour (nouveau serveur de Kick) · 🎚️ vumètres sur les côtés de la Mini Table",
     "itens": [

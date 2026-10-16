@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Pix direkt von der Bank: Auswahl mit 8 Banken und Fintechs, die Name und Nachricht liefern",
+    "itens": [
+      "💠 Pix direkt von der Bank (🧪 Labs) hat eine Bankauswahl bekommen. Aufgenommen sind nur Anbieter, deren offizielle API den Namen des Zahlers und die Nachricht liefert: Banco do Brasil, Bradesco, Santander, Inter und BS2 (Banken), Sicoob (Genossenschaftsbank), OpenPix/Woovi und Asaas (Fintechs) — dazu das eigene Profil für jede andere Bank, die der Pix-API der Zentralbank folgt.",
+      "Jede Bank zeigt nur die Felder, die sie nutzt (Zertifikat, Anwendungsschlüssel, Testumgebung, manuelle Adressen), erklärt, wo es die Zugangsdaten im Portal gibt, ob sie Privatpersonen (PF) oder Unternehmen (PJ) bedient, und verlinkt das Portal. Profile, die Zugangsdaten anders verlangen (Authorization: Basic, ohne client_secret), sind schon eingestellt.",
+      "Ehrlichkeit in der Liste: Für Privatpersonen liefert heute nur Asaas den Namen des Zahlers. Nicht aufgenommen, weil die API den Namen des Zahlers nicht liefert: Itaú, Sicredi, C6, Banrisul, Banco do Nordeste, Ailos, Efí und Mercado Pago (auf einem echten Konto geprüft: Nachricht ja, Name nein). Caixa und Safra veröffentlichen keine Dokumentation; Nubank, BTG, PagBank, PicPay und Unicred haben dafür keine API.",
+      "Jede Bank hat ihre Art, und das Programm kennt sie: Bei Inter liest es den erweiterten Kontoauszug (Scope extrato.read — wer Inter schon nutzte, muss in der Integration «Auszug: abfragen» ankreuzen); bei BB nutzt es die bankeigene Abfrage /pix-bb, die den Zahler mitbringt; bei Santander die Abfrage der am Tag empfangenen Pix. Schickt eine Bank einen Pix ohne Namen und die Person schrieb «Name: Nachricht», trennt das Programm den Namen ab.",
+      "Ein Wechsel von Bank oder Umgebung leert die Liste der schon gesehenen Pix (die erste Abfrage markiert wieder nur); Anwendungsschlüssel und Zugangsdaten bleiben verschlüsselt auf dem Computer und erreichen nie die Bildschirme; das Programm liest nur — es erzeugt keine Forderung und bewegt nichts. Der letzte rohe Pix liegt zur Diagnose in data/pix-ultimo.json, nur auf deinem Computer.",
+      "Übersetzungen in allen 10 Sprachen; FAQ und README aktualisiert."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick: der Chat ist zurück (neuer Kick-Server) · 🎚️ Pegel an den Seiten des Mini-Decks",
     "itens": [

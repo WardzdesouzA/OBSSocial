@@ -1,4 +1,15 @@
 {
+  "0.183.0": {
+    "titulo": "💠 Pix straight from the bank: picker with 8 banks and fintechs that deliver name and message",
+    "itens": [
+      "💠 Pix straight from the bank (🧪 Labs) got a bank picker. Only providers whose official API returns the payer’s name and message are in: Banco do Brasil, Bradesco, Santander, Inter and BS2 (banks), Sicoob (credit union), OpenPix/Woovi and Asaas (fintechs) — plus the custom profile for any other that follows the Central Bank’s Pix API.",
+      "Each bank shows only the fields it uses (certificate, application key, test environment, manual addresses), explains where to get the credentials in its portal, whether it serves individuals (PF) or companies (PJ), and links to the portal. Profiles that ask for credentials differently (Authorization: Basic, no client_secret) come pre-adjusted.",
+      "Honesty in the list: for individuals, today only Asaas returns the payer’s name. Left out for not delivering the payer’s name through the API: Itaú, Sicredi, C6, Banrisul, Banco do Nordeste, Ailos, Efí and Mercado Pago (checked on a real account: it brings the message but not the name). Caixa and Safra do not publish documentation; Nubank, BTG, PagBank, PicPay and Unicred have no API for this.",
+      "Each bank has its own way and the program already knows it: for Inter it reads the enriched statement (extrato.read scope — existing users must tick «Statement: query» in the integration); for BB it uses the bank’s own /pix-bb query, which brings the payer; for Santander, the day’s received-Pix query. If a bank sends a Pix without a name and the person wrote «Name: message», the program splits the name off.",
+      "Switching bank or environment clears the list of already-seen Pix (the first query goes back to marking only); the application key and credentials stay encrypted on the computer and never reach the screens; the program only reads — it never creates charges or moves money. The last raw Pix is kept in data/pix-ultimo.json, on your computer only, for diagnosis.",
+      "Translations in all 10 languages; FAQ and README updated."
+    ]
+  },
   "0.182.0": {
     "titulo": "🟢 Kick: chat is back (Kick’s new server) · 🎚️ meters on the sides of the Mini Deck",
     "itens": [

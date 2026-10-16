@@ -461,6 +461,7 @@
   #mpTabs .mp-chip { border-radius: 9px 9px 0 0; border-bottom-width: 2px; }
   .lab-body { margin-top: 10px; }
   .lab-item.off .lab-body { opacity: 0.45; pointer-events: none; }
+  #pixSalvarBtn:disabled { opacity: 0.35; cursor: default; filter: none; }
   /* 🧪 v0.125: cada item do Labs recolhe/expande como os cards da página
      Temas — a seta fica FORA do rótulo do interruptor, para o clique nela
      não ligar/desligar a função */
@@ -2780,7 +2781,7 @@
           <span><b>💠 Pix direto do banco (experimental)</b> — cada Pix recebido na sua conta vira um comentário na aba 💠 Pix do painel (e numa coluna própria), com a mensagem que a pessoa escreveu no app do banco</span>
         </label>
         <div class="lab-body">
-          <div class="hint">Sem intermediário e sem taxa de plataforma: o programa consulta a <b>API Pix do SEU banco</b> (padrão do Banco Central) de tempos em tempos. Você precisa criar um aplicativo no portal do desenvolvedor do banco e colar aqui as credenciais e o certificado que ele fornecer. Perfis prontos: <b>Banco Inter</b> (conta PJ — MEI serve; certificado sai de graça no portal) e <b>Sicoob</b> (PJ e <b>pessoa física</b>; usa certificado ICP-Brasil no CPF/CNPJ). Outro banco que siga o padrão? Use o perfil personalizado.</div>
+          <div class="hint">Sem intermediário e sem taxa de plataforma: o programa consulta a <b>API Pix do SEU banco</b> (padrão do Banco Central) de tempos em tempos e só <b>lê</b> os Pix recebidos — valor, nome de quem pagou e a mensagem, se tiver. Você cria um aplicativo no portal do desenvolvedor do banco e cola aqui as credenciais (e o certificado, quando o banco pede). Escolha o banco na lista: cada um mostra onde conseguir as credenciais e se atende <b>PF</b> (pessoa física) ou <b>PJ</b> (empresa/MEI). Outro banco que siga o padrão? Use o perfil personalizado.</div>
           <div class="settings-grid">
             <div><label>Banco</label>
               <select id="pixBancoSel">
@@ -2790,11 +2791,28 @@
               </select>
             </div>
             <div><label>Consultar a cada (segundos)</label><input type="number" id="pixIntervaloInput" min="5" max="120" step="1" placeholder="10"></div>
-            <div><label>Client ID (do portal do banco)</label><input type="text" id="pixClientIdInput" autocomplete="off"></div>
-            <div><label>Client Secret</label><input type="password" id="pixClientSecretInput" autocomplete="off" placeholder="em branco = não mexer no guardado"></div>
-            <div><label>Certificado (caminho do arquivo .crt, .pem ou .pfx)</label><input type="text" id="pixCertInput" autocomplete="off" placeholder="C:\certificados\banco.crt"></div>
-            <div><label>Chave privada (.key — se for separada do certificado)</label><input type="text" id="pixChaveArqInput" autocomplete="off" placeholder="C:\certificados\banco.key"></div>
-            <div><label>Senha do certificado (só para .pfx)</label><input type="password" id="pixCertSenhaInput" autocomplete="off" placeholder="em branco = não mexer no guardado"></div>
+          </div>
+          <div class="hint" id="pixBancoAjuda" style="margin-top:2px"></div>
+          <div class="settings-grid">
+            <div id="pixAmbienteWrap" style="display:none"><label>Ambiente</label>
+              <select id="pixAmbienteSel">
+                <option value="producao">Produção (conta de verdade)</option>
+                <option value="sandbox">Testes (sandbox do banco)</option>
+              </select>
+            </div>
+            <div id="pixClientIdWrap"><label id="pixClientIdLabel">Client ID (do portal do banco)</label><input type="text" id="pixClientIdInput" autocomplete="off"></div>
+            <div id="pixClientSecretWrap"><label id="pixClientSecretLabel">Client Secret</label><input type="password" id="pixClientSecretInput" autocomplete="off" placeholder="em branco = não mexer no guardado"></div>
+            <div id="pixAppKeyWrap" style="display:none"><label id="pixAppKeyLabel">Chave do aplicativo</label><input type="password" id="pixAppKeyInput" autocomplete="off" placeholder="em branco = não mexer no guardado"></div>
+            <div id="pixAuthWrap" style="display:none"><label>Credenciais no pedido do token</label>
+              <select id="pixAuthSel">
+                <option value="">Como o banco costuma pedir</option>
+                <option value="form">No formulário (client_id e client_secret no corpo)</option>
+                <option value="basic">No cabeçalho (Authorization: Basic)</option>
+              </select>
+            </div>
+            <div class="pix-cert"><label>Certificado (caminho do arquivo .crt, .pem ou .pfx)</label><input type="text" id="pixCertInput" autocomplete="off" placeholder="C:\certificados\banco.crt"></div>
+            <div class="pix-cert"><label>Chave privada (.key — se for separada do certificado)</label><input type="text" id="pixChaveArqInput" autocomplete="off" placeholder="C:\certificados\banco.key"></div>
+            <div class="pix-cert"><label>Senha do certificado (só para .pfx)</label><input type="password" id="pixCertSenhaInput" autocomplete="off" placeholder="em branco = não mexer no guardado"></div>
           </div>
           <div id="pixCustomWrap" style="display:none">
             <div class="settings-grid">
@@ -2803,6 +2821,7 @@
               <div><label>Escopo OAuth</label><input type="text" id="pixEscopoInput" autocomplete="off" placeholder="pix.read"></div>
             </div>
           </div>
+          <div class="hint" id="pixBancoAviso" style="display:none;margin-top:2px"></div>
           <div class="row" style="margin-top:8px;align-items:center">
             <button id="pixSalvarBtn" class="icon-btn" title="Salvar e conectar ao banco">💾</button>
             <button id="pixTesteBtn" class="icon-btn" style="width:auto;padding:0 10px;font-size:13px" title="Manda um Pix de mentira para o painel — para ver a aba 💠 Pix e o visual na tela sem depender do banco">🧪 Pix de exemplo</button>
@@ -3253,7 +3272,7 @@
       <details class="faq-item"><summary>Por que alguns comentários ficam apagados, com «✓ lido»?</summary><div class="faq-resposta">Porque já foram para a tela. Todo comentário que passou pelo destaque ganha a marca «✓ lido» com a hora em que foi mostrado e fica levemente esmaecido em todas as abas e colunas (inclusive nas de doação) — para você nunca mostrar o mesmo comentário duas vezes sem querer. O que está NO AR agora fica com a borda verde. A marca sobrevive a reinícios e acompanha todos os painéis abertos; para começar do zero, apague «✓ Marcas de leitura e fila» em 🗄️ Logs e dados.</div></details>
       <details class="faq-item"><summary>Dá para ver o chat de cada rede separado, em vez de tudo misturado?</summary><div class="faq-resposta">Dá: na aba 🔴 Ao vivo, ligue o 🧱 Colunas e cada rede ganha a sua coluna, lado a lado, com o total real da live e a própria paginação (📄, de 5 a 100 por página). A coluna nasce no primeiro comentário daquela rede — para ver também as redes conectadas que ainda não falaram, ligue o 🔇 + Caladas; o 💬 + Unificado põe o chat misturado ao lado das outras. Arraste qualquer coluna pelo cabeçalho (⠿) para a ordem que quiser: fica salva. Cada coluna tem o próprio 🔄 para reiniciar aquela rede e buscar de volta o que ela guarda.</div></details>
       <details class="faq-item"><summary>Numa live cheia os comentários chegam em rajada (ou demoram a aparecer). Dá para ajustar?</summary><div class="faq-resposta">Dá — é o fluxo suave, nos dois seletores da barra do painel. O ⏱️ escolhe o ritmo geral: tempo real, de 2 a 60 segundos, ou 🖐️ manual (o botão 🔃 solta de uma vez o que estiver esperando, com contador). O 🌊 escolhe o espaço entre uma mensagem e outra ao aparecer (efeito automático, ou de 0,5 s a 5 s) e, no modo 🧱 Por coluna, cada rede goteja no próprio compasso, com o ⏳ mostrando quantas aguardam e o ⏭️ que solta a fila para pular direto para as mensagens atuais. O chat fixo no OBS segue o mesmo ritmo; a 🔎 busca e os logs recebem tudo na hora, independente do ritmo. Se os comentários «demoram», olhe primeiro esses dois seletores.</div></details>
-      <details class="faq-item"><summary>Como trago as doações (LivePix, PixGG, Pix) para o painel?</summary><div class="faq-resposta">Cada serviço tem o seu caminho, e cada um ganha aba e coluna próprias no painel, com nome, valor e mensagem — você decide quando cada doação vai para a tela (destaque ou fila). 💜 LivePix: em 🔌 Conexões, cole o ID e o segredo do cliente de uma aplicação criada de graça em dashboard.livepix.gg → Configurações → API; a aba ainda controla os alertas do widget dela (⏸ represar, ⏭ pular, 🔁 repetir) e mostra a carteira. 💚 PixGG: em 🔌 Conexões, cole a chave do widget de alertas (ou a URL inteira dele) — o OBS Social lê o mesmo canal que o widget usa, com a autorização da PixGG; pausar e bloquear quem doa é no painel da PixGG (🔗). 💠 Pix direto do banco: ligue em 🧪 Labs e preencha as credenciais da API Pix do seu banco (Banco Inter, Sicoob ou personalizado) — cada Pix recebido vira um comentário com a mensagem do pagador, sem taxa de plataforma. As chaves ficam cifradas só no seu computador. E a 💰 Arrecadação da live (🧪 Labs) soma tudo, com a taxa de cada serviço, e mostra o que chega de verdade.</div></details>
+      <details class="faq-item"><summary>Como trago as doações (LivePix, PixGG, Pix) para o painel?</summary><div class="faq-resposta">Cada serviço tem o seu caminho, e cada um ganha aba e coluna próprias no painel, com nome, valor e mensagem — você decide quando cada doação vai para a tela (destaque ou fila). 💜 LivePix: em 🔌 Conexões, cole o ID e o segredo do cliente de uma aplicação criada de graça em dashboard.livepix.gg → Configurações → API; a aba ainda controla os alertas do widget dela (⏸ represar, ⏭ pular, 🔁 repetir) e mostra a carteira. 💚 PixGG: em 🔌 Conexões, cole a chave do widget de alertas (ou a URL inteira dele) — o OBS Social lê o mesmo canal que o widget usa, com a autorização da PixGG; pausar e bloquear quem doa é no painel da PixGG (🔗). 💠 Pix direto do banco: ligue em 🧪 Labs, escolha o banco na lista (Banco do Brasil, Bradesco, Santander, Inter, BS2, Sicoob, OpenPix/Woovi, Asaas e outros — ou um perfil personalizado) e preencha as credenciais que o portal dele fornece — cada Pix recebido vira um comentário com nome, valor e mensagem do pagador, sem taxa de plataforma. Só entram provedores cuja API devolve o nome de quem pagou e a mensagem; a lista avisa quem atende PF ou PJ e quem pede certificado. As chaves ficam cifradas só no seu computador. E a 💰 Arrecadação da live (🧪 Labs) soma tudo, com a taxa de cada serviço, e mostra o que chega de verdade.</div></details>
       <details class="faq-item"><summary>Dá para receber mensagens do Telegram e do WhatsApp na live?</summary><div class="faq-resposta">Dá, como funções experimentais do 🧪 Labs — cada uma ganha uma aba e uma coluna no painel, com texto, foto, áudio, vídeo e figurinha, prévia antes de ir para a tela, resposta assinada pelo painel e ⏳ timeout / 🚫 banimento pelo botão direito. 📨 Telegram: 100% oficial e grátis — crie um bot no @BotFather, cole o token em 🔌 Conexões e as pessoas falam com o bot (ou num grupo em que ele seja administrador). 💬 WhatsApp: NÃO é oficial da Meta e existe risco real de banimento do número — use sempre um número SECUNDÁRIO da live; escolha a biblioteca local (grátis, escaneando um QR) ou o gateway Whapi (pago). Nos dois, um seletor decide se entram também grupos, canais e comunidades ou só a conversa direta. Os números de telefone nunca aparecem no painel nem na tela.</div></details>
       <details class="faq-item"><summary>Alguém mandou um GIF no chat da Twitch. Ele aparece?</summary><div class="faq-resposta">Aparece — grande e animado, no painel, no comentário em destaque e no chat fixo, misturado com o texto e os emotes na ordem certa. A Twitch liberou os GIFs (GIPHY) para assinantes Tier 2 e 3, e o OBS Social mostra o GIF exatamente da URL que a Twitch entrega (só https). A legenda do GIF fica como texto alternativo: aparece na dica ao passar o mouse e vale na 🔎 busca. Quer ver como fica sem esperar um assinante? O botão 💬 de comentário de teste tem uma amostra de GIF.</div></details>
       <details class="faq-item"><summary>Como mostro na tela um vídeo do YouTube ou do TikTok, uma imagem ou um áudio?</summary><div class="faq-resposta">Pelo botão 🎞️ Mídia direta do painel: cole a URL (YouTube, TikTok, Instagram, Vimeo, clipe da Twitch, post do X, anexo do Discord, arquivo solto…) ou escolha um arquivo do próprio computador — nada é enviado para a biblioteca, a mídia é mostrada de onde está. O 👁️ põe e tira da tela, com tamanho, ⛶ tela cheia, um player completo comandado do painel (play/pause, posição, 🔊 volume, 🚀 velocidade, 🔁 repetir) e um crédito de fonte («Fonte: @perfil · site») que vai junto para a tela. Sites que escondem o arquivo do vídeo (Instagram, TikTok…) aparecem como quadro do site; para tê-los no nosso player, ligue 🧪 Labs → 🎬 Extrator da mídia direta e baixe o extrator (yt-dlp) em 🔌 Conexões — alguns só entregam o vídeo logado, e aí entram os 🍪 cookies do seu navegador. Mostrar conteúdo de terceiros na sua live é responsabilidade de quem transmite.</div></details>
@@ -6322,6 +6341,85 @@ function aplicarTaxasBuscadas(event) {
   document.getElementById('taxasStatus').textContent = sc.referencia ? '⚠️ Preenchido com o valor de referência' : '✅ Taxas preenchidas e salvas';
   document.getElementById('taxasFonte').textContent = `Super Chat ${sc.valor}%: ${sc.fonte || ''} LivePix ${lp.valor}%: ${lp.fonte || ''} Pix ${px.valor}%: ${px.fonte || ''}` + (pg.valor !== undefined ? ` PixGG ${pg.valor}%: ${pg.fonte || ''}` : '');
 }
+// 💠 v0.183: o seletor de bancos vem do servidor (catálogo), agrupado por tipo
+const PIX_GRUPOS = [['banco', 'Bancos'], ['cooperativa', 'Cooperativas'], ['fintech', 'Fintechs e contas digitais'], ['gateway', 'Plataformas de pagamento'], ['outro', 'Outros']];
+let pixCatalogoAtual = [];
+function pixBancoInfo(id) { return pixCatalogoAtual.find((b) => b.id === id) || null; }
+function montarPixBancos(lista, bancoAtual) {
+  const sel = document.getElementById('pixBancoSel');
+  if (!sel) return;
+  if (!Array.isArray(lista) || !lista.length) {
+    // sem catálogo (página aberta pela rede): ao menos o banco guardado aparece no seletor
+    if (bancoAtual && ![...sel.options].some((o) => o.value === bancoAtual)) { const o = document.createElement('option'); o.value = bancoAtual; o.textContent = bancoAtual; sel.appendChild(o); }
+    return;
+  }
+  const assinatura = lista.map((b) => b.id + ':' + b.nome).join('|');
+  if (sel.dataset.assinatura === assinatura) return;
+  sel.dataset.assinatura = assinatura;
+  pixCatalogoAtual = lista;
+  const t = (s) => (typeof OBS_I18N !== 'undefined' && OBS_I18N ? OBS_I18N.t(s) : s);
+  const atual = sel.value;
+  sel.textContent = '';
+  for (const [grupo, rotulo] of PIX_GRUPOS) {
+    const itens = lista.filter((b) => (b.grupo || 'outro') === grupo);
+    if (!itens.length) continue;
+    const og = document.createElement('optgroup');
+    og.label = t(rotulo);
+    for (const b of itens) {
+      const o = document.createElement('option');
+      o.value = b.id;
+      o.textContent = b.nome + (b.tipo === 'indisponivel' ? ' — ' + t('sem API Pix') : '');
+      og.appendChild(o);
+    }
+    sel.appendChild(og);
+  }
+  if (lista.some((b) => b.id === atual)) sel.value = atual;
+}
+// Mostra só os campos que o banco escolhido usa e explica onde conseguir as credenciais
+function ajustarCamposPix() {
+  const t = (s) => (typeof OBS_I18N !== 'undefined' && OBS_I18N ? OBS_I18N.t(s) : s);
+  const id = document.getElementById('pixBancoSel').value;
+  const b = pixBancoInfo(id) || { tipo: 'bacen', cert: true, pf: null, pj: null };
+  const indisp = b.tipo === 'indisponivel';
+  const emSandbox = !!b.sandbox && document.getElementById('pixAmbienteSel').value === 'sandbox';
+  // no ambiente de testes de um banco de endereços manuais, os endereços de teste já vêm prontos
+  document.getElementById('pixCustomWrap').style.display = !indisp && (id === 'personalizado' || (b.urlsManuais && !emSandbox)) ? '' : 'none';
+  document.getElementById('pixAuthWrap').style.display = !indisp && b.authEscolhivel ? '' : 'none';
+  document.getElementById('pixClientIdWrap').style.display = indisp || b.semClientId ? 'none' : '';
+  document.getElementById('pixClientSecretWrap').style.display = indisp || b.semSecret ? 'none' : '';
+  for (const el of document.querySelectorAll('#lab-pix .pix-cert')) el.style.display = indisp || b.cert === false ? 'none' : '';
+  const aviso = document.getElementById('pixBancoAviso');
+  aviso.textContent = b.aviso ? '⚠️ ' + b.aviso : '';
+  aviso.style.display = b.aviso ? '' : 'none';
+  document.getElementById('pixAmbienteWrap').style.display = !indisp && b.sandbox ? '' : 'none';
+  document.getElementById('pixAppKeyWrap').style.display = !indisp && b.appKey ? '' : 'none';
+  document.getElementById('pixSalvarBtn').disabled = indisp; // sem API não há o que salvar — a ajuda explica o porquê
+  if (b.appKey) document.getElementById('pixAppKeyLabel').textContent = b.appKey.rotulo || t('Chave do aplicativo');
+  document.getElementById('pixClientIdLabel').textContent = b.rotuloId || t('Client ID (do portal do banco)');
+  document.getElementById('pixClientSecretLabel').textContent = b.rotuloSegredo || t('Client Secret');
+  const ajuda = document.getElementById('pixBancoAjuda');
+  const partes = [];
+  const quem = b.pf === true && b.pj === true ? t('PF e PJ')
+    : b.pj === true && b.pf === false ? t('só PJ (empresa)')
+    : b.pf === true && b.pj === false ? t('só PF')
+    : b.pj === true ? t('PJ (PF não confirmado)')
+    : b.pf === true ? t('PF (PJ não confirmado)') : '';
+  if (quem) partes.push('👤 ' + quem);
+  if (indisp) partes.push('🚫 ' + t('sem API Pix'));
+  if (b.cert === false && b.tipo !== 'indisponivel') partes.push('🔓 ' + t('sem certificado'));
+  else if (b.cert !== false && b.tipo !== 'indisponivel') partes.push('🔐 ' + t('com certificado'));
+  if (b.appKey && b.appKey.ajuda) partes.push(b.appKey.ajuda);
+  if (b.ajuda) partes.push(b.ajuda);
+  ajuda.textContent = '';
+  ajuda.append(partes.join(' · '));
+  if (b.portal) {
+    ajuda.append(' ');
+    const a = document.createElement('a');
+    a.href = b.portal; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t('abrir portal ↗');
+    ajuda.appendChild(a);
+  }
+  ajuda.style.display = partes.length || b.portal ? '' : 'none';
+}
 function fillPixLab() {
   const p = cfgPix || {};
   const st = document.getElementById('pixStatus');
@@ -6331,8 +6429,11 @@ function fillPixLab() {
   else if (p.estado === 'ok') st.textContent = '🟢 ' + t('conectado ao banco — consultando os Pix recebidos');
   else if (p.estado === 'erro') st.textContent = '🔴 ' + (p.detalhe || t('erro'));
   else st.textContent = '🟡 ' + t('conectando ao banco...');
+  montarPixBancos(p.bancos, p.banco);
   const campos = [
     ['pixBancoSel', p.banco || 'inter'],
+    ['pixAmbienteSel', p.ambiente || 'producao'],
+    ['pixAuthSel', p.auth || ''],
     ['pixIntervaloInput', p.intervalo || 10],
     ['pixClientIdInput', p.clientId || ''],
     ['pixCertInput', p.certArquivo || ''],
@@ -6350,19 +6451,21 @@ function fillPixLab() {
   if (seg && document.activeElement !== seg) seg.placeholder = p.temSegredo ? t('•••• (guardado — em branco = manter)') : t('em branco = não mexer no guardado');
   const sen = document.getElementById('pixCertSenhaInput');
   if (sen && document.activeElement !== sen) sen.placeholder = p.temSenhaCert ? t('•••• (guardado — em branco = manter)') : t('em branco = não mexer no guardado');
-  const custom = document.getElementById('pixCustomWrap');
-  if (custom) custom.style.display = (document.getElementById('pixBancoSel').value === 'personalizado') ? '' : 'none';
+  const ak = document.getElementById('pixAppKeyInput');
+  if (ak && document.activeElement !== ak) ak.placeholder = p.temAppKey ? t('•••• (guardado — em branco = manter)') : t('em branco = não mexer no guardado');
+  ajustarCamposPix();
 }
-document.getElementById('pixBancoSel').addEventListener('input', () => {
-  document.getElementById('pixCustomWrap').style.display =
-    document.getElementById('pixBancoSel').value === 'personalizado' ? '' : 'none';
-});
+document.getElementById('pixBancoSel').addEventListener('input', ajustarCamposPix);
+document.getElementById('pixAmbienteSel').addEventListener('input', ajustarCamposPix);
 document.getElementById('pixSalvarBtn').onclick = () => {
   hub.send({ type: 'pixConfig', config: {
     banco: document.getElementById('pixBancoSel').value,
+    ambiente: document.getElementById('pixAmbienteSel').value,
+    auth: document.getElementById('pixAuthSel').value,
     intervalo: Number(document.getElementById('pixIntervaloInput').value) || 10,
     clientId: document.getElementById('pixClientIdInput').value,
     clientSecret: document.getElementById('pixClientSecretInput').value,
+    appKey: document.getElementById('pixAppKeyInput').value,
     certArquivo: document.getElementById('pixCertInput').value,
     chaveArquivo: document.getElementById('pixChaveArqInput').value,
     certSenha: document.getElementById('pixCertSenhaInput').value,
@@ -6372,6 +6475,7 @@ document.getElementById('pixSalvarBtn').onclick = () => {
   } });
   document.getElementById('pixClientSecretInput').value = '';
   document.getElementById('pixCertSenhaInput').value = '';
+  document.getElementById('pixAppKeyInput').value = '';
 };
 document.getElementById('pixTesteBtn').onclick = () => { hub.send({ type: 'pixTeste' }); };
 function fillObsLab() {
