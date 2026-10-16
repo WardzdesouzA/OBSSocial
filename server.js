@@ -2792,7 +2792,7 @@ const PIX_BANCOS = {
     urlToken: '', urlPix: 'https://api.mercadopago.com/v1/payments/search',
     portal: 'https://www.mercadopago.com.br/developers/panel/app',
     ajuda: 'mercadopago.com.br/developers → Suas integrações → sua aplicação → Credenciais de produção → copie o Access Token.',
-    aviso: 'O Mercado Pago só lista as cobranças Pix criadas nele (QR do app, checkout, maquininha) — transferência direta para a chave não aparece, e não há mensagem do pagador.',
+    aviso: 'O Mercado Pago só lista pagamentos de cobranças criadas nele (QR da loja, checkout), pagos por Pix ou com saldo do Mercado Pago — transferência direta para a chave Pix não aparece, e não há mensagem do pagador. Cole o Access Token (não a Public Key: os dois começam com APP_USR).',
   },
   // ----- sem API para isto (ficam na lista para explicar) -----
   nubank: {
@@ -3086,7 +3086,12 @@ const dataLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 const centavos = (v) => (Number.isFinite(Number(v)) ? (Number(v) / 100).toFixed(2) : '');
 const nomeDe = (...xs) => xs.map((x) => String(x || '').trim()).find(Boolean) || '';
 function pixRecusa(r, oque) {
-  if (r.status === 401 || r.status === 403) { pixRt.token = null; throw new Error(`o banco recusou o acesso (HTTP ${r.status})`); }
+  if (r.status === 401 || r.status === 403) {
+    pixRt.token = null;
+    let motivo = '';
+    try { const j = JSON.parse(r.corpo); motivo = String(j.error_description || j.message || j.error || j.title || j.detail || '').slice(0, 90); } catch { /* corpo sem JSON */ }
+    throw new Error(`o banco recusou o acesso (HTTP ${r.status}${motivo ? ': ' + motivo : ''})`);
+  }
   if (r.status !== 200 && r.status !== 204) throw new Error(`${oque} falhou (HTTP ${r.status})`);
   if (r.status === 204) return {};
   try { return JSON.parse(r.corpo); } catch { throw new Error(`${oque}: a resposta do banco não veio em JSON`); }
@@ -3168,13 +3173,15 @@ const PIX_CONSULTAS = {
       pagador: { nome: nomeDe(d.externalAccount?.name) },
     }));
   },
-  // Mercado Pago: token fixo da aplicação; lista as cobranças Pix pagas (QR/checkout do MP)
+  // Mercado Pago: token fixo da aplicação; lista os pagamentos aprovados das
+  // cobranças do MP (QR/checkout) feitos por Pix de outro banco ou com o saldo
+  // da conta Mercado Pago (quem paga o QR pelo app do MP) — cartão fica de fora
   async mercadopago(perfil, inicio, fim) {
     const { urlPix } = pixUrls();
     const data = (d) => d.toISOString().replace('Z', '-00:00');
-    const url = pixAddQuery(urlPix, { sort: 'date_approved', criteria: 'desc', range: 'date_approved', begin_date: data(inicio), end_date: data(fim), status: 'approved', payment_method_id: 'pix', limit: '50' });
+    const url = pixAddQuery(urlPix, { sort: 'date_approved', criteria: 'desc', range: 'date_approved', begin_date: data(inicio), end_date: data(fim), status: 'approved', limit: '50' });
     const json = pixRecusa(await pixRequest(url, { headers: { Authorization: `Bearer ${pixConfig.clientSecret}`, Accept: 'application/json' } }), 'consulta de Pix');
-    return (Array.isArray(json.results) ? json.results : []).map((r) => ({
+    return (Array.isArray(json.results) ? json.results : []).filter((r) => r.payment_method_id === 'pix' || r.payment_type_id === 'account_money' || r.payment_method_id === 'account_money').map((r) => ({
       endToEndId: r.id !== undefined ? 'mp-' + r.id : '', valor: r.transaction_amount, horario: r.date_approved || r.date_created,
       infoPagador: '',
       pagador: { nome: nomeDe([r.payer?.first_name, r.payer?.last_name].filter(Boolean).join(' ')) },
