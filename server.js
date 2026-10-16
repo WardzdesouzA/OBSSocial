@@ -5195,6 +5195,14 @@ function getComponentes() {
   }
   return componentesInv;
 }
+// O inventário nunca pode derrubar o «init» de uma conexão: qualquer tropeço
+// (um arquivo estranho em data/, um comando que não respondeu) vira «sem dados»
+function componentesAtualSeguro() {
+  try { return getComponentes().atual(); } catch (err) {
+    console.log('  (inventário de componentes indisponível: ' + String(err && err.message || err).slice(0, 120) + ')');
+    return { em: null, itens: [] };
+  }
+}
 // Consulta os desenvolvedores de cada componente e conta ao computador local
 // (auto = a passada diária: avisa no painel quando há versão nova que importa)
 function componentesVerificar(auto, ws) {
@@ -11656,7 +11664,7 @@ wss.on('connection', (ws, req) => {
     transcricaoEstado: transcritor.estado(),
     ytdlpEstado: extratorYtDlp.estado(), // 🧪 v0.134: o extrator da mídia direta
     waLib: waLibEstado(),
-    componentes: ws.role === 'local' ? getComponentes().atual() : undefined, // 🧩 v0.185: só o computador do streamer
+    componentes: ws.role === 'local' ? componentesAtualSeguro() : undefined, // 🧩 v0.185: só o computador do streamer
     readIds: Object.fromEntries([...state.readIds].slice(-MAX_READ_IDS)),
     version: APP_VERSION,
     lanUrl: lanAddress() ? `http://${lanAddress()}:${PORT}` : null,
@@ -13300,18 +13308,19 @@ function tratarMensagem(ws, raw) {
     // 🧩 v0.185: inventário dos componentes — ler, verificar nos sites dos
     // desenvolvedores e atualizar os que o próprio programa baixa
     case 'componentesInventario':
-      responderLocal(ws, { type: 'componentes', ...getComponentes().atual() });
+      responderLocal(ws, { type: 'componentes', ...componentesAtualSeguro() });
       break;
     case 'componentesVerificar':
       componentesVerificar(false, ws);
       break;
     case 'componenteAtualizar': {
-      const item = getComponentes().atual().itens.find((c) => c.id === String(msg.id || ''));
+      const item = componentesAtualSeguro().itens.find((c) => c.id === String(msg.id || ''));
       if (!item || item.acao !== 'atualizar' || item.estado !== 'nova') break;
       if (item.id === 'ytdlp') extratorYtDlp.baixar();
       else if (item.id === 'whisper') transcritor.baixarMotor('motor', { tag: item.maisNova });
       else if (item.id === 'ffmpeg') transcritor.baixarMotor('ffmpeg');
-      else if (item.id === 'baileys') waLibInstalar(item.maisNova);
+      // a biblioteca do WhatsApp só muda dentro da linha testada — nada de cair na versão fixada em silêncio
+      else if (item.id === 'baileys' && waLibVersaoPedida(item.maisNova) === item.maisNova) waLibInstalar(item.maisNova);
       break;
     }
     case 'ytdlpMotor': {

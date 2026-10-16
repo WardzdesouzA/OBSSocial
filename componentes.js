@@ -48,9 +48,12 @@ const ARQUIVO = 'componentes.json';   // em data/: só o que veio da internet (o
 function reescrever(url) {
   const base = process.env.OBS_TESTE_COMPONENTES_BASE;
   if (!base) return url;
+  if (String(url).startsWith(base.replace(/\/$/, ''))) return url; // já aponta para o servidor de mentira
   const u = new URL(url);
   return base.replace(/\/$/, '') + '/' + u.host + u.pathname + u.search;
 }
+// A tag do whisper.cpp tem a forma «v1.8.2» — a mesma que baixarMotor() aceita
+const TAG_WHISPER = /^v\d+\.\d+\.\d+$/;
 
 // GET pequeno com tempo limite e teto; `seguir` = quantos redirecionamentos
 // acompanhar (0 = devolve o 3xx com o Location, que é o que interessa no
@@ -176,21 +179,32 @@ class Componentes {
     const versoes = (this.transcritor && typeof this.transcritor.versoes === 'function') ? this.transcritor.versoes() : {};
     const cam = (this.transcritor && typeof this.transcritor.caminhos === 'function') ? this.transcritor.caminhos() : { motor: null, ffmpeg: null };
     const motorPronto = !!(tr && tr.motor && tr.motor.pronto);
+    // Um motor baixado por uma versão anterior à 0.185 não tem a tag anotada:
+    // o programa só baixava a versão fixada na URL — é ela, então.
+    const tagFixada = this.transcritor && this.transcritor.urlMotor ? (/\/releases\/download\/([^/]+)\//.exec(this.transcritor.urlMotor) || [])[1] || null : null;
+    const whisperVersao = motorPronto && tr.motor.origem === 'baixado' ? ((versoes.motor && versoes.motor.tag) || tagFixada) : null;
     itens.push({
       id: 'whisper', nome: 'whisper.cpp (transcrição)', categoria: 'opcional',
-      versao: motorPronto ? ((versoes.motor && tr.motor.origem === 'baixado') ? versoes.motor.tag : null) : null,
+      versao: whisperVersao,
       arquitetura: arq, origem: motorPronto ? tr.motor.origem : 'nao',
       acao: motorPronto ? (tr.motor.origem === 'baixado' ? 'atualizar' : 'sistema') : null,
       nota: motorPronto && tr.motor.origem !== 'baixado' ? 'semVersao' : null,
     });
     const ffPronto = !!(tr && tr.ffmpeg && tr.ffmpeg.pronto);
-    let ffVersao = null;
-    if (ffPronto && cam.ffmpeg) { const m = /ffmpeg version (\S+)/.exec(this._rodar(cam.ffmpeg.comando, ['-version'])); ffVersao = m ? m[1] : null; }
+    let ffVersao = null; let ffBaixadoEm = null;
+    if (ffPronto && cam.ffmpeg) {
+      const m = /ffmpeg version (\S+)/.exec(this._rodar(cam.ffmpeg.comando, ['-version'])); ffVersao = m ? m[1] : null;
+      if (tr.ffmpeg.origem === 'baixado') {
+        // a data do download: a anotada; sem anotação (download anterior à 0.185), a do arquivo
+        ffBaixadoEm = (versoes.ffmpeg && versoes.ffmpeg.em) || null;
+        if (!ffBaixadoEm) { try { ffBaixadoEm = fs.statSync(cam.ffmpeg.comando).mtime.toISOString(); } catch { /* fica sem data */ } }
+      }
+    }
     itens.push({
       id: 'ffmpeg', nome: 'ffmpeg (conversor de áudio/vídeo)', categoria: 'opcional',
       versao: ffVersao, arquitetura: arq, origem: ffPronto ? tr.ffmpeg.origem : 'nao',
       acao: ffPronto ? (tr.ffmpeg.origem === 'baixado' ? 'atualizar' : 'sistema') : null,
-      baixadoEm: ffPronto && tr.ffmpeg.origem === 'baixado' && versoes.ffmpeg ? versoes.ffmpeg.em : null,
+      baixadoEm: ffBaixadoEm,
     });
     const baileys = this.waLibDir ? this._versaoPacote(this.waLibDir, '@whiskeysockets/baileys') : null;
     itens.push({ id: 'baileys', nome: 'Biblioteca do WhatsApp (Baileys)', categoria: 'opcional', versao: baileys, arquitetura: null, origem: baileys ? 'baixado' : 'nao', acao: baileys ? 'atualizar' : null });
@@ -203,7 +217,12 @@ class Componentes {
   // ---------- o que veio da internet ----------
   _arquivoRemoto() { return path.join(this.dataDir, ARQUIVO); }
   _carregarRemoto() {
-    if (this._remoto === null) this._remoto = lerJson(this._arquivoRemoto()) || { em: null, itens: {} };
+    if (this._remoto === null) {
+      // só a forma esperada entra; um arquivo estranho (editado à mão, truncado) é ignorado
+      const j = lerJson(this._arquivoRemoto());
+      const ok = j && typeof j === 'object' && !Array.isArray(j) && j.itens && typeof j.itens === 'object' && !Array.isArray(j.itens);
+      this._remoto = ok ? { em: typeof j.em === 'string' ? j.em : null, itens: j.itens } : { em: null, itens: {} };
+    }
     return this._remoto;
   }
   _salvarRemoto() {
@@ -214,23 +233,33 @@ class Componentes {
   atual() {
     const remoto = this._carregarRemoto();
     const itens = this.inventario().map((it) => {
-      const r = remoto.itens[it.id] || null;
-      const saida = { ...it, maisNova: r ? r.maisNova || null : null, extra: r && r.extra ? r.extra : null, estado: 'naoVerificado', avisar: false };
+      const r = remoto.itens && remoto.itens[it.id] && typeof remoto.itens[it.id] === 'object' ? remoto.itens[it.id] : null;
+      const saida = { ...it, maisNova: r ? r.maisNova || null : null, extra: r && r.extra && typeof r.extra === 'object' ? r.extra : null, estado: 'naoVerificado', avisar: false };
       if (it.origem === 'nao') { saida.estado = 'naoInstalado'; return saida; }
       if (!r) return saida;
       if (r.erro) { saida.estado = 'desconhecido'; return saida; }
-      if (it.id === 'node' && r.extra && r.extra.semSuporte) { saida.estado = 'semSuporte'; saida.avisar = true; return saida; }
+      if (it.id === 'node' && r.extra && r.extra.semSuporte) {
+        // a linha inteira acabou: o que vale é a LTS atual, não o último remendo da linha morta
+        saida.estado = 'semSuporte'; saida.avisar = true; saida.maisNova = null;
+        return saida;
+      }
       if (it.id === 'ffmpeg') {
-        // build rolante: «nova» quando o arquivo publicado é mais novo que o download (com 1 dia de folga)
+        // build rolante (o BtbN republica quase todo dia): só vale avisar quando o
+        // download já tem mais de 60 dias em relação ao build publicado
         const pub = r.extra && r.extra.publicadoEm ? Date.parse(r.extra.publicadoEm) : NaN;
         const baix = it.baixadoEm ? Date.parse(it.baixadoEm) : NaN;
-        if (it.origem !== 'baixado' || !Number.isFinite(pub)) { saida.estado = it.origem === 'baixado' ? 'desconhecido' : 'ok'; return saida; }
-        saida.estado = Number.isFinite(baix) && pub > baix + 24 * 3600 * 1000 ? 'nova' : 'ok';
+        if (it.origem !== 'baixado') { saida.estado = 'ok'; return saida; }
+        if (!Number.isFinite(pub) || !Number.isFinite(baix)) { saida.estado = 'desconhecido'; return saida; }
+        saida.estado = pub > baix + 60 * 24 * 3600 * 1000 ? 'nova' : 'ok';
         saida.maisNova = saida.estado === 'nova' ? new Date(pub).toISOString().slice(0, 10) : null;
         return saida;
       }
-      if (!saida.maisNova) { saida.estado = it.versao ? 'desconhecido' : 'desconhecido'; return saida; }
-      if (!it.versao) { saida.estado = 'desconhecido'; return saida; }
+      if (it.id === 'whisper' && r.extra && r.extra.semZip) {
+        // existe tag mais nova, mas sem o zip pronto para este sistema: fica como está
+        saida.estado = 'ok'; saida.nota = 'semZip'; saida.maisNova = null;
+        return saida;
+      }
+      if (!saida.maisNova || !it.versao) { saida.estado = 'desconhecido'; return saida; }
       saida.estado = cmpVersoes(saida.maisNova, it.versao) > 0 ? 'nova' : 'ok';
       // o painel avisa do que importa de verdade: motor, extrator (os sites mudam) e a biblioteca do WhatsApp
       saida.avisar = saida.estado === 'nova' && ['node', 'ytdlp', 'baileys'].includes(it.id);
@@ -239,7 +268,12 @@ class Componentes {
     return { em: remoto.em, itens };
   }
 
-  avisos() { return this.atual().itens.filter((it) => it.avisar).map((it) => ({ id: it.id, nome: it.nome, versao: it.versao, maisNova: it.maisNova, estado: it.estado })); }
+  avisos() {
+    return this.atual().itens.filter((it) => it.avisar).map((it) => ({
+      id: it.id, nome: it.nome, versao: it.versao, maisNova: it.maisNova, estado: it.estado,
+      ltsAtual: it.extra && it.extra.ltsAtual ? it.extra.ltsAtual : null,
+    }));
+  }
 
   // Consulta os desenvolvedores de cada componente (uma vez por dia, ou a
   // pedido). Falha de um não derruba os outros; o que falhou fica «desconhecido».
@@ -303,10 +337,16 @@ class Componentes {
       anota('ytdlp', async () => ({ maisNova: await tagDoRedirecionamento(URLS.ytdlpLatest), extra: null }));
     }
     const whisperLocal = local.find((i) => i.id === 'whisper');
-    if (whisperLocal.origem === 'baixado') {
+    if (whisperLocal.origem === 'baixado' && this.transcritor && this.transcritor.urlMotor) {
       anota('whisper', async () => {
         const tag = await tagDoRedirecionamento(URLS.whisperLatest);
-        if (!versaoValida(tag)) throw new Error('tag estranha');
+        if (!TAG_WHISPER.test(tag)) throw new Error('tag estranha');
+        // O redirecionamento diz a tag, não que o zip exista para ela (o
+        // whisper.cpp já deixou de publicar o zip do Windows em versões
+        // novas): confere o arquivo desta arquitetura antes de oferecer
+        const candidata = this.transcritor.urlMotor.replace(/\/releases\/download\/v\d+\.\d+\.\d+\//, `/releases/download/${tag}/`);
+        const r = await pedir(candidata, { metodo: 'HEAD', seguir: 4 });
+        if (r.status !== 200) return { maisNova: null, extra: { semZip: tag } };
         return { maisNova: tag, extra: null };
       });
     }
@@ -327,8 +367,13 @@ class Componentes {
       anota('baileys', async () => {
         const r = await pedir(`${URLS.npm}@whiskeysockets%2Fbaileys`, { headers: { Accept: 'application/vnd.npm.install-v1+json' } });
         if (r.status !== 200) throw new Error('npm respondeu ' + r.status);
-        const versoes = Object.keys(JSON.parse(r.texto).versions || {}).filter((v) => versaoValida(v) && !temSufixo(v));
-        const major = numeros(bLocal.versao)[0];
+        // Fora: pré-lançamentos («-rc») e versões marcadas como «deprecated» no
+        // npm (há uma 6.17.16 publicada por engano, com alerta de segurança)
+        const versoes = Object.entries(JSON.parse(r.texto).versions || {})
+          .filter(([v, meta]) => versaoValida(v) && !temSufixo(v) && !(meta && meta.deprecated))
+          .map(([v]) => v);
+        // a «mesma linha» é a linha testada com o programa (a instalada pode ser outra, à mão)
+        const major = numeros(this.waVersaoPadrao || bLocal.versao)[0];
         let mesma = null; let maior = null;
         for (const v of versoes) {
           if (numeros(v)[0] === major) { if (!mesma || cmpVersoes(v, mesma) > 0) mesma = v; }

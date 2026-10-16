@@ -263,6 +263,11 @@ class Transcritor {
     if (this.downloads.has(chave)) return;
     let url = chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor;
     const tag = chave === 'motor' && /^v\d+\.\d+\.\d+$/.test(String(opcoes.tag || '')) ? String(opcoes.tag) : null;
+    if (chave === 'motor' && opcoes.tag && !tag) {
+      // uma tag fora do padrão não vira um download silencioso da versão fixada
+      this.aoEvento({ type: 'transcricaoAviso', chave, erro: `versão pedida fora do padrão (${String(opcoes.tag).slice(0, 30)})` });
+      return;
+    }
     if (url && tag) url = url.replace(/\/releases\/download\/v\d+\.\d+\.\d+\//, `/releases/download/${tag}/`);
     if (!url) {
       // v0.184: sem zip pronto para esta arquitetura (ex.: ffmpeg no Windows de 32 bits)

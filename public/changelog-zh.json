@@ -3,8 +3,8 @@
     "titulo": "🧩 组件:程序所用一切的版本、架构与新版本提醒",
     "itens": [
       "在 设置 → ℹ️ 关于 中,新的「🧩 组件」部分列出 OBS Social 运行所用的一切 —— Node.js(引擎)、ws、qrcode-generator 和 lottie-web(ZIP 自带)、yt-dlp、whisper.cpp、ffmpeg 和 WhatsApp 库(开启功能时下载)以及系统的 curl —— 附带正在使用的版本与架构,以及各自来源(自带、系统安装、程序下载、便携副本)。",
-      "程序打开时和每天 1 次,与 OBS Social 自身的新版本检查一起(同一开关),它会询问各组件的开发者:nodejs.org(你所用系列的最新版本和支持日程 —— 若该系列已停止支持会提醒,并告知当前 LTS)、npm 仓库(ws、qrcode-generator、lottie-web、Baileys)和 GitHub(yt-dlp、whisper.cpp;ffmpeg 则看构建日期)。出现重要新版本时面板会提醒:Node.js、yt-dlp(网站每周都在变)和 WhatsApp 库(协议会变)。",
-      "程序自己下载的组件就地有 ⬇️ 更新按钮:yt-dlp(最新版本)、whisper.cpp(新标签;由于 whisper-cli 不报告自身版本,已下载的版本记录在 data/motor-transcricao/versoes.json)、ffmpeg(最新构建)和 WhatsApp 库(仅同一主版本系列 —— 新的主版本系列需测试后随程序引入)。Node.js 请从官方网站更新(或替换 node-portable 文件夹);ZIP 自带的随下一个 OBS Social 版本到来;系统自带的只做显示。",
+      "程序打开时和每天 1 次,与 OBS Social 自身的新版本检查一起(同一开关),它会询问各组件的开发者:nodejs.org(你所用系列的最新版本)和 Node 项目在 GitHub 上公布的官方支持日程(若该系列已停止支持会提醒,并告知当前 LTS)、npm 仓库(ws、qrcode-generator、lottie-web、Baileys)和 GitHub(yt-dlp、whisper.cpp;ffmpeg 则看构建日期)。出现重要新版本时面板会提醒:Node.js、yt-dlp(网站每周都在变)和 WhatsApp 库(协议会变)。",
+      "程序自己下载的组件在发现新版本时就地出现 ⬇️ 更新按钮:yt-dlp(最新版本)、whisper.cpp(新标签;由于 whisper-cli 不报告自身版本,已下载的版本记录在 data/motor-transcricao/versoes.json)、ffmpeg(最新构建)和 WhatsApp 库(仅同一主版本系列 —— 新的主版本系列需测试后随程序引入)。Node.js 请从官方网站更新(或替换 node-portable 文件夹);ZIP 自带的随下一个 OBS Social 版本到来;系统自带的只做显示。",
       "这些都不会自行下载任何程序:检查只读取版本,下载仍是一如既往、由你触发。一切都限于主播的电脑。10 种语言的翻译;README 已更新。"
     ]
   },

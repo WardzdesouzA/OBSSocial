@@ -3379,7 +3379,7 @@
 
       <div class="field">
         <label>🧩 Componentes</label>
-        <div class="hint" style="margin-bottom:6px">Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e têm botão próprio aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.</div>
+        <div class="hint" style="margin-bottom:6px">Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e, quando há versão nova, ganham o botão ⬇️ Atualizar aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.</div>
         <div class="row">
           <button id="compVerificarBtn" class="icon-btn" style="width:auto;padding:0 14px">🔄 Verificar atualizações dos componentes</button>
           <span id="compStatus" class="hint" style="margin:0 0 0 10px"></span>
@@ -3523,6 +3523,9 @@ const hub = connectHub((event) => {
         const auto = document.getElementById('updAutoChk');
         if (auto && auto.closest('label')) auto.closest('label').style.display = 'none';
         document.getElementById('updStatus').textContent = 'ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+        // 🧩 v0.185: o inventário de componentes também é só do computador local (LOCAL_ONLY_OPS)
+        const compBloco = document.getElementById('compVerificarBtn');
+        if (compBloco && compBloco.closest('.field')) compBloco.closest('.field').style.display = 'none';
         // 🔒 v0.179: o card de segurança em 🔗 URLs também é só do computador local
         // (LOCAL_ONLY_OPS): pela rede os seletores e a senha ficam travados em vez
         // de aceitar o clique e mentir na tela depois da recusa do servidor
@@ -3793,6 +3796,7 @@ const hub = connectHub((event) => {
     // 🔒 v0.169.5: uma operação só do computador local, pedida pela rede
     case 'somenteLocal':
       if (event.op === 'connect') SEGREDO_PENDENTE.clear(); // 🔒 v0.179: o segredo digitado pela rede foi descartado — nada a confirmar
+      if (/^componente/.test(String(event.op || '')) && compBtn) { compBtn.disabled = false; compStatus.textContent = ''; } // 🧩 v0.185: a recusa não deixa o botão preso
       obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒');
       fillSecurity(secState.last); // 🔒 v0.179: a tela volta ao estado real (o servidor recusou)
       break;
@@ -14386,6 +14390,7 @@ function renderComponentes(dados) {
     } else if (it.estado === 'desconhecido') sit.push(compTexto('span', '❓ não foi possível verificar'));
     else sit.push(compTexto('span', 'não verificado'));
     if (it.nota === 'semVersao') sit.push(compTexto('div', 'O whisper-cli instalado no sistema não informa a versão.', 'color:var(--muted)'));
+    if (it.nota === 'semZip') sit.push(compTexto('div', 'Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.', 'color:var(--muted)'), it.extra && it.extra.semZip ? ' (' + it.extra.semZip + ')' : '');
     if (it.extra && it.extra.majorNovo) sit.push(compTexto('div', 'Uma linha maior nova existe, mas só entra depois de testada, numa atualização do OBS Social.', 'color:var(--muted)'));
     if (it.id === 'node' && it.origem === 'portatil' && (it.estado === 'nova' || it.estado === 'semSuporte')) sit.push(compTexto('div', 'Troque a pasta node-portable pela versão nova.', 'color:var(--muted)'));
     td(sit);

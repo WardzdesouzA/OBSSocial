@@ -10,9 +10,11 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // v0.185 — whisper.cpp sem zip para o sistema
+    "Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.": "有更新的版本,但没有为此系统准备好的安装包;保留当前版本。",
     // v0.185 — 🧩 Componentes (Sobre + faixa do painel)
     "🧩 Componentes": "🧩 组件",
-    "Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e têm botão próprio aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.": "程序运行所用的一切,附带正在使用的版本、架构和各自来源。ZIP 自带的(ws、qrcode-generator、lottie-web)随 OBS Social 一起更新;可选组件(yt-dlp、whisper.cpp、ffmpeg、WhatsApp 库)在你开启功能时下载,并在此处有专用按钮;Node.js 请从官方网站更新。检查在程序打开时和每天 1 次进行,与 OBS Social 自身的检查一起(上方同一开关),有重要新版本时面板会提醒。",
+    "Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e, quando há versão nova, ganham o botão ⬇️ Atualizar aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.": "程序运行所用的一切,附带正在使用的版本、架构和各自来源。ZIP 自带的(ws、qrcode-generator、lottie-web)随 OBS Social 一起更新;可选组件(yt-dlp、whisper.cpp、ffmpeg、WhatsApp 库)在你开启功能时下载,有新版本时会在此处出现 ⬇️ 更新按钮;Node.js 请从官方网站更新。检查在程序打开时和每天 1 次进行,与 OBS Social 自身的检查一起(上方同一开关),有重要新版本时面板会提醒。",
     "🔄 Verificar atualizações dos componentes": "🔄 检查组件更新",
     "⏳ Verificando os componentes…": "⏳ 正在检查组件…",
     "Última verificação:": "上次检查:",

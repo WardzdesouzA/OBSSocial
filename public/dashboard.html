@@ -2642,14 +2642,21 @@ function showComponentesBanner(avisos) {
   barra.style.cssText = 'position:sticky;top:0;z-index:9998;background:#8a5a00;color:#fff;text-align:center;padding:8px 40px 8px 14px;font-weight:600;font-size:14px';
   const rotulo = document.createElement('span');
   rotulo.textContent = '🧩 Componentes com versão nova:';
-  const lista = document.createElement('span');
-  lista.textContent = ' ' + avisos.map((a) => `${a.nome} ${a.versao || '?'} → ${a.maisNova || '⛔'}`).join(' · ') + ' — ';
+  barra.append(rotulo, ' ');
+  // cada nome num nó próprio (o tradutor da página só reconhece o texto exato);
+  // as versões ficam fora, num nó de texto
+  avisos.forEach((a, i) => {
+    const nome = document.createElement('span');
+    nome.textContent = a.nome;
+    barra.append(i ? ' · ' : '', nome, ` ${a.versao || '?'} → ${a.maisNova || ('⛔ LTS ' + (a.ltsAtual || ''))}`.trimEnd());
+  });
+  barra.append(' — ');
   const link = document.createElement('a');
   link.href = '/config#sec-sobre';
   link.target = '_blank';
   link.style.cssText = 'color:#fff;text-decoration:underline';
   link.textContent = 'Ver em Configurações → Sobre';
-  barra.append(rotulo, lista, link);
+  barra.append(link);
   const fechar = document.createElement('button');
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';

@@ -10,9 +10,11 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // v0.185 — whisper.cpp sem zip para o sistema
+    "Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.": "더 새로운 버전이 있지만 이 시스템용 준비된 패키지가 없어 현재 버전이 유지됩니다.",
     // v0.185 — 🧩 Componentes (Sobre + faixa do painel)
     "🧩 Componentes": "🧩 구성 요소",
-    "Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e têm botão próprio aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.": "프로그램이 동작하기 위해 쓰는 모든 것을 사용 중인 버전과 아키텍처, 출처와 함께 보여 줍니다. ZIP에 들어 있는 것(ws, qrcode-generator, lottie-web)은 OBS Social과 함께 업데이트되고, 선택 항목(yt-dlp, whisper.cpp, ffmpeg, WhatsApp 라이브러리)은 기능을 켤 때 내려받으며 여기에 전용 버튼이 있습니다. Node.js는 공식 사이트에서 업데이트하세요. 확인은 프로그램을 열 때와 하루 1번, OBS Social 자체 확인과 함께(위의 같은 스위치) 이루어지며, 중요한 새 버전이 있으면 대시보드가 알립니다.",
+    "Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e, quando há versão nova, ganham o botão ⬇️ Atualizar aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.": "프로그램이 동작하기 위해 쓰는 모든 것을 사용 중인 버전과 아키텍처, 출처와 함께 보여 줍니다. ZIP에 들어 있는 것(ws, qrcode-generator, lottie-web)은 OBS Social과 함께 업데이트되고, 선택 항목(yt-dlp, whisper.cpp, ffmpeg, WhatsApp 라이브러리)은 기능을 켤 때 내려받으며, 새 버전이 있으면 여기에 ⬇️ 업데이트 버튼이 나타납니다. Node.js는 공식 사이트에서 업데이트하세요. 확인은 프로그램을 열 때와 하루 1번, OBS Social 자체 확인과 함께(위의 같은 스위치) 이루어지며, 중요한 새 버전이 있으면 대시보드가 알립니다.",
     "🔄 Verificar atualizações dos componentes": "🔄 구성 요소 업데이트 확인",
     "⏳ Verificando os componentes…": "⏳ 구성 요소를 확인하는 중…",
     "Última verificação:": "마지막 확인:",
