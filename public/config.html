@@ -3377,6 +3377,16 @@
         <label class="check lab-toggle" style="margin-bottom:0"><input type="checkbox" id="updAutoChk" class="sw" checked> <span>🔁 Procurar atualização sozinho <b>ao abrir o programa</b> e <b>1x por dia</b>, e me avisar quando houver versão nova (nunca instala sem a sua confirmação)</span></label>
       </div>
 
+      <div class="field">
+        <label>🧩 Componentes</label>
+        <div class="hint" style="margin-bottom:6px">Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e, quando há versão nova, ganham o botão ⬇️ Atualizar aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.</div>
+        <div class="row">
+          <button id="compVerificarBtn" class="icon-btn" style="width:auto;padding:0 14px">🔄 Verificar atualizações dos componentes</button>
+          <span id="compStatus" class="hint" style="margin:0 0 0 10px"></span>
+        </div>
+        <div id="compTabela" style="margin-top:8px;overflow:auto"></div>
+      </div>
+
       <div class="field" style="margin-bottom:0">
         <label>📜 O que mudou em cada versão</label>
         <div id="changelogBox" class="hint" style="margin-bottom:0">carregando...</div>
@@ -3513,6 +3523,9 @@ const hub = connectHub((event) => {
         const auto = document.getElementById('updAutoChk');
         if (auto && auto.closest('label')) auto.closest('label').style.display = 'none';
         document.getElementById('updStatus').textContent = 'ℹ️ Esta página veio pela rede. Verificar e instalar a atualização só funciona no computador onde o OBS Social roda: abra as configurações nele pelo endereço http://localhost:3000 que a janela preta mostra.';
+        // 🧩 v0.185: o inventário de componentes também é só do computador local (LOCAL_ONLY_OPS)
+        const compBloco = document.getElementById('compVerificarBtn');
+        if (compBloco && compBloco.closest('.field')) compBloco.closest('.field').style.display = 'none';
         // 🔒 v0.179: o card de segurança em 🔗 URLs também é só do computador local
         // (LOCAL_ONLY_OPS): pela rede os seletores e a senha ficam travados em vez
         // de aceitar o clique e mentir na tela depois da recusa do servidor
@@ -3560,7 +3573,8 @@ const hub = connectHub((event) => {
       // 🎙️ v0.67: estado da transcrição local (modelos/motor/downloads)
       trEstado = event.transcricaoEstado || null;
       renderTranscricao();
-      ydEstado = event.ytdlpEstado || null; // 🎬 v0.134: o extrator da mídia direta
+      ydEstado = event.ytdlpEstado || null;
+      if (event.componentes) renderComponentes(event.componentes); // 🧩 v0.185 (só chega no computador local) // 🎬 v0.134: o extrator da mídia direta
       renderYtDlp();
       // 💬 v0.69: biblioteca local do WhatsApp + modo lembrado da conexão
       waLibState = event.waLib || null;
@@ -3698,6 +3712,7 @@ const hub = connectHub((event) => {
       break;
     // 💬 v0.69: biblioteca local do WhatsApp e QR de pareamento
     case 'waLib':
+      pedirInventarioComponentes(); // 🧩 v0.185: a biblioteca instalada/atualizada entra no inventário
       waLibState = event.lib || null;
       renderWaLib();
       break;
@@ -3707,11 +3722,13 @@ const hub = connectHub((event) => {
     // 🎙️ v0.67: progresso dos downloads e prontidão do motor/modelos
     case 'transcricaoEstado':
       trEstado = event.estado || null;
+      pedirInventarioComponentes(); // 🧩 v0.185: um download do motor/ffmpeg muda o inventário
       renderTranscricao();
       break;
     // 🎬 v0.134: progresso do download e prontidão do extrator
     case 'ytdlpEstado':
       ydEstado = event.estado || null;
+      pedirInventarioComponentes(); // 🧩 v0.185: a versão do yt-dlp entra no inventário
       renderYtDlp();
       break;
     case 'ytdlpAviso': {
@@ -3779,6 +3796,7 @@ const hub = connectHub((event) => {
     // 🔒 v0.169.5: uma operação só do computador local, pedida pela rede
     case 'somenteLocal':
       if (event.op === 'connect') SEGREDO_PENDENTE.clear(); // 🔒 v0.179: o segredo digitado pela rede foi descartado — nada a confirmar
+      if (/^componente/.test(String(event.op || '')) && compBtn) { compBtn.disabled = false; compStatus.textContent = ''; } // 🧩 v0.185: a recusa não deixa o botão preso
       obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒');
       fillSecurity(secState.last); // 🔒 v0.179: a tela volta ao estado real (o servidor recusou)
       break;
@@ -3856,6 +3874,13 @@ const hub = connectHub((event) => {
     case 'updateAuto':
       document.getElementById('updAutoChk').checked = event.enabled;
       break;
+    case 'componentes': {
+      // 🧩 v0.185: inventário/verificação dos componentes (resposta ou passada diária)
+      if (compBtn) compBtn.disabled = false;
+      if (event.erro) { if (compStatus) compStatus.textContent = '⚠️ Não consegui verificar agora. Confira a internet e tente de novo.'; break; }
+      renderComponentes(event);
+      break;
+    }
     case 'update': {
       const chk = document.getElementById('updCheckBtn');
       const apl = document.getElementById('updApplyBtn');
@@ -14324,6 +14349,83 @@ updApplyBtn.onclick = async () => {
   updApplyBtn.disabled = true;
   updStatus.textContent = '⏳ Baixando e instalando... (a live não é interrompida)';
   hub.send({ type: 'updateApply' });
+};
+
+// ---------- 🧩 Componentes (v0.185) ----------
+// O inventário vem do servidor (só no computador local): versão, arquitetura e
+// origem de cada componente e, depois da verificação nos sites dos
+// desenvolvedores, a versão mais nova e a situação. Textos em português:
+// o tradutor da página cuida do resto.
+const compTabela = document.getElementById('compTabela');
+const compStatus = document.getElementById('compStatus');
+const compBtn = document.getElementById('compVerificarBtn');
+const COMP_ORIGEM = { incluso: 'incluído no ZIP', sistema: 'instalado no sistema', baixado: 'baixado pelo programa', portatil: 'cópia portátil', nao: 'não instalado', config: 'comando configurado' };
+function compTexto(tag, texto, estilo) { const el = document.createElement(tag); el.textContent = texto; if (estilo) el.style.cssText = estilo; return el; }
+function renderComponentes(dados) {
+  if (!compTabela || !dados || !Array.isArray(dados.itens)) return;
+  compTabela.innerHTML = '';
+  compStatus.innerHTML = '';
+  if (dados.em) compStatus.append(compTexto('span', 'Última verificação:'), ' ' + new Date(dados.em).toLocaleString());
+  else compStatus.append(compTexto('span', 'Ainda não verificado — clique no botão.'));
+  const tabela = document.createElement('table');
+  tabela.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px';
+  const cab = document.createElement('tr');
+  for (const h of ['Componente', 'Versão em uso', 'Arquitetura', 'Origem', 'Situação', 'Ação']) cab.appendChild(compTexto('th', h, 'text-align:left;padding:4px 6px;border-bottom:1px solid var(--border, #444);color:var(--muted);font-weight:600'));
+  tabela.appendChild(cab);
+  for (const it of dados.itens) {
+    const tr = document.createElement('tr');
+    tr.dataset.comp = it.id;
+    const td = (conteudo) => { const c = document.createElement('td'); c.style.cssText = 'padding:4px 6px;border-bottom:1px solid var(--border, #333);vertical-align:top'; c.append(...(Array.isArray(conteudo) ? conteudo : [conteudo])); tr.appendChild(c); return c; };
+    td(compTexto('span', it.nome));
+    td(it.versao || (it.origem === 'nao' ? '—' : '?'));
+    td(it.arquitetura || '—');
+    td(compTexto('span', COMP_ORIGEM[it.origem] || it.origem || '—'));
+    const sit = [];
+    if (it.estado === 'naoInstalado') sit.push('—');
+    else if (it.estado === 'ok') sit.push(compTexto('span', '✔ atualizado'));
+    else if (it.estado === 'nova') sit.push(compTexto('span', '🆕 há versão nova:'), ' ' + (it.maisNova || ''));
+    else if (it.estado === 'semSuporte') {
+      sit.push(compTexto('span', '⛔ linha sem suporte desde'), ' ' + ((it.extra && it.extra.fimSuporte) || ''));
+      if (it.extra && it.extra.ltsAtual) sit.push(' · ', compTexto('span', 'LTS atual:'), ' ' + it.extra.ltsAtual);
+    } else if (it.estado === 'desconhecido') sit.push(compTexto('span', '❓ não foi possível verificar'));
+    else sit.push(compTexto('span', 'não verificado'));
+    if (it.nota === 'semVersao') sit.push(compTexto('div', 'O whisper-cli instalado no sistema não informa a versão.', 'color:var(--muted)'));
+    if (it.nota === 'semZip') sit.push(compTexto('div', 'Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.', 'color:var(--muted)'), it.extra && it.extra.semZip ? ' (' + it.extra.semZip + ')' : '');
+    if (it.extra && it.extra.majorNovo) sit.push(compTexto('div', 'Uma linha maior nova existe, mas só entra depois de testada, numa atualização do OBS Social.', 'color:var(--muted)'));
+    if (it.id === 'node' && it.origem === 'portatil' && (it.estado === 'nova' || it.estado === 'semSuporte')) sit.push(compTexto('div', 'Troque a pasta node-portable pela versão nova.', 'color:var(--muted)'));
+    td(sit);
+    const acao = [];
+    const precisa = it.estado === 'nova' || it.estado === 'semSuporte';
+    if (it.acao === 'atualizar' && it.estado === 'nova') {
+      const b = compTexto('button', '⬇️ Atualizar agora', 'width:auto;padding:0 10px');
+      b.className = 'icon-btn';
+      b.onclick = () => { b.disabled = true; hub.send({ type: 'componenteAtualizar', id: it.id }); };
+      acao.push(b);
+    } else if (it.acao === 'site' && precisa) {
+      const a = compTexto('a', '🌐 Abrir nodejs.org');
+      a.href = 'https://nodejs.org/'; a.target = '_blank'; a.rel = 'noopener';
+      acao.push(a, ' ', compTexto('span', 'atualize pelo site oficial', 'color:var(--muted)'));
+    } else if (it.acao === 'programa' && precisa) acao.push(compTexto('span', 'virá com uma atualização do OBS Social', 'color:var(--muted)'));
+    else if (it.acao === 'sistema' && precisa) acao.push(compTexto('span', 'atualize pelo gerenciador do seu sistema', 'color:var(--muted)'));
+    else acao.push('—');
+    td(acao);
+    tabela.appendChild(tr);
+  }
+  compTabela.appendChild(tabela);
+}
+// Um download do yt-dlp/motor/ffmpeg ou a biblioteca do WhatsApp instalada
+// mudam a versão em uso: pede o inventário de novo (sem ir à internet)
+let compPedidoTimer = null;
+function pedirInventarioComponentes() {
+  if (!compTabela || !compTabela.firstChild) return;
+  clearTimeout(compPedidoTimer);
+  compPedidoTimer = setTimeout(() => hub.send({ type: 'componentesInventario' }), 600);
+}
+if (compBtn) compBtn.onclick = () => {
+  compBtn.disabled = true;
+  compStatus.textContent = '⏳ Verificando os componentes…';
+  hub.send({ type: 'componentesVerificar' });
+  setTimeout(() => { compBtn.disabled = false; }, 60 * 1000); // nada fica preso para sempre
 };
 
 </script>

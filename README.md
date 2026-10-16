@@ -40,7 +40,7 @@ Everything stays inside the folder you extracted — nothing is installed anywhe
 |---|---|---|
 | `Iniciar (Windows).bat` · `iniciar-mac-linux.command` | the launchers (double-click and the program opens); they check Node.js and the components before starting | ✅ |
 | `server.js` | the program itself (a local server: dashboard, overlays, connections to the chats) | ✅ |
-| `clima.js`, `currency.js`, `midiadireta.js`, `transcricao.js`, `vmix.js`, `ytdlp.js` | parts of the program (weather, currencies, direct media, transcription, vMix, extractor) | ✅ |
+| `clima.js`, `componentes.js`, `currency.js`, `midiadireta.js`, `transcricao.js`, `vmix.js`, `ytdlp.js` | parts of the program (weather, components inventory, currencies, direct media, transcription, vMix, extractor) | ✅ |
 | `connectors/` | the connection to each network (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp — gateway and local library —, LivePix, PixGG) plus two shared helpers: `caminhos.js` (the fallback paths when a site blocks the program) and `formato.js` (text formatting) | ✅ |
 | `public/` | the pages the browser and OBS open (dashboard, overlay, chat, settings, mini soundboard), the 10 languages, the version history, the factory sounds, the icons and the Lottie library | ✅ |
 | `node_modules/` | the two external components the program uses (`ws` — WebSocket — and `qrcode-generator`), already included — no need to run `npm install` | ✅ |
@@ -61,6 +61,8 @@ None of these come in the ZIP and none is needed for normal use — the program 
 | **WhatsApp local library** (Baileys) | 💬 WhatsApp without a paid gateway (QR pairing) | `data/whatsapp-lib/` | npm (comes with Node.js) |
 
 The program also makes use of tools that already come with the system, when they exist: **curl** and **PowerShell** (Windows) as fallback paths when a site blocks the normal connection, and a **browser open** on the same computer for Kick.
+
+**Versions and updates of the components:** in Settings → ℹ️ About → 🧩 Components, the program lists each of them with the version and architecture in use, where it came from (included in the ZIP, installed on the system, downloaded by the program, portable copy) and whether its developers have published a new version — checked when the program opens and once a day, together with OBS Social's own update check (same switch), with a notice on the dashboard when something that matters is out of date (Node.js, yt-dlp, the WhatsApp library). What the program itself downloads gets a ⬇️ Update button right there when a newer version is found; Node.js you update from the official site; what comes in the ZIP arrives with the next OBS Social version.
 
 ## How to use (every time you go live)
 
@@ -222,7 +224,7 @@ Everything is on the **🔗 URLs for OBS** page in the settings. The rules, in s
 
 - **📣 Feedback**: its own page in the settings — write your suggestion or problem and the button opens your email already filled in to send to the developer.
 - **💖 Support the Developer**: if OBS Social helps you, you can give something back with any amount via QR code (NuBank — Pix from any bank —, LivePix and PixGG) or with the monthly "⚡ Amigos do OBS Social" subscription on LivePix. No feature depends on it.
-- **ℹ️ About**: version, credits for the creators and the **full changelog** in a menu that expands version by version.
+- **ℹ️ About**: version, credits for the creators and the **full changelog** in a menu that expands version by version — plus the **🧩 Components** inventory (version, architecture, origin and new-version check of everything the program uses).
 - **🔄 1-click update**: on the About page, the "Check for a new version" button checks GitHub and, **only if you confirm**, installs the update by itself — without needing to download a ZIP. Your settings, password, logs and media stay intact; afterwards you just close and open the program. Nothing is updated without your confirmation. The program also **looks for an update by itself when it opens and once a day** and lets you know on the dashboard when there's a new version (you can turn this off; it never installs without your confirmation) — and, when it updates, it **closes and opens by itself**: the dashboard reloads and the overlay in OBS reconnects without you doing anything. There's also a ♻️ button in Connections to **restart the program** at any time.
 
 ## Frequently asked questions
@@ -306,7 +308,7 @@ Tudo fica dentro da pasta que você extraiu — nada é instalado em outro lugar
 |---|---|---|
 | `Iniciar (Windows).bat` · `iniciar-mac-linux.command` | os iniciadores (dois cliques e o programa abre); conferem o Node.js e os componentes antes de abrir | ✅ |
 | `server.js` | o programa em si (um servidor local: painel, overlays, conexões com os chats) | ✅ |
-| `clima.js`, `currency.js`, `midiadireta.js`, `transcricao.js`, `vmix.js`, `ytdlp.js` | partes do programa (clima, moedas, mídia direta, transcrição, vMix, extrator) | ✅ |
+| `clima.js`, `componentes.js`, `currency.js`, `midiadireta.js`, `transcricao.js`, `vmix.js`, `ytdlp.js` | partes do programa (clima, inventário de componentes, moedas, mídia direta, transcrição, vMix, extrator) | ✅ |
 | `connectors/` | a conexão com cada rede (YouTube, Twitch, Kick, Bilibili, Telegram, WhatsApp — gateway e biblioteca local —, LivePix, PixGG) e dois ajudantes compartilhados: `caminhos.js` (os caminhos de reserva quando um site bloqueia o programa) e `formato.js` (formatação de texto) | ✅ |
 | `public/` | as páginas que o navegador e o OBS abrem (painel, overlay, chat, configurações, mini mesa), os 10 idiomas, o histórico de versões, os sons de fábrica, os ícones e a biblioteca Lottie | ✅ |
 | `node_modules/` | os dois componentes externos que o programa usa (`ws` — WebSocket — e `qrcode-generator`), já incluídos — não precisa rodar `npm install` | ✅ |
@@ -327,6 +329,8 @@ Nenhum destes vem no ZIP e nenhum é necessário para o uso normal — o program
 | **Biblioteca local do WhatsApp** (Baileys) | 💬 WhatsApp sem gateway pago (pareamento por QR) | `data/whatsapp-lib/` | npm (vem junto do Node.js) |
 
 O programa também aproveita, quando existem, ferramentas que já vêm no sistema: o **curl** e o **PowerShell** (Windows) como caminhos de reserva quando um site bloqueia a conexão normal, e um **navegador aberto** no mesmo computador para a Kick.
+
+**Versões e atualizações dos componentes:** em Configurações → ℹ️ Sobre → 🧩 Componentes, o programa lista cada um deles com a versão e a arquitetura em uso, de onde veio (incluído no ZIP, instalado no sistema, baixado pelo programa, cópia portátil) e se os desenvolvedores publicaram versão nova — conferido ao abrir o programa e 1x por dia, junto com a verificação de atualização do próprio OBS Social (mesmo seletor), com aviso no painel quando algo que importa está defasado (Node.js, yt-dlp, biblioteca do WhatsApp). O que o programa mesmo baixa ganha o botão ⬇️ Atualizar ali quando há versão nova; o Node.js você atualiza pelo site oficial; o que vem no ZIP chega com a próxima versão do OBS Social.
 
 ## Como usar (toda vez que for fazer live)
 
@@ -488,7 +492,7 @@ Tudo fica na página **🔗 URLs para o OBS** das configurações. As regras, em
 
 - **📣 Feedback**: página própria nas configurações — escreva sua sugestão ou problema e o botão abre o seu e-mail já preenchido para enviar ao desenvolvedor.
 - **💖 Apoie o Desenvolvedor**: se o OBS Social te ajuda, dá para retribuir com qualquer valor via QR code (NuBank — Pix de qualquer banco —, LivePix e PixGG) ou com a assinatura mensal «⚡ Amigos do OBS Social» no LivePix. Nenhum recurso depende disso.
-- **ℹ️ Sobre**: versão, créditos dos criadores e o **changelog completo** num menu expandível por versão.
+- **ℹ️ Sobre**: versão, créditos dos criadores e o **changelog completo** num menu expandível por versão — mais o inventário **🧩 Componentes** (versão, arquitetura, origem e aviso de versão nova de tudo o que o programa usa).
 - **🔄 Atualização com 1 clique**: na página Sobre, o botão "Verificar se há versão nova" busca no GitHub e, **só se você confirmar**, instala a atualização sozinho — sem precisar baixar ZIP. Suas configurações, senha, logs e mídias ficam intactos; depois é só fechar e abrir o programa. Nada é atualizado sem a sua confirmação. O programa também **procura atualização sozinho ao abrir e 1x por dia** e avisa no painel quando há versão nova (dá para desligar; ele nunca instala sem a sua confirmação) — e, ao atualizar, **fecha e abre sozinho**: o painel recarrega e o overlay no OBS reconecta sem você fazer nada. Tem também um botão ♻️ em Conexões para **reiniciar o programa** a qualquer momento.
 
 ## Perguntas frequentes

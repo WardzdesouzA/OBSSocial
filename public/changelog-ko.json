@@ -1,4 +1,13 @@
 {
+  "0.185.0": {
+    "titulo": "🧩 구성 요소: 프로그램이 쓰는 모든 것의 버전, 아키텍처, 새 버전 알림",
+    "itens": [
+      "설정 → ℹ️ 정보의 새 섹션 🧩 구성 요소는 OBS Social이 동작하기 위해 쓰는 모든 것을 나열합니다 — Node.js(엔진), ws·qrcode-generator·lottie-web(ZIP 포함), yt-dlp·whisper.cpp·ffmpeg·WhatsApp 라이브러리(기능을 켤 때 내려받음), 시스템의 curl — 사용 중인 버전과 아키텍처, 각각의 출처(포함, 시스템 설치, 프로그램이 내려받음, 포터블 사본)와 함께.",
+      "프로그램을 열 때와 하루 1번, OBS Social 자체의 새 버전 확인과 함께(같은 스위치) 각 구성 요소의 개발자에게 물어봅니다: nodejs.org(사용 중인 계열의 최신 버전)과 Node 프로젝트가 GitHub에 공개하는 공식 지원 일정(계열이 지원 종료되었으면 경고하고 현행 LTS를 알려 줌), npm 레지스트리(ws, qrcode-generator, lottie-web, Baileys), GitHub(yt-dlp, whisper.cpp; ffmpeg는 빌드 날짜). 중요한 새 버전이 나오면 대시보드가 알립니다: Node.js, yt-dlp(사이트는 매주 바뀜), WhatsApp 라이브러리(프로토콜이 바뀜).",
+      "프로그램이 직접 내려받는 것에는 새 버전이 있을 때 그 자리에 ⬇️ 업데이트 버튼이 나타납니다: yt-dlp(최신 버전), whisper.cpp(새 태그; whisper-cli가 자기 버전을 알려 주지 않으므로 내려받은 버전은 data/motor-transcricao/versoes.json에 기록), ffmpeg(최신 빌드), WhatsApp 라이브러리(같은 메이저 계열만 — 새 메이저 계열은 테스트 후 프로그램과 함께 들어옴). Node.js는 공식 사이트에서(또는 node-portable 폴더를 교체해) 업데이트하고, ZIP에 든 것은 다음 OBS Social 버전으로 오며, 시스템 것은 표시만 합니다.",
+      "이 중 어느 것도 스스로 프로그램을 내려받지 않습니다. 확인은 버전만 읽고, 다운로드는 늘 그랬듯 당신이 눌러서 시작합니다. 모두 스트리머의 컴퓨터로 제한됩니다. 10개 언어 번역, README 업데이트."
+    ]
+  },
   "0.184.0": {
     "titulo": "📦 패키지: ZIP에 든 것, 설치할 것, 실행 방법을 README 맨 앞에; Node.js를 설명하는 실행 스크립트",
     "itens": [
