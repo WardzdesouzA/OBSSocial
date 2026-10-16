@@ -2427,6 +2427,11 @@ const hub = connectHub((event) => {
       // Aviso da busca automática diária: versão nova no GitHub (só no PC local)
       if (event.auto && event.hasUpdate) showUpdateBanner(event.latest);
       break;
+    case 'componentes':
+      // 🧩 v0.185: a mesma passada diária conferiu os componentes (Node.js,
+      // yt-dlp, biblioteca do WhatsApp…) — avisa só o que importa (só no PC local)
+      if (event.auto && Array.isArray(event.avisos) && event.avisos.length) showComponentesBanner(event.avisos);
+      break;
     case 'deckPode': // 👀 v0.179: o streamer mexeu nos seletores da rede com o painel do espectador aberto
       if (event.podeRede) aplicarModoEspectador(papelDaConexao, event.podeRede);
       break;
@@ -2619,6 +2624,32 @@ function showUpdateBanner(latest) {
   link.style.cssText = 'color:#fff;text-decoration:underline';
   link.textContent = 'Clique aqui para atualizar';
   barra.append(`🎉 Versão nova do OBS Social disponível: v${latest}! `, link);
+  const fechar = document.createElement('button');
+  fechar.textContent = '✖';
+  fechar.title = 'Dispensar este aviso';
+  fechar.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
+  fechar.onclick = () => barra.remove();
+  barra.appendChild(fechar);
+  document.body.prepend(barra);
+}
+
+// 🧩 v0.185: faixa dos componentes com versão nova (Node.js, yt-dlp, biblioteca
+// do WhatsApp) — mesma ideia da faixa de atualização, em outra cor
+function showComponentesBanner(avisos) {
+  if (document.getElementById('componentesBanner')) return;
+  const barra = document.createElement('div');
+  barra.id = 'componentesBanner';
+  barra.style.cssText = 'position:sticky;top:0;z-index:9998;background:#8a5a00;color:#fff;text-align:center;padding:8px 40px 8px 14px;font-weight:600;font-size:14px';
+  const rotulo = document.createElement('span');
+  rotulo.textContent = '🧩 Componentes com versão nova:';
+  const lista = document.createElement('span');
+  lista.textContent = ' ' + avisos.map((a) => `${a.nome} ${a.versao || '?'} → ${a.maisNova || '⛔'}`).join(' · ') + ' — ';
+  const link = document.createElement('a');
+  link.href = '/config#sec-sobre';
+  link.target = '_blank';
+  link.style.cssText = 'color:#fff;text-decoration:underline';
+  link.textContent = 'Ver em Configurações → Sobre';
+  barra.append(rotulo, lista, link);
   const fechar = document.createElement('button');
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';

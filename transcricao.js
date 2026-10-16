@@ -145,6 +145,21 @@ class Transcritor {
 
   _avisaEstado() { this.aoEvento({ type: 'transcricaoEstado', estado: this.estado() }); }
 
+  // 🧩 v0.185: para o inventário de componentes — onde estão o motor e o ffmpeg
+  caminhos() { return { motor: this._ondeMotor(''), ffmpeg: this._ondeFfmpeg() }; }
+  // …e o que o programa mesmo baixou (tag do whisper.cpp, data do download):
+  // o whisper-cli não diz a própria versão, então ela fica anotada aqui
+  _arquivoVersoes() { return path.join(this.dirMotor, 'versoes.json'); }
+  versoes() { try { return JSON.parse(fs.readFileSync(this._arquivoVersoes(), 'utf8')) || {}; } catch { return {}; } }
+  _anotarVersao(chave, dados) {
+    try {
+      const atual = this.versoes();
+      atual[chave] = { ...dados, em: new Date().toISOString() };
+      fs.mkdirSync(this.dirMotor, { recursive: true });
+      fs.writeFileSync(this._arquivoVersoes(), JSON.stringify(atual, null, 2) + '\n');
+    } catch { /* sem anotação: o inventário mostra «?» */ }
+  }
+
   // ---------- downloads sob demanda ----------
   // Baixa uma URL (seguindo redirecionamentos) para um arquivo .part e avisa
   // o progresso; no fim chama aoPronto(caminhoPart).
@@ -241,10 +256,14 @@ class Transcritor {
 
   // Motor (whisper-cli) e ffmpeg para Windows (o zip da arquitetura, ver
   // MOTOR_WIN/FFMPEG_WIN): só os executáveis/DLLs necessários caem em dirMotor
-  baixarMotor(alvo) {
+  // opcoes.tag (só o motor): baixa essa versão do whisper.cpp em vez da fixada
+  // no programa — é o botão «Atualizar» do inventário de componentes (v0.185)
+  baixarMotor(alvo, opcoes = {}) {
     const chave = alvo === 'ffmpeg' ? 'ffmpeg' : 'motor';
     if (this.downloads.has(chave)) return;
-    const url = chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor;
+    let url = chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor;
+    const tag = chave === 'motor' && /^v\d+\.\d+\.\d+$/.test(String(opcoes.tag || '')) ? String(opcoes.tag) : null;
+    if (url && tag) url = url.replace(/\/releases\/download\/v\d+\.\d+\.\d+\//, `/releases/download/${tag}/`);
     if (!url) {
       // v0.184: sem zip pronto para esta arquitetura (ex.: ffmpeg no Windows de 32 bits)
       this.aoEvento({ type: 'transcricaoAviso', chave, erro: `não existe um ${chave === 'ffmpeg' ? 'ffmpeg' : 'whisper.cpp'} pronto para baixar neste sistema (${process.platform}/${process.arch}); instale-o você mesmo e o OBS Social o encontra sozinho` });
@@ -266,6 +285,11 @@ class Transcritor {
           };
         const tirados = zipExtrair(zip, quer, this.dirMotor);
         fs.unlinkSync(part);
+        if (tirados) {
+          // 🧩 v0.185: anota a versão baixada (a tag da URL) para o inventário
+          const mTag = /\/releases\/download\/([^/]+)\//.exec(url);
+          this._anotarVersao(chave, chave === 'motor' ? { tag: mTag ? decodeURIComponent(mTag[1]) : null, url } : { url });
+        }
         this._terminaDownload(chave, tirados ? null : new Error('o zip não trouxe o executável esperado'));
       } catch (err) {
         try { fs.unlinkSync(part); } catch {}

@@ -4467,6 +4467,9 @@ const LOCAL_ONLY_OPS = new Set(['securityPassword', 'securityMode', 'securityPer
   // 🧪 v0.134: baixar/apagar o extrator (yt-dlp) também grava no disco da
   // máquina — quem manda é o painel aberto no próprio computador
   'ytdlpMotor',
+  // 🧩 v0.185: o inventário dos componentes (versões, consulta aos sites dos
+  // desenvolvedores, botões de atualizar) é do computador do streamer
+  'componentesInventario', 'componentesVerificar', 'componenteAtualizar',
   // 🎞️ v0.129: escolher/listar arquivos do computador é do computador local
   'midiaDiretaArquivo', 'midiaDiretaPastas',
   // 💬 Instalar a biblioteca local do WhatsApp / apagar a sessão pareada
@@ -5181,8 +5184,35 @@ function relaunchApp() {
 
 // 🔁 Busca automática de atualização (ao abrir e 1x por dia, opcional — só AVISA, nunca
 // instala nada sozinho; o aviso vai apenas para o computador local).
+// 🧩 v0.185: o inventário dos componentes (Node.js, ws, yt-dlp, whisper.cpp,
+// ffmpeg, Baileys…) nasce quando é preciso — depois de o extrator, o
+// transcritor e a pasta da biblioteca do WhatsApp existirem.
+let componentesInv = null;
+function getComponentes() {
+  if (!componentesInv) {
+    const { Componentes } = require('./componentes.js');
+    componentesInv = new Componentes({ appDir: __dirname, dataDir: DATA_DIR, extrator: extratorYtDlp, transcritor, waLibDir: WA_LIB_DIR, waVersaoPadrao: WA_LIB_VERSAO });
+  }
+  return componentesInv;
+}
+// Consulta os desenvolvedores de cada componente e conta ao computador local
+// (auto = a passada diária: avisa no painel quando há versão nova que importa)
+function componentesVerificar(auto, ws) {
+  return getComponentes().verificar().then((r) => {
+    const avisos = getComponentes().avisos();
+    const msg = JSON.stringify({ type: 'componentes', auto: !!auto, ...r, avisos });
+    for (const c of wss.clients) if (c.readyState === 1 && c.role === 'local') c.send(msg);
+    if (auto && avisos.length) console.log('  🧩 Componente com versão nova: ' + avisos.map((a) => `${a.nome} ${a.versao || '?'} → ${a.maisNova || 'sem suporte'}`).join(', ') + '. Veja em Configurações → ℹ️ Sobre.');
+    return r;
+  }).catch((err) => {
+    if (ws) responderLocal(ws, { type: 'componentes', erro: String(err && err.message || err).slice(0, 160) });
+    else console.log(`  (verificação dos componentes não concluiu: ${String(err && err.message || err).slice(0, 120)})`);
+  });
+}
+
 function autoUpdateTick() {
   if (!updateConfig.autoCheck) return;
+  componentesVerificar(true); // 🧩 v0.185: na mesma passada diária, os componentes (só avisa)
   buscarVersaoNova().then((cache) => {
     if (cmpVersions(cache.latest, APP_VERSION) > 0) {
       console.log('  ' + tcons('🎉 Versão nova disponível: v$1 (você está na v$2). Atualize em Configurações → ℹ️ Sobre.', cache.latest, APP_VERSION));
@@ -7568,8 +7598,17 @@ const WA_LIB_TEMPO_MAX = Number(process.env.OBS_TESTE_NPM_TEMPO_MS) || 10 * 60 *
 // publicado no npm. Este desvio manda o npm buscar de lá: a instalação
 // deixa de precisar de git, e o código é o mesmo.
 const WA_LIB_DESVIOS = { libsignal: '^6.0.0' };
-function waLibInstalar() {
+// A versão da biblioteca testada com o programa. 🧩 v0.185: o inventário de
+// componentes pode pedir outra da MESMA linha maior (correções do protocolo
+// do WhatsApp); uma linha maior nova só entra depois de testada, com o programa.
+const WA_LIB_VERSAO = '6.7.24';
+function waLibVersaoPedida(v) {
+  const s = String(v || '').trim();
+  return /^\d+\.\d+\.\d+$/.test(s) && s.split('.')[0] === WA_LIB_VERSAO.split('.')[0] ? s : WA_LIB_VERSAO;
+}
+function waLibInstalar(versaoPedida) {
   if (waLib.instalando) return;
+  const versao = waLibVersaoPedida(versaoPedida);
   waLib.instalando = true;
   waLib.erro = '';
   broadcastWaLib();
@@ -7611,7 +7650,7 @@ function waLibInstalar() {
     // No Windows o npm.cmd precisa do shell — e aí a pasta com espaço ou "&"
     // no nome (C:\Users\Ana & Bia\...) tem que ir entre aspas
     const comShell = process.platform === 'win32';
-    const args = ['install', '@whiskeysockets/baileys@6.7.24', '--prefix', WA_LIB_DIR, '--no-audit', '--no-fund', '--omit=dev']
+    const args = ['install', '@whiskeysockets/baileys@' + versao, '--prefix', WA_LIB_DIR, '--no-audit', '--no-fund', '--omit=dev']
       .map((a) => (comShell && /[\s&^|<>()"]/.test(a) ? '"' + a.replace(/"/g, '') + '"' : a));
     // rodando DENTRO da pasta da biblioteca: o npm não tem para onde subir
     proc = waSpawn(npmCmd, args, { windowsHide: true, shell: comShell, cwd: WA_LIB_DIR });
@@ -11617,6 +11656,7 @@ wss.on('connection', (ws, req) => {
     transcricaoEstado: transcritor.estado(),
     ytdlpEstado: extratorYtDlp.estado(), // 🧪 v0.134: o extrator da mídia direta
     waLib: waLibEstado(),
+    componentes: ws.role === 'local' ? getComponentes().atual() : undefined, // 🧩 v0.185: só o computador do streamer
     readIds: Object.fromEntries([...state.readIds].slice(-MAX_READ_IDS)),
     version: APP_VERSION,
     lanUrl: lanAddress() ? `http://${lanAddress()}:${PORT}` : null,
@@ -13255,6 +13295,23 @@ function tratarMensagem(ws, raw) {
       const alvo = msg.alvo === 'ffmpeg' ? 'ffmpeg' : 'motor';
       if (msg.acao === 'baixar') transcritor.baixarMotor(alvo);
       else if (msg.acao === 'cancelar') transcritor.cancelarDownload(alvo);
+      break;
+    }
+    // 🧩 v0.185: inventário dos componentes — ler, verificar nos sites dos
+    // desenvolvedores e atualizar os que o próprio programa baixa
+    case 'componentesInventario':
+      responderLocal(ws, { type: 'componentes', ...getComponentes().atual() });
+      break;
+    case 'componentesVerificar':
+      componentesVerificar(false, ws);
+      break;
+    case 'componenteAtualizar': {
+      const item = getComponentes().atual().itens.find((c) => c.id === String(msg.id || ''));
+      if (!item || item.acao !== 'atualizar' || item.estado !== 'nova') break;
+      if (item.id === 'ytdlp') extratorYtDlp.baixar();
+      else if (item.id === 'whisper') transcritor.baixarMotor('motor', { tag: item.maisNova });
+      else if (item.id === 'ffmpeg') transcritor.baixarMotor('ffmpeg');
+      else if (item.id === 'baileys') waLibInstalar(item.maisNova);
       break;
     }
     case 'ytdlpMotor': {

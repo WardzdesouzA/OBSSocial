@@ -62,6 +62,8 @@ None of these come in the ZIP and none is needed for normal use — the program 
 
 The program also makes use of tools that already come with the system, when they exist: **curl** and **PowerShell** (Windows) as fallback paths when a site blocks the normal connection, and a **browser open** on the same computer for Kick.
 
+**Versions and updates of the components:** in Settings → ℹ️ About → 🧩 Components, the program lists each of them with the version and architecture in use, where it came from (included in the ZIP, installed on the system, downloaded by the program, portable copy) and whether its developers have published a new version — checked when the program opens and once a day, together with OBS Social's own update check (same switch), with a notice on the dashboard when something that matters is out of date (Node.js, yt-dlp, the WhatsApp library). What the program itself downloads has a ⬇️ Update button right there; Node.js you update from the official site; what comes in the ZIP arrives with the next OBS Social version.
+
 ## How to use (every time you go live)
 
 1. Open the project folder and **double-click**:
@@ -327,6 +329,8 @@ Nenhum destes vem no ZIP e nenhum é necessário para o uso normal — o program
 | **Biblioteca local do WhatsApp** (Baileys) | 💬 WhatsApp sem gateway pago (pareamento por QR) | `data/whatsapp-lib/` | npm (vem junto do Node.js) |
 
 O programa também aproveita, quando existem, ferramentas que já vêm no sistema: o **curl** e o **PowerShell** (Windows) como caminhos de reserva quando um site bloqueia a conexão normal, e um **navegador aberto** no mesmo computador para a Kick.
+
+**Versões e atualizações dos componentes:** em Configurações → ℹ️ Sobre → 🧩 Componentes, o programa lista cada um deles com a versão e a arquitetura em uso, de onde veio (incluído no ZIP, instalado no sistema, baixado pelo programa, cópia portátil) e se os desenvolvedores publicaram versão nova — conferido ao abrir o programa e 1x por dia, junto com a verificação de atualização do próprio OBS Social (mesmo seletor), com aviso no painel quando algo que importa está defasado (Node.js, yt-dlp, biblioteca do WhatsApp). O que o programa mesmo baixa tem botão ⬇️ Atualizar ali; o Node.js você atualiza pelo site oficial; o que vem no ZIP chega com a próxima versão do OBS Social.
 
 ## Como usar (toda vez que for fazer live)
 

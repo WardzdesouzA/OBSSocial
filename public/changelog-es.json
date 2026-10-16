@@ -1,4 +1,13 @@
 {
+  "0.185.0": {
+    "titulo": "🧩 Componentes: versión, arquitectura y aviso de versión nueva de todo lo que usa el programa",
+    "itens": [
+      "En Configuración → ℹ️ Acerca de, la nueva sección 🧩 Componentes lista todo lo que OBS Social usa para funcionar — Node.js (el motor), ws, qrcode-generator y lottie-web (incluidos en el ZIP), yt-dlp, whisper.cpp, ffmpeg y la biblioteca de WhatsApp (descargados cuando activas la función) y el curl del sistema — con la versión y la arquitectura en uso y de dónde vino cada uno (incluido, instalado en el sistema, descargado por el programa, copia portátil).",
+      "Al abrir el programa y 1 vez al día, junto con la búsqueda de versión nueva del propio OBS Social (mismo selector), consulta a los desarrolladores de cada componente: nodejs.org (la versión más nueva de tu línea y el calendario de soporte — avisa si la línea perdió el soporte y cuál es la LTS actual), el registro de npm (ws, qrcode-generator, lottie-web, Baileys) y GitHub (yt-dlp, whisper.cpp; para ffmpeg, la fecha del build). El panel avisa cuando hay una versión nueva que importa: Node.js, yt-dlp (los sitios cambian cada semana) y la biblioteca de WhatsApp (el protocolo cambia).",
+      "Lo que el programa mismo descarga tiene botón ⬇️ Actualizar allí: yt-dlp (la versión más nueva), whisper.cpp (la etiqueta nueva; la versión descargada queda anotada en data/motor-transcricao/versoes.json, ya que whisper-cli no informa la suya), ffmpeg (el build más nuevo) y la biblioteca de WhatsApp (solo la misma línea mayor — una línea mayor nueva entra después de probarse, con el programa). Node.js lo actualizas desde el sitio oficial (o reemplazando la carpeta node-portable); lo que viene en el ZIP llega con la próxima versión de OBS Social; lo que es del sistema solo se informa.",
+      "Nada de esto descarga ningún programa por su cuenta: la verificación solo lee versiones, y las descargas siguen siendo las de siempre, activadas por ti. Todo está restringido a la computadora del streamer. Traducciones en los 10 idiomas; README actualizado."
+    ]
+  },
   "0.184.0": {
     "titulo": "📦 Paquete: qué viene en el ZIP, qué instalar y cómo ejecutar — todo al comienzo del README; iniciadores que explican Node.js",
     "itens": [

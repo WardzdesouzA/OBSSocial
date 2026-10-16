@@ -1,4 +1,13 @@
 {
+  "0.185.0": {
+    "titulo": "🧩 Components: version, architecture and new-version notices for everything the program uses",
+    "itens": [
+      "In Settings → ℹ️ About, the new 🧩 Components section lists everything OBS Social uses to work — Node.js (the engine), ws, qrcode-generator and lottie-web (included in the ZIP), yt-dlp, whisper.cpp, ffmpeg and the WhatsApp library (downloaded when you turn the feature on) and the system’s curl — with the version and architecture in use and where each one came from (included, installed on the system, downloaded by the program, portable copy).",
+      "When the program opens and once a day, together with OBS Social’s own new-version check (same switch), it asks each component’s developers: nodejs.org (the newest version of your line and the support schedule — it warns if the line lost support and which LTS is current), the npm registry (ws, qrcode-generator, lottie-web, Baileys) and GitHub (yt-dlp, whisper.cpp; for ffmpeg, the build date). The dashboard warns when a new version that matters is out: Node.js, yt-dlp (sites change every week) and the WhatsApp library (the protocol changes).",
+      "What the program itself downloads has a ⬇️ Update button right there: yt-dlp (the newest version), whisper.cpp (the new tag; the downloaded version is recorded in data/motor-transcricao/versoes.json, since whisper-cli does not report its own), ffmpeg (the newest build) and the WhatsApp library (same major line only — a new major line comes in after testing, with the program). Node.js you update from the official site (or by replacing the node-portable folder); what comes in the ZIP arrives with the next OBS Social version; what belongs to the system is only reported.",
+      "None of this downloads any program on its own: the check only reads versions, and the downloads remain the usual ones, triggered by you. Everything is restricted to the streamer’s computer. Translations in all 10 languages; README updated."
+    ]
+  },
   "0.184.0": {
     "titulo": "📦 Package: what comes in the ZIP, what to install and how to run — all at the top of the README; launchers that explain Node.js",
     "itens": [

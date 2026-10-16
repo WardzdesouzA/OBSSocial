@@ -1,4 +1,13 @@
 {
+  "0.185.0": {
+    "titulo": "🧩 Bileşenler: programın kullandığı her şeyin sürümü, mimarisi ve yeni sürüm uyarısı",
+    "itens": [
+      "Ayarlar → ℹ️ Hakkında’daki yeni 🧩 Bileşenler bölümü, OBS Social’ın çalışmak için kullandığı her şeyi listeler — Node.js (motor), ws, qrcode-generator ve lottie-web (ZIP’e dahil), yt-dlp, whisper.cpp, ffmpeg ve WhatsApp kitaplığı (özelliği açtığınızda indirilir) ve sistemin curl’ü — kullanılan sürüm ve mimariyle ve her birinin nereden geldiğiyle (dahil, sistemde kurulu, program tarafından indirildi, taşınabilir kopya).",
+      "Program açılırken ve günde 1 kez, OBS Social’ın kendi yeni sürüm aramasıyla birlikte (aynı anahtar), her bileşenin geliştiricilerine sorar: nodejs.org (hattınızın en yeni sürümü ve destek takvimi — hat desteğini yitirmişse uyarır ve güncel LTS’yi söyler), npm kayıt defteri (ws, qrcode-generator, lottie-web, Baileys) ve GitHub (yt-dlp, whisper.cpp; ffmpeg için derleme tarihi). Önemli bir yeni sürüm çıktığında panel uyarır: Node.js, yt-dlp (siteler her hafta değişir) ve WhatsApp kitaplığı (protokol değişir).",
+      "Programın kendi indirdiklerinin orada ⬇️ Güncelle düğmesi vardır: yt-dlp (en yeni sürüm), whisper.cpp (yeni etiket; whisper-cli kendi sürümünü bildirmediği için indirilen sürüm data/motor-transcricao/versoes.json dosyasına yazılır), ffmpeg (en yeni derleme) ve WhatsApp kitaplığı (yalnızca aynı ana hat — yeni bir ana hat test edildikten sonra programla gelir). Node.js’i resmi siteden güncellersiniz (ya da node-portable klasörünü değiştirerek); ZIP’te gelenler bir sonraki OBS Social sürümüyle gelir; sisteme ait olanlar yalnızca bildirilir.",
+      "Bunların hiçbiri kendi başına program indirmez: denetim yalnızca sürümleri okur ve indirmeler her zamanki gibi sizin tetiklediğiniz indirmelerdir. Her şey yayıncının bilgisayarıyla sınırlıdır. 10 dilde çeviriler; README güncellendi."
+    ]
+  },
   "0.184.0": {
     "titulo": "📦 Paket: ZIP’te ne var, ne kurulacak ve nasıl çalıştırılır — hepsi README’nin başında; Node.js’i açıklayan başlatıcılar",
     "itens": [
