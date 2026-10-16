@@ -1,13 +1,12 @@
 {
   "0.183.0": {
-    "titulo": "💠 银行直连 Pix:可选 16 家银行和平台",
+    "titulo": "💠 银行直连 Pix:可选 8 家能提供姓名和留言的银行与金融科技",
     "itens": [
-      "💠 银行直连 Pix(🧪 实验室)新增银行选择器,按银行、合作社、金融科技和支付平台分组:Banco do Brasil、Bradesco、Itaú、Santander、Inter、C6、Banrisul、BS2、Safra、Banco do Nordeste、Sicoob、Sicredi、Ailos、Efí、Cora、OpenPix/Woovi、Asaas 和 Mercado Pago,另有自定义配置供任何遵循中央银行 Pix API 的银行使用。",
-      "每家银行只显示它用到的字段(证书、应用密钥、测试环境、手动地址),说明在其门户何处获取凭据、支持个人(PF)还是企业(PJ),并附门户链接。凭据传递方式不同的配置(Authorization: Basic、自定义字段名、JSON 正文、无 client_secret)已预先调好。",
-      "列表如实标注:Nubank、BTG、PagBank、PicPay 和 Unicred 显示为禁用并给出原因 —— 它们没有读取已收 Pix 的开放 API(Nubank 仅能通过需要参与机构的 Open Finance)。",
-      "Inter 的读取改为增强对账单(extrato.read 范围):标准 Pix 查询只列出通过 API 创建的收款 —— 落到你密钥上的 Pix,连同付款人姓名和留言,来自对账单。已在用 Inter 的用户需在集成中勾选「对账单:查询」。",
-      "应用密钥(BB、Caixa)和凭据一如既往加密保存在电脑上,绝不发送到屏幕;程序只读取 —— 不创建收款,也不转账。",
-      "Mercado Pago 已在真实账户验证:打到密钥的 Pix 会出现并带留言,但其 API 不提供付款人姓名。对不提供姓名的服务商(Mercado Pago、Efí),如果对方在 Pix 里写「姓名: 留言」,程序会把姓名拆出来。最后一笔原始 Pix 仅保存在你的电脑上的 data/pix-ultimo.json,用于诊断。",
+      "💠 银行直连 Pix(🧪 实验室)新增银行选择器。只收录官方 API 会返回付款人姓名和留言的服务商:Banco do Brasil、Bradesco、Santander、Inter、BS2(银行),Sicoob(合作社),OpenPix/Woovi、Asaas(金融科技),另有自定义配置供任何遵循中央银行 Pix API 的银行使用。",
+      "每家银行只显示它用到的字段(证书、应用密钥、测试环境、手动地址),说明在其门户何处获取凭据、支持个人(PF)还是企业(PJ),并附门户链接。凭据传递方式不同的配置(Authorization: Basic、无 client_secret)已预先调好。",
+      "列表如实标注:对个人用户,目前只有 Asaas 返回付款人姓名。因 API 不提供付款人姓名而未收录:Itaú、Sicredi、C6、Banrisul、Banco do Nordeste、Ailos、Efí 和 Mercado Pago(已在真实账户验证:有留言但无姓名)。Caixa 和 Safra 未公开文档;Nubank、BTG、PagBank、PicPay 和 Unicred 没有相应的 API。",
+      "每家银行有自己的方式,程序都已掌握:Inter 读取增强对账单(extrato.read 范围 —— 已在用的用户需在集成中勾选「对账单:查询」);BB 使用自有的 /pix-bb 查询,带付款人;Santander 使用当日已收 Pix 查询。如果银行发来的 Pix 没有姓名而对方写了「姓名: 留言」,程序会把姓名拆出来。",
+      "切换银行或环境会清空已见 Pix 列表(首次查询重新只做标记);应用密钥和凭据加密保存在电脑上,绝不发送到屏幕;程序只读取 —— 不创建收款,也不转账。最后一笔原始 Pix 仅保存在你的电脑上的 data/pix-ultimo.json,用于诊断。",
       "10 种语言的翻译;FAQ 和 README 已更新。"
     ]
   },

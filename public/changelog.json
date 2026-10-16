@@ -1,14 +1,13 @@
 [
   {
     "version": "0.183.0",
-    "titulo": "💠 Pix direto do banco: seletor com 16 bancos e plataformas",
+    "titulo": "💠 Pix direto do banco: seletor com 8 bancos e fintechs que entregam nome e mensagem",
     "itens": [
-      "💠 O Pix direto do banco (🧪 Labs) ganhou um seletor de bancos, agrupado em Bancos, Cooperativas, Fintechs e Plataformas de pagamento: Banco do Brasil, Bradesco, Itaú, Santander, Inter, C6, Banrisul, BS2, Safra, Banco do Nordeste, Sicoob, Sicredi, Ailos, Efí, Cora, OpenPix/Woovi, Asaas e Mercado Pago — além do perfil personalizado para qualquer outro que siga a API Pix do Banco Central.",
-      "Cada banco mostra só os campos que usa (certificado, chave do aplicativo, ambiente de testes, endereços manuais), explica onde conseguir as credenciais no portal dele, se atende pessoa física (PF) ou empresa (PJ) e traz o link do portal. Perfis que pedem credenciais de outro jeito (Authorization: Basic, campos com nome próprio, corpo em JSON, sem client_secret) já vêm ajustados.",
-      "Honestidade na lista: Nubank, BTG, PagBank, PicPay e Unicred aparecem desligados, com o motivo — não têm API aberta para ler os Pix recebidos (o Nubank só pelo Open Finance, que exige uma instituição participante).",
-      "No Inter, a leitura passou para o extrato enriquecido (escopo extrato.read): a consulta de Pix do padrão só lista cobranças geradas pela API — o Pix que cai na sua chave, com nome de quem pagou e mensagem, vem do extrato. Quem já usava o Inter precisa marcar «Extrato: consultar» na integração.",
-      "A chave do aplicativo (BB, Caixa) e as credenciais ficam cifradas no computador, como antes, e nunca vão para as telas; o programa só lê — nunca cria cobrança nem movimenta nada.",
-      "Mercado Pago, conferido numa conta real: o Pix recebido na chave aparece, com a mensagem — mas a API dele não entrega o nome de quem pagou. Nos provedores sem nome (Mercado Pago, Efí), se a pessoa escrever «Nome: mensagem» no Pix, o programa separa o nome. O último Pix bruto fica em data/pix-ultimo.json, só no seu computador, para diagnóstico.",
+      "💠 O Pix direto do banco (🧪 Labs) ganhou um seletor de bancos. Entram só provedores cuja API oficial devolve o nome de quem pagou e a mensagem: Banco do Brasil, Bradesco, Santander, Inter e BS2 (bancos), Sicoob (cooperativa), OpenPix/Woovi e Asaas (fintechs) — mais o perfil personalizado para qualquer outro que siga a API Pix do Banco Central.",
+      "Cada banco mostra só os campos que usa (certificado, chave do aplicativo, ambiente de testes, endereços manuais), explica onde conseguir as credenciais no portal dele, se atende pessoa física (PF) ou empresa (PJ) e traz o link do portal. Perfis que pedem credenciais de outro jeito (Authorization: Basic, sem client_secret) já vêm ajustados.",
+      "Honestidade na lista: para pessoa física, hoje só a Asaas devolve o nome do pagador. Ficaram de fora, por não entregarem o nome de quem pagou pela API: Itaú, Sicredi, C6, Banrisul, Banco do Nordeste, Ailos, Efí e Mercado Pago (este conferido numa conta real: traz a mensagem, mas não o nome). Caixa e Safra não publicam a documentação; Nubank, BTG, PagBank, PicPay e Unicred não têm API para isso.",
+      "Cada banco tem o seu jeito e o programa já sabe: no Inter, lê o extrato enriquecido (escopo extrato.read — quem já usava precisa marcar «Extrato: consultar» na integração); no BB, usa a consulta própria /pix-bb, que traz o pagador; no Santander, a consulta de Pix recebidos do dia. Se um banco mandar o Pix sem nome e a pessoa escreveu «Nome: mensagem», o programa separa o nome.",
+      "Trocar de banco ou de ambiente zera a lista de Pix já vistos (a primeira consulta volta a só marcar); a chave do aplicativo e as credenciais ficam cifradas no computador e nunca vão para as telas; o programa só lê — nunca cria cobrança nem movimenta nada. O último Pix bruto fica em data/pix-ultimo.json, só no seu computador, para diagnóstico.",
       "Traduções nos 10 idiomas; FAQ e README atualizados."
     ]
   },
