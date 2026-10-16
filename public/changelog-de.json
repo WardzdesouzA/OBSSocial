@@ -1,4 +1,11 @@
 {
+  "0.186.0": {
+    "titulo": "🧩 Komponenten aktuell: ws 8.22.0 und lottie-web 5.13.0; was zum System gehört, wird erklärt",
+    "itens": [
+      "Die im ZIP enthaltenen Bibliotheken wurden auf die Versionen aktualisiert, auf die das Komponenten-Inventar hinwies: ws 8.22.0 (WebSocket) und lottie-web 5.13.0 (Animationen). So aktualisieren sie sich — zusammen mit OBS Social, nie von außen, damit das 1-Klick-Update ganz bleibt.",
+      "In der Tabelle 🧩 Komponenten erscheint, was zum System gehört (curl), nicht mehr als «nicht geprüft»: es heißt jetzt, dass es mit dem System kommt und mit ihm aktualisiert wird (Windows Update, App Store, Paketverwaltung), und der Name erklärt, wofür es dient — ein Systemwerkzeug als Ersatzweg, wenn eine Seite das Programm blockiert."
+    ]
+  },
   "0.185.0": {
     "titulo": "🧩 Komponenten: Version, Architektur und Hinweis auf neue Versionen für alles, was das Programm nutzt",
     "itens": [

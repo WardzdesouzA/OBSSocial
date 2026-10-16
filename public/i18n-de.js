@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // v0.186 — componentes do sistema
+    "🖥️ vem com o sistema e atualiza com ele (Windows Update, App Store, gerenciador de pacotes)": "🖥️ kommt mit dem System und wird mit ihm aktualisiert (Windows Update, App Store, Paketverwaltung)",
     // v0.185 — whisper.cpp sem zip para o sistema
     "Existe versão mais nova, mas sem o pacote pronto para este sistema; fica a versão atual.": "Es gibt eine neuere Version, aber ohne fertiges Paket für dieses System; die aktuelle Version bleibt.",
     // v0.185 — 🧩 Componentes (Sobre + faixa do painel)
@@ -52,7 +54,7 @@ window.OBS_I18N_DICTS.de = {
     "whisper.cpp (transcrição)": "whisper.cpp (Transkription)",
     "ffmpeg (conversor de áudio/vídeo)": "ffmpeg (Audio-/Video-Konverter)",
     "Biblioteca do WhatsApp (Baileys)": "WhatsApp-Bibliothek (Baileys)",
-    "curl (caminho de reserva)": "curl (Ersatzweg)",
+    "curl (ferramenta do sistema; caminho de reserva quando um site bloqueia o programa)": "curl (Systemwerkzeug; Ersatzweg, wenn eine Seite das Programm blockiert)",
     "🧩 Componentes com versão nova:": "🧩 Komponenten mit neuer Version:",
     "Ver em Configurações → Sobre": "In Einstellungen → Über ansehen",
     // v0.184 — extrator: sem yt-dlp pronto para a arquitetura

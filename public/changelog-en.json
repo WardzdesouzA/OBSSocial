@@ -1,4 +1,11 @@
 {
+  "0.186.0": {
+    "titulo": "🧩 Components up to date: ws 8.22.0 and lottie-web 5.13.0; what belongs to the system is explained",
+    "itens": [
+      "The libraries that come in the ZIP were updated to the versions the components inventory pointed to: ws 8.22.0 (WebSocket) and lottie-web 5.13.0 (animations). That is how they update — together with OBS Social, never from outside, so the 1-click update stays whole.",
+      "In the 🧩 Components table, what belongs to the system (curl) no longer shows as «not checked»: it now says it comes with the system and updates with it (Windows Update, App Store, package manager), and the name explains what it is for — a system tool used as a fallback path when a site blocks the program."
+    ]
+  },
   "0.185.0": {
     "titulo": "🧩 Components: version, architecture and new-version notices for everything the program uses",
     "itens": [

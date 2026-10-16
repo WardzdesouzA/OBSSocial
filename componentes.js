@@ -210,7 +210,7 @@ class Componentes {
     itens.push({ id: 'baileys', nome: 'Biblioteca do WhatsApp (Baileys)', categoria: 'opcional', versao: baileys, arquitetura: null, origem: baileys ? 'baixado' : 'nao', acao: baileys ? 'atualizar' : null });
     // do sistema
     const curl = /curl (\S+)(?: \(([^)]+)\))?/.exec(this._rodar(process.platform === 'win32' ? 'curl.exe' : 'curl', ['--version']));
-    itens.push({ id: 'curl', nome: 'curl (caminho de reserva)', categoria: 'sistema', versao: curl ? curl[1] : null, arquitetura: curl && curl[2] ? curl[2] : null, origem: curl ? 'sistema' : 'nao', acao: null });
+    itens.push({ id: 'curl', nome: 'curl (ferramenta do sistema; caminho de reserva quando um site bloqueia o programa)', categoria: 'sistema', versao: curl ? curl[1] : null, arquitetura: curl && curl[2] ? curl[2] : null, origem: curl ? 'sistema' : 'nao', acao: null });
     return itens;
   }
 
@@ -236,6 +236,8 @@ class Componentes {
       const r = remoto.itens && remoto.itens[it.id] && typeof remoto.itens[it.id] === 'object' ? remoto.itens[it.id] : null;
       const saida = { ...it, maisNova: r ? r.maisNova || null : null, extra: r && r.extra && typeof r.extra === 'object' ? r.extra : null, estado: 'naoVerificado', avisar: false };
       if (it.origem === 'nao') { saida.estado = 'naoInstalado'; return saida; }
+      // o que é do sistema (curl) atualiza com o sistema: não há o que verificar aqui
+      if (it.categoria === 'sistema') { saida.estado = 'sistema'; return saida; }
       if (!r) return saida;
       if (r.erro) { saida.estado = 'desconhecido'; return saida; }
       if (it.id === 'node' && r.extra && r.extra.semSuporte) {
