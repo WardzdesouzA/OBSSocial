@@ -7,6 +7,7 @@
       "Honesty in the list: Nubank, BTG, PagBank, PicPay and Unicred appear disabled, with the reason — they have no open API to read received Pix (Nubank only through Open Finance, which requires a participating institution).",
       "For Inter, reading moved to the enriched statement (extrato.read scope): the standard Pix query only lists charges created through the API — the Pix that lands on your key, with the payer’s name and message, comes from the statement. Existing Inter users need to tick «Statement: query» in their integration.",
       "The application key (BB, Caixa) and the credentials stay encrypted on the computer, as before, and never reach the screens; the program only reads — it never creates charges or moves money.",
+      "Mercado Pago, checked on a real account: a Pix received on the key shows up, with its message — but its API does not deliver the payer’s name. For providers without a name (Mercado Pago, Efí), if the person writes «Name: message» in the Pix, the program splits the name off. The last raw Pix is kept in data/pix-ultimo.json, on your computer only, for diagnosis.",
       "Translations in all 10 languages; FAQ and README updated."
     ]
   },

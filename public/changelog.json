@@ -8,6 +8,7 @@
       "Honestidade na lista: Nubank, BTG, PagBank, PicPay e Unicred aparecem desligados, com o motivo — não têm API aberta para ler os Pix recebidos (o Nubank só pelo Open Finance, que exige uma instituição participante).",
       "No Inter, a leitura passou para o extrato enriquecido (escopo extrato.read): a consulta de Pix do padrão só lista cobranças geradas pela API — o Pix que cai na sua chave, com nome de quem pagou e mensagem, vem do extrato. Quem já usava o Inter precisa marcar «Extrato: consultar» na integração.",
       "A chave do aplicativo (BB, Caixa) e as credenciais ficam cifradas no computador, como antes, e nunca vão para as telas; o programa só lê — nunca cria cobrança nem movimenta nada.",
+      "Mercado Pago, conferido numa conta real: o Pix recebido na chave aparece, com a mensagem — mas a API dele não entrega o nome de quem pagou. Nos provedores sem nome (Mercado Pago, Efí), se a pessoa escrever «Nome: mensagem» no Pix, o programa separa o nome. O último Pix bruto fica em data/pix-ultimo.json, só no seu computador, para diagnóstico.",
       "Traduções nos 10 idiomas; FAQ e README atualizados."
     ]
   },

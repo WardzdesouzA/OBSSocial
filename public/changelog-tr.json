@@ -7,6 +7,7 @@
       "Listede dürüstlük: Nubank, BTG, PagBank, PicPay ve Unicred nedeniyle birlikte devre dışı görünür — alınan Pix’leri okumak için açık API’leri yok (Nubank yalnızca katılımcı bir kurum gerektiren Open Finance üzerinden).",
       "Inter’de okuma zenginleştirilmiş hesap özetine (extrato.read kapsamı) geçti: standart Pix sorgusu yalnızca API ile oluşturulan tahsilatları listeler — anahtarınıza düşen Pix, ödeyenin adı ve mesajıyla, hesap özetinden gelir. Inter’i zaten kullananlar entegrasyonda «Hesap özeti: sorgula»yı işaretlemeli.",
       "Uygulama anahtarı (BB, Caixa) ve kimlik bilgileri eskisi gibi bilgisayarda şifreli kalır ve ekranlara asla gitmez; program yalnızca okur — tahsilat oluşturmaz, para hareket ettirmez.",
+      "Mercado Pago, gerçek bir hesapta doğrulandı: anahtara gelen Pix mesajıyla görünür — ama API’si ödeyenin adını vermez. Ad vermeyen sağlayıcılarda (Mercado Pago, Efí) kişi Pix’e «Ad: mesaj» yazarsa program adı ayırır. Son ham Pix, tanı için yalnızca bilgisayarınızda data/pix-ultimo.json dosyasında tutulur.",
       "10 dilde çeviriler; SSS ve README güncellendi."
     ]
   },

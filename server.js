@@ -2762,7 +2762,7 @@ const PIX_BANCOS = {
     sandbox: { urlToken: 'https://pix-h.api.efipay.com.br/oauth/token', urlPix: 'https://pix-h.api.efipay.com.br/v2/pix' },
     portal: 'https://dev.efipay.com.br/',
     ajuda: 'app.sejaefi.com.br → API → Criar aplicação → ative «API Pix» com o escopo de consulta → copie Client ID e Client Secret; em «Meus Certificados» gere o .p12 (baixa uma vez só). Pessoa física: conta Efí Pro (CPF).',
-    aviso: 'A lista da Efí não traz o nome de quem pagou — só valor e mensagem.',
+    aviso: 'A lista da Efí não traz o nome de quem pagou — só valor e mensagem. Peça para escreverem «Nome: mensagem» no Pix — o programa separa o nome.',
   },
   cora: {
     nome: 'Cora', grupo: 'fintech', tipo: 'bacen', auth: 'form', semSecret: true, semScope: true, cert: true, pf: false, pj: true, consulta: 'coraExtrato',
@@ -2796,7 +2796,7 @@ const PIX_BANCOS = {
     urlToken: '', urlPix: 'https://api.mercadopago.com/v1/payments/search',
     portal: 'https://www.mercadopago.com.br/developers/panel/app',
     ajuda: 'mercadopago.com.br/developers → Suas integrações → sua aplicação → Credenciais de produção → copie o Access Token.',
-    aviso: 'Cole o Access Token (não a Public Key: os dois começam com APP_USR). Entram os Pix recebidos na chave e os pagamentos de cobranças do Mercado Pago (QR, checkout) por Pix ou saldo; cartão fica de fora. A mensagem do pagador vem; o nome dele a API do Mercado Pago não entrega (aparece «Apoiador Pix»).',
+    aviso: 'Cole o Access Token (não a Public Key: os dois começam com APP_USR). Entram os Pix recebidos na chave e os pagamentos de cobranças do Mercado Pago (QR, checkout) por Pix ou saldo; cartão fica de fora. A mensagem vem, mas a API do Mercado Pago NÃO entrega o nome de quem pagou: peça para escreverem «Nome: mensagem» no Pix — o programa separa o nome.',
   },
   // ----- sem API para isto (ficam na lista para explicar) -----
   nubank: {
@@ -3216,12 +3216,19 @@ async function pixTick() {
       pixRt.vistos.add(id);
       if (pixRt.primeira) continue; // o que já existia antes de ligar não vira apoio
       novos += 1;
-      const nome = String(item?.pagador?.nome || item?.devedor?.nome || '').trim().slice(0, 60);
+      let nome = String(item?.pagador?.nome || item?.devedor?.nome || '').trim().slice(0, 60);
+      let mensagem = String(item?.infoPagador || '').trim().slice(0, 500);
+      // 💠 v0.183: provedor que não entrega o nome (Mercado Pago, Efí): se a pessoa
+      // escreveu «Nome: mensagem», o começo vira o nome — só quando o banco não deu nenhum
+      if (!nome) {
+        const m = /^@?([^:\n]{2,40}?)\s*:\s*(\S[\s\S]*)$/.exec(mensagem);
+        if (m && !/^\d+$/.test(m[1]) && !/^(https?|www\.)/i.test(m[1])) { nome = m[1].trim().slice(0, 60); mensagem = m[2].trim(); }
+      }
       try { gravarPrivado(PIX_ULTIMO_FILE, JSON.stringify({ banco: pixConfig.banco, em: new Date().toISOString(), item: item?._bruto || item }, null, 2)); } catch { /* diagnóstico; sem ele nada muda */ }
       emitDonation({
         name: nome || 'Apoiador Pix',
         amountText: formatDonationValue(item?.valor),
-        message: String(item?.infoPagador || '').slice(0, 500),
+        message: mensagem,
         rotulo: 'Pix',
       });
     }

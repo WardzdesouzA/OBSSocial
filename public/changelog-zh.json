@@ -7,6 +7,7 @@
       "列表如实标注:Nubank、BTG、PagBank、PicPay 和 Unicred 显示为禁用并给出原因 —— 它们没有读取已收 Pix 的开放 API(Nubank 仅能通过需要参与机构的 Open Finance)。",
       "Inter 的读取改为增强对账单(extrato.read 范围):标准 Pix 查询只列出通过 API 创建的收款 —— 落到你密钥上的 Pix,连同付款人姓名和留言,来自对账单。已在用 Inter 的用户需在集成中勾选「对账单:查询」。",
       "应用密钥(BB、Caixa)和凭据一如既往加密保存在电脑上,绝不发送到屏幕;程序只读取 —— 不创建收款,也不转账。",
+      "Mercado Pago 已在真实账户验证:打到密钥的 Pix 会出现并带留言,但其 API 不提供付款人姓名。对不提供姓名的服务商(Mercado Pago、Efí),如果对方在 Pix 里写「姓名: 留言」,程序会把姓名拆出来。最后一笔原始 Pix 仅保存在你的电脑上的 data/pix-ultimo.json,用于诊断。",
       "10 种语言的翻译;FAQ 和 README 已更新。"
     ]
   },
