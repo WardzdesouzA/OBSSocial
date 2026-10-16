@@ -5109,15 +5109,23 @@ function applyUpdate(buffer) {
   return written;
 }
 
-// Troca os scripts de iniciar guardados como .novo (só em momento seguro,
-// quando nenhuma janela está lendo o script).
-function applyStagedLaunchers() {
+// Troca os scripts de iniciar guardados como .novo.
+// 🔁 v0.184: por RENAME, não por cópia — o bash lê o script pelo descritor
+// que mantém aberto (o inode antigo) e segue o laço antigo sem tropeçar em
+// bytes trocados; a cópia regravava o mesmo inode e o bash passava a ler um
+// pedaço do script novo. O cmd do Windows reabre o .bat pelo NOME a cada
+// linha, por isso o .bat de uma janela em uso é trocado por fora, em
+// relaunchApp(), só depois de a janela antiga fechar (`exceto` o deixa aqui).
+function applyStagedLaunchers(exceto) {
   for (const nome of ['Iniciar (Windows).bat', 'iniciar-mac-linux.command']) {
+    if (nome === exceto) continue;
     const novo = path.join(__dirname, nome + '.novo');
     try {
       if (fs.existsSync(novo)) {
-        fs.copyFileSync(novo, path.join(__dirname, nome));
-        fs.unlinkSync(novo);
+        const destino = path.join(__dirname, nome);
+        fs.renameSync(novo, destino);
+        // o .novo nasce 0644; o .command precisa continuar executável
+        if (nome.endsWith('.command') && process.platform !== 'win32') { try { fs.chmodSync(destino, 0o755); } catch {} }
       }
     } catch {}
   }
@@ -5139,12 +5147,28 @@ function relaunchApp() {
   }
   // Nunca mexemos em outros processos (nem no cmd pai): antivírus tratam
   // "matar o processo pai" como comportamento de malware — e com razão.
-  if (process.platform === 'win32' && fs.existsSync(path.join(__dirname, 'Iniciar (Windows).bat'))) {
+  const BAT = 'Iniciar (Windows).bat';
+  if (process.platform === 'win32' && fs.existsSync(path.join(__dirname, BAT))) {
+    if (doBat && fs.existsSync(path.join(__dirname, BAT + '.novo'))) {
+      // 🔁 v0.184: o cmd lê o .bat por posição de byte e reabre o arquivo a
+      // cada linha — trocar o .bat enquanto a janela antiga está parada no
+      // «node server.js» faria ela executar um trecho qualquer do script novo.
+      // Então: esta janela sai com 0 (lê o «exit» do arquivo VELHO e fecha
+      // sozinha) e um cmd à parte espera uns segundos, troca o arquivo e abre
+      // a janela nova. Só comandos internos do Windows: sem rede, sem PowerShell.
+      applyStagedLaunchers(BAT);
+      // (windowsVerbatimArguments: o Node não deve escapar as aspas internas;
+      // «ping» como espera porque o «timeout» recusa entrada redirecionada)
+      spawn('cmd.exe', ['/c', `ping -n 4 127.0.0.1 >nul & move /y "${BAT}.novo" "${BAT}" >nul & start "OBS Social" "${BAT}"`], {
+        cwd: __dirname, detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true,
+      }).unref();
+      console.log('  (Esta janela fecha sozinha; a nova abre em alguns segundos.)');
+      process.exit(0);
+    }
     applyStagedLaunchers();
-    spawn('cmd.exe', ['/c', 'start', 'OBS Social', 'Iniciar (Windows).bat'], {
+    spawn('cmd.exe', ['/c', 'start', 'OBS Social', BAT], {
       cwd: __dirname, detached: true, stdio: 'ignore',
     }).unref();
-    console.log('  (Se a janela antiga pedir "pressione qualquer tecla", pode fechá-la — da próxima vez isso não acontece mais.)');
     process.exit(0);
   }
   applyStagedLaunchers();

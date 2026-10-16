@@ -26,7 +26,7 @@ OBS Social is a program that runs **on your own computer** (it is not a website)
 
 **Step 3 — Open the program.** In the extracted folder, **double-click**:
 - **Windows:** `Iniciar (Windows).bat`
-- **Mac/Linux:** `iniciar-mac-linux.command` *(on a Mac it may refuse to open the first time: right-click → Open on macOS up to 14, or System Settings → Privacy & Security → Open Anyway on macOS 15 or newer; if it says you don't have permission, see the questions at the end)*
+- **Mac/Linux:** `iniciar-mac-linux.command` *(on a Mac it may refuse to open the first time: right-click → Open on macOS up to 14, or System Settings → Privacy & Security → Open Anyway on macOS 15 or newer; if it says you don't have permission, see the questions at the end. On Linux, if double-clicking doesn't open a window, run `bash iniciar-mac-linux.command` in a terminal)*
 
 A black window opens, checks Node.js and says **"✅ OBS Social is running!"**. **Leave that window open** during the stream (to quit the program, close it). If Node.js is missing or too old, the same window says so and offers to open the download page. Then open your browser at **http://localhost:3000** (the control dashboard), connect the chats under the gear ⚙️ and, in OBS, add a **Browser** source with the URL `http://localhost:3000/overlay` (featured comment) and/or `http://localhost:3000/chat` (fixed chat), 1920×1080. The detailed walkthrough is right below, in [How to use](#how-to-use-every-time-you-go-live).
 
@@ -292,7 +292,7 @@ O OBS Social é um programa que roda **no seu próprio computador** (não é um 
 
 **Passo 3 — Abra o programa.** Na pasta extraída, dê **dois cliques** em:
 - **Windows:** `Iniciar (Windows).bat`
-- **Mac/Linux:** `iniciar-mac-linux.command` *(no Mac, na primeira vez ele pode recusar abrir: botão direito → Abrir no macOS até o 14, ou Ajustes do Sistema → Privacidade e Segurança → Abrir Mesmo Assim no macOS 15 ou mais novo; se disser que você não tem permissão, veja as dúvidas no fim)*
+- **Mac/Linux:** `iniciar-mac-linux.command` *(no Mac, na primeira vez ele pode recusar abrir: botão direito → Abrir no macOS até o 14, ou Ajustes do Sistema → Privacidade e Segurança → Abrir Mesmo Assim no macOS 15 ou mais novo; se disser que você não tem permissão, veja as dúvidas no fim. No Linux, se o duplo clique não abrir uma janela, rode `bash iniciar-mac-linux.command` num terminal)*
 
 Uma janela preta abre, confere o Node.js e diz **«✅ OBS Social está rodando!»**. **Deixe essa janela aberta** durante a live (para encerrar o programa, feche-a). Se o Node.js estiver faltando ou for antigo demais, a mesma janela avisa e oferece abrir a página de download. Depois abra o navegador em **http://localhost:3000** (o painel de controle), conecte os chats na engrenagem ⚙️ e, no OBS, adicione uma fonte **Navegador** com a URL `http://localhost:3000/overlay` (comentário em destaque) e/ou `http://localhost:3000/chat` (chat fixo), 1920×1080. O passo a passo detalhado está logo abaixo, em [Como usar](#como-usar-toda-vez-que-for-fazer-live).
 
