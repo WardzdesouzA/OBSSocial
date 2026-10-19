@@ -34,7 +34,7 @@ window.OBS_I18N_DICTS.zh = {
     "🗂️ Abas": "🗂️ 标签页",
     "📄 Dentro das abas e das colunas": "📄 标签页和列的内部",
     "👁️ O que aparece no painel — desmarque para esconder": "👁️ 面板上显示的内容 —— 取消勾选即隐藏",
-    "Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. Cada seletor desta lista também aparece no cartão da própria função.": "全部勾选就是平常的面板。取消勾选你不用的项目来腾出空间：对所有打开面板的屏幕都有效（电脑上和通过网络）。⚙️ 设置、🛡️ 安全模式、「当前显示中」栏、带开关的直播列以及公告始终保留。此列表中的每个开关也会出现在对应功能自己的卡片上。",
+    "Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. As funções que têm cartão próprio também têm o mesmo seletor lá.": "全部勾选就是平常的面板。取消勾选你不用的项目来腾出空间：对所有打开面板的屏幕都有效（电脑上和通过网络）。⚙️ 设置、🛡️ 安全模式、「当前显示中」栏、带开关的直播列以及公告始终保留。有自己卡片的功能，在该卡片上也有同一个开关。",
     "🔃 e ⏭️ voltam sozinhos quando o ritmo está em 🖐️ Manual — sem eles nada entraria no painel.": "节奏处于 🖐️ 手动时，🔃 和 ⏭️ 会自动回来 —— 没有它们，面板里什么都进不来。",
     "👁️ Mostrar tudo de novo": "👁️ 重新全部显示",
     "Volta a mostrar todos os elementos do painel (o padrão)": "重新显示面板的所有元素（默认）",

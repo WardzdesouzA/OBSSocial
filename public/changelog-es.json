@@ -1,4 +1,10 @@
 {
+  "0.188.1": {
+    "titulo": "👁️ Ajustes de la revisión del panel ocultable",
+    "itens": [
+      "El ◀ ▶ ↺ de la tarjeta 🎁 Sorteo y de 🧩 Personalizar widgets también deshace el interruptor «Mostrar … en el panel» que vive en ellas. El texto de la lista «👁️ Qué aparece en el panel» ahora dice lo correcto: solo las funciones con tarjeta propia tienen el interruptor repetido allí. El README en inglés usa los mismos nombres que el resto del documento, y las dos versiones citan todo lo que queda siempre (también los chips de ventanas minimizadas y los avisos)."
+    ]
+  },
   "0.188.0": {
     "titulo": "👁️ El panel a tu manera: oculta lo que no usas",
     "itens": [

@@ -2568,11 +2568,12 @@
         <label class="check lab-toggle" style="margin-top:8px"><input type="checkbox" id="p-toolbarBottom" class="sw"> <span>🔁 Ferramentas abaixo das abas</span></label>
       </div>
       <!-- 👁️ v0.188: a lista completa do que o painel pode esconder (settings.panel.ocultos).
-           Cada seletor também mora no cartão da própria função; aqui é a visão de conjunto.
+           As funções com cartão próprio têm o mesmo seletor lá; aqui é a visão de conjunto
+           (e o único lugar do que não tem cartão: busca, abas, ritmo, chips, teste…).
            A lista é montada em JS a partir de OBS_PAINEL_ORDEM.OCULTAVEIS (painel-ordem.js). -->
       <div class="field" id="ocultosCampo">
         <label>👁️ O que aparece no painel — desmarque para esconder</label>
-        <div class="hint" style="margin-bottom:6px">Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. Cada seletor desta lista também aparece no cartão da própria função.</div>
+        <div class="hint" style="margin-bottom:6px">Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. As funções que têm cartão próprio também têm o mesmo seletor lá.</div>
         <div id="ocultosLista" style="display:flex;flex-wrap:wrap;gap:8px 18px"></div>
         <div class="hint" style="margin:6px 0 0">🔃 e ⏭️ voltam sozinhos quando o ritmo está em 🖐️ Manual — sem eles nada entraria no painel.</div>
         <button class="icon-btn" id="ocultosMostrarTudo" style="width:auto;padding:0 12px;margin-top:8px;font-size:13px" title="Volta a mostrar todos os elementos do painel (o padrão)">👁️ Mostrar tudo de novo</button>
@@ -9605,7 +9606,18 @@ const TELA_CHAVES = ['position', 'posX', 'posY', 'scale', 'mediaX', 'mediaY', 'm
   'destaqueLivre', 'cardAlturaEm', 'mediaCardAjuste', 'cartaoSoArte'];
 const TELA_WIDGET_CHAVES = ['position', 'x', 'y', 'scale', 'pecasLivre', 'pecasLargura', 'pecasAltura', 'pecas'];
 
+// 👁️ v0.188.1: o seletor «Mostrar … no painel» que mora no cartão 🎁 Sorteio ou no
+// 🧩 (por widget) é uma configuração do painel (panel.ocultos), mas o ◀ ▶ ↺ DAQUELE
+// cartão também precisa desfazê-lo. A foto da seção leva a visibilidade como campo
+// à parte (__oculto), que nunca vai ao servidor dentro da seção: sendSnapshot a
+// tira e manda { panel: { ocultos } } junto.
+const SECAO_OCULTO = { raffle: 'raffle', 'widget:qr': 'qr', 'widget:likemeter': 'likemeter', 'widget:audience': 'aud', 'widget:winstreak': 'ws', 'widget:aviso': 'aviso' };
 function snapshotFrom(source, key) {
+  const snap = snapshotFromBase(source, key);
+  if (snap && SECAO_OCULTO[key]) snap.__oculto = (((source.panel || {}).ocultos || {})[SECAO_OCULTO[key]] === true);
+  return snap;
+}
+function snapshotFromBase(source, key) {
   if (!source) return null;
   if (key === 'featured') {
     const out = {};
@@ -9648,7 +9660,15 @@ function sendSnapshot(key, snap) {
   // passo novo no histórico do 🖱️ Organizar — senão o primeiro ◀ de lá
   // re-aplicava exatamente o que o usuário acabou de desfazer
   telaAplicandoHist = true;
+  // 👁️ v0.188.1: a visibilidade do botão no painel viaja à parte (ver SECAO_OCULTO)
+  let ocultoExtra = null;
+  if (SECAO_OCULTO[key] && snap && typeof snap === 'object' && '__oculto' in snap) {
+    ocultoExtra = { [SECAO_OCULTO[key]]: snap.__oculto === true };
+    snap = { ...snap };
+    delete snap.__oculto;
+  }
   try {
+    if (ocultoExtra) hub.send({ type: 'settings', settings: { panel: { ocultos: ocultoExtra } } });
     if (key === 'featured') hub.send({ type: 'settings', settings: { ...snap } });
     else if (key === 'chat') hub.send({ type: 'settings', settings: { chat: snap } });
     // 👁️ v0.188: o servidor funde panel.ocultos chave a chave (ausente = fica como
@@ -14188,8 +14208,8 @@ for (const rowId of ['mpTools', 'mpTabs']) {
   });
 }
 // ---------- 👁️ v0.188: o que aparece no painel ----------
-// Cada <input data-painel-mostrar="chave"> (no cartão da própria função e na
-// lista de conjunto em 🎨 Temas) manda { panel: { ocultos: { chave: !marcado } } };
+// Cada <input data-painel-mostrar="chave"> (na lista de conjunto em 🎨 Temas e,
+// para as funções com cartão próprio, também lá) manda { panel: { ocultos: { chave: !marcado } } };
 // o servidor funde chave a chave e só grava as conhecidas (OCULTAVEIS). O eco
 // «settings» repreenche todos os seletores da mesma chave, onde quer que estejam.
 const OCULTAVEIS_ROTULOS = {
@@ -14249,7 +14269,11 @@ function fillMostrarNoPainel(panel) {
 document.addEventListener('change', (e) => {
   const chk = e.target;
   if (!(chk instanceof HTMLInputElement) || chk.type !== 'checkbox' || !chk.dataset.painelMostrar) return;
-  recordChange('panel');
+  // 👁️ v0.188.1: dentro do cartão 🎁 Sorteio ou do 🧩, o histórico é o do PRÓPRIO
+  // cartão (o ◀ dele desfaz); na lista de 🎨 Temas e nos cartões sem ◀ ▶ ↺, o do painel
+  const box = chk.closest('.card')?.querySelector(':scope > h3 .hist-btns');
+  const secao = box ? resolveSectionKey(box) : null;
+  recordChange(secao && SECAO_OCULTO[secao] ? secao : 'panel');
   hub.send({ type: 'settings', settings: { panel: { ocultos: { [chk.dataset.painelMostrar]: !chk.checked } } } });
 });
 document.getElementById('ocultosMostrarTudo').onclick = () => {

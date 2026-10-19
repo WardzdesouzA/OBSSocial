@@ -34,7 +34,7 @@ window.OBS_I18N_DICTS.ja = {
     "🗂️ Abas": "🗂️ タブ",
     "📄 Dentro das abas e das colunas": "📄 タブと列の中",
     "👁️ O que aparece no painel — desmarque para esconder": "👁️ パネルに表示するもの — チェックを外すと隠れます",
-    "Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. Cada seletor desta lista também aparece no cartão da própria função.": "すべてチェックが入った状態がいつものパネルです。使わないもののチェックを外してスペースを確保しましょう。パネルを開くすべての画面（コンピューターでもネットワーク経由でも）に適用されます。⚙️ 設定、🛡️ セーフティモード、「表示中」のバー、スイッチ付きのライブの列、お知らせは常に残ります。このリストの各スイッチは、その機能自身のカードにも表示されます。",
+    "Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. As funções que têm cartão próprio também têm o mesmo seletor lá.": "すべてチェックが入った状態がいつものパネルです。使わないもののチェックを外してスペースを確保しましょう。パネルを開くすべての画面（コンピューターでもネットワーク経由でも）に適用されます。⚙️ 設定、🛡️ セーフティモード、「表示中」のバー、スイッチ付きのライブの列、お知らせは常に残ります。専用のカードがある機能では、同じスイッチがそのカードにもあります。",
     "🔃 e ⏭️ voltam sozinhos quando o ritmo está em 🖐️ Manual — sem eles nada entraria no painel.": "ペースが 🖐️ 手動のときは 🔃 と ⏭️ が自動で戻ります — それらがないとパネルに何も入ってこないからです。",
     "👁️ Mostrar tudo de novo": "👁️ すべてもう一度表示",
     "Volta a mostrar todos os elementos do painel (o padrão)": "パネルのすべての要素を再び表示します（既定）",

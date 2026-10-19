@@ -1,4 +1,10 @@
 {
+  "0.188.1": {
+    "titulo": "👁️ Follow-up to the hideable dashboard",
+    "itens": [
+      "The ◀ ▶ ↺ of the 🎁 Giveaway and 🧩 Customize widgets cards now also undo the «Show … on the dashboard» switch that lives in them. The text of the «👁️ What appears on the dashboard» list now says it right: only features with their own card have the switch repeated there. The English README uses the same names as the rest of the document, and both versions list everything that always stays (also the minimized-window chips and the warning banners)."
+    ]
+  },
   "0.188.0": {
     "titulo": "👁️ The panel your way: hide what you don’t use",
     "itens": [

@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.188.1",
+    "titulo": "👁️ Ajustes da revisão do painel escondível",
+    "itens": [
+      "O ◀ ▶ ↺ do cartão 🎁 Sorteio e do 🧩 Personalizar widgets também desfaz o seletor «Mostrar … no painel» que mora neles. O texto da lista «👁️ O que aparece no painel» passa a dizer o certo: só as funções com cartão próprio têm o seletor repetido lá. O README em inglês usa os mesmos nomes do resto do documento, e as duas versões citam tudo o que fica sempre (também os chips de janelas minimizadas e os avisos)."
+    ]
+  },
+  {
     "version": "0.188.0",
     "titulo": "👁️ O painel do seu jeito: esconda o que não usa",
     "itens": [

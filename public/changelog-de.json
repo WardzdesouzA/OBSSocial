@@ -1,4 +1,10 @@
 {
+  "0.188.1": {
+    "titulo": "👁️ Nacharbeit zur Review des ausblendbaren Panels",
+    "itens": [
+      "Das ◀ ▶ ↺ der Karten 🎁 Verlosung und 🧩 Widgets anpassen macht jetzt auch den Schalter «… im Panel anzeigen» rückgängig, der dort wohnt. Der Text der Liste «👁️ Was im Panel erscheint» sagt es nun richtig: nur Funktionen mit eigener Karte haben den Schalter auch dort. Die englische README verwendet dieselben Namen wie der Rest des Dokuments, und beide Fassungen nennen alles, was immer bleibt (auch die Chips minimierter Fenster und die Hinweisbanner)."
+    ]
+  },
   "0.188.0": {
     "titulo": "👁️ Das Panel nach Ihrem Geschmack: verstecken Sie, was Sie nicht nutzen",
     "itens": [
