@@ -1,4 +1,10 @@
 {
+  "0.188.1": {
+    "titulo": "👁️ Retouches de la revue du panneau masquable",
+    "itens": [
+      "Le ◀ ▶ ↺ de la carte 🎁 Tirage au sort et de 🧩 Personnaliser les widgets annule aussi l’interrupteur « Afficher … sur le panneau » qui y habite. Le texte de la liste « 👁️ Ce qui apparaît sur le panneau » dit désormais juste : seules les fonctions ayant leur propre carte y ont l’interrupteur répété. Le README en anglais utilise les mêmes noms que le reste du document, et les deux versions citent tout ce qui reste toujours (aussi les puces des fenêtres réduites et les bandeaux d’avertissement)."
+    ]
+  },
   "0.188.0": {
     "titulo": "👁️ Le panneau à votre façon : masquez ce que vous n’utilisez pas",
     "itens": [

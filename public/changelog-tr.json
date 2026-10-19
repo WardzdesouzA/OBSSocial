@@ -1,4 +1,10 @@
 {
+  "0.188.1": {
+    "titulo": "👁️ Gizlenebilir panel incelemesinin düzeltmeleri",
+    "itens": [
+      "🎁 Çekiliş ve 🧩 Bileşenleri kişiselleştir kartlarının ◀ ▶ ↺ düğmeleri artık orada yaşayan «… panelde göster» anahtarını da geri alır. «👁️ Panelde ne görünür» listesinin metni artık doğruyu söyler: yalnızca kendi kartı olan işlevlerde anahtar orada da tekrarlanır. İngilizce README belgenin geri kalanıyla aynı adları kullanır ve iki sürüm de her zaman kalanların tümünü sayar (küçültülmüş pencere çipleri ve uyarı şeritleri de)."
+    ]
+  },
   "0.188.0": {
     "titulo": "👁️ Panel sizin istediğiniz gibi: kullanmadıklarınızı gizleyin",
     "itens": [

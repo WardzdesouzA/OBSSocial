@@ -34,7 +34,7 @@ window.OBS_I18N_DICTS.ko = {
     "🗂️ Abas": "🗂️ 탭",
     "📄 Dentro das abas e das colunas": "📄 탭과 컬럼 안",
     "👁️ O que aparece no painel — desmarque para esconder": "👁️ 패널에 보이는 것 — 숨기려면 체크를 해제하세요",
-    "Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. Cada seletor desta lista também aparece no cartão da própria função.": "모두 체크된 상태가 평소의 패널입니다. 쓰지 않는 것을 체크 해제하면 공간이 생겨요. 패널을 여는 모든 화면(컴퓨터와 네트워크 경유)에 적용됩니다. ⚙️ 설정, 🛡️ 안전 모드, «지금 화면에 표시 중» 바, 스위치가 달린 라이브 컬럼, 공지는 항상 남습니다. 이 목록의 각 스위치는 해당 기능의 카드에도 나타납니다.",
+    "Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. As funções que têm cartão próprio também têm o mesmo seletor lá.": "모두 체크된 상태가 평소의 패널입니다. 쓰지 않는 것을 체크 해제하면 공간이 생겨요. 패널을 여는 모든 화면(컴퓨터와 네트워크 경유)에 적용됩니다. ⚙️ 설정, 🛡️ 안전 모드, «지금 화면에 표시 중» 바, 스위치가 달린 라이브 컬럼, 공지는 항상 남습니다. 자체 카드가 있는 기능은 그 카드에도 같은 스위치가 있습니다.",
     "🔃 e ⏭️ voltam sozinhos quando o ritmo está em 🖐️ Manual — sem eles nada entraria no painel.": "속도가 🖐️ 수동일 때는 🔃와 ⏭️가 저절로 돌아옵니다 — 그것들이 없으면 패널에 아무것도 들어오지 않으니까요.",
     "👁️ Mostrar tudo de novo": "👁️ 모두 다시 보이기",
     "Volta a mostrar todos os elementos do painel (o padrão)": "패널의 모든 요소를 다시 보이게 합니다(기본값)",
