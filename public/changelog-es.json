@@ -1,4 +1,11 @@
 {
+  "0.188.0": {
+    "titulo": "👁️ El panel a tu manera: oculta lo que no usas",
+    "itens": [
+      "Cualquier elemento del panel puede ocultarse para que la pantalla quede limpia y sobre espacio para lo que importa. En Configuración, cada función ganó un interruptor «Mostrar en el panel» en su propia tarjeta (Código QR, Sorteo, Likómetro, Audiencia, Winstreak, Avisos, Reloj, Clima, LivePix, PixGG, Transcripción, Recaudación, Mesa de pistas, OBS Studio, vMix, Revisar un día, tamaño de la interfaz, claro/oscuro), y 🎨 Temas → «👁️ Lo que aparece en el panel» lista todo de una vez — encabezado, barra de herramientas, pestañas, barras y contadores — con el botón «Mostrar todo de nuevo». Lo predeterminado es el panel de siempre; lo que desmarcas desaparece en todas las pantallas que abren el panel.",
+      "Siempre quedan: ⚙️ Configuración, 🛡️ Modo de Seguridad, la barra «En pantalla ahora», las columnas de En vivo con sus interruptores (siguen en el panel) y los avisos. Los botones 🔃 y ⏭️ vuelven solos con el ritmo en 🖐️ Manual; una pestaña ocultada mientras estaba abierta vuelve a En vivo; una herramienta ocultada se lleva su ventana minimizada. Solo se graba lo que la lista conoce — la configuración no crece con claves extrañas."
+    ]
+  },
   "0.187.0": {
     "titulo": "🍪 Las cookies del extractor en la tarjeta 🎞️ Medio directo",
     "itens": [

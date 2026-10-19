@@ -1,4 +1,11 @@
 {
+  "0.188.0": {
+    "titulo": "👁️ Das Panel nach Ihrem Geschmack: verstecken Sie, was Sie nicht nutzen",
+    "itens": [
+      "Jedes Element des Panels lässt sich verstecken, damit der Bildschirm aufgeräumt bleibt und Platz für das Wichtige bleibt. In den Einstellungen hat jede Funktion auf ihrer eigenen Karte einen Schalter «Im Panel anzeigen» bekommen (QR-Code, Verlosung, Like-O-Meter, Zuschauer, Siegesserie, Hinweise, Uhr, Wetter, LivePix, PixGG, Transkript, Einnahmen, Soundboard, OBS Studio, vMix, Einen Tag ansehen, Größe der Benutzeroberfläche, hell/dunkel), und 🎨 Themes → «👁️ Was im Panel erscheint» listet alles auf einmal — Kopfzeile, Werkzeugleiste, Tabs, Leisten und Zähler — mit dem Button «Alles wieder anzeigen». Standard ist das gewohnte Panel; wo Sie den Haken entfernen, verschwindet das Element auf allen Bildschirmen, die das Panel öffnen.",
+      "Immer da: ⚙️ Einstellungen, 🛡️ Sicherheitsmodus, die Leiste «Jetzt auf dem Bildschirm», die Live-Spalten mit ihren Schaltern (sie bleiben im Panel) und die Hinweise. Die Buttons 🔃 und ⏭️ kommen von selbst zurück, wenn der Rhythmus auf 🖐️ Manuell steht; ein Tab, der versteckt wird, während er offen war, kehrt zu Live zurück; ein verstecktes Werkzeug nimmt sein minimiertes Fenster mit. Gespeichert wird nur, was die Liste kennt — die Konfiguration wächst nicht mit fremden Schlüsseln."
+    ]
+  },
   "0.187.0": {
     "titulo": "🍪 Die Cookies des Extraktors in der Karte 🎞️ Direktmedien",
     "itens": [

@@ -1,4 +1,11 @@
 {
+  "0.188.0": {
+    "titulo": "👁️ Panel sizin istediğiniz gibi: kullanmadıklarınızı gizleyin",
+    "itens": [
+      "Panelin herhangi bir öğesi gizlenebilir; böylece ekran temiz kalır ve önemli olana yer açılır. Ayarlar’da her işlev kendi kartında bir «Panelde göster» anahtarı kazandı (QR Kod, Çekiliş, Beğeni-metre, İzleyici, Galibiyet serisi, Duyurular, Saat, Hava durumu, LivePix, PixGG, Deşifre, Gelir, Parça masası, OBS Studio, vMix, Bir günü gözden geçir, arayüz boyutu, açık/koyu) ve 🎨 Temalar → «👁️ Panelde ne görünsün» hepsini bir arada listeler — başlık, araç çubuğu, sekmeler, çubuklar ve sayaçlar — «Hepsini yeniden göster» düğmesiyle birlikte. Varsayılan her zamanki paneldir; işaretini kaldırdıklarınız paneli açan tüm ekranlardan kaybolur.",
+      "Her zaman kalanlar: ⚙️ Ayarlar, 🛡️ Güvenlik Modu, «Şu an ekranda» çubuğu, anahtarlarıyla birlikte Canlı sütunları (panelde kalmaya devam eder) ve duyurular. 🔃 ve ⏭️ düğmeleri ritim 🖐️ Manuel’deyken kendiliğinden geri gelir; açıkken gizlenen bir sekme Canlı’ya döner; gizlenen bir araç küçültülmüş penceresini de yanında götürür. Yalnızca listenin tanıdığı şeyler kaydedilir — yapılandırma yabancı anahtarlarla şişmez."
+    ]
+  },
   "0.187.0": {
     "titulo": "🍪 Çıkarıcının çerezleri 🎞️ Doğrudan medya kartında",
     "itens": [
