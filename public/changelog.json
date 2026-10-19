@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.188.0",
+    "titulo": "👁️ O painel do seu jeito: esconda o que não usa",
+    "itens": [
+      "Qualquer elemento do painel pode ser escondido para a tela ficar limpa e sobrar espaço para o que importa. Em Configurações, cada função ganhou um seletor «Mostrar no painel» no seu próprio cartão (QR Code, Sorteio, Likômetro, Audiência, Winstreak, Avisos, Relógio, Clima, LivePix, PixGG, Transcrição, Arrecadação, Mesa de trilhas, OBS Studio, vMix, Rever um dia, tamanho da interface, claro/escuro), e 🎨 Temas → «👁️ O que aparece no painel» lista tudo de uma vez — cabeçalho, barra de ferramentas, abas, barras e contadores — com o botão «Mostrar tudo de novo». O padrão é o painel de sempre; o que você desmarca some em todas as telas que abrem o painel.",
+      "Ficam sempre: ⚙️ Configurações, 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas (continuam no painel) e os avisos. Os botões 🔃 e ⏭️ voltam sozinhos com o ritmo em 🖐️ Manual; uma aba escondida enquanto estava aberta volta para Ao vivo; uma ferramenta escondida leva junto a janela minimizada dela. Só o que a lista conhece é gravado — a configuração não cresce com chaves estranhas."
+    ]
+  },
+  {
     "version": "0.187.0",
     "titulo": "🍪 Os cookies do extrator na cartela 🎞️ Mídia direta",
     "itens": [

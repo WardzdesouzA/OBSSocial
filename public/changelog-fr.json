@@ -1,4 +1,11 @@
 {
+  "0.188.0": {
+    "titulo": "👁️ Le panneau à votre façon : masquez ce que vous n’utilisez pas",
+    "itens": [
+      "N’importe quel élément du panneau peut être masqué pour que l’écran reste net et qu’il reste de la place pour ce qui compte. Dans Réglages, chaque fonction gagne un interrupteur « Afficher dans le panneau » sur sa propre carte (QR Code, Tirage au sort, Likomètre, Audience, Série de victoires, Annonces, Horloge, Météo, LivePix, PixGG, Transcription, Recettes, Table des pistes, OBS Studio, vMix, Revoir un jour, taille de l’interface, clair/sombre), et 🎨 Thèmes → « 👁️ Ce qui apparaît dans le panneau » liste tout d’un coup — en-tête, barre d’outils, onglets, barres et compteurs — avec le bouton « Tout afficher de nouveau ». Par défaut, c’est le panneau habituel ; ce que vous décochez disparaît de tous les écrans qui ouvrent le panneau.",
+      "Restent toujours : ⚙️ Réglages, 🛡️ Mode Sécurité, la barre « À l’écran maintenant », les colonnes d’En direct avec leurs interrupteurs (elles restent dans le panneau) et les annonces. Les boutons 🔃 et ⏭️ reviennent d’eux-mêmes avec le rythme sur 🖐️ Manuel ; un onglet masqué pendant qu’il était ouvert revient à En direct ; un outil masqué emporte sa fenêtre réduite avec lui. Seul ce que la liste connaît est enregistré — la configuration ne grossit pas avec des clés étrangères."
+    ]
+  },
   "0.187.0": {
     "titulo": "🍪 Les cookies de l’extracteur dans la carte 🎞️ Média direct",
     "itens": [

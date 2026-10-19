@@ -1,4 +1,11 @@
 {
+  "0.188.0": {
+    "titulo": "👁️ The panel your way: hide what you don’t use",
+    "itens": [
+      "Any panel element can be hidden so the screen stays clean and there is room for what matters. In Settings, each feature gained a «Show in the panel» switch on its own card (QR Code, Giveaway, Like-o-meter, Audience, Winstreak, Notices, Clock, Weather, LivePix, PixGG, Transcript, Earnings, Soundboard, OBS Studio, vMix, Review a day, interface size, light/dark), and 🎨 Themes → «👁️ What shows in the panel» lists everything at once — header, toolbar, tabs, bars and counters — with the «Show everything again» button. The default is the usual panel; what you uncheck disappears from every screen that opens the panel.",
+      "Always there: ⚙️ Settings, 🛡️ Safety Mode, the «On screen now» bar, the Live columns with their switches (they stay in the panel) and the notices. The 🔃 and ⏭️ buttons come back on their own with the pace on 🖐️ Manual; a tab hidden while it was open goes back to Live; a hidden tool takes its minimized window along. Only what the list knows is saved — the configuration doesn’t grow with stray keys."
+    ]
+  },
   "0.187.0": {
     "titulo": "🍪 The extractor’s cookies in the 🎞️ Direct media card",
     "itens": [

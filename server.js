@@ -602,6 +602,9 @@ const DEFAULT_SETTINGS = {
     toolOrder: [],      // ordem dos ícones de ferramentas ([] = padrão)
     tabOrder: [],       // ordem das abas
     toolbarPos: 'top',  // ferramentas acima ('top') ou abaixo ('bottom') das abas
+    // 👁️ v0.188: elementos do painel escondidos ({ chave: true }); as chaves
+    // aceitas são as OCULTAVEIS de /public/painel-ordem.js. {} = tudo visível
+    ocultos: {},
     // 🫧 Animação de chegada dos comentários no painel
     anim: { estilo: 'deslizar', duracao: 0.5 },
     previewW: 1920,     // tamanho de tela da pré-visualização (Organizar a tela)
@@ -967,7 +970,7 @@ function mergeSettings(base) {
       animationOut: ANIM_CHAT_ANTIGA[(src.chat || {}).animationOut] || (src.chat || {}).animationOut || DEFAULT_SETTINGS.chat.animationOut,
       platforms: { ...DEFAULT_SETTINGS.chat.platforms, ...((src.chat || {}).platforms || {}) },
     },
-    panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}) },
+    panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}), ocultos: PAINEL_ORDEM.ocultosLimpos((src.panel || {}).ocultos) }, // 👁️ v0.188: já saneado na carga
     livepix: sanitizeLivepix(src.livepix), // 💜 v0.174
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
     relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
@@ -12291,6 +12294,9 @@ function tratarMensagem(ws, raw) {
           ...state.settings.panel,
           ...(incoming.panel || {}),
           colDrip: { ...state.settings.panel.colDrip, ...((incoming.panel || {}).colDrip || {}) },
+          // 👁️ v0.188: chave a chave — { chave: false } volta a mostrar (a limpeza
+          // mais abaixo só guarda o que é true e está na lista)
+          ocultos: { ...state.settings.panel.ocultos, ...((incoming.panel || {}).ocultos || {}) },
         },
         labs: { ...state.settings.labs, ...(incoming.labs || {}) },
         taxas: sanitizeTaxas({ ...state.settings.taxas, ...(incoming.taxas || {}) }), // 💰 v0.170
@@ -12648,6 +12654,7 @@ function tratarMensagem(ws, raw) {
         // LÁ, uma vez só — aqui nada precisa mudar.
         p.toolOrder = PAINEL_ORDEM.soConhecidas(p.toolOrder, PAINEL_ORDEM.FERRAMENTAS);
         p.tabOrder = PAINEL_ORDEM.soConhecidas(p.tabOrder, PAINEL_ORDEM.ABAS);
+        p.ocultos = PAINEL_ORDEM.ocultosLimpos(p.ocultos); // 👁️ v0.188
         p.toolbarPos = p.toolbarPos === 'bottom' ? 'bottom' : 'top';
         p.comentGap = Math.max(0, Math.min(30, Math.round(numeroEntre(p.comentGap, 0, 30, 1))));
         p.faixaDupla = p.faixaDupla === true;

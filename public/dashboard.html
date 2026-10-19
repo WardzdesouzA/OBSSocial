@@ -379,6 +379,14 @@
   }
   .live-col-foot .icon-btn { width: 26px; height: 22px; font-size: 11px; }
   .live-col-foot select.col-gap { font-size: 11px; padding: 2px 4px; max-width: 150px; margin-right: auto; }
+  /* 👁️ v0.188: elementos escondidos em Configurações (settings.panel.ocultos). A
+     classe vence o style.display que várias funções reescrevem a cada «settings»;
+     contadores e rascunhos somem por classe no body, porque nascem dinamicamente */
+  .oculto-cfg { display: none !important; }
+  body.oc-contadores .tab .count, body.oc-contadores .live-col-head .count, body.oc-contadores .live-col-head .colq,
+  body.oc-contadores .live-col-head .colp, body.oc-contadores #raffleBadge, body.oc-contadores #feedPendingBadge { display: none !important; }
+  /* (os badges ▶ da Mesa e ● do OBS/vMix são estado, não contagem: ficam) */
+  body.oc-transcricao .chat-item .msg-transcricao { display: none !important; }
   .live-col-head .colq { font-size: 11px; font-weight: 600; color: var(--accent); margin-left: 6px; }
   .live-col-head .colp { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 6px; }
   /* 🔄 Recarregar só esta coluna */
@@ -6025,13 +6033,17 @@ function janMinGravar() {
 function renderJanChips() {
   const box = document.getElementById('telinhaChips');
   if (!box) return;
+  // 👁️ v0.188: a ferramenta escondida em Configurações não ganha chip (o chip
+  // reabriria uma janela invisível); a entrada fica guardada para quando ela voltar
+  const visivel = (id) => { const pop = document.getElementById(id); return !!pop && !pop.closest('.oculto-cfg'); };
   for (const chip of box.querySelectorAll('[data-cartao]')) {
-    if (!janMinimizadas.has(chip.dataset.cartao)) chip.remove();
+    if (!janMinimizadas.has(chip.dataset.cartao) || !visivel(chip.dataset.cartao)) chip.remove();
   }
   for (const [id, rotulo] of janMinimizadas) {
     if (box.querySelector(`[data-cartao="${id}"]`)) continue;
     const pop = document.getElementById(id);
     if (!pop) { janMinimizadas.delete(id); continue; }
+    if (!visivel(id)) continue;
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.dataset.cartao = id;
@@ -7979,6 +7991,59 @@ function applyPanel() {
   }
   refreshPlatformVisibility();
   aplicarLabsFerramentas();
+  aplicarOcultos(); // 👁️ v0.188: por último — a classe vence o que as funções acima mostraram
+}
+
+// ---------- 👁️ v0.188: esconder elementos do painel ----------
+// settings.panel.ocultos = { chave: true } (as chaves são as OCULTAVEIS de
+// painel-ordem.js; o servidor só grava as conhecidas). Cada chave aponta para
+// o(s) nó(s) que somem; a classe .oculto-cfg (display:none !important) convive
+// com o style.display que o Labs, as abas dinâmicas e os badges reescrevem.
+// Nunca entram aqui: ⚙️, 🛡️, a barra «No ar agora», as colunas e os avisos.
+const OCULTAVEIS_ALVOS = {
+  titulo: () => [document.querySelector('header h1')],
+  conexoes: () => [document.getElementById('connChips')],
+  arrecadado: () => [document.getElementById('arrecadadoWrap')],
+  revisao: () => [document.getElementById('revisaoBtn')],
+  teste: () => [document.getElementById('testBtn'), document.getElementById('testLimparBtn')],
+  layout: () => [document.getElementById('layoutBtn')],
+  zoom: () => [document.getElementById('zoomBtn')?.closest('.tool-wrap')],
+  tema: () => [document.getElementById('themeBtn')],
+  relogio: () => [document.getElementById('relogioTopo')?.closest('.tool-wrap')],
+  clima: () => [document.getElementById('climaTopo')?.closest('.tool-wrap')],
+  feedRate: () => [document.getElementById('feedRateQuick')?.closest('label')],
+  feedGap: () => [document.getElementById('feedGapQuick')?.closest('label')],
+  feedFlush: () => [document.getElementById('feedFlushBtn')],
+  feedJump: () => [document.getElementById('feedJumpBtn')],
+  limparTela: () => [document.getElementById('clearAllBtn')],
+  busca: () => [document.getElementById('searchBox')],
+  livepixBarra: () => [document.getElementById('livepixBarra')],
+  pixggBarra: () => [document.getElementById('pixggBarra')],
+};
+for (const k of OBS_PAINEL_ORDEM.FERRAMENTAS) OCULTAVEIS_ALVOS[k] = () => [document.getElementById(k + 'ToolBtn')?.closest('.tool-wrap')];
+for (const a of OBS_PAINEL_ORDEM.ABAS) if (a !== 'live') OCULTAVEIS_ALVOS['aba-' + a] = () => [document.querySelector(`.tab[data-tab="${a}"]`)];
+function ocultosDoPainel() {
+  return (typeof OBS_PAINEL_ORDEM.ocultosLimpos === 'function') ? OBS_PAINEL_ORDEM.ocultosLimpos(settings?.panel?.ocultos) : {};
+}
+function aplicarOcultos() {
+  const oc = ocultosDoPainel();
+  // 🖐️ no ritmo Manual as mensagens só entram pelo 🔃/⏭️ — eles ficam, mesmo desmarcados
+  const manual = Number(settings?.panel?.refreshSeconds) === 0;
+  for (const [chave, alvos] of Object.entries(OCULTAVEIS_ALVOS)) {
+    const esconder = !!oc[chave] && !(manual && (chave === 'feedFlush' || chave === 'feedJump'));
+    for (const el of alvos()) if (el) el.classList.toggle('oculto-cfg', esconder);
+  }
+  document.body.classList.toggle('oc-contadores', !!oc.contadores);
+  document.body.classList.toggle('oc-transcricao', !!oc.transcricao);
+  // 🔎 escondida com texto dentro, a busca é limpa pelo mesmo caminho do usuário —
+  // senão a aba Ao vivo ficaria presa no resultado, sem campo para desfazer
+  const busca = document.getElementById('searchBox');
+  if (oc.busca && busca && busca.value) { busca.value = ''; busca.dispatchEvent(new Event('input')); }
+  // uma aba escondida enquanto estava aberta volta para Ao vivo (que fica sempre)
+  const ativa = document.querySelector('.tab.active');
+  if (ativa && ativa.classList.contains('oculto-cfg')) document.querySelector('.tab[data-tab="live"]')?.click();
+  // a janela minimizada de uma ferramenta escondida sai da fila de chips (volta quando ela reaparecer)
+  if (typeof renderJanChips === 'function') renderJanChips();
 }
 
 // ---------- 🎵 Mesa de trilhas (Labs) ----------

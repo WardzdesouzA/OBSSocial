@@ -1107,6 +1107,9 @@
         <a class="icon-btn" href="https://dashboard.livepix.gg" target="_blank" rel="noopener" style="width:auto;padding:0 10px;font-size:13px;text-decoration:none;display:inline-flex;align-items:center" title="Bloquear e desbloquear quem doa, e o resto que a API não faz, é no painel da LivePix">🔗 Painel da LivePix</a>
       </div>
       <div class="hint">🔒 O segredo fica cifrado só neste computador (pasta data/) e nunca vai para as telas. Bloquear ou desbloquear quem doa é feito no painel da LivePix (🔗). A LivePix cobra 5% por doação — a taxa entra na 💰 Arrecadação da live.</div>
+      <!-- 👁️ v0.188: o que da LivePix aparece no painel -->
+      <label class="check"><input type="checkbox" class="sw" data-painel-mostrar="aba-livepix"> <span>👁️ Mostrar a aba 💜 LivePix no painel</span></label>
+      <label class="check"><input type="checkbox" class="sw" data-painel-mostrar="livepixBarra"> <span>👁️ Mostrar a barra da LivePix (represar, pular, repetir) dentro da aba</span></label>
       <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
     </div>
 
@@ -1124,6 +1127,9 @@
         <a class="icon-btn" href="https://pixgg.com" target="_blank" rel="noopener" style="width:auto;padding:0 10px;font-size:13px;text-decoration:none;display:inline-flex;align-items:center" title="Pausar, pular e limpar a fila de alertas, e bloquear quem doa, é no painel da PixGG">🔗 Painel da PixGG</a>
         <span class="hint" style="margin:0">A PixGG cobra 3,9% por doação (valor de referência dos termos dela) — a taxa entra na 💰 Arrecadação da live.</span>
       </div>
+      <!-- 👁️ v0.188: o que da PixGG aparece no painel -->
+      <label class="check"><input type="checkbox" class="sw" data-painel-mostrar="aba-pixgg"> <span>👁️ Mostrar a aba 💚 PixGG no painel</span></label>
+      <label class="check"><input type="checkbox" class="sw" data-painel-mostrar="pixggBarra"> <span>👁️ Mostrar a barra da PixGG dentro da aba</span></label>
       <div class="hint">ℹ️ O OBS Social lê o mesmo canal de tempo real que o widget de alertas e o painel da PixGG usam — só leitura, uma conexão, nada é enviado à PixGG — <b>com a autorização da PixGG</b> (e-mail de 24/09/2026). A API oficial dela (Aplicações) só entrega webhooks numa URL pública, que um programa no seu PC não tem; por isso este caminho. 🔒 A chave fica cifrada só neste computador (pasta data/), nunca vai para as telas e só sai daqui como nome do canal na conexão com o Pusher, exatamente como o widget faz.</div>
       <div class="status"><span class="dot"></span><span class="detail">Desconectado</span></div>
     </div>
@@ -1236,6 +1242,7 @@
       <div id="trModelos" style="margin-top:6px"></div>
       <div id="trMotores" style="margin-top:6px"></div>
       <div id="trAviso" class="hint" style="display:none;color:#e0a648"></div>
+      <label class="check lab-toggle" style="margin-top:8px"><input type="checkbox" class="sw" data-painel-mostrar="transcricao"> <span>✍️ Mostrar os rascunhos da transcrição embaixo dos áudios no painel</span></label><!-- 👁️ v0.188 -->
       <div class="field" style="margin-top:8px">
         <label>Avançado — caminho de um whisper-cli seu (vazio = automático)</label>
         <input type="text" id="trComandoInput" spellcheck="false" placeholder="ex.: C:\ferramentas\whisper-cli.exe">
@@ -1981,6 +1988,10 @@
         <div id="w-showIcon-wrap">
           <label class="check lab-toggle" style="margin-top:18px"><input type="checkbox" id="w-showIcon" class="sw"> <span>👥 Mostrar o ícone de pessoas</span></label>
         </div>
+        <!-- 👁️ v0.188: o botão desta ferramenta na barra do painel (QR, Likômetro, Audiência, Winstreak, Avisos) — a chave é posta em fillWidgetForm -->
+        <div id="w-painelBtn-wrap" style="display:none">
+          <label class="check lab-toggle" style="margin-top:18px"><input type="checkbox" id="w-painelBtn" class="sw" data-painel-mostrar=""> <span>🧰 Mostrar o botão desta ferramenta na barra do painel</span></label>
+        </div>
         <div id="w-avisoFmt-wrap">
           <label>Fonte do aviso</label>
           <select id="w-fontFamily">
@@ -2096,6 +2107,7 @@
         <div class="hint" style="margin:6px 0 0">O ↺ da cor do Aviso tira a troca de cor: ele pisca mantendo a cor normal do texto.</div>
       </div>
       <div class="field" style="margin-bottom:0">
+        <label class="check lab-toggle"><input type="checkbox" class="sw" data-painel-mostrar="relogio"> <span>🕐 Mostrar o relógio na barra do painel</span></label><!-- 👁️ v0.188 -->
         <label class="check lab-toggle"><input type="checkbox" id="rl-dataPainel" class="sw"> <span>📅 Mostrar a data junto da hora no painel (desligado = só a hora)</span></label>
       </div>
     </div>
@@ -2103,6 +2115,7 @@
     <div class="card" id="cardSorteio">
       <h3>🎁 Sorteio <span class="hist-btns" data-section="raffle"><button data-act="undo" title="Voltar (desfaz o último ajuste do sorteio — vale também para o que foi mexido no botão 🎁 do painel)">◀</button><button data-act="redo" title="Avançar (refazer)">▶</button><button data-act="reset" title="TUDO do sorteio de volta ao padrão: palavras, fichas, dado, som e resposta (dá para desfazer)">↺</button></span></h3>
       <div class="hint">O que acontece na tela quando você clica em 🎲 <b>Sortear</b>. As fichas extras de subs e membros ficam no próprio botão 🎁 do painel; a aparência do pódio fica no <b>🧩 Personalizar widgets</b>, escolhendo "🎁 Sorteio".</div>
+      <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" class="sw" data-painel-mostrar="raffle"> <span>🧰 Mostrar o botão 🎁 Sorteio na barra do painel</span></label><!-- 👁️ v0.188 -->
       <!-- 🔑 v0.116: palavras de entrada (até 30) — a mesma lista do botão 🎁 do painel -->
       <div class="field">
         <label title="Com palavras na lista, só entra no sorteio quem digitar uma delas no chat. Lista vazia: todo mundo que fala entra.">🔑 Palavras para participar (até 30)</label>
@@ -2142,6 +2155,7 @@
         <div><label>Unidade</label><select id="clUnidade"><option value="C">°C</option><option value="F">°F</option></select></div>
         <div><label>Estilo do cartão</label><select id="clEstilo"><option value="cartao">Cartão (ícone, temperatura, cidade, detalhes)</option><option value="compacto">Compacto (ícone, temperatura, cidade)</option><option value="grande">Grande (ícone e temperatura em destaque)</option></select></div>
         <!-- 🗺️ v0.169: o mostrador do painel (ao lado do relógio) -->
+        <div><label>Mostrador do painel</label><label class="check"><input type="checkbox" class="sw" data-painel-mostrar="clima"><span>Mostrar o 🌤️ clima na barra do painel</span></label></div><!-- 👁️ v0.188 -->
         <div><label>Mostrador do painel: a sua cidade</label><select id="clPainelCidade" title="A cidade que aparece ao lado do relógio no painel, para quem apresenta (uma das cadastradas acima)"></select></div>
         <div><label>Mostrador do painel: acompanhar a tela</label><label class="check"><input type="checkbox" id="clPainelSegueTela" class="sw"><span>Mostrar a cidade que está passando na tela (rodízio) em vez da sua</span></label></div>
         <div><label>🗂️ Cartão completo: dias de previsão</label><input type="number" id="clCompletoDias" min="3" max="7" step="1" title="Quantos dias aparecem no cartão completo (3 a 7 — as fontes gratuitas dão 7; algumas com chave dão 3 ou 5)"></div>
@@ -2343,6 +2357,7 @@
         <label>✨ Carregar um tema pronto</label>
         <div class="hint" style="margin-bottom:6px">Escolha um tema para personalizar tudo de uma vez — depois é só ajustar o que quiser.</div>
         <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" id="t-vestirOverlays" class="sw" checked> <span>🖥️ <b>Vestir também os overlays da live</b> — ao carregar um tema, o cartão do destaque, o chat fixo e os widgets ganham as cores, os cantos e a fonte dele (o QR mantém o fundo branco, para continuar escaneável)</span></label>
+        <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" class="sw" data-painel-mostrar="tema"> <span>👁️ Mostrar o botão 🌙 claro/escuro no painel</span></label><!-- 👁️ v0.188 -->
         <div class="temas-galeria" id="temasGaleria"></div>
       </div>
 
@@ -2530,6 +2545,7 @@
             <input type="range" id="t-densidade" min="80" max="130" step="5">
           </label>
         </div>
+        <label class="check lab-toggle" style="margin-top:8px"><input type="checkbox" class="sw" data-painel-mostrar="zoom"> <span>👁️ Mostrar o botão 🔍 de tamanho da interface no painel</span></label><!-- 👁️ v0.188 -->
       </div>
 
       <div class="field">
@@ -2550,6 +2566,16 @@
           <div class="mp-row" id="mpTabs" data-kind="tab"></div>
         </div>
         <label class="check lab-toggle" style="margin-top:8px"><input type="checkbox" id="p-toolbarBottom" class="sw"> <span>🔁 Ferramentas abaixo das abas</span></label>
+      </div>
+      <!-- 👁️ v0.188: a lista completa do que o painel pode esconder (settings.panel.ocultos).
+           Cada seletor também mora no cartão da própria função; aqui é a visão de conjunto.
+           A lista é montada em JS a partir de OBS_PAINEL_ORDEM.OCULTAVEIS (painel-ordem.js). -->
+      <div class="field" id="ocultosCampo">
+        <label>👁️ O que aparece no painel — desmarque para esconder</label>
+        <div class="hint" style="margin-bottom:6px">Tudo marcado é o painel de sempre. Desmarque o que você não usa para ganhar espaço: vale para todas as telas que abrem o painel (no computador e pela rede). Ficam sempre o ⚙️ Configurações, o 🛡️ Modo de Segurança, a barra «No ar agora», as colunas do Ao vivo com os seletores delas e os avisos. Cada seletor desta lista também aparece no cartão da própria função.</div>
+        <div id="ocultosLista" style="display:flex;flex-wrap:wrap;gap:8px 18px"></div>
+        <div class="hint" style="margin:6px 0 0">🔃 e ⏭️ voltam sozinhos quando o ritmo está em 🖐️ Manual — sem eles nada entraria no painel.</div>
+        <button class="icon-btn" id="ocultosMostrarTudo" style="width:auto;padding:0 12px;margin-top:8px;font-size:13px" title="Volta a mostrar todos os elementos do painel (o padrão)">👁️ Mostrar tudo de novo</button>
       </div>
       <div class="field">
         <label>🔄 Recarregar os chats sozinho de tempos em tempos</label>
@@ -2713,6 +2739,7 @@
       <div class="field" style="margin-bottom:0">
         <label>📅 Rever um dia de live</label>
         <div class="hint">Os dias com log ficam clicáveis. Escolha um e o painel abre com tudo o que foi preservado naquele dia — a live de hoje continua rolando por baixo, e o botão «Voltar para hoje» fecha a revisão.</div>
+        <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" class="sw" data-painel-mostrar="revisao"> <span>👁️ Mostrar o botão 📅 «Rever um dia» no cabeçalho do painel</span></label><!-- 👁️ v0.188 -->
         <div id="logsCalendario"></div>
         <div class="hint" id="logsCalendarioInfo" style="margin:6px 0 0">—</div>
       </div>
@@ -2838,6 +2865,7 @@
         </label>
         <div class="lab-body">
           <div class="hint">Aparece um 💰 no cabeçalho do painel com o total arrecadado na live; clique nele para ver Super Chat, Pix/apoios, a soma e o «chega de verdade» (descontando as taxas abaixo). Moeda estrangeira entra pela cotação do dia. É uma noção, não um extrato: impostos e arredondamentos dos serviços ficam de fora.</div>
+          <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" class="sw" data-painel-mostrar="arrecadado"> <span>👁️ Mostrar o 💰 no cabeçalho do painel (desligado, a arrecadação continua sendo calculada — só não aparece)</span></label><!-- 👁️ v0.188 -->
           <div class="settings-grid">
             <div><label>Taxa do Super Chat (%)</label><input type="number" id="taxaSuperchatInput" min="0" max="100" step="0.01" placeholder="30"></div>
             <div><label>Taxa da LivePix (%)</label><input type="number" id="taxaLivepixInput" min="0" max="100" step="0.01" placeholder="5"></div>
@@ -2944,6 +2972,7 @@
           <details id="obsPainelBloco" style="margin-top:10px">
             <summary style="cursor:pointer;font-weight:700">🎛️ O que aparece no controle do OBS dentro do painel</summary>
             <div class="hint" style="margin:6px 0">Marque só o que você usa. Isso muda a ferramenta 🎬 do painel — as teclas 🎬 da Mesa de Trilhas continuam funcionando de qualquer jeito.</div>
+            <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" class="sw" data-painel-mostrar="obs"> <span>🧰 Mostrar o botão 🎬 do OBS na barra do painel</span></label><!-- 👁️ v0.188 -->
             <div id="obsPainelChecks"></div>
           </details>
         </div>
@@ -2977,6 +3006,7 @@
           <details id="vmixPainelBloco" style="margin-top:10px">
             <summary style="cursor:pointer;font-weight:700">🎛️ O que aparece no controle do vMix dentro do painel</summary>
             <div class="hint" style="margin:6px 0">Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.</div>
+            <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" class="sw" data-painel-mostrar="vmix"> <span>🧰 Mostrar o botão 🎛️ do vMix na barra do painel</span></label><!-- 👁️ v0.188 -->
             <div id="vmixPainelChecks"></div>
           </details>
         </div>
@@ -2989,6 +3019,7 @@
         </label>
         <div class="hint">⚙️ Ligada, a configuração completa mora na página «🎵 Mesa de Trilhas» do menu à esquerda (logo depois de 🎨 Temas).</div>
         <div class="lab-body">
+          <label class="check lab-toggle" style="margin-bottom:8px"><input type="checkbox" class="sw" data-painel-mostrar="trilhas"> <span>🧰 Mostrar o botão 🎵 da Mesa na barra do painel</span></label><!-- 👁️ v0.188 -->
           <div class="hint">Cada trilha é um botão na ferramenta 🎵 do painel (e do celular na mesma rede). <b>Uma por vez</b>: apertar outra troca com fade; BGM pode repetir (🔁); o ⏹ para tudo. Para o som entrar NA LIVE, a fonte do overlay no OBS precisa estar com o áudio ativo (é o normal de uma fonte de navegador).</div>
           <!-- 🎬 v0.84: o criador — cada recurso do OBS vira uma tecla DE
                VERDADE na Mesa, que a pessoa move/renomeia/apaga à vontade.
@@ -3621,6 +3652,7 @@ const hub = connectHub((event) => {
         // feita nesta mesma página também precisa redesenhá-los
         fillTranscricaoForm();
         fillYtDlpForm();
+        fillMostrarNoPainel((settings || {}).panel); // 👁️ v0.188: o eco de um seletor desta página
         // 🖱️ v0.179: e o 🖱️ Organizar a tela também — o eco do que ESTA página
         // mandou pulava o fillSettingsForm inteiro, e o editor só repintava no
         // PRÓXIMO eco qualquer (ou ao recarregar)
@@ -4664,6 +4696,7 @@ function fillSettingsForm() {
   const panel = settings.panel || {};
   document.getElementById('p-customCSS').value = panel.customCSS || '';
   renderPanelOrder(panel);
+  fillMostrarNoPainel(panel); // 👁️ v0.188
   document.getElementById('p-toolbarBottom').checked = (panel.toolbarPos || 'top') === 'bottom';
   document.getElementById('p-textoAoLado').checked = panel.textoAoLado === true;
   {
@@ -9320,6 +9353,14 @@ function fillWidgetForm() {
   document.getElementById('w-mode-wrap').style.display = kindForWraps === 'audience' ? '' : 'none';
   document.getElementById('w-numbersSide-wrap').style.display = kindForWraps === 'audience' ? '' : 'none';
   document.getElementById('w-showIcon-wrap').style.display = kindForWraps === 'audience' ? '' : 'none';
+  { // 👁️ v0.188: o botão desta ferramenta na barra do painel (o Sorteio tem o seu no cartão 🎁; relógio e clima nos deles)
+    const MAPA_BOTAO = { qr: 'qr', likemeter: 'likemeter', audience: 'aud', winstreak: 'ws', aviso: 'aviso' };
+    const chave = MAPA_BOTAO[kindForWraps] || '';
+    const wrap = document.getElementById('w-painelBtn-wrap');
+    const chk = document.getElementById('w-painelBtn');
+    if (wrap) wrap.style.display = chave ? '' : 'none';
+    if (chk) { chk.dataset.painelMostrar = chave; chk.checked = !chave || !(((settings || {}).panel || {}).ocultos || {})[chave]; }
+  }
   document.getElementById('w-pecas-wrap').style.display = ['qr', 'raffle', 'likemeter', 'winstreak', 'audience', 'relogio', 'clima'].includes(kindForWraps) ? '' : 'none';
   document.getElementById('w-qr-wrap').style.display = kindForWraps === 'qr' ? '' : 'none'; // 📱 v0.139
   document.getElementById('w-avisoFmt-wrap').style.display = kindForWraps === 'aviso' ? '' : 'none';
@@ -9572,7 +9613,8 @@ function snapshotFrom(source, key) {
     return out;
   }
   if (key === 'chat') return JSON.parse(JSON.stringify(source.chat || {}));
-  if (key === 'panel') return { ...(source.panel || {}) };
+  // 👁️ v0.188: o mapa ocultos vai copiado — a foto não pode mudar com o eco seguinte
+  if (key === 'panel') return { ...(source.panel || {}), ocultos: { ...((source.panel || {}).ocultos || {}) } };
   if (key === 'raffle') return JSON.parse(JSON.stringify(source.raffle || {})); // 🎁 v0.116
   if (key === 'tela') {
     const out = {};
@@ -9609,7 +9651,10 @@ function sendSnapshot(key, snap) {
   try {
     if (key === 'featured') hub.send({ type: 'settings', settings: { ...snap } });
     else if (key === 'chat') hub.send({ type: 'settings', settings: { chat: snap } });
-    else if (key === 'panel') hub.send({ type: 'settings', settings: { panel: snap } });
+    // 👁️ v0.188: o servidor funde panel.ocultos chave a chave (ausente = fica como
+    // está); a foto manda o mapa COMPLETO, com false no que não estava escondido,
+    // para ◀ ▶ ↺ também voltarem a mostrar (o servidor só grava o que é true)
+    else if (key === 'panel') hub.send({ type: 'settings', settings: { panel: { ...snap, ocultos: Object.fromEntries(OBS_PAINEL_ORDEM.OCULTAVEIS.map((k) => [k, !!(snap.ocultos && snap.ocultos[k] === true)])) } } });
     else if (key === 'raffle') { marcarEnvioSorteio(snap); hub.send({ type: 'settings', settings: { raffle: JSON.parse(JSON.stringify(snap)) } }); } // 🎁 v0.116
     else if (key === 'tela') hub.send({ type: 'settings', settings: JSON.parse(JSON.stringify(snap)) });
     else if (key.startsWith('widget:')) hub.send({ type: 'settings', settings: { widgets: { [key.slice(7)]: snap } } });
@@ -14142,6 +14187,77 @@ for (const rowId of ['mpTools', 'mpTabs']) {
     hub.send({ type: 'settings', settings: { panel: { [chave]: ordem } } });
   });
 }
+// ---------- 👁️ v0.188: o que aparece no painel ----------
+// Cada <input data-painel-mostrar="chave"> (no cartão da própria função e na
+// lista de conjunto em 🎨 Temas) manda { panel: { ocultos: { chave: !marcado } } };
+// o servidor funde chave a chave e só grava as conhecidas (OCULTAVEIS). O eco
+// «settings» repreenche todos os seletores da mesma chave, onde quer que estejam.
+const OCULTAVEIS_ROTULOS = {
+  titulo: 'OBS Social — nome e versão', conexoes: 'Estado das conexões (um chip por rede)', arrecadado: '💰 Arrecadado na live',
+  revisao: '📅 Rever um dia de live', teste: '💬 Comentário de teste (e o 🧹 que o apaga)', layout: '🖱️ Organizar a tela (atalho para as configurações)',
+  zoom: '🔍 Tamanho da interface', tema: '🌙 Claro/escuro',
+  qr: '📱 QR Code', raffle: '🎁 Sorteio', likemeter: '📊 Likômetro', aud: '👥 Audiência ao vivo', ws: '🏆 Winstreak', aviso: '📢 Avisos na tela',
+  midiaDireta: '🎞️ Mídia direta', trilhas: '🎵 Mesa de trilhas', obs: '🎬 OBS Studio', vmix: '🎛️ vMix', clip: '📋 Área de transferência compartilhada',
+  relogio: '🕐 Relógio, cronômetro e timer (mostrador)', clima: '🌤️ Clima (mostrador)', feedRate: '⏱️ Ritmo de entrada das mensagens',
+  feedGap: '🌊 Espaço entre as mensagens', feedFlush: '🔃 Atualizar agora', feedJump: '⏭️ Ir direto para o agora', limparTela: '✖ Limpar a tela',
+  'aba-saved': '📥 Fila', 'aba-superchat': '💰 Super Chats', 'aba-member': '👑 Membros', 'aba-whatsapp': '💬 WhatsApp', 'aba-telegram': '📨 Telegram',
+  'aba-livepix': '💜 LivePix', 'aba-pix': '💠 Pix', 'aba-pixgg': '💚 PixGG', busca: '🔎 Busca',
+  livepixBarra: '💜 Barra da LivePix (represar, pular, repetir)', pixggBarra: '💚 Barra da PixGG',
+  transcricao: '✍️ Rascunhos da transcrição embaixo dos áudios', contadores: '🔢 Contadores (nas abas, nas colunas e nos botões)',
+};
+const OCULTAVEIS_GRUPOS = [
+  ['🧭 Cabeçalho', ['titulo', 'conexoes', 'arrecadado', 'revisao', 'teste', 'layout', 'zoom', 'tema']],
+  ['🧰 Barra de ferramentas', [...OBS_PAINEL_ORDEM.FERRAMENTAS, 'relogio', 'clima', 'feedRate', 'feedGap', 'feedFlush', 'feedJump', 'limparTela']],
+  ['🗂️ Abas', [...OBS_PAINEL_ORDEM.ABAS.filter((a) => a !== 'live').map((a) => 'aba-' + a), 'busca']],
+  ['📄 Dentro das abas e das colunas', ['livepixBarra', 'pixggBarra', 'transcricao', 'contadores']],
+];
+function montarListaOcultos() {
+  const box = document.getElementById('ocultosLista');
+  if (!box || box.dataset.pronto) return;
+  box.dataset.pronto = '1';
+  for (const [titulo, chaves] of OCULTAVEIS_GRUPOS) {
+    const grupo = document.createElement('div');
+    grupo.style.cssText = 'flex:1 1 230px;min-width:230px';
+    const cab = document.createElement('div');
+    cab.style.cssText = 'font-weight:700;font-size:13px;margin:4px 0 6px';
+    cab.textContent = titulo;
+    grupo.appendChild(cab);
+    for (const chave of chaves) {
+      if (!OBS_PAINEL_ORDEM.OCULTAVEIS.includes(chave)) continue;
+      const rotulo = document.createElement('label');
+      rotulo.className = 'check';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'sw';
+      chk.dataset.painelMostrar = chave;
+      chk.checked = true;
+      const texto = document.createElement('span');
+      texto.textContent = OCULTAVEIS_ROTULOS[chave] || chave;
+      rotulo.append(chk, ' ', texto);
+      grupo.appendChild(rotulo);
+    }
+    box.appendChild(grupo);
+  }
+}
+function fillMostrarNoPainel(panel) {
+  const oc = (panel && panel.ocultos && typeof panel.ocultos === 'object') ? panel.ocultos : {};
+  for (const chk of document.querySelectorAll('input[data-painel-mostrar]')) {
+    const chave = chk.dataset.painelMostrar;
+    if (chave && document.activeElement !== chk) chk.checked = oc[chave] !== true;
+  }
+}
+document.addEventListener('change', (e) => {
+  const chk = e.target;
+  if (!(chk instanceof HTMLInputElement) || chk.type !== 'checkbox' || !chk.dataset.painelMostrar) return;
+  recordChange('panel');
+  hub.send({ type: 'settings', settings: { panel: { ocultos: { [chk.dataset.painelMostrar]: !chk.checked } } } });
+});
+document.getElementById('ocultosMostrarTudo').onclick = () => {
+  recordChange('panel');
+  hub.send({ type: 'settings', settings: { panel: { ocultos: Object.fromEntries(OBS_PAINEL_ORDEM.OCULTAVEIS.map((k) => [k, false])) } } });
+};
+montarListaOcultos();
+
 document.getElementById('p-toolbarBottom').onchange = (e) => {
   recordChange('panel');
   hub.send({ type: 'settings', settings: { panel: { toolbarPos: e.target.checked ? 'bottom' : 'top' } } });

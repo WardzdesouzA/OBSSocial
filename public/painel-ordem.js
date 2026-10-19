@@ -62,5 +62,31 @@
     return mesclar(salvo, ABAS);
   }
 
-  return { FERRAMENTAS, ABAS, COLUNAS, soConhecidas, mesclar, ordenarFerramentas, ordenarAbas };
+  // 👁️ v0.188: o que o painel pode ESCONDER (settings.panel.ocultos = { chave: true }).
+  // Tudo visível é o padrão; a pessoa desmarca em Configurações o que não usa.
+  // Fora da lista (sempre visíveis): ⚙️ Configurações, 🛡️ Modo de Segurança, a
+  // barra «No ar agora», as colunas do Ao vivo com os seletores delas, os chips
+  // das janelas minimizadas e os avisos (versão nova, componentes, espectador).
+  // As ferramentas usam a mesma chave de FERRAMENTAS; as abas usam «aba-» + data-tab.
+  const OCULTAVEIS = [
+    // cabeçalho
+    'titulo', 'conexoes', 'arrecadado', 'revisao', 'teste', 'layout', 'zoom', 'tema',
+    // barra de ferramentas (ícones, centro e lado direito)
+    ...FERRAMENTAS, 'relogio', 'clima', 'feedRate', 'feedGap', 'feedFlush', 'feedJump', 'limparTela',
+    // abas (a «live» fica sempre) e a busca
+    ...ABAS.filter((a) => a !== 'live').map((a) => 'aba-' + a), 'busca',
+    // dentro das abas e das colunas
+    'livepixBarra', 'pixggBarra', 'transcricao', 'contadores',
+  ];
+
+  // Só chaves conhecidas e só o valor true (false/ausente = visível): é o que o
+  // servidor grava e o que as páginas leem — a configuração não cresce com lixo
+  function ocultosLimpos(bruto) {
+    const limpo = {};
+    if (!bruto || typeof bruto !== 'object' || Array.isArray(bruto)) return limpo;
+    for (const k of OCULTAVEIS) if (bruto[k] === true) limpo[k] = true;
+    return limpo;
+  }
+
+  return { FERRAMENTAS, ABAS, COLUNAS, OCULTAVEIS, soConhecidas, mesclar, ordenarFerramentas, ordenarAbas, ocultosLimpos };
 });
