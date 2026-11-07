@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.189.0",
+    "titulo": "🛟 Placares que não zeram, número protegido, fechamento limpo e downloads conferidos",
+    "itens": [
+      "🧩 Os placares não zeram mais no reinício. Bastava editar um QR Code, um winstreak ou um aviso adicional no 🧩 Personalizar widgets e reiniciar o programa para as três listas voltarem ao padrão — vitórias, recorde, endereços e textos, o principal junto — e a primeira mudança seguinte gravava por cima. Agora tudo volta como estava, inclusive a posição de cada adicional no overlay vertical, que também se perdia no reinício e ao restaurar o backup das ferramentas.",
+      "🛟 Arquivo ilegível não zera mais calado: se winstreak.json, qrcodes.json, avisos.json ou settings.json não abrir, a janela preta avisa e uma cópia dele fica em data/ (…ilegivel-….json) antes de qualquer gravação por cima; um item com defeito fica de fora sem levar os outros. Apagar «🧰 QR codes e winstreaks» mantém o QR Code e o winstreak principais (vazios), como já acontecia com o aviso — mostrar um QR logo depois dava erro até reiniciar.",
+      "📱 🕹️ Controle externo: o que volta para o aparelho (Stream Deck, Companion, atalhos, automações) passa pelo mesmo filtro da tela de quem só assiste. O estado (destaque e ganhadores do sorteio), a revisão do dia e a recarga de coluna levavam o número do WhatsApp de quem escreve; agora sai o mesmo apelido da tela pública (📱 Convidado …). Quem só assiste também deixou de receber o identificador dos ganhadores do sorteio no WhatsApp. O painel no computador do streamer continua vendo o número, para responder.",
+      "🧹 Reiniciar o OBS Social (♻️, atualização, «apagar tudo») ou encerrá-lo por fora agora leva junto o whisper, o ffmpeg, o yt-dlp, o npm e o curl que estavam rodando — no Mac e no Linux eles ficavam escondidos gastando o processador. E fechar a janela logo depois de mudar uma configuração não perde mais a mudança: o que estava para ser gravado vai para o disco antes.",
+      "🔐 Downloads conferidos: o yt-dlp, o motor do whisper.cpp, o ffmpeg e os modelos de voz só são usados depois de bater com a soma SHA-256 oficial (a publicada no release, ou a fixada no programa para as versões fixas). O que não bate é apagado, nunca roda, e o recado fica na tela até um clique. Uma cópia baixada antes desta versão não tem como ser conferida sem rodar: o cartão mostra «baixado antes da conferência de integridade — baixe de novo», e um clique em ⬇️ resolve. Os modelos de voz já baixados são conferidos sozinhos, uma vez, no primeiro uso."
+    ]
+  },
+  {
     "version": "0.188.1",
     "titulo": "👁️ Ajustes da revisão do painel escondível",
     "itens": [

@@ -92,6 +92,12 @@ function redeFora(err) {
   return /ENOTFOUND|ECONNREFUSED|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH/.test(code);
 }
 
+// 🛟 v0.189: o servidor entrega aqui o registro dele (configurarVigia): um
+// curl/PowerShell de consulta em andamento não continua rodando depois de o
+// OBS Social fechar
+let vigiarPrograma = null;
+function configurarVigia(fn) { vigiarPrograma = typeof fn === 'function' ? fn : null; }
+
 // Roda um programa mandando `entrada` pela entrada padrão; devolve stdout/stderr
 function rodarPrograma(exe, args, entrada, tempoMs) {
   return new Promise((resolve, reject) => {
@@ -99,6 +105,7 @@ function rodarPrograma(exe, args, entrada, tempoMs) {
     try {
       filho = spawn(exe, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     } catch (err) { return reject(err); }
+    if (vigiarPrograma) vigiarPrograma(filho); // 🛟 v0.189
     const saida = []; const erro = [];
     let tamanho = 0; let acabou = false;
     const timer = setTimeout(() => { if (!acabou) { try { filho.kill(); } catch {} } }, tempoMs + 5000);
@@ -385,4 +392,4 @@ function criarCaminhos(op) {
   return { pedir, configurar, estado, explicacaoBarrado, nomeDaVia: (v) => VIA_NOME[v] || v, rede, rotulo };
 }
 
-module.exports = { criarCaminhos, VIAS, VIA_NOME, UA_CHROME, redeFora };
+module.exports = { criarCaminhos, VIAS, VIA_NOME, UA_CHROME, redeFora, configurarVigia };

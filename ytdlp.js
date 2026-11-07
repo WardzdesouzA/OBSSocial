@@ -19,7 +19,9 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 const { spawn, spawnSync } = require('child_process');
+const integridade = require('./integridade');
 
 // Os executáveis prontos do projeto (um arquivo só, sem instalador), por
 // sistema E arquitetura (v0.184) — um binário x64 não roda num Windows de
@@ -48,6 +50,9 @@ class Extrator {
     this.base = opcoes.base || BASE_YTDLP;
     this.aoEvento = typeof opcoes.aoEvento === 'function' ? opcoes.aoEvento : () => {};
     this.ehPublico = typeof opcoes.ehPublico === 'function' ? opcoes.ehPublico : async () => true;
+    // 🛟 v0.189: vigiar(proc) anota o yt-dlp no registro do servidor, que o
+    // encerra quando o OBS Social fecha
+    this.vigiar = typeof opcoes.vigiar === 'function' ? opcoes.vigiar : null;
     this.download = null;      // { pct, req, cancelado }
     this.cache = new Map();    // url da página → { em, achado }
     this.falhas = new Map();   // 🧭 v0.166: url da página → { motivo, detalhe } da última tentativa
@@ -75,7 +80,8 @@ class Extrator {
     const nome = nomeDoArquivo();
     if (nome) {
       const baixado = path.join(this.dir, nome);
-      if (this._temArquivo(baixado)) return { comando: baixado, origem: 'baixado' };
+      // 🛟 v0.189: o baixado só roda se passou pela conferência (conferidos.json)
+      if (this._temArquivo(baixado) && integridade.estaConferido(this.dir, nome)) return { comando: baixado, origem: 'baixado' };
     }
     const s = this._noSistema();
     if (s) return { comando: s, origem: 'sistema' };
@@ -109,6 +115,9 @@ class Extrator {
       // v0.184: false quando o yt-dlp não publica um executável para este
       // sistema/arquitetura — o painel não oferece um download que não rodaria
       baixavel: !!nomeDoArquivo(),
+      // 🛟 v0.189: há uma cópia baixada antes da conferência de integridade —
+      // ela não roda e o painel oferece baixar de novo
+      semConferencia: this._semConferencia(),
       // 🍪 v0.166: só o RESUMO — o conteúdo dos cookies nunca sai daqui
       cookies: { arquivo: this._temArquivo(this.arquivoCookies()), sites: this.sitesDosCookies() },
     };
@@ -167,6 +176,37 @@ class Extrator {
 
   _avisaEstado() { this.aoEvento({ type: 'ytdlpEstado', estado: this.estado() }); }
 
+  // 🛟 v0.189: uma cópia baixada antes da conferência (ou trocada à mão) fica
+  // no disco, mas não roda — o painel pede para baixar de novo
+  _semConferencia() {
+    const nome = nomeDoArquivo();
+    return !!nome && this._temArquivo(path.join(this.dir, nome)) && !integridade.estaConferido(this.dir, nome);
+  }
+
+  // 🛟 v0.189: a soma oficial vem do SHA2-256SUMS do MESMO release do arquivo.
+  // O «latest» é um redirecionamento: ele é lido UMA vez, sem segui-lo, para
+  // descobrir a tag — e as somas e o executável vêm dessa tag. Um release que
+  // saia no meio do caminho não mistura as somas de um com o arquivo do outro.
+  async _somaOficial(nome) {
+    const inicial = this.base + 'SHA2-256SUMS';
+    const r1 = await integridade.buscarTexto(inicial, { seguir: 0 });
+    let urlSomas = inicial;
+    let texto = r1.texto;
+    if (r1.destino) {
+      const destino = new URL(r1.destino);
+      // a tag continua no mesmo endereço (o GitHub) e no formato dos releases
+      if (destino.origin !== new URL(inicial).origin || !/\/releases\/download\/[^/]+\/SHA2-256SUMS$/.test(destino.pathname)) throw new Error('o «latest» apontou para um endereço inesperado');
+      urlSomas = destino.toString();
+      const r2 = await integridade.buscarTexto(urlSomas);
+      if (r2.status !== 200) throw new Error('o arquivo de somas respondeu ' + r2.status);
+      texto = r2.texto;
+    } else if (r1.status !== 200) throw new Error('o arquivo de somas respondeu ' + r1.status);
+    const soma = integridade.lerSomas(texto).get(nome);
+    if (!soma) throw new Error('o arquivo de somas do release não traz ' + nome);
+    const tag = (/\/releases\/download\/([^/]+)\//.exec(urlSomas) || [])[1];
+    return { soma, urlArquivo: new URL(nome, urlSomas).toString(), tag: tag ? decodeURIComponent(tag) : null };
+  }
+
   // ---------- baixar sob demanda ----------
   baixar() {
     if (this.download) return;
@@ -180,25 +220,33 @@ class Extrator {
     this._avisaEstado();
     const destino = path.join(this.dir, nome);
     const part = destino + '.part';
-    this._buscar(this.base + nome, part, () => {
-      if (this.download && this.download.cancelado) { this._limpar(part); this._fim(); return; }
-      try {
-        fs.renameSync(part, destino);
-        if (process.platform !== 'win32') { try { fs.chmodSync(destino, 0o755); } catch { /* sem permissão */ } }
-        this._versao = null;
-        this._fim();
-      } catch (err) { this._limpar(part); this._fim(err); }
-    }, (err) => {
-      this._limpar(part);
-      this._fim(this.download && this.download.cancelado ? null : err);
-    });
+    // 🛟 v0.189: primeiro a soma oficial (_somaOficial); sem ela, nada é baixado
+    this._somaOficial(nome).then(({ soma, urlArquivo, tag }) => {
+      if (!this.download || this.download.cancelado) { this._fim(); return; }
+      this._buscar(urlArquivo, part, (p, conta) => {
+        if (this.download && this.download.cancelado) { this._limpar(part); this._fim(); return; }
+        // 🛟 v0.189: não bateu → o .part sai do disco sem nunca virar executável
+        if (conta.sha256 !== soma) { this._limpar(part); this._fim(integridade.erroNaoConfere(nome, soma, conta.sha256)); return; }
+        try {
+          fs.renameSync(part, destino);
+          if (process.platform !== 'win32') { try { fs.chmodSync(destino, 0o755); } catch { /* sem permissão */ } }
+          integridade.anotarConferido(this.dir, nome, { sha256: conta.sha256, bytes: conta.bytes, tag });
+          this._versao = null;
+          this._fim();
+        } catch (err) { this._limpar(part); this._fim(err); }
+      }, (err) => {
+        this._limpar(part);
+        this._fim(this.download && this.download.cancelado ? null : err);
+      });
+    }).catch((err) => this._fim(this.download && this.download.cancelado ? null : integridade.erroSemSoma(nome, err && err.message)));
   }
 
   _limpar(p) { try { fs.unlinkSync(p); } catch { /* nem chegou a existir */ } }
 
   _fim(erro) {
     this.download = null;
-    if (erro) this.aoEvento({ type: 'ytdlpAviso', erro: String(erro.message || erro) });
+    // 🛟 v0.189: integridade = a soma não bateu — o painel deixa esse recado na tela
+    if (erro) this.aoEvento({ type: 'ytdlpAviso', erro: String(erro.message || erro), ...(erro.integridade ? { integridade: true } : {}) });
     this._avisaEstado();
   }
 
@@ -210,7 +258,10 @@ class Extrator {
 
   apagar() {
     const nome = nomeDoArquivo();
-    if (nome) this._limpar(path.join(this.dir, nome));
+    if (nome) {
+      this._limpar(path.join(this.dir, nome));
+      integridade.anotarConferido(this.dir, nome, null); // 🛟 v0.189
+    }
     this._versao = null;
     this.cache.clear();
     this._avisaEstado();
@@ -241,9 +292,12 @@ class Extrator {
       let ultimoAviso = 0;
       const escrita = fs.createWriteStream(destinoPart);
       if (this.download) this.download.req = req;
+      // 🛟 v0.189: a soma SHA-256 sai daqui, pedaço a pedaço, enquanto chega
+      const conta = crypto.createHash('sha256');
       res.on('data', (peca) => {
         lidos += peca.length;
         if (lidos > LIMITE_BYTES) { req.destroy(new Error('arquivo maior que o limite')); return; }
+        conta.update(peca);
         if (this.download) {
           this.download.pct = total ? Math.min(99, Math.floor((lidos / total) * 100)) : null;
           const agora = Date.now();
@@ -254,7 +308,7 @@ class Extrator {
       // 🎞️ v0.179: só avisa «pronto» no 'close' (arquivo já fechado) — no
       // 'finish' o descritor de escrita ainda está aberto e o --version que
       // mede a versão falhava com ETXTBSY, deixando o painel sem a versão
-      escrita.on('close', () => { if (!avisou) aoPronto(destinoPart); });
+      escrita.on('close', () => { if (!avisou) aoPronto(destinoPart, { sha256: conta.digest('hex'), bytes: lidos }); });
       escrita.on('error', aoErro);
       res.on('error', aoErro);
     });
@@ -284,7 +338,8 @@ class Extrator {
     try { u = new URL(pagina); } catch { return null; }
     if (!/^https?:$/.test(u.protocol)) return null;
     const chave = u.toString();
-    if (!onde) { this._anotarFalha(chave, 'semPrograma'); return null; }
+    // 🛟 v0.189: a cópia antiga, sem conferência, tem motivo próprio no painel
+    if (!onde) { this._anotarFalha(chave, this._semConferencia() ? 'semConferencia' : 'semPrograma'); return null; }
     // 🔒 o yt-dlp não vai bisbilhotar a rede de casa por causa de uma URL colada
     if (!(await this.ehPublico(u.hostname))) return null;
     const guardado = this._doCache(chave);
@@ -349,6 +404,13 @@ class Extrator {
       try {
         proc = spawn(comando, args, { windowsHide: true });
       } catch { resolve({ ok: false, saida: '', erro: 'não consegui iniciar o programa', demorou: false }); return; }
+      // 🛟 v0.189: o OBS Social fechando encerra o yt-dlp junto. O executável
+      // pronto do yt-dlp é de arquivo único (PyInstaller): um carregador que
+      // abre o processo de verdade. No Mac/Linux o carregador repassa o
+      // SIGTERM a ele; no Windows o kill() (o do tempo limite e o do
+      // fechamento) derruba só o carregador, e o de verdade termina sozinho
+      // pelos próprios limites (--socket-timeout 15, --retries 1)
+      if (this.vigiar) this.vigiar(proc);
       const relogio = setTimeout(() => { demorou = true; try { proc.kill(); } catch { /* já saiu */ } fim(-1); }, TEMPO_MAX_MS);
       proc.stdout.on('data', (d) => {
         if (saida.length < LIMITE_SAIDA) saida += d;

@@ -1,4 +1,14 @@
 {
+  "0.189.0": {
+    "titulo": "🛟 Scores that don’t reset, protected phone numbers, clean shutdown and verified downloads",
+    "itens": [
+      "🧩 Scores no longer reset on restart. Editing an extra QR Code, winstreak or announcement in 🧩 Customize widgets and restarting the program was enough for all three lists to go back to the defaults — wins, record, addresses and texts, the main one included — and the next change saved over them. Now everything comes back as it was, including each extra’s position on the vertical overlay, which was also lost on restart and when restoring the tools backup.",
+      "🛟 An unreadable file no longer resets silently: if winstreak.json, qrcodes.json, avisos.json or settings.json can’t be opened, the black window says so and a copy of it is kept in data/ (…ilegivel-….json) before anything is saved over it; a broken item is left out without taking the others with it. Deleting «🧰 QR codes and winstreaks» keeps the main QR Code and winstreak (empty), as already happened with the announcement — showing a QR right after used to fail until a restart.",
+      "📱 🕹️ External control: what goes back to the device (Stream Deck, Companion, shortcuts, automations) passes through the same filter as a viewer’s screen. The state (featured message and giveaway winners), the day review and the column reload carried the WhatsApp number of whoever wrote; now the same nickname as on the public screen comes out (📱 Convidado …). Viewers also no longer receive the identifier of WhatsApp giveaway winners. The dashboard on the streamer’s computer still sees the number, to reply.",
+      "🧹 Restarting OBS Social (♻️, update, «delete everything») or stopping it from outside now takes along the whisper, ffmpeg, yt-dlp, npm and curl that were running — on Mac and Linux they stayed hidden, using the processor. And closing the window right after changing a setting no longer loses the change: what was about to be saved goes to disk first.",
+      "🔐 Verified downloads: yt-dlp, the whisper.cpp engine, ffmpeg and the voice models are only used after they match the official SHA-256 checksum (the one published with the release, or the one fixed in the program for pinned versions). What doesn’t match is deleted, never runs, and the message stays on screen until a click. A copy downloaded before this version can’t be checked without running it: the card shows «downloaded before the integrity check — download it again», and one click on ⬇️ fixes it. Voice models already downloaded are checked on their own, once, the first time they are used."
+    ]
+  },
   "0.188.1": {
     "titulo": "👁️ Follow-up to the hideable dashboard",
     "itens": [
