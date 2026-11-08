@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "방송 종료",
+    "Marcar o fim da live": "방송 종료 표시하기",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "방송을 종료할까요? 대기열에 남은 신청은 «지난 방송에서» 표시를 달고 다음 방송으로 넘어가고, 모두가 다시 무료 신청을 할 수 있어요.",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "방송을 종료할까요? 남은 유료 신청은 «지난 방송에서» 표시를 달고 다음 방송으로 넘어가고, 무료 신청은 대기열에서 빠지며, 모두가 다시 무료 신청을 할 수 있어요.",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "대시보드의 🙋에서 «🏁 방송 종료»를 누르면 방송이 끝나요. 그러면 모두가 다시 무료 신청을 할 수 있고, 대기열에 남은 신청에는 «지난 방송에서» 표시가 붙어요.",
+    "o jogo da vez está sem catálogo": "현재 게임에 카탈로그가 없음",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "신청이 🧪 Labs에서 꺼져 있어요.",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "오류 때문에 신청 기능이 열리지 않았어요. OBS Social 창을 확인하세요.",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.ko = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "쓰는 것만 체크하세요. 패널의 🎛️ 도구가 달라집니다 — 사운드보드의 🎛️ 키는 어느 쪽이든 그대로 작동합니다.",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "$1판 결제함"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "$1판 중 1판 남음"],
     [/^faltam (\d+) de (\d+)$/, "$2판 중 $1판 남음"],

@@ -385,7 +385,7 @@
   .oculto-cfg { display: none !important; }
   body.oc-contadores .tab .count, body.oc-contadores .live-col-head .count, body.oc-contadores .live-col-head .colq,
   body.oc-contadores .live-col-head .colp, body.oc-contadores #raffleBadge, body.oc-contadores #feedPendingBadge,
-  body.oc-contadores #pedidosBadge, body.oc-contadores .ped-n, body.oc-contadores .ped-contagem { display: none !important; }
+  body.oc-contadores #pedidosBadge, body.oc-contadores .ped-n, body.oc-contadores .ped-contagem, body.oc-contadores .ped-mais-n { display: none !important; }
   /* (os badges ▶ da Mesa e ● do OBS/vMix são estado, não contagem: ficam) */
   body.oc-transcricao .chat-item .msg-transcricao { display: none !important; }
   /* 🙋 v0.192: a barra dos Pedidos na coluna e o «➕ Virar pedido» nascem
@@ -1031,6 +1031,8 @@
   #pedidosPop .pedidos-barra { margin-bottom: 10px; }
   .pedidos-barra button:disabled, .pedidos-barra select:disabled, .pedidos-barra input:disabled,
   .pedidos-vista button:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+  /* esperando o eco do servidor: apagado, mas com o foco do teclado */
+  .pedidos-barra button[aria-disabled="true"], .pedidos-vista button[aria-disabled="true"] { opacity: 0.45; cursor: progress; filter: none; }
   .pedidos-vista { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .pedidos-vista [hidden] { display: none !important; }
   .pedidos-vista .hint { font-size: 12px; color: var(--muted); line-height: 1.4; margin: 0; }
@@ -1061,6 +1063,7 @@
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; cursor: pointer;
   }
   .pedido-card .msg-text.inteira { display: block; -webkit-line-clamp: unset; }
+  .pedido-card .msg-text:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   .pedido-card .ped-itens { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
   .pedido-card .ped-item {
     display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0;
@@ -1074,6 +1077,7 @@
   .pedido-card .ped-item.duvida { border-color: var(--yellow); cursor: pointer; }
   .pedido-card .ped-item.duvida .ped-sinal { color: var(--yellow); }
   .pedido-card .ped-partidas { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--muted); }
+  .pedido-card .ped-pagas { color: var(--yellow); }
   .pedido-card .ped-marcas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
   .pedido-card .ped-marca { font-size: 10px; background: var(--border); border-radius: 4px; padding: 1px 5px; color: var(--muted); }
   .pedido-card .ped-marca.alerta { color: var(--yellow); }
@@ -2329,6 +2333,9 @@ const hub = connectHub((event) => {
       pedidosCatalogos = Array.isArray(event.pedidosCatalogos) ? event.pedidosCatalogos : [];
       podeRedeAtual = event.podeRede && typeof event.podeRede === 'object' ? event.podeRede : null;
       pedidosConhecidos = null; // a fila do init é a base: nada nela é «pedido novo»
+      // o init traz só o resumo dos Pedidos: a fila inteira (e cada mudança dela) vem
+      // porque esta tela pede — o chat e a tela do OBS não recebem a fila
+      hub.send({ type: 'pedidosAssinar', quer: 'fila' });
       applyPanel();
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
       liveMessages.length = 0;
@@ -3679,7 +3686,10 @@ function openCtxMenu(event, message, inFila) {
     ctxMenu.lastChild.classList.add('virar-pedido');
   }
 
-  // Posiciona no cursor (compensando o zoom da interface) sem sair da janela
+  posicionarCtxMenu(event);
+}
+// Posiciona no cursor (compensando o zoom da interface) sem sair da janela
+function posicionarCtxMenu(event) {
   const zoomFactor = (Number(uiZoom) || 100) / 100;
   ctxMenu.classList.add('open');
   const menuRect = ctxMenu.getBoundingClientRect();
@@ -3692,8 +3702,9 @@ function openCtxMenu(event, message, inFila) {
 }
 
 document.addEventListener('click', closeCtxMenu);
+// (o cartão do pedido abre o menu dele: o fechador não o fecha logo em seguida)
 document.addEventListener('contextmenu', (e) => {
-  if (!e.target.closest('.chat-item')) closeCtxMenu();
+  if (!e.target.closest('.chat-item, .pedido-card')) closeCtxMenu();
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMenu(); });
 for (const list of Object.values(lists)) list.addEventListener('scroll', closeCtxMenu);
@@ -8278,8 +8289,9 @@ function aplicarLabsFerramentas() {
 // e o tradutor pula), os nomes do catálogo num bloco [data-no-i18n].
 const PEDIDOS_ONDE = ['auto', 'coluna', 'aba', 'ambos'];
 const RE_PEDIDO_ID = /^p\d{1,12}$/;
-// só imagem servida pelo próprio programa, do catálogo (nunca endereço de fora)
-const RE_PEDIDO_IMG = /^\/pedidos-img\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9-]{1,120}\.(?:png|jpg|webp|gif)$/;
+// só imagem servida pelo próprio programa, do catálogo (nunca endereço de fora); o
+// «?v=» é a versão do arquivo: a imagem trocada (mesmo nome) chega com outro endereço
+const RE_PEDIDO_IMG = /^\/pedidos-img\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9-]{1,120}\.(?:png|jpg|webp|gif)(?:\?v=[a-z0-9]{1,24})?$/;
 const PEDIDOS_LIMITE = 100;    // cartões por seção de cada vez (o resto, em «Mostrar mais»)
 const PEDIDOS_TRAVA_MS = 1500; // o botão tocado espera o eco do servidor (ou isto)
 const PEDIDOS_SECOES = [
@@ -8296,12 +8308,12 @@ const PEDIDOS_MARCAS = new Map([
   ['semMensagem', 'pago sem mensagem'], ['naoPareceEmPedido', 'talvez não seja pedido'],
   ['sinalizada', 'mensagem sinalizada'], ['acimaDoMaximo', 'acima do máximo de partidas'],
   ['cheio', 'fila cheia'], ['moedaSemCotacao', 'moeda sem cotação'], ['itemEmDuvida', 'item em dúvida'],
-  ['gratisEmDuvida', 'personagem em dúvida'], ['semItem', 'nenhum item reconhecido'],
+  ['gratisEmDuvida', 'personagem em dúvida'], ['semItem', 'nenhum item reconhecido'], ['semCatalogo', 'o jogo da vez está sem catálogo'],
   ['valorConvertido', 'valor convertido'], ['atrasado', 'chegou atrasado'], ['intercalado', 'intercalado'],
   ['naoTenho', 'não tenho'], ['moderacao', 'removido do chat pela moderação'], ['creditoUsado', 'usou crédito'],
   ['reenviado', 'reenviado'], ['virado', 'comentário que virou pedido'], ['manual', 'feito à mão'],
 ]);
-const PEDIDOS_MARCAS_ALERTA = new Set(['pagosFechados', 'abaixoDoPreco', 'semMensagem', 'naoPareceEmPedido', 'sinalizada', 'acimaDoMaximo', 'cheio', 'moedaSemCotacao', 'itemEmDuvida', 'gratisEmDuvida', 'semItem', 'naoTenho', 'moderacao']);
+const PEDIDOS_MARCAS_ALERTA = new Set(['pagosFechados', 'abaixoDoPreco', 'semMensagem', 'naoPareceEmPedido', 'sinalizada', 'acimaDoMaximo', 'cheio', 'moedaSemCotacao', 'itemEmDuvida', 'gratisEmDuvida', 'semItem', 'semCatalogo', 'naoTenho', 'moderacao']);
 // o arquivo dos pedidos travado: a frase do servidor (a mesma chave de tradução)
 const PEDIDOS_TRAVADO = new Map([
   ['ilegivel', 'O arquivo dos pedidos não abre: nada é gravado até você escolher «começar do zero».'],
@@ -8396,9 +8408,20 @@ function travarPedidos(chave, op) {
     if (t && t.ate <= Date.now()) { pedidosTravas.delete(chave); aplicarTravasPedidos(); }
   }, PEDIDOS_TRAVA_MS + 20);
 }
+// Esperando o eco, o botão fica apagado (aria-disabled) mas NÃO desabilitado: o
+// navegador tira o foco de um botão desabilitado, e quem usa o teclado voltaria
+// ao começo da página a cada partida. Sem permissão, aí sim, desabilitado.
+const botaoParadoPedidos = (b) => b.disabled || b.getAttribute('aria-disabled') === 'true';
+function esperarEcoPedidos(b, esperando) {
+  if (esperando) b.setAttribute('aria-disabled', 'true');
+  else b.removeAttribute('aria-disabled');
+}
 function aplicarTravasPedidos() {
   const pode = podeMexerPedidos() && pedidosLigados();
-  for (const b of document.querySelectorAll('button[data-trava]')) b.disabled = !pode || pedidosTravas.has(b.dataset.trava);
+  for (const b of document.querySelectorAll('button[data-trava]')) {
+    b.disabled = !pode;
+    esperarEcoPedidos(b, pode && pedidosTravas.has(b.dataset.trava));
+  }
 }
 // a resposta é só de quem tocou: o erro vira recado; o acerto solta o botão quando
 // o quadro «pedidos» chegar (é ele que traz o pedido novo, com o «faltavam» novo)
@@ -8412,7 +8435,11 @@ function respostaDosPedidos(ev) {
   aplicarTravasPedidos();
   mostrarRecadoObs(ev.ok !== false, typeof ev.texto === 'string' ? ev.texto : '', '🙋 ');
   // o interruptor ou o jogo que a pessoa mexeu voltam ao que vale de verdade
-  if (ev.ok === false) agendarRenderPedidos();
+  if (ev.ok === false) {
+    if (op === 'pedidosAbrir') for (const chk of document.querySelectorAll('input[data-ped-abrir]')) chk.__toque = null;
+    if (op === 'pedidosJogo') for (const sel of document.querySelectorAll('select.ped-jogo')) sel.__toque = null;
+    agendarRenderPedidos();
+  }
   // o ⏩ (ou a partida que chamou o próximo sozinha) DESTA tela trouxe alguém: se
   // ele tiver item em dúvida, a janela das opções abre aqui (a tela só mostra o confirmado)
   if (ev.ok !== false) {
@@ -8495,8 +8522,12 @@ function montarBarraPedidos(barra) {
     chk.className = 'sw';
     chk.dataset.pedAbrir = tipo;
     chk.addEventListener('change', () => {
-      // «ligar» explícito: o toque repetido não desfaz o anterior
-      if (!enviarPedidos({ type: 'pedidosAbrir', tipo, ligar: chk.checked ? 1 : 0 })) chk.checked = !chk.checked;
+      // «ligar» explícito: o toque repetido não desfaz o anterior. Até o eco chegar
+      // (ou 2 s), o interruptor mostra o toque; depois vale o estado do servidor —
+      // o fechado por outra tela ou pelo Stream Deck aparece mesmo com o foco aqui
+      chk.__toque = { ligar: chk.checked, ate: Date.now() + 2000 };
+      if (!enviarPedidos({ type: 'pedidosAbrir', tipo, ligar: chk.checked ? 1 : 0 })) { chk.__toque = null; chk.checked = !chk.checked; return; }
+      setTimeout(agendarRenderPedidos, 2100);
     });
     lbl.append(chk, ` ${emoji} `, pedEl('span', '', rotulo));
     return lbl;
@@ -8506,7 +8537,12 @@ function montarBarraPedidos(barra) {
   jogo.setAttribute('aria-label', 'Jogo da vez');
   jogo.addEventListener('change', () => {
     const v = String(jogo.value || '').slice(0, 60);
-    if (!v || !enviarPedidos({ type: 'pedidosJogo', jogo: v })) agendarRenderPedidos();
+    // como o interruptor: até o eco chegar (ou 2 s), o seletor mostra a escolha;
+    // depois, o jogo que vale — a troca feita por outra tela ou pelo Stream Deck, a
+    // recusa e a falta de conexão aparecem mesmo com o foco aqui
+    jogo.__toque = v ? { jogo: v, ate: Date.now() + 2000 } : null;
+    if (!v || !enviarPedidos({ type: 'pedidosJogo', jogo: v })) { jogo.__toque = null; agendarRenderPedidos(); return; }
+    setTimeout(agendarRenderPedidos, 2100);
   });
   const prox = pedEl('button', 'secondary');
   prox.type = 'button';
@@ -8514,13 +8550,28 @@ function montarBarraPedidos(barra) {
   prox.dataset.trava = 'proximo'; // dois toques no ⏩ chamariam duas pessoas
   prox.title = 'Chamar o próximo da fila';
   prox.append('⏩ ', pedEl('span', '', 'Próximo'));
-  prox.onclick = () => { if (!prox.disabled) enviarPedidos({ type: 'pedidoProximo' }, 'proximo'); };
+  prox.onclick = () => { if (!botaoParadoPedidos(prox)) enviarPedidos({ type: 'pedidoProximo' }, 'proximo'); };
   const novo = pedEl('button', 'secondary');
   novo.type = 'button';
   novo.dataset.acao = 'novo';
   novo.title = 'Pedido à mão';
   novo.append('＋ ', pedEl('span', '', 'Novo'));
   novo.onclick = () => { if (!novo.disabled) novoPedidoAMao(); };
+  // 🏁 fim da live: o «um por live» dos grátis recomeça e o que sobrou na fila fica
+  // para a próxima, marcado «da live anterior» (os grátis, como a página 🎁 Grátis diz)
+  const fimLive = pedEl('button', 'secondary');
+  fimLive.type = 'button';
+  fimLive.dataset.acao = 'fimDaLive';
+  fimLive.dataset.trava = 'fimDaLive';
+  fimLive.title = 'Marcar o fim da live';
+  fimLive.append('🏁 ', pedEl('span', '', 'Fim da live'));
+  fimLive.onclick = async () => {
+    if (botaoParadoPedidos(fimLive)) return;
+    const texto = settings?.pedidos?.gratis?.manterNaProximaLive === false
+      ? 'Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.'
+      : 'Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.';
+    if (await obsConfirmar(texto, { icone: '🏁', ok: 'Fim da live' })) enviarPedidos({ type: 'pedidosFimDaLive' }, 'fimDaLive');
+  };
   const nFila = pedEl('span', 'ped-contagem ped-c-fila', '📋 0');
   nFila.title = 'Na fila';
   const nRev = pedEl('span', 'ped-contagem ped-c-revisar', '⚠ 0');
@@ -8528,7 +8579,7 @@ function montarBarraPedidos(barra) {
   barra.append(
     interruptor('pagos', '💰', 'Pagos', 'Abrir ou fechar os pedidos pagos'),
     interruptor('gratis', '🎁', 'Grátis', 'Abrir ou fechar os pedidos grátis'),
-    jogo, prox, novo, nFila, nRev,
+    jogo, prox, novo, fimLive, nFila, nRev,
   );
 }
 function pintarBarraPedidos(barra) {
@@ -8538,7 +8589,10 @@ function pintarBarraPedidos(barra) {
   const ab = est && est.abertos && typeof est.abertos === 'object' ? est.abertos : {};
   for (const chk of barra.querySelectorAll('input[data-ped-abrir]')) {
     const tipo = chk.dataset.pedAbrir === 'gratis' ? 'gratis' : 'pagos';
-    if (document.activeElement !== chk) chk.checked = ab[tipo] === true;
+    const real = ab[tipo] === true;
+    const t = chk.__toque;
+    // o toque desta tela ainda a caminho: espera o eco; senão, o que vale de verdade
+    if (!(t && Date.now() < t.ate && t.ligar !== real)) { chk.__toque = null; chk.checked = real; }
     chk.disabled = !pode || !est;
   }
   pintarJogoPedidos(barra.querySelector('select.ped-jogo'), est, pode);
@@ -8563,7 +8617,7 @@ function pintarJogoPedidos(sel, est, pode) {
   }
   if (atual && !vistos.has(atual.id)) jogos.unshift({ id: atual.id.slice(0, 60), nome: String(atual.nome || atual.id).slice(0, 120), erro: true });
   const assin = JSON.stringify(jogos);
-  if (sel.__assin !== assin && document.activeElement !== sel) {
+  if (sel.__assin !== assin) {
     sel.__assin = assin;
     sel.replaceChildren(...jogos.map((j) => {
       const o = document.createElement('option');
@@ -8573,7 +8627,9 @@ function pintarJogoPedidos(sel, est, pode) {
       return o;
     }));
   }
-  if (document.activeElement !== sel) sel.value = atual ? atual.id.slice(0, 60) : '';
+  const real = atual ? atual.id.slice(0, 60) : '';
+  const t = sel.__toque;
+  if (!(t && Date.now() < t.ate && t.jogo !== real)) { sel.__toque = null; if (sel.value !== real) sel.value = real; }
   sel.hidden = !jogos.length;
   sel.disabled = !pode || !est || !jogos.length;
 }
@@ -8757,17 +8813,40 @@ function botaoDoPedido(ctx, emoji, rotulo, dica, acao, trava, fazer) {
   const b = pedEl('button', 'secondary');
   b.type = 'button';
   b.dataset.acao = acao;
+  // (o menu do botão direito do cartão repete o botão com estes dois)
+  b.dataset.rotulo = rotulo;
+  b.dataset.emoji = String(emoji || '').trim();
   if (trava) b.dataset.trava = trava;
   if (dica) b.title = dica;
   if (emoji) b.append(emoji);
   b.append(pedEl('span', '', rotulo));
-  b.disabled = !ctx.pode || (!!trava && pedidosTravas.has(trava));
+  b.disabled = !ctx.pode;
+  esperarEcoPedidos(b, ctx.pode && !!trava && pedidosTravas.has(trava));
   // um toque = uma ação (nada de «segurar acelera»): o botão espera o eco
-  b.onclick = () => { if (!b.disabled) fazer(); };
+  b.onclick = () => { if (!botaoParadoPedidos(b)) fazer(); };
   return b;
+}
+// 🖱️ O botão direito no cartão abre o menu do programa (#ctxMenu) com as ações do
+// cartão: cada opção toca o botão de verdade (as mesmas confirmações e travas).
+// Sem ação possível (quem só assiste, ✔ Feitos), fica o menu do navegador.
+function abrirMenuDoPedido(e, card) {
+  const botoes = [...card.querySelectorAll('button[data-acao][data-rotulo]')].filter((b) => !botaoParadoPedidos(b) && b.isConnected);
+  if (!botoes.length) return;
+  e.preventDefault();
+  ctxMenu.innerHTML = '';
+  for (const b of botoes) {
+    const opcao = document.createElement('div');
+    opcao.className = 'ctx-item' + (b.dataset.acao === 'recusar' ? ' danger' : '');
+    // o rótulo num nó próprio (o motor de idiomas traduz pela chave, sem o emoji)
+    opcao.append(`${b.dataset.emoji || '🙋'}  `, Object.assign(document.createElement('span'), { textContent: b.dataset.rotulo }));
+    opcao.onclick = (ev) => { ev.stopPropagation(); closeCtxMenu(); if (b.isConnected && !botaoParadoPedidos(b)) b.click(); };
+    ctxMenu.appendChild(opcao);
+  }
+  posicionarCtxMenu(e);
 }
 function preencherCartaoPedido(card, p, secao, ctx, assin) {
   card.__assin = assin;
+  if (!card.__menu) { card.__menu = true; card.addEventListener('contextmenu', (e) => abrirMenuDoPedido(e, card)); }
   const id = String(p.id).slice(0, 40);
   card.className = 'pedido-card' + (secao === 'agora' ? ' agora' : '') + (p.estado === 'pulado' ? ' pulado' : '');
   card.dataset.pedido = id;
@@ -8792,10 +8871,18 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
     topo.append(pedEl('span', 'sc-amount', v.aproximado && v.original ? `≈ ${v.texto} (${v.original})` : v.texto));
   }
   partes.push(topo);
-  // a frase (curta: 3 linhas; o clique mostra inteira)
+  // a frase (curta: 3 linhas; o clique, o Enter ou o espaço mostram inteira — o Tab
+  // chega nela, como num botão)
   if (p.texto) {
     const t = pedEl('div', 'msg-text', p.texto);
-    t.addEventListener('click', () => t.classList.toggle('inteira'));
+    t.tabIndex = 0;
+    t.setAttribute('role', 'button');
+    t.setAttribute('aria-expanded', 'false');
+    const alternar = () => { t.setAttribute('aria-expanded', String(t.classList.toggle('inteira'))); };
+    t.addEventListener('click', alternar);
+    t.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); alternar(); }
+    });
     partes.push(t);
   }
   // itens ✓ e dúvidas ⚠ (os nomes do catálogo nunca são traduzidos)
@@ -8836,6 +8923,10 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
   if (total > 0 && secao !== 'feitos' && secao !== 'devolver') {
     linha.append(pedEl('span', 'ped-faltam', faltam === 1 ? `falta 1 de ${total}` : `faltam ${faltam} de ${total}`));
   }
+  // acima do máximo: quantas foram pagas (o excedente fica à vista até você decidir;
+  // só vem para quem vê os valores)
+  const pagas = pedInteiro(part.pagas);
+  if (pagas > total) linha.append(pedEl('span', 'ped-pagas', `pagou ${pagas} partidas`));
   const resultados = [];
   if (pedInteiro(p.vitorias)) resultados.push(`🏆 ${pedInteiro(p.vitorias)}`);
   if (pedInteiro(p.derrotas)) resultados.push(`💀 ${pedInteiro(p.derrotas)}`);
@@ -9011,11 +9102,26 @@ async function novoPedidoAMao() {
 function pedidosVirarDisponivel() {
   return pedidosLigados() && podeMexerPedidos() && !ocultosDoPainel().virarPedido;
 }
-// a mensagem que já virou pedido (só o painel do streamer recebe o msgId)
+// a mensagem que já virou pedido (só o painel do streamer recebe o msgId). O id do
+// comentário do Telegram leva o id da conversa (no privado, o da pessoa): o pedido
+// traz um resumo dele, refeito aqui com a mesma conta do pedidos.js (resumoDoId)
+function resumoDoIdPedido(s) {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 2654435761);
+    h2 = Math.imul(h2 ^ c, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
 function pedidoDaMensagem(message) {
   if (!message || message.id === undefined || message.id === null || !pedidosLigados()) return null;
   const id = String(message.id);
-  return todosOsPedidos(pedidosEstado).find((p) => p.msgId === id && p.platform === message.platform) || null;
+  const ref = message.platform === 'telegram' && id.startsWith('tg-') ? 'tg-h' + resumoDoIdPedido(id) : id;
+  return todosOsPedidos(pedidosEstado).find((p) => p.msgId === ref && p.platform === message.platform) || null;
 }
 function virarPedidoDaMensagem(message) {
   if (!message || message.id === undefined || message.id === null) return false;
@@ -9062,15 +9168,37 @@ function pintarAtalhoPedidos() {
   btn.dataset.destino = destino;
   btn.replaceChildren(destino === 'aba' ? '🗂️ ' : '🧱 ', pedEl('span', '', destino === 'aba' ? 'Ir para a aba' : 'Ir para a coluna'));
 }
-// «Ver o pedido»: abre onde ele está e acende o cartão por um instante
+// «Ver o pedido»: abre onde ele está e acende o cartão por um instante. Na fila
+// longa (mais de 100 numa seção), o «Mostrar mais» abre até ele; o pedido que já
+// saiu da lista dá recado (nada de clique calado)
 function mostrarPedidoNaTela(id) {
   const pid = String(id);
   if (!RE_PEDIDO_ID.test(pid)) return;
+  const est = pedidosLigados() ? pedidosEstado : null;
+  let lugar = null;
+  if (est) {
+    for (const [secao, lista] of [['agora', est.agora ? [est.agora] : []], ['fila', pedLista(est.fila)], ['revisar', pedLista(est.revisar)],
+      ['devolver', pedLista(est.aDevolver)], ['feitos', pedLista(est.feitos)]]) {
+      const i = lista.findIndex((p) => p && String(p.id) === pid);
+      if (i >= 0) { lugar = { secao, i }; break; }
+    }
+  }
+  if (!lugar) { mostrarRecadoObs(false, 'Esse pedido não está mais na lista.', '🙋 '); return; }
   let alvo = irParaPedidos();
   if (!alvo) {
     const pop = document.getElementById('pedidosPop');
     if (pop && !pop.classList.contains('open')) document.getElementById('pedidosToolBtn')?.click();
     alvo = pop;
+  }
+  const vista = alvo ? (alvo.classList && alvo.classList.contains('pedidos-vista') ? alvo : alvo.querySelector('.pedidos-vista')) : null;
+  if (vista && vista.__limites) {
+    const precisa = Math.ceil((lugar.i + 1) / PEDIDOS_LIMITE) * PEDIDOS_LIMITE;
+    if ((vista.__limites.get(lugar.secao) || PEDIDOS_LIMITE) < precisa) {
+      vista.__limites.set(lugar.secao, precisa);
+      pintarVistaPedidos(vista);
+    }
+    const feitos = lugar.secao === 'feitos' ? vista.querySelector('.ped-secao[data-secao="feitos"]') : null;
+    if (feitos && !feitos.open) feitos.open = true;
   }
   setTimeout(() => {
     const card = alvo ? [...alvo.querySelectorAll('.pedido-card')].find((c) => c.dataset.pedido === pid) : null;
@@ -9102,10 +9230,23 @@ document.getElementById('pedidosToolBtn')?.addEventListener('click', () => {
   const limite = (document.documentElement.clientWidth || window.innerWidth) - 8;
   if (r.right > limite) pop.style.left = Math.round(-Math.max(0, Math.min(r.right - limite, r.left - 8)) / zoom) + 'px';
 });
-// 🙋 + Pedidos (modo Colunas): marcado = coluna; desmarcado = só a aba
+// 🙋 + Pedidos (modo Colunas): marcado = coluna; desmarcado = só a aba. Marcar de
+// novo volta ao que era antes de desmarcar (o automático continua automático, sem a
+// aba a mais); sem essa lembrança (desmarcado em outra tela), a aba que já estava
+// fica e a coluna volta junto
+const PEDIDOS_ONDE_ANTES = 'obsSocialPedidosOndeAntes';
 document.getElementById('colPedidosChk')?.addEventListener('input', (e) => {
   const atual = pedidosOndeAtual();
-  const onde = e.target.checked ? (atual === 'aba' ? 'ambos' : atual) : 'aba';
+  let onde;
+  if (e.target.checked) {
+    let antes = null;
+    try { antes = localStorage.getItem(PEDIDOS_ONDE_ANTES); localStorage.removeItem(PEDIDOS_ONDE_ANTES); } catch { /* sem armazenamento */ }
+    if (atual !== 'aba') onde = atual;
+    else onde = ['auto', 'coluna', 'ambos'].includes(antes) ? antes : 'ambos';
+  } else {
+    if (atual !== 'aba') { try { localStorage.setItem(PEDIDOS_ONDE_ANTES, atual); } catch { /* sem armazenamento */ } }
+    onde = 'aba';
+  }
   hub.send({ type: 'settings', settings: { panel: { pedidosOnde: onde } } });
 });
 // a hora dos cartões segue o idioma desta tela

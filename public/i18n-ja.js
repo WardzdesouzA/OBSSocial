@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "配信終了",
+    "Marcar o fim da live": "配信の終了を記録",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "配信を終了しますか？ キューに残ったものは「前回の配信から」の印付きで次回に持ち越し、全員がもう一度無料リクエストを出せます。",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "配信を終了しますか？ 残った有料リクエストは「前回の配信から」の印付きで次回に持ち越し、無料リクエストはキューから外れ、全員がもう一度無料リクエストを出せます。",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "パネルの 🙋 で「🏁 配信終了」を押すと配信が終わります。そのとき全員がもう一度無料リクエストを出せるようになり、キューに残ったものには「前回の配信から」の印が付きます。",
+    "o jogo da vez está sem catálogo": "現在のゲームにカタログがありません",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "リクエストは 🧪 Labs でオフになっています。",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "エラーのためリクエストを開けませんでした。OBS Social のウィンドウを確認してください。",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.ja = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "使うものだけチェックしてください。パネルの 🎛️ ツールが変わります — サウンドボードの 🎛️ キーはどちらでも動きます。",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "$1 試合分を支払い"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "残り 1／$1"],
     [/^faltam (\d+) de (\d+)$/, "残り $1／$2"],

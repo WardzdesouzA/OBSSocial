@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.en = {
     ru: 'Russian', tr: 'Turkish', ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Simplified)',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "End of stream",
+    "Marcar o fim da live": "Mark the end of the stream",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "End of stream? What’s left in the queue stays for the next one, marked «from the previous stream», and everyone can ask for a free request again.",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "End of stream? The paid requests left stay for the next one, marked «from the previous stream», the free ones leave the queue and everyone can ask for a free request again.",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "The stream ends when you tap «🏁 End of stream», in the dashboard’s 🙋: then everyone can ask for a free request again, and what’s left in the queue gets marked «from the previous stream».",
+    "o jogo da vez está sem catálogo": "the current game has no catalog",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "Requests are turned off in 🧪 Labs.",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "Requests didn’t start because of an error: check the OBS Social window.",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.en = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Tick only what you use. This changes the panel’s 🎛️ tool — the 🎛️ keys on the Soundboard keep working either way.",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "paid for $1 matches"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "1 of $1 left"],
     [/^faltam (\d+) de (\d+)$/, "$1 of $2 left"],

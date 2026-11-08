@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "Yayın sonu",
+    "Marcar o fim da live": "Yayının sonunu işaretle",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "Yayın sonu mu? Kuyrukta kalanlar «önceki yayından» işaretiyle sonrakine kalır ve herkes yeniden bir ücretsiz istekte bulunabilir.",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "Yayın sonu mu? Kalan ücretliler «önceki yayından» işaretiyle sonrakine kalır, ücretsizler kuyruktan çıkar ve herkes yeniden bir ücretsiz istekte bulunabilir.",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "Yayın, paneldeki 🙋 içinde «🏁 Yayın sonu»na dokunduğunuzda biter: o zaman herkes yeniden bir ücretsiz istekte bulunabilir ve kuyrukta kalanlar «önceki yayından» olarak işaretlenir.",
+    "o jogo da vez está sem catálogo": "şu anki oyunun kataloğu yok",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "İstekler 🧪 Labs’te kapalı.",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "İstekler bir hata yüzünden açılamadı: OBS Social penceresine bakın.",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.tr = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Sadece kullandıklarınızı işaretleyin. Bu, panelin 🎛️ aracını değiştirir — Ses Masası’ndaki 🎛️ tuşları her hâlükârda çalışır.",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "$1 maç ödendi"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "$1 içinden 1 kaldı"],
     [/^faltam (\d+) de (\d+)$/, "$2 içinden $1 kaldı"],

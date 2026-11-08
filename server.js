@@ -183,7 +183,7 @@ const { Clima: ClimaServico, sanitizeClima, sanitizeCidade: sanitizeCidadeClima,
 // leitura do site oficial do Dead by Daylight (só no clique). Requeridos aqui em
 // cima, junto do clima: o DEFAULT_SETTINGS e o mergeSettings usam o padrão e o
 // sanitizador deles enquanto o «const state = {» nasce (zona morta, TDZ)
-const { criarPedidos, sanitizarConfiguracao: sanitizarPedidosConf, CONFIG_PADRAO: PEDIDOS_CONFIG_PADRAO } = require('./pedidos');
+const { criarPedidos, sanitizarConfiguracao: sanitizarPedidosConf, CONFIG_PADRAO: PEDIDOS_CONFIG_PADRAO, nomeCivil: nomeCivilPedidos } = require('./pedidos');
 const { criarCatalogos } = require('./pedidos-catalogo');
 const { criarDbd } = require('./pedidos-dbd');
 const { gravarAtomico: gravarAtomicoPedidos } = require('./pedidos-arquivos');
@@ -1893,6 +1893,7 @@ function montarPedidos() {
       apelidoDeTelefone,
       pareceTelefone: pareceTelefoneSrv,
       converter: pedidosConverterValor,
+      versaoDaImagem: versaoImagemPedidos,
     });
     pedidosDbd = criarDbd({ catalogos, versao: APP_VERSION, ...(PEDIDOS_DBD_TESTE ? { fetch: PEDIDOS_DBD_TESTE.fetch, tempoMs: PEDIDOS_DBD_TESTE.tempoMs } : {}) });
   } catch (err) {
@@ -1903,6 +1904,32 @@ function montarPedidos() {
   }
 }
 function pedidosProntos() { return !!(catalogos && pedidosNucleo && pedidosDbd); }
+// 🖼️ A versão de cada imagem (data e tamanho do arquivo) vai na URL: a imagem
+// trocada nasce com o MESMO nome, e sem a versão o navegador mostraria a velha.
+// Cada mudança do catálogo gera outro objeto na memória, então a anotação por
+// catálogo (WeakMap) cai sozinha quando ele muda.
+const pedidosVersoesPorCatalogo = new WeakMap(); // catálogo → Map(arquivo → versão)
+function versaoImagemPedidos(jogo, arquivo) {
+  if (!catalogos) return null;
+  try {
+    const cat = catalogos.carregar(jogo);
+    if (!cat || cat.ok === false || !Array.isArray(cat.itens)) return null;
+    let m = pedidosVersoesPorCatalogo.get(cat);
+    if (!m) { m = new Map(); pedidosVersoesPorCatalogo.set(cat, m); }
+    if (m.has(arquivo)) return m.get(arquivo);
+    let v = null;
+    const caminho = catalogos.caminhoImagem(jogo, arquivo);
+    if (caminho) {
+      try { const st = fs.statSync(caminho); v = Math.round(st.mtimeMs).toString(36) + st.size.toString(36); } catch { v = null; }
+    }
+    m.set(arquivo, v);
+    return v;
+  } catch { return null; }
+}
+const urlImagemPedidos = (jogo, arquivo) => {
+  const v = versaoImagemPedidos(jogo, arquivo);
+  return `/pedidos-img/${jogo}/${arquivo}${v ? `?v=${v}` : ''}`;
+};
 
 // O núcleo avisa cada mudança (aoMudar); várias na mesma volta do laço (uma
 // rajada de pedidos do chat) viram UM envio, e ele só sai depois que o wss existe
@@ -1962,22 +1989,65 @@ function nomesDosItensPedidos(proj) {
   }
   return out;
 }
-function pedidosParaCliente(ws) { return pedidosParaPapel(papelPedidos(ws)); }
+// 📡 Quem recebe a fila: com 500 pedidos, cada quadro passa de meio megabyte, e o
+// chat e a tela do OBS, o mini Mesa e as configurações não mostram a fila. A
+// página diz o que quer (pedidosAssinar): «fila» (o painel), «resumo» (as
+// configurações: o jogo em uso e o arquivo travado) ou nada. A página que não
+// disse nada recebe só o resumo no init. Quem não é página (sem Origin: um
+// programa ou automação no próprio computador) recebe a fila como sempre.
+function pedidosQuer(ws) {
+  if (ws.pedidosQuer === 'fila' || ws.pedidosQuer === 'resumo') return ws.pedidosQuer;
+  return ws.ehPagina ? null : 'fila';
+}
+function pedidosResumoDe(proj) {
+  if (!proj || proj.ligado !== true) return { ligado: false };
+  const out = { ligado: true, resumo: true, travado: proj.travado || null, jogo: proj.jogo || null };
+  if (typeof proj.copia === 'string') out.copia = proj.copia;
+  if (Number.isFinite(proj.esperando)) out.esperando = proj.esperando;
+  return out;
+}
+function pedidosParaCliente(ws) {
+  const proj = pedidosParaPapel(papelPedidos(ws));
+  // no init: a página que ainda não pediu a fila leva só o resumo
+  return ws.ehPagina && ws.pedidosQuer !== 'fila' ? pedidosResumoDe(proj) : proj;
+}
+function quadroPedidos(papel, quer, proj, motivos) {
+  const quadro = { type: 'pedidos', pedidos: quer === 'resumo' ? pedidosResumoDe(proj) : proj };
+  if (quer === 'fila' && Array.isArray(motivos) && motivos.length) quadro.motivos = motivos;
+  return JSON.stringify(papel === 'viewer' ? semTelefonesParaViewer(quadro) : quadro);
+}
+// a resposta ao pedidosAssinar: o retrato de agora, só para esta tela
+function enviarPedidosAo(ws) {
+  const quer = pedidosQuer(ws);
+  if (!quer || ws.readyState !== 1) return;
+  const papel = papelPedidos(ws);
+  const texto = quadroPedidos(papel, quer, pedidosParaPapel(papel), null);
+  if (quer === 'resumo') ws.pedidosResumoEnviado = texto;
+  try { ws.send(texto); } catch { /* caiu */ }
+}
 // Cada cliente recebe a projeção do PAPEL dele (molde broadcastMidiaDireta); para
-// quem só assiste, o filtro de telefone ainda passa por cima (a segunda camada)
+// quem só assiste, o filtro de telefone ainda passa por cima (a segunda camada).
+// O resumo só sai quando mudou (a fila muda muito na live; o jogo e a trava, não).
 function broadcastPedidos(motivos) {
   let clientes;
   try { clientes = wss.clients; } catch { return; } // o wss ainda não nasceu: não há quem avisar
+  const projecoes = new Map();
   const prontos = new Map();
   for (const c of clientes) {
     if (c.readyState !== 1) continue;
+    const quer = pedidosQuer(c);
+    if (!quer) continue;
     const papel = papelPedidos(c);
-    let texto = prontos.get(papel);
+    const chave = papel + '|' + quer;
+    let texto = prontos.get(chave);
     if (texto === undefined) {
-      const quadro = { type: 'pedidos', pedidos: pedidosParaPapel(papel) };
-      if (Array.isArray(motivos) && motivos.length) quadro.motivos = motivos;
-      texto = JSON.stringify(papel === 'viewer' ? semTelefonesParaViewer(quadro) : quadro);
-      prontos.set(papel, texto);
+      if (!projecoes.has(papel)) projecoes.set(papel, pedidosParaPapel(papel));
+      texto = quadroPedidos(papel, quer, projecoes.get(papel), motivos);
+      prontos.set(chave, texto);
+    }
+    if (quer === 'resumo') {
+      if (c.pedidosResumoEnviado === texto) continue;
+      c.pedidosResumoEnviado = texto;
     }
     try { c.send(texto); } catch { /* caiu */ }
   }
@@ -2021,7 +2091,9 @@ function enviarAosLocaisPedidos(obj) {
 }
 function pedidosDbdEstado() {
   if (!pedidosProntos()) return null;
-  return { ...pedidosDbd.estado(), fim: pedidosDbdUltimo };
+  const e = { ...pedidosDbd.estado(), fim: pedidosDbdUltimo };
+  if (e.fase === 'fim') e.mensagem = ''; // (a palavra do módulo: o resultado vem no «fim»)
+  return e;
 }
 
 // 🧪 Ligou/desligou no Labs, voltou o backup das configurações ou o programa
@@ -2037,6 +2109,25 @@ function sincronizarPedidosComLabs() {
 function pedidosFecharParaSair() {
   try { if (pedidosDbd) pedidosDbd.cancelar(); } catch { /* segue */ }
   try { if (pedidosNucleo) pedidosNucleo.fechar(); } catch (err) { console.error('  ⚠️ 🙋 Pedidos: não consegui gravar a fila ao fechar:', (err && err.message) || err); }
+}
+
+// 🎁 As recompensas de pontos do canal da Twitch: o conector guarda o catálogo
+// público delas (id → título). Vai uma LISTA (nunca objeto indexado pelo id), com
+// teto, só com o id, o título e o custo. A página oferece cada uma para escolher:
+// o id guardado continua valendo quando o streamer renomeia a recompensa.
+function recompensasDoCanalPedidos() {
+  const tw = state.connectors && state.connectors.twitch;
+  const mapa = tw && tw.recompensas instanceof Map ? tw.recompensas : null;
+  const lista = [];
+  if (mapa) {
+    for (const [id, r] of mapa) {
+      if (lista.length >= 100) break;
+      if (typeof id !== 'string' || !id || id.length > 100) continue;
+      const titulo = r && typeof r.titulo === 'string' ? r.titulo.slice(0, 100) : '';
+      lista.push({ id, titulo, custo: r && Number.isFinite(r.custo) ? r.custo : null });
+    }
+  }
+  return { canal: tw && typeof tw.channel === 'string' ? tw.channel.slice(0, 100) : null, lista };
 }
 
 // ── 🎛️ Operações (painel pelo WebSocket e 🕹️ controle externo) ──
@@ -2055,16 +2146,22 @@ function valorPed(v, max) {
   if (typeof v === 'string') return v.slice(0, max);
   return 'invalido';
 }
-function itensPed(v) {
+// O «trecho» de cada item vira apelido «seu» no catálogo, que é só deste
+// computador: ele só passa vindo do painel deste computador. Pela rede (quem só
+// assiste com o seletor 🙋, a liberdade total) e pelo controle externo vai só o
+// id — o núcleo ensina então o trecho da frase do próprio pedido (a dúvida que o
+// leitor teve), nunca um texto qualquer que chegou junto com o toque.
+function itensPed(v, comTrecho) {
   if (!Array.isArray(v)) return v === undefined ? undefined : null;
   return v.slice(0, 31).map((x) => {
     if (typeof x === 'string') return x.slice(0, 100);
     if (!x || typeof x !== 'object' || Array.isArray(x)) return null;
     const o = { id: typeof x.id === 'string' ? x.id.slice(0, 100) : '' };
-    if (typeof x.trecho === 'string') o.trecho = x.trecho.slice(0, 200);
+    if (comTrecho && typeof x.trecho === 'string') o.trecho = x.trecho.slice(0, 200);
     return o;
   });
 }
+const doComputadorLocal = (ws) => !!ws && ws.role === 'local' && !ws.controleExterno;
 const PEDIDOS_OPS = new Map([
   ['pedidosAbrir', ['abrir', (m) => ({ tipo: textoPed(m.tipo, 10), ligar: valorPed(m.ligar, 10) })]],
   ['pedidosJogo', ['escolherJogo', (m) => ({ jogo: textoPed(m.jogo, 60) })]],
@@ -2076,8 +2173,8 @@ const PEDIDOS_OPS = new Map([
   ['pedidoDevolvido', ['devolvido', idOuNumeroPed]],
   ['pedidoIgnorar', ['ignorar', idOuNumeroPed]],
   ['pedidoLiberarNome', ['liberarNome', idOuNumeroPed]],
-  ['pedidoConfirmar', ['confirmar', (m) => ({ ...idOuNumeroPed(m), itens: itensPed(m.itens), partidas: valorPed(m.partidas, 12) })]],
-  ['pedidoCorrigir', ['corrigir', (m) => ({ ...idOuNumeroPed(m), itens: itensPed(m.itens), partidas: valorPed(m.partidas, 12) })]],
+  ['pedidoConfirmar', ['confirmar', (m, ws) => ({ ...idOuNumeroPed(m), itens: itensPed(m.itens, doComputadorLocal(ws)), partidas: valorPed(m.partidas, 12) })]],
+  ['pedidoCorrigir', ['corrigir', (m, ws) => ({ ...idOuNumeroPed(m), itens: itensPed(m.itens, doComputadorLocal(ws)), partidas: valorPed(m.partidas, 12) })]],
   ['pedidoNovo', ['novo', (m) => ({ texto: textoPed(m.texto, 2400), quem: textoPed(m.quem, 200), partidas: valorPed(m.partidas, 12) })]],
   ['pedidoDeMensagem', ['virar', null]], // a mensagem é a que o servidor guardou (abaixo)
   ['pedidosFimDaLive', ['fimDaLive', () => ({})]],
@@ -2089,7 +2186,10 @@ const PEDIDOS_OPS = new Map([
 // que o cliente mandar vira pedido por conta própria
 function mensagemGuardadaPedidos(platform, id) {
   if (!platform || !id) return null;
-  const bate = (m) => !!m && typeof m === 'object' && m.id === id && m.platform === platform;
+  // quem só assiste recebe o 💠 Pix com o id resumido (sem o nº do pagamento)
+  const porResumo = RE_ID_PIX_RESUMO.test(id);
+  const bate = (m) => !!m && typeof m === 'object' && m.platform === platform
+    && (m.id === id || (porResumo && typeof m.id === 'string' && m.id.startsWith('pix-') && idPixParaRede(m.id) === id));
   const listas = [Object.hasOwn(state.recentByPlatform, platform) ? state.recentByPlatform[platform] : null, state.recent, feedQueue, feedReleasing, state.saved];
   for (const l of listas) {
     if (!Array.isArray(l)) continue;
@@ -2138,9 +2238,9 @@ function tratarOpPedidos(ws, msg) {
     const m = mensagemGuardadaPedidos(textoPed(msg.platform, 20), textoPed(msg.id, 300));
     if (!m) return avisoPedidos(ws, { ok: false, op, erro: 'mensagem-invalida', texto: 'Não achei essa mensagem.' });
     args = { message: m };
-  } else args = def[1](msg);
+  } else args = def[1](msg, ws);
   // 🕹️ o Stream Deck repete toques: vindo do controle externo, o núcleo ignora o
-  // mesmo toque em menos de 3 s (a partida com «faltavam» se confere sozinha)
+  // mesmo toque em menos de 3 s (a partida com o «n» e o «faltavam» se confere sozinha)
   const r = pedidosNucleo.operar(def[0], args, { origem: ws.controleExterno ? 'controle' : 'painel' });
   avisoPedidos(ws, respostaDoNucleoPedidos(op, r));
   // a confirmação que ensinou apelido mexeu no catálogo: o resumo acompanha
@@ -2191,7 +2291,8 @@ function pedidosControleEstado() {
   if (!pedidosLigado()) return { ligado: false };
   const comErro = { ligado: true, travado: 'erro', pagos: false, gratis: false, jogo: null, jogoNome: null, agora: null, fila: 0, revisar: 0 };
   if (!pedidosProntos()) return comErro;
-  const r = pedidosNucleo.resumo() || {};
+  // o personagem no idioma do programa, como o painel recebe (e não o inglês)
+  const r = pedidosNucleo.resumo({ idioma: idiomaDoConsole() }) || {};
   if (r.ok === false) return comErro; // (o núcleo devolveu erro em vez do retrato)
   const a = r.agora && typeof r.agora === 'object' ? r.agora : null;
   let jogoNome = null;
@@ -2291,7 +2392,7 @@ function itemCatalogoParaTela(jogo, it) {
   const out = { ...it };
   if (it.imagem) {
     const escondida = it.imagem.ocultar === true;
-    out.imagem = { arquivo: it.imagem.arquivo, origem: it.imagem.origem, ocultar: escondida, url: escondida ? null : `/pedidos-img/${jogo}/${it.imagem.arquivo}` };
+    out.imagem = { arquivo: it.imagem.arquivo, origem: it.imagem.origem, ocultar: escondida, url: escondida ? null : urlImagemPedidos(jogo, it.imagem.arquivo) };
   }
   return out;
 }
@@ -2387,7 +2488,9 @@ function pedidosDbdComecar(ws, msg, op, jogo) {
     imagens,
     ...(PEDIDOS_DBD_TESTE ? { pausaMs: PEDIDOS_DBD_TESTE.pausaMs } : {}),
     aoProgresso: (p) => enviarAosLocaisPedidos({
-      type: 'pedidosDbdProgresso', jogo, fase: String(p.fase || ''), feitas: Number(p.feitas) || 0, total: Number(p.total) || 0, mensagem: String(p.mensagem || '').slice(0, 200),
+      // (no fim, a «mensagem» do módulo é uma palavra dele — «pronto» ou o motivo —:
+      // o resultado chega no pedidosDbdFim, com a frase traduzível)
+      type: 'pedidosDbdProgresso', jogo, fase: String(p.fase || ''), feitas: Number(p.feitas) || 0, total: Number(p.total) || 0, mensagem: p.fase === 'fim' ? '' : String(p.mensagem || '').slice(0, 200),
     }),
   });
   Promise.resolve(rodada).then(
@@ -2441,12 +2544,15 @@ function servirImagemPedidos(req, res, urlPath) {
   if (!caminho || imagemPedidosEscondida(jogo, arquivo)) return naoAchei();
   const tipo = PEDIDOS_TIPOS_IMAGEM[path.extname(arquivo).toLowerCase()];
   if (!tipo) return naoAchei();
+  // com a versão do arquivo na URL (?v=…), a imagem trocada tem outro endereço:
+  // a versão pode ficar no cache; sem ela, o navegador confere de novo a cada vez
+  const versionada = /(?:^|&)v=[a-z0-9]{1,24}(?:&|$)/.test(String(req.url || '').split('?')[1] || '');
   fs.stat(caminho, (err, st) => {
     if (err || !st.isFile()) return naoAchei();
     res.writeHead(200, {
       'Content-Type': tipo,
       'Content-Length': st.size,
-      'Cache-Control': 'private, max-age=60', // curto: trocar a imagem aparece logo
+      'Cache-Control': versionada ? 'private, max-age=86400' : 'no-cache',
       'X-Content-Type-Options': 'nosniff',
       'Content-Security-Policy': "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'",
     });
@@ -2550,7 +2656,7 @@ function tratarRotaPedidos(req, res, urlPath, role) {
     lerCorpoPedidos(req, res, 5 * 1024 * 1024, grande('imagem-grande'), falhou, (buf) => {
       const r = catalogos.guardarImagem(jogo, item, buf, ext || null, 'sua');
       if (!r || r.ok === false) return json(400, erroCatalogoPedidos('imagem', r, true));
-      json(200, { ok: true, arquivo: r.arquivo, url: `/pedidos-img/${jogo}/${r.arquivo}` });
+      json(200, { ok: true, arquivo: r.arquivo, url: urlImagemPedidos(jogo, r.arquivo) });
       mudou();
     });
     return;
@@ -2621,13 +2727,42 @@ function juntarEsperaPedidos(doBackup) {
   }
   gravarAtomicoPedidos(PEDIDOS_ESPERA_FILE, JSON.stringify({ versao: 1, mensagens: atual.concat(doB).slice(-5000) }), { privado: true });
 }
+// O maior nº de pedido escrito no arquivo da fila e nas cópias dele, mesmo
+// estragados: com a fila travada como ilegível, o núcleo nasce com o nº zerado,
+// mas os pedidos que existiram continuam escritos no disco (como o «começar do
+// zero» do núcleo faz)
+function seqNoDiscoPedidos() {
+  let maior = 0;
+  let copias = [];
+  try { copias = fs.readdirSync(PEDIDOS_DIR).filter((f) => /^pedidos\.ilegivel-.+\.json$/.test(f)).sort().slice(-50); } catch { copias = []; }
+  for (const f of [PEDIDOS_FILE, ...copias.map((c) => path.join(PEDIDOS_DIR, c))]) {
+    try {
+      if (fs.statSync(f).size > 64 * 1024 * 1024) continue;
+      const txt = fs.readFileSync(f, 'utf8');
+      for (const m of txt.matchAll(/"(?:seq|n)"\s*:\s*(\d{1,12})|"id"\s*:\s*"p(\d{1,12})"/g)) {
+        const v = Number(m[1] || m[2]);
+        if (v > maior) maior = v;
+      }
+    } catch { /* sem o arquivo: segue */ }
+  }
+  return maior;
+}
 // Restaurar: a leitura do site para, a fila grava o que estava adiado e para, os
 // arquivos do backup voltam (gravação atômica), e as três peças são montadas de
 // novo a partir do disco; as telas recebem tudo na hora. O nº do pedido não
-// volta com o backup (é a âncora das planilhas): fica o maior dos dois.
+// volta com o backup (é a âncora das planilhas): fica o maior dos dois
+// (com a fila travada, o maior que está escrito no disco).
 function restaurarBackupPedidos(origem) {
   let seqAgora = 0;
-  try { if (pedidosNucleo) seqAgora = Number(pedidosNucleo.diagnostico().seq) || 0; } catch { /* segue */ }
+  let semFila = !pedidosNucleo;
+  try {
+    if (pedidosNucleo) {
+      const d = pedidosNucleo.diagnostico();
+      seqAgora = Number(d.seq) || 0;
+      semFila = !!d.travado;
+    }
+  } catch { semFila = true; }
+  if (semFila) seqAgora = Math.max(seqAgora, seqNoDiscoPedidos());
   try { if (pedidosDbd) pedidosDbd.cancelar(); } catch { /* segue */ }
   try { if (pedidosNucleo) pedidosNucleo.fechar(); } catch { /* segue */ }
   let erro = null;
@@ -2659,7 +2794,8 @@ function restaurarBackupPedidos(origem) {
 }
 // 🧹 Limpar os pedidos: a fila, as listas, o registro, os créditos e os pagamentos
 // em espera saem; o nº do pedido (seq) continua de onde estava — é a âncora das
-// planilhas e nunca volta. «Apagar tudo» leva também os catálogos e as imagens.
+// planilhas e nunca volta —, e o jogo da vez e os 💰/🎁 abertos ficam como estavam.
+// «Apagar tudo» leva também os catálogos e as imagens (e fecha os pagos e grátis).
 function limparPedidos(tudo) {
   if (!pedidosProntos()) return { ok: false, texto: PEDIDOS_SEM_NUCLEO };
   try { pedidosDbd.cancelar(); } catch { /* segue */ }
@@ -2675,7 +2811,17 @@ function limparPedidos(tudo) {
   pedidosNucleo.fechar();
   let erro = null;
   try {
-    gravarAtomicoPedidos(PEDIDOS_FILE, JSON.stringify({ versao: 1, seq, jogo, pedidos: [] }), { privado: true });
+    // os interruptores 💰 Pagos e 🎁 Grátis (com os intervalos em que os pagos
+    // ficaram abertos) são da live, não da fila: limpar só os pedidos os deixa como
+    // estavam — no meio da live, o pago seguinte não vai para ⚠ Revisar à toa
+    let abertos = null;
+    if (!tudo) {
+      try {
+        const d = JSON.parse(fs.readFileSync(PEDIDOS_FILE, 'utf8'));
+        if (d && typeof d === 'object' && d.abertos && typeof d.abertos === 'object' && !Array.isArray(d.abertos)) abertos = d.abertos;
+      } catch { abertos = null; }
+    }
+    gravarAtomicoPedidos(PEDIDOS_FILE, JSON.stringify({ versao: 1, seq, jogo, ...(abertos ? { abertos, vivoEm: Date.now() } : {}), pedidos: [] }), { privado: true });
     fs.rmSync(PEDIDOS_ESPERA_FILE, { force: true });
     if (tudo) {
       fs.rmSync(PEDIDOS_CATALOGOS_DIR, { recursive: true, force: true });
@@ -3643,8 +3789,11 @@ function livepixResumo(ws) {
 // no banco e o valor exato em centavos — os Pedidos não perdem nem repetem um
 // Pix que chegou atrasado (o id «pix-<nº>» é o mesmo a cada entrega, e a
 // repetição para no servidor). `teste` = o «🧪 Pix de exemplo»: id «test-pix-…»
-// e o selo «teste», como os comentários de mentira (o 🧹 tira; não volta do log)
-function emitDonation({ name, amountText, message, platform = 'pix', rotulo = 'Pix', endToEndId, horario, centavos, teste = false }) {
+// e o selo «teste», como os comentários de mentira (o 🧹 tira; não volta do log).
+// `semNome` = o banco não mandou o nome de quem pagou: o «Apoiador Pix» não é
+// ninguém, e os Pedidos tratam cada pagamento desses como uma pessoa (dois
+// pagadores sem nome nunca dividem o crédito)
+function emitDonation({ name, amountText, message, platform = 'pix', rotulo = 'Pix', endToEndId, horario, centavos, teste = false, semNome = false }) {
   const e2e = typeof endToEndId === 'string' ? endToEndId.trim().slice(0, 120) : '';
   const agora = Date.now();
   let id;
@@ -3652,25 +3801,39 @@ function emitDonation({ name, amountText, message, platform = 'pix', rotulo = 'P
   // (o nº que não é só letras, números e .:_- vira um resumo: o id viaja às telas)
   else if (e2e) id = 'pix-' + (/^[A-Za-z0-9._:-]{1,80}$/.test(e2e) ? e2e : 'h' + crypto.createHash('sha256').update(e2e).digest('hex').slice(0, 32));
   else id = `don-${agora}-${Math.random().toString(36).slice(2)}`;
-  // a hora do banco só vale com o relógio (só a data viraria meia-noite) e dentro
-  // de uma faixa sã (data zerada ou lixo = agora)
+  // A hora do banco vai no bloco pix, para os Pedidos (o pago vale pela hora do
+  // pagamento). O timestamp continua o da CHEGADA, como sempre foi: o Pix chega
+  // pela consulta, que demora (o intervalo, o banco que leva um tempo para
+  // listar, o programa reiniciado), e com a hora do banco ele iria para o passado
+  // da linha do tempo — podado do chat fixo cheio e na 2ª página do 🔴 Ao vivo.
+  // Ela só vale com o relógio (só a data viraria meia-noite) e numa faixa sã
+  // (data zerada ou lixo fica de fora).
   const quando = typeof horario === 'string' && /\d:\d\d/.test(horario) ? Date.parse(horario) : NaN;
-  const timestamp = Number.isFinite(quando) && quando > agora - 30 * 86400000 && quando < agora + 86400000 ? quando : agora;
+  const horaDoBanco = Number.isFinite(quando) && quando > agora - 30 * 86400000 && quando < agora + 86400000 ? quando : null;
   const valorExato = Number.isInteger(centavos) && centavos >= 0 ? centavos : null;
   const badges = [amountText ? `${rotulo} ${amountText}` : rotulo];
   if (teste) badges.push('teste');
+  const pix = {
+    endToEndId: e2e || null,
+    centavos: valorExato,
+    ...(horaDoBanco !== null ? { horario: horaDoBanco } : {}),
+    ...(semNome ? { semNome: true } : {}),
+  };
   const msg = {
     platform,
     channel: platform,
     id,
     author: String(name || 'Anônimo').slice(0, 60),
+    // 🧪 o Pix de exemplo usa o rótulo dos pagadores sem nome, mas tem identidade
+    // própria: a ficha dele no 🎁 sorteio nunca é a de um pagador de verdade
+    ...(teste ? { authorId: PIX_TESTE_AUTOR_ID } : {}),
     authorColor: null,
     avatar: null,
     badges,
     superchat: { amount: amountText || '', color: '#32bcad', headerColor: '#32bcad', textColor: '#000000' },
     runs: [{ type: 'text', text: String(message || '').slice(0, 500) }],
-    timestamp,
-    ...(e2e || valorExato !== null ? { pix: { endToEndId: e2e || null, centavos: valorExato } } : {}),
+    timestamp: agora,
+    ...(e2e || valorExato !== null || horaDoBanco !== null ? { pix } : {}),
   };
   // 🧪 o 🧹 também tira a ficha que o Pix de exemplo deu no sorteio
   if (teste) participantesDeTeste.add(chaveParticipante(msg));
@@ -3898,10 +4061,20 @@ function loadPixVistos() {
     return new Set(raw.ids.slice(-1000).map(String));
   } catch { return new Set(); }
 }
+// 🙋 v0.192: junto da lista, a hora da última consulta boa (do mesmo provedor):
+// é dela que a 1ª consulta depois de abrir o programa recupera a parada
+function loadPixConsultadoEm() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(PIX_VISTOS_FILE, 'utf8'));
+    const atual = pixAssinaturaVistos();
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.banco !== atual.banco || raw.ambiente !== atual.ambiente || raw.consulta !== atual.consulta) return null;
+    return Number.isFinite(raw.consultadoEm) ? raw.consultadoEm : null;
+  } catch { return null; }
+}
 function savePixVistos() {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(PIX_VISTOS_FILE, JSON.stringify({ ...pixAssinaturaVistos(), ids: [...pixRt.vistos].slice(-1000) }));
+    fs.writeFileSync(PIX_VISTOS_FILE, JSON.stringify({ ...pixAssinaturaVistos(), ids: [...pixRt.vistos].slice(-1000), consultadoEm: pixRt.consultadoEm }));
   } catch { /* o proximo tick tenta de novo */ }
 }
 
@@ -3915,6 +4088,10 @@ const pixRt = {
   token: null,
   tokenExpira: 0,
   agent: null,
+  consultadoEm: loadPixConsultadoEm(), // 🙋 v0.192: a última consulta boa (hora)
+  recuperarDesde: null, // 🙋 v0.192: a 1ª consulta depois de abrir olha desde a parada
+  recuperarFalhas: 0,
+  jaArrancou: false,
 };
 function pixResumo(ws) {
   // 🔒 v0.127.1: os dados de cadastro (clientId, caminhos dos certificados,
@@ -4059,10 +4236,17 @@ async function pixToken() {
 // A consulta devolve a lista no formato do Banco Central:
 //   [{ endToEndId, valor, horario, infoPagador, pagador: { nome } }]
 // Os gateways (API própria) são traduzidos para esse mesmo formato em pixGateway().
-async function pixConsultar() {
+// 🙋 v0.192: a janela é de 40 min; logo depois de abrir o programa (com os
+// Pedidos ligados), a 1ª consulta olha desde a parada (`desde`), até 24 h — o Pix
+// feito durante uma parada curta, com os pagos abertos, continua valendo
+const PIX_JANELA_MS = 40 * 60 * 1000;
+const PIX_RECUPERAR_TETO_MS = 24 * 3600 * 1000;
+async function pixConsultar(desde) {
   const perfil = pixPerfil();
   const fim = new Date();
-  const inicio = new Date(fim.getTime() - 40 * 60 * 1000); // janela de 40 min
+  let ini = fim.getTime() - PIX_JANELA_MS;
+  if (Number.isFinite(desde)) ini = Math.max(Math.min(ini, desde), fim.getTime() - PIX_RECUPERAR_TETO_MS);
+  const inicio = new Date(ini);
   const consulta = PIX_CONSULTAS[perfil.consulta || 'bacen'];
   if (!consulta) throw new Error('este provedor ainda não tem consulta implementada');
   return consulta(perfil, inicio, fim);
@@ -4160,8 +4344,12 @@ const PIX_CONSULTAS = {
 
 };
 async function pixTick() {
+  const desde = pixRt.recuperarDesde;
+  const fimMs = Date.now();
   try {
-    const lista = await pixConsultar();
+    const lista = await pixConsultar(desde);
+    if (desde !== null && pixRt.recuperarDesde === desde) pixRt.recuperarDesde = null; // a parada já foi lida
+    pixRt.consultadoEm = fimMs;
     let novos = 0;
     for (const item of lista) {
       const id = String(item?.endToEndId || '').slice(0, 64);
@@ -4179,7 +4367,7 @@ async function pixTick() {
       }
       try { gravarPrivado(PIX_ULTIMO_FILE, JSON.stringify({ banco: pixConfig.banco, em: new Date().toISOString(), item: item?._bruto || item }, null, 2)); } catch { /* diagnóstico; sem ele nada muda */ }
       emitDonation({
-        name: nome || 'Apoiador Pix',
+        name: nome || PIX_SEM_NOME,
         amountText: formatDonationValue(item?.valor),
         message: mensagem,
         rotulo: 'Pix',
@@ -4187,12 +4375,16 @@ async function pixTick() {
         endToEndId: id,
         horario: typeof item?.horario === 'string' ? item.horario : '',
         centavos: centavosDoPix(item?.valor),
+        semNome: !nome,
       });
     }
     pixRt.primeira = false;
     if (novos || pixRt.vistos.size) savePixVistos();
     pixStatus('ok', '');
   } catch (err) {
+    // o banco recusou a janela grande (ou a rede ainda não voltou): três
+    // tentativas e a consulta segue com a janela de sempre
+    if (desde !== null && pixRt.recuperarDesde === desde && ++pixRt.recuperarFalhas >= 3) pixRt.recuperarDesde = null;
     pixStatus('erro', String(err && err.message || err).slice(0, 200));
   }
 }
@@ -4413,6 +4605,19 @@ function arrancarPix() {
   // mesmo com o programa tendo ficado fechado; sem histórico, a 1ª consulta
   // só marca o que encontrar (senão o painel inundava com Pix antigos)
   pixRt.primeira = pixRt.vistos.size === 0;
+  // 🙋 v0.192: logo depois de abrir o programa, com histórico e os Pedidos ligados,
+  // a 1ª consulta olha desde a parada: a última consulta guardada ou a última
+  // atividade gravada da fila (a mais antiga), com uma folga de 5 min
+  pixRt.recuperarDesde = null;
+  pixRt.recuperarFalhas = 0;
+  const primeiroArranque = !pixRt.jaArrancou;
+  pixRt.jaArrancou = true;
+  if (primeiroArranque && !pixRt.primeira && pedidosLigado()) {
+    const marcas = [pixRt.consultadoEm];
+    try { if (pedidosNucleo) marcas.push(pedidosNucleo.diagnostico().vivoAoAbrir); } catch { /* sem a fila, vale a consulta guardada */ }
+    const desde = Math.min(...marcas.filter((x) => Number.isFinite(x)));
+    if (Number.isFinite(desde)) pixRt.recuperarDesde = desde - 5 * 60 * 1000;
+  }
   if (state.settings.labs?.pix !== true) { pixStatus('desligado', ''); return; }
   const perfil = pixPerfil();
   const { urlToken, urlPix } = pixUrls();
@@ -5522,6 +5727,7 @@ const OP_CATEGORY = {
   pedidosCatalogoApagar: 'pedidos', pedidosCatalogoRecriar: 'pedidos', pedidosCatalogoItem: 'pedidos',
   pedidosCatalogoItemApagar: 'pedidos', pedidosCatalogoTipo: 'pedidos', pedidosCatalogoTipoApagar: 'pedidos',
   pedidosCatalogoImagem: 'pedidos', pedidosCatalogoImagens: 'pedidos', pedidosDbdAtualizar: 'pedidos', pedidosDbdCancelar: 'pedidos',
+  pedidosRecompensas: 'pedidos',
 };
 
 // 📺 v0.179: avisos de RETORNO da tela — a tela do OBS conta que o vídeo da
@@ -5891,7 +6097,70 @@ function mensagemComTelefone(m) {
   return !!m && typeof m === 'object' && !Array.isArray(m)
     && (m.platform === 'whatsapp' || pareceTelefoneSrv(m.author) || pareceTelefoneSrv(semSufixoJid(m.authorLogin)) || pareceTelefoneSrv(semSufixoJid(m.authorId)));
 }
-function mensagemParaViewer(m) {
+// 💠 v0.192: o comentário do Pix do banco pela rede. O nº do pagamento
+// (endToEndId: o banco de quem pagou e a hora) não vai para quem só assiste — o
+// id «pix-<nº>» vira um resumo dele (o mesmo a cada entrega; o servidor acha o
+// comentário de volta pelo resumo) e o bloco pix sai. Com os 🙋 Pedidos ligados, o
+// nome civil segue a opção «Nome de quem paga pelo Pix do banco» (o primeiro nome,
+// por padrão) para quem só assiste, para quem entra com liberdade total e para o
+// controle externo; o painel deste computador vê o nome como o banco mandou.
+const PIX_SEM_NOME = 'Apoiador Pix'; // o rótulo de quando o banco não manda o nome (não é ninguém)
+// O «🧪 Pix de exemplo» usa esse mesmo rótulo; o id de autor dele (nenhum Pix de
+// verdade tem um) separa a ficha dele no 🎁 sorteio da dos pagadores sem nome
+const PIX_TESTE_AUTOR_ID = 'teste-pix';
+const RE_ID_PIX_RESUMO = /^pix-h[0-9a-f]{24}$/;
+function ehComentarioPix(m) { return !!m && typeof m === 'object' && !Array.isArray(m) && (m.platform === 'pix' || m.platform === 'doacao'); }
+function idPixParaRede(id) { return 'pix-h' + crypto.createHash('sha256').update(String(id)).digest('hex').slice(0, 24); }
+function idPixParaViewer(id) { return typeof id === 'string' && id.startsWith('pix-') && !RE_ID_PIX_RESUMO.test(id) ? idPixParaRede(id) : id; }
+function nomePixParaRede() {
+  if (!pedidosLigado()) return 'completo';
+  const v = state.settings.pedidos && state.settings.pedidos.nomePix;
+  return v === 'completo' || v === 'anonimo' ? v : 'primeiro';
+}
+function pixParaRede(m, viewer) {
+  if (!ehComentarioPix(m)) return m;
+  let out = m;
+  const modo = nomePixParaRede();
+  const semNome = m.author === PIX_SEM_NOME || (!!m.pix && typeof m.pix === 'object' && m.pix.semNome === true);
+  if (modo !== 'completo' && !semNome && typeof m.author === 'string' && m.author.trim()) {
+    const nome = nomeCivilPedidos(m.author, modo);
+    if (nome !== m.author) out = { ...m, author: nome };
+  }
+  if (viewer) {
+    if ('pix' in out) { if (out === m) out = { ...m }; delete out.pix; }
+    if (idPixParaViewer(out.id) !== out.id) {
+      if (out === m) out = { ...m };
+      out.id = idPixParaViewer(out.id);
+    }
+  }
+  return out;
+}
+// Liberdade total pela rede: só o nome civil do Pix muda (o telefone continua
+// sendo só de quem só assiste). Devolve o MESMO objeto quando nada mudou.
+function pixCivilParaRede(v, prof = 0) {
+  if (!v || typeof v !== 'object' || prof > 6) return v;
+  if (Array.isArray(v)) {
+    let out = null;
+    for (let i = 0; i < v.length; i++) {
+      const n = pixCivilParaRede(v[i], prof + 1);
+      if (n !== v[i]) { if (!out) out = v.slice(); out[i] = n; }
+    }
+    return out || v;
+  }
+  if (typeof v.platform === 'string' && 'author' in v) return pixParaRede(v, false);
+  let out = null;
+  for (const k of Object.keys(v)) {
+    const n = pixCivilParaRede(v[k], prof + 1);
+    if (n !== v[k]) { if (!out) out = { ...v }; out[k] = n; }
+  }
+  return out || v;
+}
+function temFullConectado() {
+  for (const c of wss.clients) if (c.role === 'full' && c.readyState === 1) return true;
+  return false;
+}
+function mensagemParaViewer(original) {
+  const m = pixParaRede(original, true);
   if (!mensagemComTelefone(m)) return m;
   const { authorId, authorLogin, waChatId, ...resto } = m;
   if (pareceTelefoneSrv(resto.author)) resto.author = apelidoDeTelefone(resto.author);
@@ -5919,6 +6188,13 @@ function semTelefonesParaViewer(v, prof = 0) {
     return out || v;
   }
   if (typeof v.platform === 'string' && ('author' in v || 'runs' in v || 'authorId' in v)) return mensagemParaViewer(v);
+  // 💠 v0.192: o id do 💠 Pix também anda fora da mensagem — o «lido» de quando foi
+  // para a tela, a lista dos lidos e a das apagadas: o mesmo resumo, sem o nº do pagamento
+  if (v.type === 'read' && idPixParaViewer(v.id) !== v.id) v = { ...v, id: idPixParaViewer(v.id) };
+  if (v.type === 'apagadas' && Array.isArray(v.ids) && v.ids.some((x) => idPixParaViewer(x) !== x)) v = { ...v, ids: v.ids.map(idPixParaViewer) };
+  if (v.readIds && typeof v.readIds === 'object' && !Array.isArray(v.readIds) && Object.keys(v.readIds).some((k) => idPixParaViewer(k) !== k)) {
+    v = { ...v, readIds: Object.fromEntries(Object.entries(v.readIds).map(([k, x]) => [idPixParaViewer(k), x])) };
+  }
   // a correção de avatar chega com o «login» da pessoa — no WhatsApp é o número
   if (v.type === 'avatarFix' && (v.platform === 'whatsapp' || pareceTelefoneSrv(semSufixoJid(v.login)))) return { ...v, login: '' };
   if (v.type === 'apagadas' && v.platform === 'whatsapp' && v.troca && (canalWaSemTelefone(v.troca.de) !== v.troca.de || canalWaSemTelefone(v.troca.para) !== v.troca.para)) v = { ...v, troca: { ...v.troca, de: canalWaSemTelefone(v.troca.de), para: canalWaSemTelefone(v.troca.para) } };
@@ -5939,9 +6215,13 @@ function temViewerConectado() {
   for (const c of wss.clients) if (c.role === 'viewer' && c.readyState === 1) return true;
   return false;
 }
-// Resposta direta a UMA conexão, com o mesmo filtro
+// Resposta direta a UMA conexão, com o mesmo filtro (💠 v0.192: e o nome civil do
+// Pix do banco para a liberdade total pela rede)
 function enviarAo(ws, payload) {
-  ws.send(JSON.stringify(ws.role === 'viewer' ? semTelefonesParaViewer(payload) : payload));
+  let p = payload;
+  if (ws.role === 'viewer') p = semTelefonesParaViewer(payload);
+  else if (ws.role === 'full' && nomePixParaRede() !== 'completo') p = pixCivilParaRede(payload);
+  ws.send(JSON.stringify(p));
 }
 
 function broadcast(payload) {
@@ -5953,8 +6233,14 @@ function broadcast(payload) {
     const limpo = semTelefonesParaViewer(payload);
     if (limpo !== payload) paraViewer = JSON.stringify(limpo);
   }
+  // 💠 v0.192: o nome civil do Pix do banco para quem entra com liberdade total
+  let paraFull = message;
+  if (nomePixParaRede() !== 'completo' && temFullConectado()) {
+    const x = pixCivilParaRede(payload);
+    if (x !== payload) paraFull = JSON.stringify(x);
+  }
   for (const client of wss.clients) {
-    if (client.readyState === 1) client.send(client.role === 'viewer' ? paraViewer : message);
+    if (client.readyState === 1) client.send(client.role === 'viewer' ? paraViewer : client.role === 'full' ? paraFull : message);
   }
 }
 
@@ -12815,6 +13101,9 @@ setTimeout(sincronizarObsComLabs, 1500);
 // recebe não carregam caminhos do computador do streamer (pasta do backup,
 // comando do transcritor). Ele não consegue gravá-los de volta (o servidor
 // só aceita esses campos de quem está no computador), então nada se perde.
+// 🙋 v0.192: nem a lista das palavras bloqueadas dos Pedidos — os nomes que
+// viram «Anônimo» para quem assiste (a troca é feita aqui no servidor, e quem só
+// assiste não muda os Pedidos), como a moderação, que também não vai para ele.
 function settingsParaCliente(ws) {
   if (!ws || ws.role !== 'viewer') return state.settings;
   const s = state.settings;
@@ -12822,6 +13111,7 @@ function settingsParaCliente(ws) {
     ...s,
     backup: { ...(s.backup || {}), pasta: '' },
     transcricao: { ...(s.transcricao || {}), comando: '' },
+    ...(s.pedidos ? { pedidos: { ...s.pedidos, palavrasBloqueadas: [] } } : {}),
   };
 }
 // 🔒 v0.177: toda mudança de configuração sai com o MESMO filtro do init —
@@ -12857,6 +13147,9 @@ wss.on('connection', (ws, req) => {
   ws.clientIp = ip;
   ws.addressClass = classifyAddress(req.socket.remoteAddress);
   ws.deviceInfo = deviceLabel(req.headers['user-agent']);
+  // 🙋 v0.192: página do navegador (tem Origin) diz o que quer dos Pedidos; quem
+  // não é página (programa, automação) recebe a fila como sempre
+  ws.ehPagina = typeof req.headers.origin === 'string' && req.headers.origin !== '';
   // Nome da máquina via DNS reverso (quando a rede informa) — sem travar nada
   // (só com um IP de verdade: dns.reverse('') estoura na hora)
   if (net.isIP(ip)) {
@@ -13072,6 +13365,17 @@ kickApiConfigurar({ navegador: { disponivel: () => kickNavegadoresLocais().lengt
 function tratarMensagem(ws, raw) {
   let msg;
   try { msg = JSON.parse(raw.toString()); } catch { return; }
+  if (!msg || typeof msg !== 'object') return;
+
+  // 🙋 v0.192: a página diz o que quer dos Pedidos («fila», «resumo» ou nada). É
+  // um sinal da página, não uma ação: vale de qualquer papel (o que chega é a
+  // projeção do papel dela) e responde com o retrato de agora
+  if (msg.type === 'pedidosAssinar') {
+    ws.pedidosQuer = msg.quer === 'fila' || msg.quer === 'resumo' ? msg.quer : null;
+    ws.pedidosResumoEnviado = null;
+    enviarPedidosAo(ws);
+    return;
+  }
 
   // ---------- 🔐 Portão de operações ----------
   // Operações de segurança: SÓ do computador local — nem com senha.
@@ -13528,6 +13832,7 @@ function tratarMensagem(ws, raw) {
     }
     case 'settings': {
       const incoming = (msg.settings && typeof msg.settings === 'object' && !Array.isArray(msg.settings)) ? msg.settings : {};
+      let pedidosRegrasNegadas = false; // 🙋 v0.192: quem só assiste mexeu nas regras dos Pedidos
       // 🔒 v0.127.1: só entram chaves que as configurações conhecem (senão
       // cada mensagem podia plantar uma chave nova e o settings.json crescia
       // sem fim), textos com teto de tamanho, e a pasta do backup só muda
@@ -13550,6 +13855,8 @@ function tratarMensagem(ws, raw) {
       if (ws.role === 'viewer') {
         delete incoming.labs;
         // 🙋 v0.192: preço, máximo, grátis e privacidade dos Pedidos não são «visual»
+        // (a página fica sabendo, e o campo volta ao valor de verdade)
+        if (incoming.pedidos !== undefined) pedidosRegrasNegadas = true;
         delete incoming.pedidos;
         if (!security.permissions.logs) { delete incoming.logRetentionDays; delete incoming.backup; }
       }
@@ -14093,6 +14400,8 @@ function tratarMensagem(ws, raw) {
       }
       saveSettings();
       broadcastSettings();
+      // (depois do eco: a página repinta as regras com o valor que vale)
+      if (pedidosRegrasNegadas) avisoPedidos(ws, { ok: false, op: 'settings', erro: 'somenteStreamer', texto: 'Quem só assiste pela rede não muda as regras dos Pedidos.' });
       // Mudou algo do backup (pasta/frequências)? O resumo (pasta em uso,
       // lista de backups) acompanha na hora
       if (incoming.backup) broadcastBackup();
@@ -14510,7 +14819,7 @@ function tratarMensagem(ws, raw) {
         else pixConfig._appKeyCifrada = null;
       }
       Object.assign(pixConfig, novo);
-      if (trocou) { pixRt.vistos.clear(); savePixVistos(); }
+      if (trocou) { pixRt.vistos.clear(); pixRt.consultadoEm = null; savePixVistos(); }
       savePixConfig();
       arrancarPix();
       break;
@@ -14615,7 +14924,7 @@ function tratarMensagem(ws, raw) {
         // o 🧹 tira e desconta do Arrecadado, não volta do log e só vira 🧪
         // pedido com a opção «teste vira pedido»
         emitDonation({
-          name: 'Apoiador Pix',
+          name: PIX_SEM_NOME,
           amountText: 'R$ 20,00',
           message: 'Pix de teste — é assim que a mensagem do pagador aparece! 💠',
           rotulo: 'Pix',
@@ -14917,6 +15226,9 @@ function tratarMensagem(ws, raw) {
           author: amostra.author,
         }));
       }
+      // e a do 🧪 Pix de exemplo, pelo id de autor que só ele tem (o pagador de
+      // verdade que chegou sem nome continua no sorteio)
+      chaves.add(chaveParticipante({ platform: 'pix', authorId: PIX_TESTE_AUTOR_ID, author: PIX_SEM_NOME }));
       for (const chave of chaves) {
         if (state.participants.delete(chave)) fichas++;
       }
@@ -15474,6 +15786,11 @@ function tratarMensagem(ws, raw) {
     case 'pedidosDbdAtualizar': case 'pedidosDbdCancelar':
       tratarOpPedidos(ws, msg);
       break;
+    // 🎁 as recompensas de pontos do canal (Twitch), para a página dos Pedidos
+    // oferecer na lista das aceitas: só leitura
+    case 'pedidosRecompensas':
+      try { ws.send(JSON.stringify({ type: 'pedidosRecompensas', ...recompensasDoCanalPedidos() })); } catch { /* caiu */ }
+      break;
     default:
       // 🕹️ v0.179: só o controle externo precisa saber que a operação não existe
       // (o painel não manda nome inventado; pela rede o portão acima já respondeu)
@@ -15742,7 +16059,7 @@ const CONTROLE_ACOES = [
   { id: 'vmix/atualizar', grupo: 'vmix', nome: 'vMix: atualizar as listas', desc: 'Pede ao vMix as entradas e estados de novo', msg: () => ({ type: 'vmixAtualizar' }) },
   // 🙋 v0.192: Pedidos (Labs). Desligados no Labs, a ação volta como erro (400)
   // com o texto; o mesmo toque repetido em menos de 3 s é ignorado (o núcleo
-  // confere — com «faltavam», a partida confere sozinha)
+  // confere — com o «n» E o «faltavam», a partida confere sozinha)
   { id: 'pedidos/pagos', grupo: 'pedidos', nome: 'Pedidos pagos: abrir/fechar', desc: 'Abre ou fecha os pedidos pagos', params: [CP_PEDIDOS.ligar],
     msg: controlePedidos((p) => ({ type: 'pedidosAbrir', tipo: 'pagos', ligar: textoControlePed(p.ligar, 10) || undefined })) },
   { id: 'pedidos/gratis', grupo: 'pedidos', nome: 'Pedidos grátis: abrir/fechar', desc: 'Abre ou fecha os pedidos grátis', params: [CP_PEDIDOS.ligar],
@@ -15865,7 +16182,8 @@ function controleCatalogo() {
 
 // O retrato do momento, para aparelhos que mostram estado (Companion etc.)
 function controleEstado() {
-  const f = state.featured;
+  // (💠 v0.192: o destaque do Pix do banco sem o nº do pagamento e com o nome pela opção)
+  const f = state.featured ? pixParaRede(state.featured, true) : null;
   // 📱 v0.189: o retrato vai para aparelhos que mostram o nome numa tecla ou
   // numa tela (Companion, Stream Deck...) — o autor que É um número sai com o
   // mesmo apelido da tela pública e de quem só assiste (📱 Convidado XYZ); o

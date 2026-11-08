@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "Stream-Ende",
+    "Marcar o fim da live": "Das Ende des Streams markieren",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "Stream-Ende? Was in der Warteschlange übrig ist, bleibt für den nächsten, markiert mit «aus dem vorigen Stream», und jede Person kann wieder einen kostenlosen Wunsch äußern.",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "Stream-Ende? Übrige bezahlte Wünsche bleiben für den nächsten, markiert mit «aus dem vorigen Stream», die kostenlosen verlassen die Warteschlange und jede Person kann wieder einen kostenlosen Wunsch äußern.",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "Der Stream endet, wenn du im 🙋 im Dashboard auf «🏁 Stream-Ende» tippst: Dann kann jede Person wieder einen kostenlosen Wunsch äußern, und was in der Warteschlange übrig ist, wird mit «aus dem vorigen Stream» markiert.",
+    "o jogo da vez está sem catálogo": "das aktuelle Spiel hat keinen Katalog",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "Wünsche sind in 🧪 Labs ausgeschaltet.",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "Wünsche konnten wegen eines Fehlers nicht starten: Sieh im Fenster von OBS Social nach.",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.de = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Haken Sie nur an, was Sie nutzen. Das ändert das 🎛️-Werkzeug des Panels — die 🎛️-Tasten des Soundboards funktionieren so oder so.",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "$1 Runden bezahlt"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "noch 1 von $1"],
     [/^faltam (\d+) de (\d+)$/, "noch $1 von $2"],

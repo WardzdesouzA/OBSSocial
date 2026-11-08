@@ -2800,6 +2800,7 @@
             <li>🤖 A IA é opcional e não vem junto com o programa: ela chega numa próxima versão. Hoje, só o leitor local, no seu computador, entende os pedidos.</li>
           </ul>
         </div>
+        <div class="hint" id="pedSoLeitura" style="display:none">👀 Esta página veio pela rede, sem a senha: você vê as regras dos Pedidos, mas só o computador do streamer (ou quem entra com a senha) muda.</div>
         <div class="ped-alerta" id="pedAlerta" style="display:none"></div>
       </div>
     </div>
@@ -2865,7 +2866,7 @@
           <span class="ped-jogo-info"><span>Itens:</span> <b id="pedCatTotal">0</b></span>
         </div>
         <div class="ped-status" id="pedCatStatus" role="status"></div>
-        <div class="ped-itens" id="pedCatLista"></div>
+        <div class="ped-itens" id="pedCatLista" tabindex="-1"></div>
         <div class="ped-pager"><button class="ped-mini" id="pedCatAnterior" title="Página anterior">◀</button><span id="pedCatPagina">1 / 1</span><button class="ped-mini" id="pedCatProxima" title="Próxima página">▶</button></div>
         <input type="file" id="pedImagemArq" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" style="display:none">
         <div class="field">
@@ -2890,6 +2891,7 @@
     <div class="card" id="pedPagosCard">
       <h3>💰 Pagos</h3>
       <div class="hint">Os pedidos de quem apoia. Você abre e fecha os pagos pelo botão 🙋 do painel; aqui ficam as regras. Pagamento nunca se perde: o que não fecha com as regras vai para ⚠ Revisar.</div>
+      <div class="hint">⚠️ O que chega com o OBS Social fechado depende da fonte: a LivePix entrega depois, o Pix do banco só o das últimas 24 horas, o Super Chat só com o 🕘 Recuperar mensagens perdidas ligado, e a PixGG não reenvia.</div>
       <div class="settings-grid">
         <div><label for="ped-preco">Preço de uma partida (R$)</label><input type="number" id="ped-preco" min="0.01" max="100000" step="0.01" placeholder="10.00"></div>
         <div><label for="ped-maximoPartidas">Máximo de partidas por pedido (1 a 99)</label><input type="number" id="ped-maximoPartidas" min="1" max="99" step="1"></div>
@@ -2929,10 +2931,12 @@
         <label class="check"><input type="checkbox" class="sw" id="ped-gratis-chat"> <span>💬 Comentário no chat que cita o catálogo</span></label>
         <label class="check"><input type="checkbox" class="sw" id="ped-gratis-telegram"> <span>📨 Telegram</span></label>
         <label class="check"><input type="checkbox" class="sw" id="ped-gratis-whatsapp"> <span>💬 WhatsApp</span></label>
+        <label class="check" style="margin-bottom:0"><input type="checkbox" class="sw" id="ped-gratis-soConversaDireta"> <span>🔒 No Telegram e no WhatsApp, só a conversa direta com o robô ou o número (mensagem de grupo não vira pedido)</span></label>
       </div>
       <div class="field">
         <label>🎁 Recompensas aceitas (o nome ou o id; vazio = qualquer resgate com texto)</label>
         <div id="ped-recompensas"></div>
+        <div class="ped-recompensas-canal" id="ped-recompensasCanal"></div>
       </div>
       <div class="settings-grid">
         <div><label for="ped-gratis-porPessoa">Quantos por pessoa</label>
@@ -2942,7 +2946,9 @@
           <select id="ped-gratis-emDuvida"><option value="revisar">Vai para ⚠ Revisar</option><option value="fila">Entra na fila com a dúvida marcada</option></select></div>
       </div>
       <label class="check" style="margin-top:10px"><input type="checkbox" class="sw" id="ped-gratis-soInscritos"> <span>👑 Só inscritos e membros (Twitch, YouTube, Kick)</span></label>
+      <label class="check"><input type="checkbox" class="sw" id="ped-gratis-cargosTambem"> <span>🛡️ Com «Só inscritos», mod, VIP e o dono do canal também podem pedir</span></label>
       <label class="check"><input type="checkbox" class="sw" id="ped-gratis-manterNaProximaLive"> <span>🔁 Os grátis que sobrarem ficam para a próxima live</span></label>
+      <div class="hint" style="margin:0 0 8px">A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».</div>
       <label class="check" style="margin-bottom:0"><input type="checkbox" class="sw" id="ped-robosPodem"> <span>🤖 Robôs do chat também podem pedir</span></label>
     </div>
     <div class="card" id="pedFilaCard">
@@ -2958,10 +2964,13 @@
         <div><label for="ped-seguidas">Pedido com mais de uma partida</label>
           <select id="ped-seguidas"><option value="sim">Todas as partidas em sequência</option><option value="nao">Intercalar: uma partida e o pedido volta para o fim da fila</option></select></div>
         <div><label for="ped-fecharAbertosDepoisDeHoras">Fechar os abertos se o programa ficar fechado mais de (horas; 0 = sempre)</label><input type="number" id="ped-fecharAbertosDepoisDeHoras" min="0" max="168" step="1"></div>
+        <div><label for="ped-moderacao">🛡️ Pedido cuja mensagem a moderação apagou (ou de quem foi banido)</label>
+          <select id="ped-moderacao"><option value="manter">Fica na fila, marcado</option><option value="revisar">Vai para ⚠ Revisar</option><option value="recusar">É recusado (o pago vai para ⚠ Revisar)</option></select></div>
         <div><label for="ped-onde">Onde a fila aparece no painel</label>
           <select id="ped-onde"><option value="auto">Automático (coluna no modo 🧱 Colunas, aba no modo lista)</option><option value="coluna">Só na coluna</option><option value="aba">Só na aba</option><option value="ambos">Na coluna e na aba</option></select></div>
       </div>
       <div class="hint" style="margin-top:6px">Se o OBS Social ficar fechado mais tempo que isso, os pagos e os grátis abertos se fecham na hora em que ele parou. Pagamento feito durante uma parada curta continua valendo.</div>
+      <div class="hint">⚠️ O que chega com o OBS Social fechado depende da fonte: a LivePix entrega depois, o Pix do banco só o das últimas 24 horas, o Super Chat só com o 🕘 Recuperar mensagens perdidas ligado, e a PixGG não reenvia.</div>
       <label class="check" style="margin-bottom:0"><input type="checkbox" class="sw" id="ped-chamarProximoAoTerminar"> <span>⏩ Chamar o próximo sozinho quando um pedido termina</span></label>
     </div>
     <div class="card" id="pedNomesCard">
@@ -2992,6 +3001,12 @@
         <label class="check"><input type="checkbox" class="sw" id="ped-imagens-tela"> <span>📺 Na tela (no widget, que chega numa próxima versão)</span></label>
         <label class="check"><input type="checkbox" class="sw" id="ped-imagens-pagos"> <span>💰 Nos pedidos pagos</span></label>
         <div class="ped-linha" style="margin:4px 0 0"><span class="ped-jogo-info">Tudo de uma vez:</span> <button class="ped-mini" id="ped-imagensNenhuma">🙈 Esconder todas</button> <button class="ped-mini" id="ped-imagensTodas">🖼️ Mostrar todas</button></div>
+      </div>
+      <div class="field" id="ped-imagensTiposCampo">
+        <label>🏷️ Por tipo (retratos, perks, add-ons, oferendas...)</label>
+        <div class="ped-linha" id="ped-imagensTiposJogo" style="margin:0 0 4px"></div>
+        <div class="ped-tipos" id="ped-imagensTipos"></div>
+        <div class="hint" style="margin:4px 0 0">Desligue um tipo para tirar só as imagens dele: por exemplo, os retratos ficam e os ícones de perk saem. Vale para o jogo escolhido em 🎮 Jogo.</div>
       </div>
       <label class="check"><input type="checkbox" class="sw" id="ped-imagens-baixarDoSiteOficial"> <span>⬇️ Baixar as imagens do site oficial (Dead by Daylight)</span></label>
       <div class="settings-grid" style="margin-top:6px">
@@ -3680,9 +3695,9 @@
       <!-- 🙋 v0.192: os Pedidos (cada pergunta e cada resposta é uma frase inteira: vira uma chave de tradução) -->
       <details class="faq-item"><summary>🙋 O que são os Pedidos e como ligo?</summary><div class="faq-resposta">Uma fila de pedidos para a live, de qualquer jogo: quem apoia (LivePix, PixGG, Pix do banco, Super Chat) ou resgata pontos do canal pede o personagem, a build ou o que o seu jogo tiver, e o OBS Social lê a mensagem, entende o pedido pelo catálogo do jogo e põe na fila, com as partidas de cada um. Ligue em 🧪 Labs → 🙋 Pedidos (experimental): aparece a página 🙋 Pedidos no menu, onde você monta o catálogo e escolhe cada regra, e o painel ganha o botão 🙋, a aba e a coluna. Nasce desligado, e desligar não apaga nada: só para de aceitar pedidos e esconde as peças.</div></details>
       <details class="faq-item"><summary>🙋 Os Pedidos funcionam com qualquer jogo?</summary><div class="faq-resposta">Sim. Dead by Daylight é só um exemplo: na página 🙋 Pedidos você digita o nome do jogo e monta o catálogo dele — personagens, itens, perks, o que o jogo tiver, com os nomes nos idiomas que quiser e os apelidos. No Dead by Daylight, o botão 🔄 lê o site oficial (só quando você clica). Nos outros jogos, por enquanto, importe uma planilha (CSV ou JSON) ou adicione à mão. A montagem automática pela pesquisa na internet e pela IA chega numa próxima versão, e a IA vai ser opcional: ela não vem junto com o programa.</div></details>
-      <details class="faq-item"><summary>🙋 De onde vêm as imagens e como tiro?</summary><div class="faq-resposta">De três lugares: do site oficial (só no Dead by Daylight, com a opção de baixar as imagens ligada), da pasta de imagens que você importar e da imagem que você escolher para cada item. Elas ficam só no seu computador, em data/pedidos/imagens, para uso pessoal: o OBS Social não distribui nenhuma. Para tirar, desligue em 🖼️ Imagens onde não quer ver (no painel, na tela, nos pedidos pagos) ou esconda todas de uma vez; no 📚 Catálogo, esconda ou apague a imagem de um item, ou use 🗑️ Apagar imagens (todas ou só as de uma origem). As imagens não entram no backup: baixe ou importe de novo quando precisar.</div></details>
+      <details class="faq-item"><summary>🙋 De onde vêm as imagens e como tiro?</summary><div class="faq-resposta">De três lugares: do site oficial (só no Dead by Daylight, com a opção de baixar as imagens ligada), da pasta de imagens que você importar e da imagem que você escolher para cada item. Elas ficam só no seu computador, em data/pedidos/imagens, para uso pessoal: o OBS Social não distribui nenhuma. Para tirar, desligue em 🖼️ Imagens onde não quer ver (no painel, na tela, nos pedidos pagos) ou esconda todas de uma vez; no 📚 Catálogo, esconda ou apague a imagem de um item, ou use 🗑️ Apagar imagens (todas ou só as de uma origem). As imagens não entram no backup: baixe ou importe de novo quando precisar. <span>Também dá para tirar por tipo: em 🖼️ Imagens, desligue um tipo e só as imagens dele saem (por exemplo, os retratos ficam e os ícones de perk saem).</span></div></details>
       <details class="faq-item"><summary>🙋 Posso cobrar pelos pedidos?</summary><div class="faq-resposta">Essa decisão é sua: o OBS Social só organiza a fila e não cobra nada de ninguém. Antes de cobrar, leia as regras do jogo e da plataforma. As regras de conteúdo de fã da Behaviour, dona do Dead by Daylight, não permitem pedir dinheiro em troca do conteúdo do jogo, e cada plataforma tem as suas regras para apoios. O link para as regras da Behaviour está nos avisos da página 🙋 Pedidos.</div></details>
-      <details class="faq-item"><summary>🙋 Como funciona a fila (pago, grátis, pular, partidas)?</summary><div class="faq-resposta">A fila é por ordem de chegada (a hora do pagamento ou da mensagem), com pagos e grátis juntos. Você abre e fecha os pagos e os grátis pelo botão 🙋 do painel, e um pagamento feito com os pagos abertos vale mesmo que chegue atrasado. No pago, cada partida custa o preço que você definir, até o máximo por pedido; o que passa disso ou não fica claro vai para ⚠ Revisar e nunca se perde. O grátis entra pelos caminhos que você ligar (resgate de pontos, chat, Telegram, WhatsApp), um por pessoa. ⏩ Próximo chama o mais antigo; 🏆, 💀 e ✔ baixam uma partida; ⏭ Pular deixa o pedido no lugar ou tira da fila, como você escolher. Cada regra tem a sua opção na página 🙋 Pedidos.</div></details>
+      <details class="faq-item"><summary>🙋 Como funciona a fila (pago, grátis, pular, partidas)?</summary><div class="faq-resposta">A fila é por ordem de chegada (a hora do pagamento ou da mensagem), com pagos e grátis juntos. Você abre e fecha os pagos e os grátis pelo botão 🙋 do painel, e um pagamento feito com os pagos abertos vale mesmo que chegue atrasado. No pago, cada partida custa o preço que você definir, até o máximo por pedido; o que passa disso ou não fica claro vai para ⚠ Revisar e nunca se perde. O grátis entra pelos caminhos que você ligar (resgate de pontos, chat, Telegram, WhatsApp), um por pessoa. ⏩ Próximo chama o mais antigo; 🏆, 💀 e ✔ baixam uma partida; ⏭ Pular deixa o pedido no lugar ou tira da fila, como você escolher. Cada regra tem a sua opção na página 🙋 Pedidos. <span>⚠️ O que chega com o OBS Social fechado depende da fonte: a LivePix entrega depois, o Pix do banco só o das últimas 24 horas, o Super Chat só com o 🕘 Recuperar mensagens perdidas ligado, e a PixGG não reenvia.</span> <span>🎁 No grátis, você também escolhe: só a conversa direta no Telegram e no WhatsApp, mod, VIP e o dono do canal junto com os inscritos, e as recompensas do seu canal da Twitch numa lista.</span> <span>🛡️ O pedido de quem teve a mensagem apagada pela moderação (ou foi banido) fica na fila marcado, vai para ⚠ Revisar ou é recusado, como você escolher; o pago nunca é recusado sozinho.</span></div></details>
       <details class="faq-item"><summary>🙋 Como uso os Pedidos no Stream Deck?</summary><div class="faq-resposta">Ligue também o 🕹️ Controle externo em 🧪 Labs. Na página 🕹️ Controle Externo, o grupo 🙋 Pedidos traz os endereços prontos: abrir e fechar os pagos e os grátis, chamar o próximo, vitória, derrota, partida jogada, pular, retomar e trocar o jogo. Cole cada endereço numa tecla do seu aparelho. O mesmo toque repetido em menos de 3 segundos é ignorado, para uma tecla apertada duas vezes não baixar duas partidas.</div></details>
       <details class="faq-item"><summary>🙋 O que acontece com quem tem o número de telefone visível?</summary><div class="faq-resposta">O número nunca aparece: nem no painel, nem na tela, nem para quem só assiste pela rede, nem no controle externo. Quem chega com o número no lugar do nome (comum no WhatsApp) vira «📱 Convidado» com um código, e um número escrito no meio da mensagem é tapado com 📱 antes de o pedido nascer. Do Pix do banco, a tela e quem entra pela rede veem só o primeiro nome, a não ser que você escolha o nome completo ou «Anônimo».</div></details>
       <details class="faq-item"><summary>Achei um problema ou tenho uma ideia. Para onde mando?</summary><div class="faq-resposta">Aba 📣 Feedback: escolha o assunto, escreva e envie — o botão abre o seu programa de e-mail já preenchido, e cada mensagem é lida.</div></details>
@@ -4205,6 +4220,9 @@ const hub = connectHub((event) => {
       break;
     case 'pedidoAviso':
       pedReceberAviso(event);
+      break;
+    case 'pedidosRecompensas':
+      pedReceberRecompensas(event);
       break;
     case 'pedidosDbdProgresso':
       pedReceberDbdProgresso(event);
@@ -7423,7 +7441,8 @@ const PED_ORIGENS = new Map([['site-oficial', '🖼️ do site oficial'], ['impo
 const PED_FASES_DBD = new Map([['inicio', 'Começando…'], ['robots', 'Lendo as regras do site (robots.txt)'], ['sitemap', 'Lendo a lista de páginas do site'],
   ['paginas', 'Lendo as páginas dos personagens'], ['catalogo', 'Guardando no catálogo'], ['imagens', 'Baixando as imagens'], ['fim', 'Terminando…']]);
 const RE_PED_ID_ITEM = /^[a-z0-9]+(?:-[a-z0-9]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const RE_PED_URL_IMG = /^\/pedidos-img\/[a-z0-9-]{1,60}\/[A-Za-z0-9._-]{1,120}$/;
+// (com a versão do arquivo que o servidor põe: a imagem trocada tem outro endereço)
+const RE_PED_URL_IMG = /^\/pedidos-img\/[a-z0-9-]{1,60}\/[A-Za-z0-9._-]{1,120}(?:\?v=[a-z0-9]{1,24})?$/;
 
 // Cada opção de settings.pedidos: [id do controle, caminho, tipo, mín, máx].
 // (o preço em reais, as moedas, as fichas e o jogo têm controle próprio, abaixo)
@@ -7446,6 +7465,8 @@ const PED_CAMPOS = [
   ['ped-gratis-quantidade', 'gratis.quantidade', 'int', 1, 10],
   ['ped-gratis-emDuvida', 'gratis.emDuvida', 'sel'],
   ['ped-gratis-soInscritos', 'gratis.soInscritos', 'chk'],
+  ['ped-gratis-cargosTambem', 'gratis.cargosTambem', 'chk'],
+  ['ped-gratis-soConversaDireta', 'gratis.soConversaDireta', 'chk'],
   ['ped-gratis-manterNaProximaLive', 'gratis.manterNaProximaLive', 'chk'],
   ['ped-robosPodem', 'robosPodem', 'chk'],
   ['ped-entrarDireto', 'entrarDireto', 'sel'],
@@ -7454,6 +7475,7 @@ const PED_CAMPOS = [
   ['ped-seguidas', 'seguidas', 'simnao'],
   ['ped-chamarProximoAoTerminar', 'chamarProximoAoTerminar', 'chk'],
   ['ped-fecharAbertosDepoisDeHoras', 'fecharAbertosDepoisDeHoras', 'int', 0, 168],
+  ['ped-moderacao', 'moderacao', 'sel'],
   ['ped-nomePix', 'nomePix', 'sel'],
   ['ped-nomeNaTela', 'nomeNaTela', 'chk'],
   ['ped-valorNaTela', 'valorNaTela', 'chk'],
@@ -7504,6 +7526,7 @@ function pedMandar(parcial) {
 function pedidosDaFoto(snap) {
   const out = JSON.parse(JSON.stringify(snap || {}));
   delete out.jogo;
+  delete out.__onde; // (vai ao panel, à parte)
   const atuais = (settings && settings.pedidos && settings.pedidos.precoPorMoeda) || {};
   const moedas = {};
   for (const k of Object.keys(atuais)) if (/^[A-Z]{3}$/.test(k)) moedas[k] = null;
@@ -7511,31 +7534,42 @@ function pedidosDaFoto(snap) {
   return out;
 }
 
-function fillPedidosForm() {
+// `forcar`: até o campo com o foco volta ao que vale (o servidor recusou o ajuste)
+function fillPedidosForm(forcar) {
+  if (!settings) return;
+  pedPintarCampos(forcar);
+  pedAposEco(true);
+  pedRenderJogos(); // «em uso» e o idioma dos nomes podem ter mudado
+}
+// Os campos das regras (o que tem o foco fica como a pessoa está digitando)
+function pedPintarCampos(forcar) {
   if (!settings) return;
   const p = (settings.pedidos && typeof settings.pedidos === 'object') ? settings.pedidos : {};
   for (const [id, caminho, tipo] of PED_CAMPOS) {
     const el = document.getElementById(id);
-    if (!el || document.activeElement === el) continue;
+    if (!el || (!forcar && document.activeElement === el)) continue;
     const v = pedLer(p, caminho);
     if (tipo === 'chk') el.checked = v === true;
     else if (tipo === 'simnao') el.value = v === false ? 'nao' : 'sim';
     else if (v !== undefined && v !== null) el.value = String(v);
   }
   const preco = document.getElementById('ped-preco');
-  if (preco && document.activeElement !== preco) preco.value = Number.isFinite(p.precoCentavos) ? (p.precoCentavos / 100).toFixed(2) : '';
+  if (preco && (forcar || document.activeElement !== preco)) preco.value = Number.isFinite(p.precoCentavos) ? (p.precoCentavos / 100).toFixed(2) : '';
   const onde = document.getElementById('ped-onde');
   const ondeAtual = (settings.panel || {}).pedidosOnde;
-  if (onde && document.activeElement !== onde) onde.value = ['auto', 'coluna', 'aba', 'ambos'].includes(ondeAtual) ? ondeAtual : 'auto';
-  pedAposEco();
-  pedRenderJogos(); // «em uso» e o idioma dos nomes podem ter mudado
+  if (onde && (forcar || document.activeElement !== onde)) onde.value = ['auto', 'coluna', 'aba', 'ambos'].includes(ondeAtual) ? ondeAtual : 'auto';
 }
-// O que não é campo de digitação: pode repintar mesmo com o eco do próprio ajuste
-function pedAposEco() {
+// O eco do próprio ajuste: as listas e os campos SEM o foco acompanham (o ◀ ▶ ↺
+// manda logo depois de outro ajuste, ainda na janela do eco, e o campo ficaria
+// mostrando o valor de antes); o campo com o foco não é mexido
+function pedAposEco(jaPintou) {
   if (!settings) return;
+  if (!jaPintou) pedPintarCampos(false);
   pedPintarMoedas();
   pedFichasRecompensas.pintar();
   pedFichasPalavras.pintar();
+  pedPintarRecompensasDoCanal();
+  pedPintarTiposImagem();
   pedDerivados();
 }
 function pedDerivados() {
@@ -7545,6 +7579,10 @@ function pedDerivados() {
   const resgate = document.getElementById('ped-gratis-resgate');
   const campo = document.getElementById('ped-recompensas').closest('.field');
   if (campo) campo.style.opacity = resgate && !resgate.checked ? '0.55' : '';
+  // «só a conversa direta» vale com o Telegram ou o WhatsApp; mod/VIP/dono, com «só inscritos»
+  const apagar = (id, apagado) => { const el = document.getElementById(id); const l = el && el.closest('label'); if (l) l.style.opacity = apagado ? '0.55' : ''; };
+  apagar('ped-gratis-soConversaDireta', !document.getElementById('ped-gratis-telegram').checked && !document.getElementById('ped-gratis-whatsapp').checked);
+  apagar('ped-gratis-cargosTambem', !document.getElementById('ped-gratis-soInscritos').checked);
   // o «Idioma dos nomes» mudou (aqui ou em outra tela): a tabela troca os nomes
   // na hora, como o painel (sem esperar o catálogo ser lido de novo)
   if (pedIdiomaPintado !== null && pedIdiomaNomes() !== pedIdiomaPintado) pedRenderTabela();
@@ -7582,17 +7620,69 @@ document.getElementById('ped-preco').addEventListener('change', (e) => {
   if (c !== atual) pedMandar({ precoCentavos: c });
 });
 document.getElementById('ped-onde').addEventListener('change', (e) => {
-  recordChange('panel');
+  // o histórico é o desta página (◀ ▶ ↺ dos Pedidos), não o do 🎨 Temas
+  recordChange('pedidos');
   applyingSettings = true;
   hub.send({ type: 'settings', settings: { panel: { pedidosOnde: e.target.value } } });
   setTimeout(() => { applyingSettings = false; }, 300);
 });
 // 🖼️ tudo de uma vez: painel, tela e pedidos pagos
+// («Mostrar todas» também devolve as dos tipos desligados)
 for (const [id, sim] of [['ped-imagensNenhuma', false], ['ped-imagensTodas', true]]) {
   document.getElementById(id).addEventListener('click', () => {
-    pedMandar({ imagens: { painel: sim, tela: sim, pagos: sim } });
+    pedMandar({ imagens: { painel: sim, tela: sim, pagos: sim, ...(sim ? { ocultarTipos: [] } : {}) } });
     for (const alvo of ['ped-imagens-painel', 'ped-imagens-tela', 'ped-imagens-pagos']) document.getElementById(alvo).checked = sim;
+    if (sim) pedPintarTiposImagem();
   });
+}
+// 🏷️ Imagens por tipo, no jogo aberto no 📚 Catálogo: desligado = as imagens
+// daquele tipo saem (ficam em imagens.ocultarTipos, como «jogo:tipo»)
+function pedTiposSemImagem() {
+  const img = settings && settings.pedidos && settings.pedidos.imagens;
+  return img && Array.isArray(img.ocultarTipos) ? img.ocultarTipos.filter((x) => typeof x === 'string') : [];
+}
+function pedPintarTiposImagem() {
+  const box = document.getElementById('ped-imagensTipos');
+  const jogoBox = document.getElementById('ped-imagensTiposJogo');
+  if (!box || !jogoBox) return;
+  const sem = pedTiposSemImagem();
+  // a linha com o foco não é refeita: só o estado de cada tipo acompanha
+  if (box.contains(document.activeElement) && box.dataset.jogo === pedSel.jogo) {
+    for (const chk of box.querySelectorAll('input[data-tipo]')) chk.checked = !sem.includes(pedSel.jogo + ':' + chk.dataset.tipo);
+    return;
+  }
+  box.textContent = '';
+  jogoBox.textContent = '';
+  box.dataset.jogo = pedSel.jogo;
+  const c = pedCatalogoDe(pedSel.jogo);
+  if (!c || !pedSel.carregado || !pedSel.tipos.length) {
+    jogoBox.appendChild(pedRotulo(pedPapelLocal() ? 'Escolha ou crie um jogo em 🎮 Jogo.' : 'ℹ️ O catálogo só se vê e se monta no computador onde o OBS Social roda.'));
+    return;
+  }
+  const nome = document.createElement('b');
+  nome.dataset.noI18n = '1';
+  nome.textContent = String(c.nome || c.id);
+  jogoBox.append(pedRotulo('Jogo escolhido:'), ' ', nome);
+  for (const t of pedSel.tipos) {
+    const chave = pedSel.jogo + ':' + t.id;
+    const lbl = document.createElement('label');
+    lbl.className = 'check';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.className = 'sw';
+    chk.dataset.tipo = t.id;
+    chk.checked = !sem.includes(chave);
+    chk.addEventListener('change', () => {
+      const lista = pedTiposSemImagem().filter((x) => x !== chave);
+      if (!chk.checked) lista.push(chave);
+      pedMandar({ imagens: { ocultarTipos: lista.slice(0, 500) } });
+    });
+    const n = document.createElement('span');
+    n.dataset.noI18n = '1'; // o nome do tipo vem do catálogo, no idioma escolhido
+    n.textContent = (t.icone ? t.icone + ' ' : '') + pedNomeTipo(t);
+    lbl.append(chk, ' ', n);
+    box.appendChild(lbl);
+  }
 }
 
 // 💱 Preço por moeda: a moeda é a chave (3 letras; o real é o preço de cima)
@@ -7638,7 +7728,7 @@ function pedPintarMoedas() {
     box.appendChild(linha);
   }
 }
-document.getElementById('ped-moedaAdd').addEventListener('click', () => {
+function pedAdicionarMoeda() {
   const codEl = document.getElementById('ped-moedaCodigo');
   const valEl = document.getElementById('ped-moedaValor');
   const c = String(codEl.value || '').trim().toUpperCase();
@@ -7649,7 +7739,20 @@ document.getElementById('ped-moedaAdd').addEventListener('click', () => {
   codEl.value = '';
   valEl.value = '';
   pedPintarMoedas();
-});
+  codEl.focus(); // pronto para a próxima moeda, sem o mouse
+}
+document.getElementById('ped-moedaAdd').addEventListener('click', pedAdicionarMoeda);
+// ⌨️ o Enter adiciona (como nas fichas e no «Nome do jogo»); no código, com o preço
+// ainda vazio, o Enter só passa para o preço
+for (const id of ['ped-moedaCodigo', 'ped-moedaValor']) {
+  document.getElementById(id).addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    const valEl = document.getElementById('ped-moedaValor');
+    if (id === 'ped-moedaCodigo' && !String(valEl.value).trim()) { valEl.focus(); return; }
+    pedAdicionarMoeda();
+  });
+}
 
 // 🏷️ Fichas (recompensas aceitas, palavras bloqueadas): a lista vai inteira a
 // cada mudança; o servidor tira repetidas e põe o teto
@@ -7683,7 +7786,9 @@ function pedFichas(container, op) {
       chip.className = 'palavra-chip';
       const txt = document.createElement('span');
       txt.dataset.noI18n = '1';
-      txt.textContent = p;
+      const outro = op.mostrar ? op.mostrar(p) : null;
+      txt.textContent = outro || p;
+      if (outro) txt.title = p;
       const x = document.createElement('button');
       x.type = 'button';
       x.className = 'palavra-tirar';
@@ -7720,7 +7825,72 @@ function pedFichas(container, op) {
 const pedFichasRecompensas = pedFichas(document.getElementById('ped-recompensas'), {
   caminho: 'gratis.recompensas', max: 50, maxLen: 100, placeholder: 'ex.: Pedido na live',
   vazio: 'Nenhuma: vale qualquer resgate com texto.', rotuloNova: 'Adicionar esta recompensa',
+  // a recompensa aceita pelo id (escolhida na lista do canal) aparece com o título
+  mostrar: (v) => { const r = pedRecompensasDoCanal.lista.find((x) => x.id === v); return r && r.titulo ? '🎁 ' + r.titulo : null; },
 });
+
+// 🎁 As recompensas de pontos do seu canal (Twitch): o servidor manda a lista que o
+// conector já guarda (id, título e custo). Clicar aceita a recompensa pelo id, que
+// continua valendo quando você renomeia a recompensa.
+let pedRecompensasDoCanal = { canal: null, lista: [] };
+function pedPedirRecompensas() { if (hub.aberto() && pedLigado()) hub.send({ type: 'pedidosRecompensas' }); }
+function pedReceberRecompensas(ev) {
+  const lista = Array.isArray(ev && ev.lista) ? ev.lista : [];
+  pedRecompensasDoCanal = {
+    canal: ev && typeof ev.canal === 'string' ? ev.canal.slice(0, 100) : null,
+    lista: lista.filter((r) => r && typeof r.id === 'string' && r.id && r.id.length <= 100).slice(0, 100)
+      .map((r) => ({ id: r.id, titulo: typeof r.titulo === 'string' ? r.titulo.slice(0, 100) : '', custo: Number.isFinite(r.custo) ? r.custo : null })),
+  };
+  pedFichasRecompensas.pintar();
+  pedPintarRecompensasDoCanal();
+}
+function pedPintarRecompensasDoCanal() {
+  const box = document.getElementById('ped-recompensasCanal');
+  if (!box) return;
+  const foco = document.activeElement && box.contains(document.activeElement) ? document.activeElement.dataset.recompensa || '' : null;
+  box.textContent = '';
+  const atualizar = pedBotao('🔄', pedPedirRecompensas, 'Ler de novo as recompensas do canal');
+  atualizar.dataset.recompensa = '';
+  const linha = document.createElement('div');
+  linha.className = 'ped-linha';
+  linha.style.margin = '6px 0 0';
+  const lista = pedRecompensasDoCanal.lista;
+  linha.append(pedRotulo(lista.length ? 'Do seu canal na Twitch (clique para aceitar):' : 'Para escolher entre as recompensas do seu canal, conecte a Twitch em 🔌 Conexões.'), ' ', atualizar);
+  box.appendChild(linha);
+  if (lista.length) {
+    const aceitas = pedLer((settings && settings.pedidos) || {}, 'gratis.recompensas');
+    const ja = new Set((Array.isArray(aceitas) ? aceitas : []).filter((x) => typeof x === 'string').map((x) => x.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()));
+    const norm = (x) => String(x || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+    const chips = document.createElement('div');
+    chips.className = 'ped-linha';
+    chips.style.margin = '4px 0 0';
+    for (const r of lista) {
+      const aceita = ja.has(norm(r.id)) || (!!r.titulo && ja.has(norm(r.titulo)));
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ped-mini';
+      b.dataset.recompensa = r.id;
+      b.disabled = aceita;
+      const t = document.createElement('span');
+      t.dataset.noI18n = '1'; // o título é o do canal
+      t.textContent = '🎁 ' + (r.titulo || r.id) + (r.custo ? ' · ' + r.custo : '');
+      b.append(aceita ? '✔ ' : '➕ ', t);
+      b.addEventListener('click', () => {
+        const atual = pedLer((settings && settings.pedidos) || {}, 'gratis.recompensas');
+        const l = Array.isArray(atual) ? atual.filter((x) => typeof x === 'string') : [];
+        if (l.length < 50 && !l.some((x) => norm(x) === norm(r.id))) pedMandar(pedParcial('gratis.recompensas', [...l, r.id]));
+        pedFichasRecompensas.pintar();
+        pedPintarRecompensasDoCanal();
+      });
+      chips.appendChild(b);
+    }
+    box.appendChild(chips);
+  }
+  if (foco !== null) {
+    const volta = [...box.querySelectorAll('button')].find((b) => (b.dataset.recompensa || '') === foco && !b.disabled);
+    if (volta) volta.focus({ preventScroll: true });
+  }
+}
 const pedFichasPalavras = pedFichas(document.getElementById('ped-palavrasBloqueadas'), {
   caminho: 'palavrasBloqueadas', max: 300, maxLen: 60, placeholder: 'ex.: uma palavra',
   vazio: 'Nenhuma palavra bloqueada.', rotuloNova: 'Adicionar esta palavra',
@@ -7746,8 +7916,21 @@ function pedNomeNoDialogo(nome) {
   d.textContent = String(nome || '');
   return d;
 }
-// A linha de situação: a frase (chave), números e rótulos à parte e o detalhe técnico
-// (não se traduz: pode citar o que foi digitado)
+// 🌐 O detalhe técnico (do catálogo, da planilha, da leitura do site) vem do
+// servidor em português: as frases fixas dos módulos, às vezes com o que foi
+// digitado entre «». Em português vai como está; nos outros idiomas, só traduzido
+// pelo dicionário (o padrão deixa o que foi digitado intacto) — sem tradução, o
+// detalhe não aparece: nada em português para quem escolheu outro idioma.
+function pedDetalheNoIdioma(detalhe) {
+  const s = String(detalhe || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+  if (!s) return '';
+  const idioma = typeof OBS_I18N !== 'undefined' && OBS_I18N ? OBS_I18N.atual : 'pt';
+  if (!idioma || idioma === 'pt') return s;
+  const t = OBS_I18N.t(s);
+  return t && t !== s ? t : '';
+}
+// A linha de situação: a frase (chave), números e rótulos à parte e o detalhe
+// técnico (já no idioma da tela: o nó não passa pelo tradutor de novo)
 function pedStatus(id, texto, tipo, detalhe, extras) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -7755,20 +7938,21 @@ function pedStatus(id, texto, tipo, detalhe, extras) {
   el.textContent = '';
   if (texto) el.appendChild(pedRotulo(texto));
   if (extras && extras.length) el.append(' ', ...extras);
-  if (detalhe) {
+  const det = detalhe ? pedDetalheNoIdioma(detalhe) : '';
+  if (det) {
     const d = document.createElement('span');
     d.className = 'ped-detalhe';
     d.dataset.noI18n = '1';
-    d.textContent = String(detalhe).slice(0, 300);
+    d.textContent = det;
     el.appendChild(d);
   }
 }
 function pedStatusErro(id, ev) { pedStatus(id, (ev && ev.texto) || 'Não deu certo: confira e tente de novo.', 'erro', ev && ev.detalhe); }
 function pedAvisoErro(ev, titulo) {
-  const detalhe = ev && typeof ev.detalhe === 'string' ? ev.detalhe : '';
+  const detalhe = ev && typeof ev.detalhe === 'string' ? pedDetalheNoIdioma(ev.detalhe) : '';
   return obsDialog({
     titulo: titulo || 'Pedidos', icone: '⚠️', somenteOk: true, texto: (ev && ev.texto) || 'Não deu certo: confira e tente de novo.',
-    montarExtra: detalhe ? (box) => { const d = pedNomeNoDialogo(detalhe.slice(0, 300)); d.className = 'ped-detalhe'; box.appendChild(d); } : undefined,
+    montarExtra: detalhe ? (box) => { const d = pedNomeNoDialogo(detalhe); d.className = 'ped-detalhe'; box.appendChild(d); } : undefined,
   });
 }
 // «Itens: 12 · Imagens: 3» — rótulo e número em nós próprios (sem padrão de tradução)
@@ -7830,6 +8014,13 @@ if (typeof OBS_I18N !== 'undefined' && OBS_I18N && typeof OBS_I18N.aoMudar === '
 // ── 📡 O que chega do servidor ──
 function pedReceberInit(event) {
   pedidosEstado = event.pedidos || null;
+  // aqui só importam o jogo em uso e o arquivo travado: o servidor manda o resumo
+  // (a fila inteira, a cada mudança, é do painel)
+  try { hub.send({ type: 'pedidosAssinar', quer: 'resumo' }); } catch { /* sem conexão: o próximo init pede */ }
+  // 👀 quem só assiste pela rede vê as regras, mas não as muda (o servidor recusa)
+  const soLeitura = document.getElementById('pedSoLeitura');
+  if (soLeitura) soLeitura.style.display = cfgPapel === 'viewer' ? '' : 'none';
+  pedPedirRecompensas();
   pedCatalogos = Array.isArray(event.pedidosCatalogos) ? event.pedidosCatalogos : [];
   pedDbd = event.pedidosDbd || null;
   pedSel.carregado = false; // uma reconexão relê a tabela
@@ -8104,11 +8295,19 @@ function pedRenderTabela() {
   pedIdiomaPintado = pedIdiomaNomes();
   pedPintarFiltroTipos();
   pedPintarTipos();
+  pedPintarTiposImagem();
   document.getElementById('pedCatTotal').textContent = String(pedSel.total);
   document.getElementById('pedCatPagina').textContent = pedSel.pagina + ' / ' + pedSel.paginas;
   document.getElementById('pedCatAnterior').disabled = pedSel.pagina <= 1;
   document.getElementById('pedCatProxima').disabled = pedSel.pagina >= pedSel.paginas;
+  // ⌨️ a tabela é refeita inteira (cada mudança do catálogo, inclusive de outra
+  // tela): quem estava num botão de uma linha volta ao mesmo botão da linha nova
+  // (ou à linha) — sem isso o foco caía no começo da página
+  const ativo = document.activeElement;
+  const foco = ativo && ativo !== lista && lista.contains(ativo)
+    ? { item: (ativo.closest('.ped-item') || {}).dataset?.item || '', acao: ativo.dataset?.pedAcao || '' } : null;
   lista.textContent = '';
+  if (foco) pedVoltarFoco(lista, foco);
   if (!pedSel.carregado) return;
   if (!pedSel.itens.length) {
     const v = document.createElement('div');
@@ -8123,6 +8322,13 @@ function pedRenderTabela() {
   for (const it of pedSel.itens) {
     if (it && typeof it.id === 'string') lista.appendChild(pedLinhaItem(it, tipos));
   }
+  if (foco) pedVoltarFoco(lista, foco);
+}
+function pedVoltarFoco(lista, foco) {
+  const linha = foco.item ? [...lista.querySelectorAll('.ped-item')].find((l) => l.dataset.item === foco.item) : null;
+  const botao = linha && foco.acao ? [...linha.querySelectorAll('[data-ped-acao]')].find((b) => b.dataset.pedAcao === foco.acao) : null;
+  const alvo = botao || (linha && linha.querySelector('button')) || lista;
+  try { alvo.focus({ preventScroll: true }); } catch { /* sumiu */ }
 }
 function pedLinhaItem(it, tipos) {
   const linha = document.createElement('div');
@@ -8139,7 +8345,7 @@ function pedLinhaItem(it, tipos) {
     im.loading = 'lazy';
     im.decoding = 'async';
     im.alt = '';
-    im.src = img.url + '?v=' + encodeURIComponent(String(pedSel.atualizadoEm || ''));
+    im.src = img.url; // a versão do arquivo já vem na URL: só a imagem que mudou é baixada de novo
     im.addEventListener('error', () => { im.remove(); thumb.textContent = icone; });
     thumb.appendChild(im);
   } else {
@@ -8205,13 +8411,14 @@ function pedLinhaItem(it, tipos) {
   }
   const acoes = document.createElement('div');
   acoes.className = 'ped-acoes';
-  acoes.append(pedBotao('✏️ Editar', () => pedEditarItem(it)), pedBotao('🖼️ Trocar imagem', () => pedEscolherImagem(it)));
+  const marcar = (b, acao) => { b.dataset.pedAcao = acao; return b; };
+  acoes.append(marcar(pedBotao('✏️ Editar', () => pedEditarItem(it)), 'editar'), marcar(pedBotao('🖼️ Trocar imagem', () => pedEscolherImagem(it)), 'trocar'));
   if (img) {
-    acoes.append(img.ocultar ? pedBotao('👁️ Mostrar imagem', () => pedOp({ type: 'pedidosCatalogoImagem', jogo: pedSel.jogo, id: it.id, acao: 'mostrar' }, 'pedCatStatus'))
-      : pedBotao('🙈 Esconder imagem', () => pedOp({ type: 'pedidosCatalogoImagem', jogo: pedSel.jogo, id: it.id, acao: 'ocultar' }, 'pedCatStatus')));
-    acoes.append(pedBotao('🗑️ Apagar imagem', () => pedApagarImagem(it), null, true));
+    acoes.append(marcar(img.ocultar ? pedBotao('👁️ Mostrar imagem', () => pedOp({ type: 'pedidosCatalogoImagem', jogo: pedSel.jogo, id: it.id, acao: 'mostrar' }, 'pedCatStatus'))
+      : pedBotao('🙈 Esconder imagem', () => pedOp({ type: 'pedidosCatalogoImagem', jogo: pedSel.jogo, id: it.id, acao: 'ocultar' }, 'pedCatStatus')), 'imagem'));
+    acoes.append(marcar(pedBotao('🗑️ Apagar imagem', () => pedApagarImagem(it), null, true), 'apagarImagem'));
   }
-  acoes.append(pedBotao('🗑️ Apagar item', () => pedApagarItem(it), null, true));
+  acoes.append(marcar(pedBotao('🗑️ Apagar item', () => pedApagarItem(it), null, true), 'apagarItem'));
   linha.append(thumb, info, acoes);
   return linha;
 }
@@ -8607,10 +8814,12 @@ document.getElementById('pedImportarArq').addEventListener('change', async (e) =
     ul.className = 'ped-lista-erros';
     for (const er of erros.slice(0, 100)) {
       const li = document.createElement('li');
-      const m = document.createElement('span');
-      m.dataset.noI18n = '1';
-      m.textContent = String((er && er.motivo) || '').slice(0, 300);
-      li.append(pedRotulo('Linha'), ' ', pedNumero(Number(er && er.linha) || 0), ': ', m);
+      // o motivo no idioma da tela; sem tradução, a frase fixa (traduzível)
+      const motivo = pedDetalheNoIdioma(er && er.motivo);
+      const m = motivo ? document.createElement('span') : pedRotulo('confira os dados desta linha');
+      if (motivo) { m.dataset.noI18n = '1'; m.textContent = motivo; }
+      if (Number(er && er.linha) > 0) li.append(pedRotulo('Linha'), ' ', pedNumero(Number(er.linha)), ': ', m);
+      else li.append(m);
       ul.appendChild(li);
     }
     document.getElementById('pedImportStatus').appendChild(ul);
@@ -8658,9 +8867,17 @@ async function pedImportarPasta(arquivos) {
     if (semPar.length || erros.length) {
       const ul = document.createElement('ul');
       ul.className = 'ped-lista-erros';
-      ul.dataset.noI18n = '1';
-      for (const n of semPar.slice(0, 100)) { const li = document.createElement('li'); li.textContent = String(n).slice(0, 300); ul.appendChild(li); }
-      for (const er of erros.slice(0, 100)) { const li = document.createElement('li'); li.textContent = String((er && er.arquivo) || '') + ' — ' + String((er && er.motivo) || ''); ul.appendChild(li); }
+      // o nome do arquivo como está; o motivo no idioma da tela
+      const nomeArq = (n) => { const e = document.createElement('span'); e.dataset.noI18n = '1'; e.textContent = String(n || '').slice(0, 300); return e; };
+      for (const n of semPar.slice(0, 100)) { const li = document.createElement('li'); li.append(nomeArq(n)); ul.appendChild(li); }
+      for (const er of erros.slice(0, 100)) {
+        const li = document.createElement('li');
+        const motivo = pedDetalheNoIdioma(er && er.motivo);
+        const m = motivo ? nomeArq(motivo) : pedRotulo('não deu para usar este arquivo');
+        if (er && er.arquivo) li.append(nomeArq(er.arquivo), ' — ', m);
+        else li.append(m);
+        ul.appendChild(li);
+      }
       document.getElementById('pedImportStatus').appendChild(ul);
     }
     pedCatLerLogo();
@@ -8739,8 +8956,19 @@ const PED_OK = new Map([
   ['pedidosDbdAtualizar', 'A leitura do site oficial começou.'], ['pedidosDbdCancelar', 'Cancelando a leitura…'],
 ]);
 const PED_IMAGEM_OK = new Map([['ocultar', 'Imagem escondida.'], ['mostrar', 'Imagem à mostra de novo.'], ['apagar', 'Imagem apagada.']]);
+let pedAvisouRecusa = false; // o aviso de «só leitura» aparece uma vez por página
 function pedReceberAviso(ev) {
   const op = String((ev && ev.op) || '');
+  // 👀 quem só assiste pela rede mexeu numa regra: nada foi gravado — os campos
+  // voltam ao que vale (o eco já trouxe) e a página avisa
+  if (op === 'settings' && ev.ok === false) {
+    fillPedidosForm(true);
+    if (!pedAvisouRecusa) {
+      pedAvisouRecusa = true;
+      obsAviso(typeof ev.texto === 'string' && ev.texto ? ev.texto : 'Quem só assiste pela rede não muda as regras dos Pedidos.', 'Pedidos', '🙋');
+    }
+    return;
+  }
   if (!PED_STATUS_DA_OP.has(op)) return; // as operações da fila são do painel
   const alvo = PED_STATUS_DA_OP.get(op);
   if (ev.ok === false) {
@@ -8811,6 +9039,7 @@ function pedRecusadoPelaRede() {
 function pedAoAbrirPagina() {
   pedRenderEstado();
   pedRenderJogos();
+  pedPedirRecompensas();
   if (pedSel.jogo) pedCatLer();
   if (!pedCatalogos.length) { const card = document.getElementById('pedJogoCard'); if (card && typeof card.abrirCard === 'function') card.abrirCard(); }
 }
@@ -11470,7 +11699,15 @@ function snapshotFromBase(source, key) {
   // 👁️ v0.188: o mapa ocultos vai copiado — a foto não pode mudar com o eco seguinte
   if (key === 'panel') return { ...(source.panel || {}), ocultos: { ...((source.panel || {}).ocultos || {}) } };
   if (key === 'raffle') return JSON.parse(JSON.stringify(source.raffle || {})); // 🎁 v0.116
-  if (key === 'pedidos') return JSON.parse(JSON.stringify(source.pedidos || {})); // 🙋 v0.192
+  // 🙋 v0.192: «Onde a fila aparece no painel» mora na página 🙋 Pedidos, mas é do
+  // panel (panel.pedidosOnde): vai na foto como campo à parte (__onde), para o ◀ ▶ ↺
+  // DESTA página também o desfazerem (sendSnapshot o manda ao panel)
+  if (key === 'pedidos') {
+    const out = JSON.parse(JSON.stringify(source.pedidos || {}));
+    const onde = (source.panel || {}).pedidosOnde;
+    out.__onde = ['auto', 'coluna', 'aba', 'ambos'].includes(onde) ? onde : 'auto';
+    return out;
+  }
   if (key === 'tela') {
     const out = {};
     for (const field of TELA_CHAVES) if (field in source) out[field] = source[field];
@@ -11519,7 +11756,10 @@ function sendSnapshot(key, snap) {
     // para ◀ ▶ ↺ também voltarem a mostrar (o servidor só grava o que é true)
     else if (key === 'panel') hub.send({ type: 'settings', settings: { panel: { ...snap, ocultos: Object.fromEntries(OBS_PAINEL_ORDEM.OCULTAVEIS.map((k) => [k, !!(snap.ocultos && snap.ocultos[k] === true)])) } } });
     else if (key === 'raffle') { marcarEnvioSorteio(snap); hub.send({ type: 'settings', settings: { raffle: JSON.parse(JSON.stringify(snap)) } }); } // 🎁 v0.116
-    else if (key === 'pedidos') hub.send({ type: 'settings', settings: { pedidos: pedidosDaFoto(snap) } }); // 🙋 v0.192 (o jogo em uso fica)
+    else if (key === 'pedidos') { // 🙋 v0.192 (o jogo em uso fica; o «Onde a fila aparece» vai ao panel)
+      const onde = ['auto', 'coluna', 'aba', 'ambos'].includes(snap.__onde) ? snap.__onde : null;
+      hub.send({ type: 'settings', settings: { pedidos: pedidosDaFoto(snap), ...(onde ? { panel: { pedidosOnde: onde } } : {}) } });
+    }
     else if (key === 'tela') hub.send({ type: 'settings', settings: JSON.parse(JSON.stringify(snap)) });
     else if (key.startsWith('widget:')) hub.send({ type: 'settings', settings: { widgets: { [key.slice(7)]: snap } } });
   } finally { telaAplicandoHist = false; }

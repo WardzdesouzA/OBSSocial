@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "直播结束",
+    "Marcar o fim da live": "标记直播结束",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "结束直播？队列里剩下的留到下一场，标记为「来自上一场直播」，每个人都可以再点一个免费点播。",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "结束直播？剩下的付费点播留到下一场，标记为「来自上一场直播」，免费点播离开队列，每个人都可以再点一个免费点播。",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "在面板的 🙋 里点「🏁 直播结束」，直播就算结束：这时每个人都可以再点一个免费点播，队列里剩下的会标记为「来自上一场直播」。",
+    "o jogo da vez está sem catálogo": "当前游戏没有目录",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "点播已在 🧪 Labs 中关闭。",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "点播因错误未能启动：请查看 OBS Social 窗口。",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.zh = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "只勾选你会用的。这会改变面板的 🎛️ 工具 — 音板上的 🎛️ 按键无论如何都能用。",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "已付 $1 局"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "还剩 1 局（共 $1 局）"],
     [/^faltam (\d+) de (\d+)$/, "还剩 $1 局（共 $2 局）"],

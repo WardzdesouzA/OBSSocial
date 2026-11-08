@@ -1791,6 +1791,9 @@ function criarCatalogos(baseDir) {
 
   // Para o servidor servir /pedidos-img/<jogo>/<arquivo>: só nome gerado aqui, dentro da
   // pasta do jogo, apontado por um item, arquivo comum (link simbólico não). Senão null.
+  // O caminho REAL também precisa ficar na pasta do jogo dentro da pasta real das
+  // imagens: a pasta do jogo trocada por um link (ou junção) para fora não serve
+  // nada de fora; a pasta imagens/ inteira num outro disco, de propósito, continua valendo.
   function caminhoImagem(jogoId, arquivo) {
     if (!jogoIdValido(jogoId) || typeof arquivo !== 'string' || arquivo.length > 120 || !RE_ARQUIVO.test(arquivo)) return null;
     const r = obter(jogoId);
@@ -1798,7 +1801,11 @@ function criarCatalogos(baseDir) {
     const dir = path.resolve(pastaDoJogo(jogoId));
     const p = path.resolve(dir, arquivo);
     if (path.dirname(p) !== dir) return null;
-    try { if (!fs.lstatSync(p).isFile()) return null; } catch { return null; }
+    try {
+      if (!fs.lstatSync(p).isFile()) return null;
+      const real = fs.realpathSync(p);
+      if (path.dirname(real) !== path.join(fs.realpathSync(pastaImagens), jogoId)) return null;
+    } catch { return null; }
     return p;
   }
 

@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "Конец стрима",
+    "Marcar o fim da live": "Отметить конец стрима",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "Конец стрима? Что осталось в очереди, переходит на следующий с пометкой «с прошлого стрима», и каждый снова может сделать бесплатный заказ.",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "Конец стрима? Оставшиеся платные переходят на следующий с пометкой «с прошлого стрима», бесплатные уходят из очереди, и каждый снова может сделать бесплатный заказ.",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "Стрим заканчивается, когда вы нажимаете «🏁 Конец стрима» в 🙋 на панели: тогда каждый снова может сделать бесплатный заказ, а то, что осталось в очереди, получает пометку «с прошлого стрима».",
+    "o jogo da vez está sem catálogo": "у текущей игры нет каталога",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "Заказы выключены в 🧪 Labs.",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "Заказы не запустились из-за ошибки: посмотрите окно OBS Social.",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.ru = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Отметьте только то, чем пользуетесь. Это меняет инструмент 🎛️ панели — клавиши 🎛️ на Пульте дорожек работают в любом случае.",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "оплачено матчей: $1"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "осталось 1 из $1"],
     [/^faltam (\d+) de (\d+)$/, "осталось $1 из $2"],

@@ -52,7 +52,7 @@ const PLATAFORMAS = Object.freeze(['youtube', 'twitch', 'kick', 'bilibili', 'tel
 // Marcas do pedido: as de cima mandam para ⚠ Revisar; as de baixo só informam
 const MARCAS = Object.freeze([
   'pagosFechados', 'abaixoDoPreco', 'semMensagem', 'naoPareceEmPedido', 'sinalizada', 'acimaDoMaximo',
-  'cheio', 'moedaSemCotacao', 'itemEmDuvida', 'gratisEmDuvida', 'semItem',
+  'cheio', 'moedaSemCotacao', 'itemEmDuvida', 'gratisEmDuvida', 'semItem', 'semCatalogo',
   'valorConvertido', 'atrasado', 'intercalado', 'naoTenho', 'moderacao', 'creditoUsado', 'reenviado', 'virado', 'manual',
 ]);
 const MARCAS_VALIDAS = new Set(MARCAS);
@@ -87,12 +87,19 @@ const CONFIG_PADRAO = congelar({
   gratis: {
     caminhos: { resgate: true, chat: false, telegram: false, whatsapp: false },
     recompensas: [], porPessoa: 'live', soInscritos: false, quantidade: 1, emDuvida: 'revisar', manterNaProximaLive: true,
+    // Telegram/WhatsApp: só a conversa direta com o robô/número (grupo não pede);
+    // com «só inscritos», mod, VIP e o dono do canal pedem também
+    soConversaDireta: false, cargosTambem: true,
   },
   entrarDireto: 'alta', itemEmDuvida: 'fila', pular: 'fica', seguidas: true, chamarProximoAoTerminar: false,
   testeViraPedido: false, robosPodem: false, sinalizadaRevisar: true,
+  // o pedido cuja mensagem a moderação apagou (ou de quem foi banido): fica na fila
+  // marcado, vai para ⚠ Revisar ou é recusado (o pago nunca: vai para ⚠ Revisar)
+  moderacao: 'manter',
   nomePix: 'primeiro', nomeNaTela: true, valorNaTela: false, idioma: 'auto',
   palavrasBloqueadas: [],
-  imagens: { painel: true, tela: true, pagos: true, baixarDoSiteOficial: true },
+  // ocultarTipos: os tipos sem imagem, «jogo:tipo» (ex.: só os retratos, sem os ícones de perk)
+  imagens: { painel: true, tela: true, pagos: true, baixarDoSiteOficial: true, ocultarTipos: [] },
   avisoBehaviour: true,
   // da integração: reinício longo fecha o que ficou aberto; quem vê valores pela rede
   fecharAbertosDepoisDeHoras: 6, viewerVeValores: false, fullVeValores: true,
@@ -131,6 +138,21 @@ function listaDeTextos(v, maxItens, maxLen, padrao) {
     const k = t && normalizarNome(t);
     if (!k || vistos.has(k)) continue;
     vistos.add(k);
+    out.push(t);
+  }
+  return out;
+}
+// os tipos sem imagem: «jogo:tipo», sem repetir, com teto (lista fechada pelo formato)
+const RE_JOGO_TIPO = /^[a-z0-9]+(?:-[a-z0-9]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$/;
+function tiposSemImagem(v, padrao) {
+  if (!Array.isArray(v)) return padrao.slice();
+  const out = [];
+  const fim = Math.min(v.length, 5000);
+  for (let i = 0; i < fim && out.length < 500; i++) {
+    const t = v[i];
+    if (typeof t !== 'string' || t.length > 92 || !RE_JOGO_TIPO.test(t)) continue;
+    const [jogo, tipo] = t.split(':');
+    if (jogo.length > 60 || tipo.length > 30 || out.includes(t)) continue;
     out.push(t);
   }
   return out;
@@ -179,6 +201,8 @@ function sanitizarConfiguracao(bruto, padrao) {
       // (as «Decisões finas» chamam de gratisEmDuvida: o nome solto também vale)
       emDuvida: umDe(proprio(g, 'emDuvida') !== undefined ? g.emDuvida : proprio(b, 'gratisEmDuvida'), ['revisar', 'fila'], p.gratis.emDuvida),
       manterNaProximaLive: simNao(proprio(g, 'manterNaProximaLive'), p.gratis.manterNaProximaLive),
+      soConversaDireta: simNao(proprio(g, 'soConversaDireta'), p.gratis.soConversaDireta),
+      cargosTambem: simNao(proprio(g, 'cargosTambem'), p.gratis.cargosTambem),
     },
     entrarDireto: umDe(proprio(b, 'entrarDireto'), ['alta', 'media'], p.entrarDireto),
     itemEmDuvida: umDe(proprio(b, 'itemEmDuvida'), ['fila', 'revisar'], p.itemEmDuvida),
@@ -188,12 +212,16 @@ function sanitizarConfiguracao(bruto, padrao) {
     testeViraPedido: simNao(proprio(b, 'testeViraPedido'), p.testeViraPedido),
     robosPodem: simNao(proprio(b, 'robosPodem'), p.robosPodem),
     sinalizadaRevisar: simNao(proprio(b, 'sinalizadaRevisar'), p.sinalizadaRevisar),
+    moderacao: umDe(proprio(b, 'moderacao'), ['manter', 'revisar', 'recusar'], p.moderacao),
     nomePix: umDe(proprio(b, 'nomePix'), ['primeiro', 'completo', 'anonimo'], p.nomePix),
     nomeNaTela: simNao(proprio(b, 'nomeNaTela'), p.nomeNaTela),
     valorNaTela: simNao(proprio(b, 'valorNaTela'), p.valorNaTela),
     idioma: umDe(idioma, IDIOMAS_NOMES, p.idioma),
     palavrasBloqueadas: listaDeTextos(proprio(b, 'palavrasBloqueadas'), 300, 60, p.palavrasBloqueadas),
-    imagens: booleanos(img, p.imagens),
+    imagens: {
+      ...booleanos(img, { painel: p.imagens.painel, tela: p.imagens.tela, pagos: p.imagens.pagos, baixarDoSiteOficial: p.imagens.baixarDoSiteOficial }),
+      ocultarTipos: tiposSemImagem(proprio(img, 'ocultarTipos'), p.imagens.ocultarTipos),
+    },
     avisoBehaviour: simNao(proprio(b, 'avisoBehaviour'), p.avisoBehaviour),
     fecharAbertosDepoisDeHoras: inteiro(proprio(b, 'fecharAbertosDepoisDeHoras'), 0, 168, p.fecharAbertosDepoisDeHoras),
     viewerVeValores: simNao(proprio(b, 'viewerVeValores'), p.viewerVeValores),
@@ -347,11 +375,20 @@ function nomeBloqueado(nome, der) {
 function capitalizar(s) {
   return s.toLocaleLowerCase('pt-BR').replace(/(^|[\s'’-])(\p{L})/gu, (m, a, l) => a + l.toLocaleUpperCase('pt-BR'));
 }
+// o nome que era só um telefone já virou o apelido: não há nome civil nele
+const RE_APELIDO_TELEFONE = /^📱 Convidado [0-9A-Z]{1,7}$/u;
 function nomeCivil(nome, modo) {
   if (modo === 'anonimo') return 'Anônimo';
   const limpo = String(nome).trim();
+  if (RE_APELIDO_TELEFONE.test(limpo)) return limpo;
   if (modo === 'completo') return limpo === limpo.toLocaleUpperCase('pt-BR') && /\p{Lu}/u.test(limpo) ? capitalizar(limpo) : limpo;
-  return capitalizar(limpo.split(/\s+/)[0] || limpo);
+  // o primeiro nome de verdade: a conta de MEI chega com o CNPJ ou o CPF no nome
+  // («12.345.678 MARIA DA SILVA», já tapado com 📱), e o 📱 e o que não tem letra ficam de fora
+  for (const palavra of limpo.split(/\s+/)) {
+    const p = palavra.replace(/📱/gu, '');
+    if (/\p{L}/u.test(p)) return capitalizar(p);
+  }
+  return 'Anônimo';
 }
 
 // 💰 «R$ 1.234,56» → 123456 (reserva quando não há o conversor do servidor)
@@ -392,6 +429,23 @@ function apelidoDeTelefonePadrao(nome) {
   return '📱 Convidado ' + h.toString(36).slice(-3).toUpperCase();
 }
 
+// 📨 O id do comentário do Telegram é «tg-<conversa>-<mensagem>», e no privado a
+// conversa É o id da pessoa: nas projeções vai um resumo dele, que o painel refaz
+// do id do comentário para ligar os dois (a mesma conta mora no dashboard.html)
+function resumoDoId(s) {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 2654435761);
+    h2 = Math.imul(h2 ^ c, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+const msgIdVisto = (o) => (o.plataforma === 'telegram' && typeof o.msgId === 'string' && o.msgId.startsWith('tg-') ? 'tg-h' + resumoDoId(o.msgId) : o.msgId);
+
 // ── 🔢 Ordem da fila ────────────────────────────────────────────────────────
 // hora de chegada (ou a vez nova de quem foi intercalado); empate pelo nº
 const ordemDe = (p) => (typeof p.vez === 'number' ? p.vez : p.chegada);
@@ -410,6 +464,9 @@ function criarPedidos(opcoes) {
   const apelidoDoServidor = typeof o.apelidoDeTelefone === 'function' ? o.apelidoDeTelefone : null;
   const telefoneDoServidor = typeof o.pareceTelefone === 'function' ? o.pareceTelefone : null;
   const converter = typeof o.converter === 'function' ? o.converter : null;
+  // a versão do arquivo de cada imagem (o servidor sabe quando ela mudou): vai na
+  // URL, e a imagem trocada com o mesmo nome aparece nova (sem o cache da velha)
+  const versaoDaImagem = typeof o.versaoDaImagem === 'function' ? o.versaoDaImagem : null;
   // função do servidor com erro nunca derruba a mensagem: cai na regra própria
   const agora = () => {
     let t = NaN;
@@ -437,6 +494,7 @@ function criarPedidos(opcoes) {
   let espera = [];           // pagamentos que chegaram com o arquivo travado: { em, m }
   let esperaAtrasada = false, avisouEspera = false;
   let ultimaLeitura = 0, ultimoErro = null;
+  let vivoAoAbrir = null;    // a última atividade gravada quando o arquivo abriu (o servidor sabe desde quando o programa ficou parado)
   let timerGravar = null, timerRetentar = null, timerVivo = null;
   let pendente = false, gravacoes = 0, avisouGravacao = false;
   const toques = new Map();  // operação do controle externo → hora do último toque aceito
@@ -456,6 +514,7 @@ function criarPedidos(opcoes) {
       der: {
         bloqueadas: conf.palavrasBloqueadas.map(prepararBloqueada).filter(Boolean), cacheBloqueio: new Map(),
         recompensas: new Set(conf.gratis.recompensas.map(normalizarNome).filter(Boolean)),
+        semImagem: new Set(conf.imagens.ocultarTipos), // «jogo:tipo»
       },
     };
   }
@@ -561,6 +620,7 @@ function criarPedidos(opcoes) {
       const n = dadosDoArquivo(r.dados);
       if (n) {
         E = n.dados;
+        vivoAoAbrir = E.vivoEm;
         travado = null;
         copia = null;
         assinaturaIlegivel = null;
@@ -776,6 +836,7 @@ function criarPedidos(opcoes) {
     for (const k of ['chamadoEm', 'partidaEm', 'atendidoEm', 'recusadoEm']) if (typeof b[k] === 'number' && Number.isFinite(b[k])) p[k] = b[k];
     if (typeof b.motivoRecusa === 'string') p.motivoRecusa = limparLinha(b.motivoRecusa, 30);
     if (Number.isInteger(b.creditoUsadoCentavos) && b.creditoUsadoCentavos > 0) p.creditoUsadoCentavos = b.creditoUsadoCentavos;
+    if (Number.isInteger(b.creditoGeradoCentavos) && b.creditoGeradoCentavos > 0 && b.creditoGeradoCentavos <= 1e11) p.creditoGeradoCentavos = b.creditoGeradoCentavos;
     if (b.estado === 'revisar' && Number.isInteger(b.creditoAoConfirmar) && b.creditoAoConfirmar > 0 && b.creditoAoConfirmar <= 1e11) p.creditoAoConfirmar = b.creditoAoConfirmar;
     if (ehObjeto(b.midia) && typeof b.midia.url === 'string' && b.midia.url.startsWith('/midia-inscritos/')) {
       p.midia = { tipo: limparLinha(b.midia.tipo, 20), url: limparLinha(b.midia.url, 300) };
@@ -1017,7 +1078,10 @@ function criarPedidos(opcoes) {
     const badges = Array.isArray(message.badges) ? message.badges.slice(0, 60).filter((b) => typeof b === 'string') : [];
     const fonte = fonteDe(message, plataforma);
     const pago = FONTES_PAGAS.has(fonte);
-    let hora = Number(message.timestamp);
+    // o Pix do banco traz a hora em que caiu no banco num campo próprio: o
+    // timestamp dele é a chegada (o lugar na linha do tempo das telas)
+    const horaDoBanco = fonte === 'pix' && ehObjeto(message.pix) && typeof message.pix.horario === 'number' ? message.pix.horario : NaN;
+    let hora = Number.isFinite(horaDoBanco) && horaDoBanco > 0 ? horaDoBanco : Number(message.timestamp);
     if (!Number.isFinite(hora) || hora <= 0) hora = t;
     const atrasado = t - hora > ATRASADO_MS;
     if (hora > t) hora = t; // relógio da plataforma adiantado
@@ -1040,7 +1104,10 @@ function criarPedidos(opcoes) {
     // mensagem é uma (dois anônimos não dividem crédito nem o «um por pessoa»).
     const authorId = limparLinha(message.authorId, 200);
     const login = limparLinha(message.authorLogin, 200);
-    const anonimo = !authorId && semNome(nomeBruto) && (!login || semNome(login));
+    // o Pix do banco que chegou sem o nome de quem pagou leva o rótulo do servidor
+    // («Apoiador Pix»), que não é ninguém: cada pagamento desses é uma pessoa
+    const pixSemNome = fonte === 'pix' && ehObjeto(message.pix) && message.pix.semNome === true;
+    const anonimo = pixSemNome || (!authorId && semNome(nomeBruto) && (!login || semNome(login)));
     const idAutor = authorId || login;
     const chave = anonimo
       ? hash(`${plataforma}|anonimo:${chavePagamento || chaveMsg || crypto.randomBytes(8).toString('hex')}`)
@@ -1065,10 +1132,12 @@ function criarPedidos(opcoes) {
       fonte, plataforma, msgId: msgId || null, chaveMsg, chavePagamento,
       hora, atrasado, pago, valor: v.valor, semCotacao: !!(pago && v.semCotacao),
       texto: textoDaMensagem(message, plataforma),
-      quem: { nome, chave, hashes, contato, telefone, civil: plataforma === 'pix', anonimo },
+      quem: { nome, chave, hashes, contato, telefone, civil: plataforma === 'pix' && !pixSemNome, anonimo },
       teste: msgId.startsWith('test-') || badges.includes('teste') || message.teste === true,
       historico: message.fromHistory === true, sinalizada: badges.includes('sinalizada'), robo: badges.includes('bot'), privado,
       inscrito: ehInscrito(message, plataforma, badges),
+      // mod, VIP e o dono do canal (os mesmos rótulos dos conectores da Twitch, Kick e YouTube)
+      cargo: ['twitch', 'kick', 'youtube'].includes(plataforma) && (badges.includes('mod') || badges.includes('vip') || badges.includes('dono')),
       resgate: r ? { id: limparLinha(r.id, 100) || null, titulo: limparLinha(r.titulo, 100) } : null,
       midia, reenviado: plataforma === 'pixgg' && ehObjeto(message.pixgg) && message.pixgg.forcado === true,
     };
@@ -1157,7 +1226,7 @@ function criarPedidos(opcoes) {
   const revisarPor = (marcas, conf) => marcas.some((m) => {
     if (m === 'sinalizada') return conf.sinalizadaRevisar;
     if (m === 'gratisEmDuvida' || m === 'semItem') return conf.gratis.emDuvida === 'revisar';
-    return ['pagosFechados', 'abaixoDoPreco', 'semMensagem', 'naoPareceEmPedido', 'acimaDoMaximo', 'cheio', 'moedaSemCotacao', 'itemEmDuvida'].includes(m);
+    return ['pagosFechados', 'abaixoDoPreco', 'semMensagem', 'naoPareceEmPedido', 'acimaDoMaximo', 'cheio', 'moedaSemCotacao', 'itemEmDuvida', 'semCatalogo'].includes(m);
   });
 
   // Pago. `forcado` = o streamer mandou virar pedido (as regras viram marcas).
@@ -1168,10 +1237,14 @@ function criarPedidos(opcoes) {
     const q = contarPartidas(e, conf, leitura);
     const marcas = [];
     if (!leitura.citaCatalogo && !forcado) {
-      if (e.texto) return nao('apoio'); // apoio comum: não vira pedido
+      // o jogo da vez sem catálogo (não criado ainda, apagado, que não abre): o
+      // leitor não reconhece nada, e com os pagos abertos o pagamento com texto
+      // vai para ⚠ Revisar — nunca some como apoio sem ninguém ver
+      if (e.texto && aberto && !catalogoDe(E.jogo)) marcas.push('semCatalogo');
+      else if (e.texto) return nao('apoio'); // apoio comum: não vira pedido
       // sem mensagem: só com os pagos abertos e alcançando uma partida
-      if (!aberto || q.semCotacao || q.pagas < 1) return nao('apoio');
-      marcas.push('semMensagem');
+      else if (!aberto || q.semCotacao || q.pagas < 1) return nao('apoio');
+      else marcas.push('semMensagem');
     }
     if (!aberto) marcas.push('pagosFechados');
     if (e.texto && leitura.citaCatalogo && !parecePedido(leitura, true)) marcas.push('naoPareceEmPedido');
@@ -1208,8 +1281,9 @@ function criarPedidos(opcoes) {
       if (e.historico) return nao('historico');
       if (E.abertos.gratisDesde === null || e.hora < E.abertos.gratisDesde) return nao('antiga');
       if (!Object.hasOwn(g.caminhos, e.fonte) || !g.caminhos[e.fonte]) return nao('caminhoDesligado');
+      if (g.soConversaDireta && (e.fonte === 'telegram' || e.fonte === 'whatsapp') && !e.privado) return nao('conversaDeGrupo');
       if (e.robo && !conf.robosPodem) return nao('robo');
-      if (g.soInscritos && !e.inscrito) return nao('soInscritos');
+      if (g.soInscritos && !e.inscrito && !(g.cargosTambem && e.cargo)) return nao('soInscritos');
       if (e.fonte === 'resgate') {
         if (!e.texto) return nao('semTexto');
         if (g.recompensas.length && !recompensaAceita(e.resgate)) return nao('recompensa');
@@ -1270,6 +1344,8 @@ function criarPedidos(opcoes) {
     if (d.pagas > d.partidas) p.partidas.pagas = d.pagas;
     if (d.creditoUsado) { p.creditoUsadoCentavos = d.creditoUsado; guardarCredito(e.quem.chave, 0); }
     if (d.novoCredito !== null && d.novoCredito !== undefined) guardarCredito(e.quem.chave, d.novoCredito);
+    // o crédito que a sobra DESTE pagamento criou (sai da carteira se ele for devolvido)
+    if (d.novoCredito > 0) p.creditoGeradoCentavos = d.novoCredito;
     if (d.creditoAoConfirmar > 0 && p.estado === 'revisar') p.creditoAoConfirmar = d.creditoAoConfirmar;
     if (e.midia) p.midia = e.midia;
     if (e.resgate) p.resgate = { titulo: e.resgate.titulo };
@@ -1423,6 +1499,17 @@ function criarPedidos(opcoes) {
     return feito('partida', { pedido: projetarLocal(p), terminou, proximo: chamado ? projetarLocal(chamado) : null });
   }
 
+  // O pagamento saiu da conta (vai para «a devolver», ou era de 🧪 teste): o crédito
+  // que ele usou volta para a pessoa e o que a sobra DELE criou sai da carteira —
+  // senão o dinheiro devolvido continuava valendo partida
+  function desfazerCredito(p) {
+    const k = p.quem.chave;
+    const gerado = p.creditoGeradoCentavos || 0;
+    const usado = p.creditoUsadoCentavos || 0;
+    delete p.creditoGeradoCentavos;
+    if (!k || (!gerado && !usado)) return;
+    guardarCredito(k, Math.max(0, creditoDe(k) - gerado) + usado);
+  }
   function sair(p, motivo) {
     tirar(p);
     p.estado = 'recusado';
@@ -1430,8 +1517,8 @@ function criarPedidos(opcoes) {
     p.motivoRecusa = motivo;
     delete p.creditoAoConfirmar; // não confirmado: a sobra não vira crédito
     if (p.pago) {
-      // o crédito usado volta para a pessoa; o pagamento vai para «a devolver»
-      if (p.creditoUsadoCentavos && p.quem.chave) guardarCredito(p.quem.chave, creditoDe(p.quem.chave) + p.creditoUsadoCentavos);
+      // o pagamento inteiro vai para «a devolver»
+      desfazerCredito(p);
       E.aDevolver.push(p);
     } else registrar('recusado', p, motivo);
   }
@@ -1468,7 +1555,7 @@ function criarPedidos(opcoes) {
     if (p.estado !== 'revisar') return erro('estado-invalido', 'Só dá para ignorar o que está no ⚠ Revisar.');
     tirar(p);
     delete p.creditoAoConfirmar;
-    if (p.creditoUsadoCentavos && p.quem.chave) guardarCredito(p.quem.chave, creditoDe(p.quem.chave) + p.creditoUsadoCentavos);
+    desfazerCredito(p);
     registrar('ignorado', p, 'apoio');
     return feito('ignorar', { n: p.seq });
   }
@@ -1548,7 +1635,10 @@ function criarPedidos(opcoes) {
     if (ensinar && p.estado === 'revisar') {
       p.estado = 'fila';
       // o pago aceito faz a conta de quem chegou com os pagos abertos: a sobra vira crédito
-      if (p.creditoAoConfirmar && p.quem.chave) guardarCredito(p.quem.chave, creditoDe(p.quem.chave) + p.creditoAoConfirmar);
+      if (p.creditoAoConfirmar && p.quem.chave) {
+        guardarCredito(p.quem.chave, creditoDe(p.quem.chave) + p.creditoAoConfirmar);
+        p.creditoGeradoCentavos = (p.creditoGeradoCentavos || 0) + p.creditoAoConfirmar;
+      }
       delete p.creditoAoConfirmar;
     }
     const feitas = p.partidas.total - p.partidas.faltam;
@@ -1652,13 +1742,25 @@ function criarPedidos(opcoes) {
     return feito('fimDaLive', { ficaram, sairam });
   }
 
-  // 🧪 testes saem de todas as listas
+  // 🧪 testes saem de todas as listas, e o dinheiro de ensaio sai da carteira: o
+  // crédito que a sobra deles criou vai embora e o que eles usaram volta (do mais
+  // novo para o mais velho; os de «a devolver» já fizeram essa conta ao sair)
   function tirarTestes(filtro) {
     let removidos = 0;
-    const limpa = (l) => { for (let i = l.length - 1; i >= 0; i--) if (l[i].teste && filtro(l[i])) { l.splice(i, 1); removidos++; } };
-    limpa(E.pedidos);
-    limpa(E.aDevolver);
-    limpa(E.atendidos);
+    const saem = [];
+    const limpa = (l, desfazer) => {
+      for (let i = l.length - 1; i >= 0; i--) {
+        if (!l[i].teste || !filtro(l[i])) continue;
+        const [p] = l.splice(i, 1);
+        removidos++;
+        if (desfazer) saem.push(p);
+      }
+    };
+    limpa(E.pedidos, true);
+    limpa(E.aDevolver, false);
+    limpa(E.atendidos, true);
+    saem.sort((a, b) => b.seq - a.seq);
+    for (const p of saem) desfazerCredito(p);
     if (!removidos) return { ok: true, removidos: 0 };
     return feito('limparTestes', { removidos });
   }
@@ -1678,12 +1780,20 @@ function criarPedidos(opcoes) {
     const alvos = new Set((Array.isArray(d.ids) ? d.ids : []).slice(0, 5000).map((x) => String(x).slice(0, 200)));
     const autores = typeof d.autor === 'string' && d.autor ? hashesDoAutor(plataforma, d.autor.slice(0, 200).toLowerCase()) : null;
     if (!alvos.size && !autores) return { ok: true, marcados: 0 };
+    // o streamer escolhe: fica na fila marcado, vai para ⚠ Revisar ou é recusado. O
+    // pedido da vez (▶ Agora) só ganha a marca; o pago nunca é recusado sozinho
+    const regra = cfg().moderacao;
     let marcados = 0;
-    for (const p of E.pedidos) {
+    for (const p of E.pedidos.slice()) {
       if (plataforma && p.origem.plataforma !== plataforma) continue;
       const porId = alvos.size && p.origem.msgId && alvos.has(p.origem.msgId);
       const porAutor = autores && p.quem.hashes.some((h) => autores.has(h));
-      if ((porId || porAutor) && !p.marcas.includes('moderacao')) { p.marcas.push('moderacao'); marcados++; }
+      if (!(porId || porAutor) || p.marcas.includes('moderacao')) continue;
+      p.marcas.push('moderacao');
+      marcados++;
+      if (p.estado !== 'fila' && p.estado !== 'pulado' && p.estado !== 'revisar') continue;
+      if (regra === 'recusar' && !p.pago) sair(p, 'moderacao');
+      else if (regra !== 'manter') p.estado = 'revisar';
     }
     if (!marcados) return { ok: true, marcados: 0 };
     return feito('moderacao', { marcados });
@@ -1770,9 +1880,11 @@ function criarPedidos(opcoes) {
     const a = ehObjeto(args) ? args : {};
     const origem = ehObjeto(contexto) && typeof contexto.origem === 'string' ? contexto.origem : '';
     // Stream Deck e reconexões repetem o toque: o igual em menos de 3 s é ignorado.
-    // Só a partida com o «faltavam» dispensa a trava, porque ela mesma recusa o toque
-    // velho; o nº sozinho continua batendo no toque repetido (e baixaria outra partida).
-    const comToken = OPERACOES_DE_PARTIDA.has(nome) && temValor(a.faltavam);
+    // Só a partida com o nº E o «faltavam» dispensa a trava, porque ela mesma recusa
+    // o toque velho. Um dos dois sozinho continua batendo no toque repetido: o nº
+    // baixaria outra partida do mesmo pedido, e o «faltavam» terminaria o pedido
+    // seguinte que o «chamar o próximo sozinho» acabou de chamar (com as mesmas faltando).
+    const comToken = OPERACOES_DE_PARTIDA.has(nome) && temValor(a.faltavam) && temValor(a.n);
     if (ORIGENS_EXTERNAS.has(origem) && !comToken) {
       const t = agora();
       for (const [k, quando] of toques) if (t - quando >= REPETIDO_MS || quando > t) toques.delete(k);
@@ -1792,19 +1904,33 @@ function criarPedidos(opcoes) {
     }
     return nomeParaMostrar(item, conf.idioma === 'auto' ? idioma : conf.idioma);
   }
-  const urlImagem = (jogo, item) => (item && ehObjeto(item.imagem) && item.imagem.ocultar !== true && typeof item.imagem.arquivo === 'string' && /^[a-z0-9-]+\.(?:png|jpg|webp|gif)$/.test(item.imagem.arquivo)
-    ? `/pedidos-img/${jogo}/${item.imagem.arquivo}` : null);
+  function urlImagem(jogo, item) {
+    if (!item || !ehObjeto(item.imagem) || item.imagem.ocultar === true || typeof item.imagem.arquivo !== 'string' || !/^[a-z0-9-]+\.(?:png|jpg|webp|gif)$/.test(item.imagem.arquivo)) return null;
+    const url = `/pedidos-img/${jogo}/${item.imagem.arquivo}`;
+    let v = null;
+    if (versaoDaImagem) { try { v = versaoDaImagem(jogo, item.imagem.arquivo); } catch { v = null; } }
+    return typeof v === 'string' && /^[a-z0-9]{1,24}$/.test(v) ? `${url}?v=${v}` : url;
+  }
+  const ehJogoDbd = (jogo) => { const cat = catalogoDe(jogo); return !!(cat && cat.jogo && cat.jogo.modelo === 'dbd'); };
   // `semTrecho`: o pedaço da frase também é a frase (sinalizada para quem só assiste)
   function itemVisto(it, jogo, ctx, comImagem, completo, semTrecho) {
     const c = acharItem(jogo, it.id);
-    const out = { id: it.id, tipo: c ? c.tipo : it.tipo, nome: c ? nomeDoItem(c, ctx.conf, ctx.idioma) : (it.nome || it.id) };
+    const tipo = c ? c.tipo : it.tipo;
+    const out = { id: it.id, tipo, nome: c ? nomeDoItem(c, ctx.conf, ctx.idioma) : (it.nome || it.id) };
     if (completo) {
       if (it.trecho !== undefined) out.trecho = semTrecho ? '' : it.trecho;
       if (it.certeza !== undefined) out.certeza = it.certeza;
       if (it.naoTenho || (c && c.naoTenho)) out.naoTenho = true;
     }
-    const img = comImagem ? urlImagem(jogo, c) : null;
-    if (img) { out.imagem = img; ctx.comImagens = true; }
+    // o tipo que o streamer deixou sem imagem (ex.: os ícones de perk) não leva a dele
+    const img = comImagem && !ctx.der.semImagem.has(`${jogo}:${tipo}`) ? urlImagem(jogo, c) : null;
+    if (img) {
+      out.imagem = img;
+      ctx.comImagens = true;
+      // o aviso de direitos vale onde houver imagem do Dead by Daylight (o jogo do
+      // PEDIDO, que pode não ser o da vez)
+      if (!ctx.comImagensDbd && ehJogoDbd(jogo)) ctx.comImagensDbd = true;
+    }
     return out;
   }
   function personagemDe(p, ctx, comImagem) {
@@ -1819,18 +1945,19 @@ function criarPedidos(opcoes) {
     return out;
   }
   // o nome na tela (e para quem só assiste): palavra bloqueada ou mensagem
-  // sinalizada = «Anônimo» até liberar; Pix do banco pela opção; telefone já é apelido
+  // sinalizada = «Anônimo» até liberar; Pix do banco pela opção (também o da conta
+  // de MEI, que chega com o número tapado no nome); telefone já é apelido
   function nomeNaTela(p, conf, der, ignorarOpcao) {
     if (!ignorarOpcao && !conf.nomeNaTela) return { quem: null, anonimo: false, segurado: false };
     const q = p.quem;
     if (!q.liberado && (q.sinalizada || nomeBloqueado(q.nome, der))) return { quem: 'Anônimo', anonimo: true, segurado: true };
-    if (q.civil && !q.telefone) return { quem: nomeCivil(q.nome, conf.nomePix), anonimo: conf.nomePix === 'anonimo', segurado: false };
+    if (q.civil) return { quem: nomeCivil(q.nome, conf.nomePix), anonimo: conf.nomePix === 'anonimo', segurado: false };
     return { quem: q.nome, anonimo: false, segurado: false };
   }
   const segurado = (p, der) => !p.quem.liberado && (p.quem.sinalizada || nomeBloqueado(p.quem.nome, der));
   // fora do painel local (painel pela rede, controle externo) o nome civil do Pix
   // do banco vai pela opção: o completo fica só no local
-  const nomeForaDoLocal = (p, conf) => (p.quem.civil && !p.quem.telefone ? nomeCivil(p.quem.nome, conf.nomePix) : p.quem.nome);
+  const nomeForaDoLocal = (p, conf) => (p.quem.civil ? nomeCivil(p.quem.nome, conf.nomePix) : p.quem.nome);
   function nomeDoPapel(p, ctx) {
     if (ctx.papel === 'local') return p.quem.nome;
     if (ctx.papel === 'viewer') return nomeNaTela(p, ctx.conf, ctx.der, true).quem;
@@ -1853,7 +1980,9 @@ function criarPedidos(opcoes) {
       id: p.id, n: p.seq, estado: p.estado, fonte: p.origem.fonte, platform: p.origem.plataforma,
       author: nomeDoPapel(p, ctx),
       hora: p.chegada, atrasado: p.origem.atrasado, pago: p.pago, jogo: p.jogo,
-      partidas: { ...p.partidas }, vitorias: p.vitorias, derrotas: p.derrotas, jogadas: p.jogadas,
+      // (quantas foram pagas, acima do máximo, diz o valor: só para quem vê os valores)
+      partidas: { total: p.partidas.total, faltam: p.partidas.faltam, ...(ctx.valores && p.partidas.pagas ? { pagas: p.partidas.pagas } : {}) },
+      vitorias: p.vitorias, derrotas: p.derrotas, jogadas: p.jogadas,
       texto: semTexto ? '' : p.texto,
       itens: p.itens.map((it) => itemVisto(it, p.jogo, ctx, comImagem, true, semTexto)),
       duvidas: p.duvidas.map((d) => ({ trecho: semTexto ? '' : d.trecho, motivo: d.motivo, opcoes: d.opcoes.map((x) => itemVisto(x, p.jogo, ctx, comImagem, true, semTexto)) })),
@@ -1863,7 +1992,7 @@ function criarPedidos(opcoes) {
     for (const k of ['chamadoEm', 'atendidoEm', 'recusadoEm', 'motivoRecusa']) if (p[k] !== undefined) out[k] = p[k];
     if (p.resgate) out.resgate = { titulo: p.resgate.titulo };
     if (!viewer) {
-      out.msgId = p.origem.msgId;
+      out.msgId = msgIdVisto(p.origem);
       out.chave = p.quem.chave;
       out.chavePagamento = p.origem.chave;
       if (p.midia) out.midia = { ...p.midia };
@@ -1879,7 +2008,7 @@ function criarPedidos(opcoes) {
     const conf = cfg();
     const idioma = ehObjeto(opcoes) && typeof opcoes.idioma === 'string' && IDIOMAS.includes(opcoes.idioma) ? opcoes.idioma : null;
     const valores = papel === 'local' || (papel === 'full' ? conf.fullVeValores : papel === 'viewer' ? conf.viewerVeValores : false);
-    return { papel, conf, der: derivada(), idioma, valores, imagens, comImagens: false };
+    return { papel, conf, der: derivada(), idioma, valores, imagens, comImagens: false, comImagensDbd: false };
   }
   const projetarLocal = (p) => projetar(p, contexto('local', null, cfg().imagens.painel));
   function jogoVisto(jogo) {
@@ -1918,7 +2047,7 @@ function criarPedidos(opcoes) {
       revisar: out.revisar.length, feitos: E.atendidos.length,
     };
     if (verDevolver) out.contagem.aDevolver = E.aDevolver.length;
-    out.avisoBehaviour = !!(conf.avisoBehaviour && ctx.comImagens && out.jogo && out.jogo.modelo === 'dbd');
+    out.avisoBehaviour = !!(conf.avisoBehaviour && ctx.comImagensDbd);
     if (pp === 'local') {
       out.creditos = E.creditos.size;
       // o que saiu sem virar pedido ou deixou a fila (grátis recusado, fila cheia…), o mais novo primeiro
@@ -1956,14 +2085,15 @@ function criarPedidos(opcoes) {
     const a = pedidoAgora();
     out.agora = a ? naTela(a, ctx, true) : null;
     out.proximos = E.pedidos.filter((p) => p.estado === 'fila').slice(0, 5).map((p) => naTela(p, ctx, false));
-    out.avisoBehaviour = !!(conf.avisoBehaviour && ctx.comImagens && jogo && jogo.modelo === 'dbd');
+    out.avisoBehaviour = !!(conf.avisoBehaviour && ctx.comImagensDbd);
     return out;
   }
-  // para o estado do controle externo: sem valor e sem mensagem (e o nome civil pela opção)
-  function resumo() {
+  // para o estado do controle externo: sem valor e sem mensagem (e o nome civil pela
+  // opção); o personagem no idioma do programa (`opcoes.idioma`), como no painel
+  function resumo(opcoes) {
     const a = pedidoAgora();
     let per = null;
-    if (a) { const v = personagemDe(a, contexto('tela', null, false), false); per = v ? v.nome : null; }
+    if (a) { const v = personagemDe(a, contexto('tela', opcoes, false), false); per = v ? v.nome : null; }
     return {
       travado: travado || null, pagos: E.abertos.pagos, gratis: E.abertos.gratis, jogo: E.jogo,
       agora: a ? { n: a.seq, personagem: per, quem: nomeForaDoLocal(a, cfg()), faltam: a.partidas.faltam, total: a.partidas.total } : null,
@@ -1973,7 +2103,7 @@ function criarPedidos(opcoes) {
   function diagnostico() {
     return {
       travado: travado || null, copia: copia ? path.basename(copia) : null, gravacoes, pendente, ativos: E.pedidos.length, seq: E.seq, arquivo,
-      espera: espera.length, copiaDevida, erroLeitura: ultimoErro,
+      espera: espera.length, copiaDevida, erroLeitura: ultimoErro, vivoAoAbrir,
     };
   }
   // grava o que estiver pendente (fechar o programa, ♻️, atualização)
@@ -2032,4 +2162,4 @@ function criarPedidos(opcoes) {
   return api;
 }
 
-module.exports = { criarPedidos, sanitizarConfiguracao, CONFIG_PADRAO, MARCAS, TETOS };
+module.exports = { criarPedidos, sanitizarConfiguracao, nomeCivil, CONFIG_PADRAO, MARCAS, TETOS };

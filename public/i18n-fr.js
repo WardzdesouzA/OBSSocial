@@ -10,6 +10,13 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    "Fim da live": "Fin du live",
+    "Marcar o fim da live": "Marquer la fin du live",
+    "Fim da live? O que sobrou na fila fica para a próxima, marcado «da live anterior», e cada pessoa pode pedir um grátis de novo.": "Fin du live ? Ce qui reste dans la file passe au prochain, marqué « du live précédent », et chacun peut de nouveau demander une gratuite.",
+    "Fim da live? Os pagos que sobraram ficam para a próxima, marcados «da live anterior», os grátis saem da fila e cada pessoa pode pedir um grátis de novo.": "Fin du live ? Les payantes restantes passent au prochain, marquées « du live précédent », les gratuites quittent la file et chacun peut de nouveau demander une gratuite.",
+    "A live acaba quando você toca em «🏁 Fim da live», no 🙋 do painel: aí cada pessoa pode pedir um grátis de novo, e o que sobrou na fila fica marcado «da live anterior».": "Le live se termine quand vous touchez « 🏁 Fin du live », dans le 🙋 du panneau : chacun peut alors de nouveau demander une gratuite, et ce qui reste dans la file est marqué « du live précédent ».",
+    "o jogo da vez está sem catálogo": "le jeu en cours n’a pas de catalogue",
     // 🙋 v0.192: Pedidos (fase 1)
     "Os pedidos estão desligados no 🧪 Labs.": "Les demandes sont désactivées dans 🧪 Labs.",
     "Os pedidos não abriram por um erro: veja a janela do OBS Social.": "Les demandes n’ont pas pu s’ouvrir à cause d’une erreur : regardez la fenêtre d’OBS Social.",
@@ -4043,6 +4050,8 @@ window.OBS_I18N_DICTS.fr = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Cochez seulement ce que vous utilisez. Cela change l’outil 🎛️ du panneau — les touches 🎛️ de la Table de pistes fonctionnent de toute façon.",
   },
   padroes: [
+    // 🙋 v0.192: correções da revisão (fim da live, jogo sem catálogo, partidas pagas acima do máximo)
+    [/^pagou (\d+) partidas$/, "a payé $1 parties"],
     // 🙋 v0.192: Pedidos (fase 1)
     [/^falta 1 de (\d+)$/, "encore 1 sur $1"],
     [/^faltam (\d+) de (\d+)$/, "encore $1 sur $2"],
