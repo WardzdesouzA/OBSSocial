@@ -11,7 +11,9 @@
 //   apelidos que ele ensinou («seus») nunca saem numa atualização;
 // • arquivo que não abre (cortado, mexido à mão) ganha uma cópia
 //   «.ilegivel-…» e NADA grava por cima até ele abrir de novo ou o streamer
-//   recriar o jogo de propósito;
+//   recriar o jogo de propósito; arquivo mexido por fora com o programa aberto
+//   é lido de novo antes de qualquer gravação, e item ou campo que não serve
+//   (idioma desconhecido, imagem .jpeg…) também faz a cópia antes de sumir;
 // • cada mudança monta um catálogo NOVO na memória (os itens que não mudaram
 //   são os mesmos objetos, e objeto entregue nunca é mexido depois): quem
 //   guardou o anterior continua com uma foto coerente, e quem quer saber se
@@ -40,6 +42,9 @@ const TETOS = Object.freeze({
   imagemBytes: 5 * 1024 * 1024, importadoBytes: 8 * 1024 * 1024,
   arquivosPorEnvio: 2000, errosListados: 500, fonteBytes: 256 * 1024,
 });
+// Leitura: confere se o arquivo do catálogo mudou por fora no máximo uma vez por
+// segundo (o núcleo pergunta a cada mensagem); antes de gravar, sempre.
+const CONFERIR_MS = 1000;
 
 // ── 🏷️ Tipos dos modelos ───────────────────────────────────────────────────
 // «papel» diz o que o tipo é para o núcleo (personagem = quem aparece em
@@ -77,7 +82,10 @@ const CHAVES_PERIGOSAS = new Set(['__proto__', 'constructor', 'prototype']);
 const ehObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const temCampo = (o, k) => Object.hasOwn(o, k) && o[k] !== undefined;
 const amostra = (v) => (typeof v === 'string' ? v.slice(0, 40) : typeof v);
-const jogoIdValido = (id) => typeof id === 'string' && id.length <= 60 && RE_SLUG.test(id);
+// «con», «nul», «com1»… nunca viram caminho: no Windows abrir «con.json» é abrir o
+// console (a leitura síncrona pode ficar esperando o teclado e travar o servidor)
+const jogoIdValido = (id) => typeof id === 'string' && id.length <= 60 && RE_SLUG.test(id) &&
+  !RESERVADOS_WINDOWS.test(id) && !CHAVES_PERIGOSAS.has(id);
 const fonteValida = (v) => typeof v === 'string' && v.length <= 30 && RE_SLUG.test(v);
 function idItemValido(v) {
   if (typeof v !== 'string' || v.length > 91) return false;
@@ -140,63 +148,87 @@ class ErroEntrada extends Error {
 }
 const falha = (erro, motivo, extra) => Object.assign({ ok: false, erro, motivo }, extra);
 
+// Caracteres como a pessoa conta: emoji e ideograma fora do BMP valem 1 (no .length,
+// que conta unidades UTF-16, valem 2 — um nome de 68 caracteres «passava de 120»).
+function caracteres(s) {
+  let n = s.length;
+  for (let i = 0; i < s.length - 1; i++) {
+    const c = s.charCodeAt(i);
+    if (c >= 0xd800 && c <= 0xdbff) {
+      const d = s.charCodeAt(i + 1);
+      if (d >= 0xdc00 && d <= 0xdfff) { n--; i++; }
+    }
+  }
+  return n;
+}
+const passaDe = (s, max) => s.length > max && caracteres(s) > max;
+
 function textoCurto(valor, max, rotulo, erro = 'item-invalido') {
   if (typeof valor !== 'string') throw new ErroEntrada(`${rotulo}: precisa ser texto`, erro);
   const t = valor.trim();
   if (RE_CONTROLE.test(t)) throw new ErroEntrada(`${rotulo}: tem caractere de controle (quebra de linha, tab…)`, erro);
   const limpo = t.replace(/ {2,}/g, ' ');
-  if (limpo.length > max) throw new ErroEntrada(`${rotulo}: passa de ${max} caracteres`, erro);
+  if (passaDe(limpo, max)) throw new ErroEntrada(`${rotulo}: passa de ${max} caracteres`, erro);
   return limpo;
 }
 
+// Leitura leniente (arquivo do disco): o que cai fora conta em `perdas.n`, para o
+// arquivo ganhar uma cópia antes que a próxima gravação o perca de vez.
+const contarPerda = (perdas) => { if (perdas) perdas.n++; };
+const vazio = (v) => v === null || v === undefined || v === '';
+
 // { en: 'The Trapper', pt: 'O Caçador' } → só códigos conhecidos, na ordem de IDIOMAS
-function lerNomes(valor, { max = 120, rotulo = 'nome', erro = 'item-invalido', leniente = false } = {}) {
+function lerNomes(valor, { max = 120, rotulo = 'nome', erro = 'item-invalido', leniente = false, perdas = null } = {}) {
   if (!ehObjeto(valor)) {
-    if (leniente) return {};
+    if (leniente) { if (!vazio(valor)) contarPerda(perdas); return {}; }
     throw new ErroEntrada(`${rotulo}: precisa ser um objeto { en: …, pt: … }`, erro);
   }
-  if (!leniente) {
-    for (const k of Object.keys(valor)) {
-      if (!IDIOMAS.includes(k)) throw new ErroEntrada(`${rotulo}: idioma desconhecido «${k.slice(0, 20)}» (vale ${IDIOMAS.join(', ')})`, erro);
-    }
+  for (const k of Object.keys(valor)) {
+    if (IDIOMAS.includes(k)) continue;
+    if (!leniente) throw new ErroEntrada(`${rotulo}: idioma desconhecido «${k.slice(0, 20)}» (vale ${IDIOMAS.join(', ')})`, erro);
+    if (!vazio(valor[k])) contarPerda(perdas); // «pt-BR» escrito à mão
   }
   const saida = {};
   for (const k of IDIOMAS) {
     if (!Object.hasOwn(valor, k)) continue;
     const v = valor[k];
-    if (v === null || v === undefined || v === '') continue;
+    if (vazio(v)) continue;
     try {
       const t = textoCurto(v, max, `${rotulo} (${k})`, erro);
       if (t) saida[k] = t;
-    } catch (e) { if (!leniente) throw e; }
+    } catch (e) {
+      if (!leniente) throw e;
+      contarPerda(perdas);
+    }
   }
   return saida;
 }
 
 // Listas de nomes antigos e apelidos: sem repetir (comparando normalizado), até 50
-function lerLista(valor, { rotulo, max, semBarra = false, leniente = false }) {
+function lerLista(valor, { rotulo, max, semBarra = false, leniente = false, perdas = null }) {
   if (valor === null || valor === undefined) return [];
   if (!Array.isArray(valor)) {
-    if (leniente) return [];
+    if (leniente) { contarPerda(perdas); return []; }
     throw new ErroEntrada(`${rotulo}: precisa ser uma lista`);
   }
   const saida = [];
   const vistos = new Set();
   for (const v of valor) {
-    if (v === null || v === undefined || v === '') continue;
+    if (vazio(v)) continue;
     let t;
     try {
       t = textoCurto(v, max, rotulo);
       // o «|» separa os apelidos na coluna da planilha
       if (semBarra && t.includes('|')) throw new ErroEntrada(`${rotulo}: «|» separa os apelidos na planilha e não pode fazer parte de um`);
     } catch (e) {
-      if (leniente) continue;
+      if (leniente) { contarPerda(perdas); continue; }
       throw e;
     }
     const n = normalizar(t);
-    if (!n || vistos.has(n)) continue;
+    if (!n) { if (leniente) contarPerda(perdas); continue; }
+    if (vistos.has(n)) continue; // repetido (igual depois de normalizar): nada se perde
     if (saida.length >= TETOS.apelidos) {
-      if (leniente) break;
+      if (leniente) { contarPerda(perdas); break; }
       throw new ErroEntrada(`${rotulo}: no máximo ${TETOS.apelidos} por item`);
     }
     vistos.add(n);
@@ -236,8 +268,24 @@ function lerDesc(v) {
   if (typeof v !== 'string') throw new ErroEntrada('descrição: precisa ser texto');
   const t = v.replace(/\r\n?/g, '\n').trim();
   if (/[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/.test(t)) throw new ErroEntrada('descrição: tem caractere de controle');
-  if (t.length > 500) throw new ErroEntrada('descrição: passa de 500 caracteres');
+  if (passaDe(t, 500)) throw new ErroEntrada('descrição: passa de 500 caracteres');
   return t;
+}
+
+// Lado de uma perk geral (sem dono) no DBD: só por ele o validarBuild do leitor sabe
+// que «Spine Chill» é de sobrevivente. Aceita o id e o nome do tipo em qualquer idioma.
+const LADOS = Object.freeze(['killer', 'sobrevivente']);
+const SINONIMOS_LADO = new Map();
+for (const t of TIPOS_DBD) {
+  if (!LADOS.includes(t.id)) continue;
+  for (const nome of [t.id, ...Object.values(t.nomes)]) SINONIMOS_LADO.set(chaveDeArquivo(nome), t.id);
+}
+function lerLado(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v !== 'string') throw new ErroEntrada('lado: precisa ser texto');
+  const l = SINONIMOS_LADO.get(chaveDeArquivo(v));
+  if (!l) throw new ErroEntrada(`lado desconhecido «${v.slice(0, 30)}» (vale ${LADOS.join(', ')} ou vazio)`);
+  return l;
 }
 function lerSimNao(v, rotulo) {
   if (typeof v !== 'boolean') throw new ErroEntrada(`${rotulo}: precisa ser true ou false`);
@@ -259,6 +307,7 @@ function lerItemEntrada(bruto, tiposIds) {
   if (temCampo(bruto, 'apelidos')) d.apelidos = lerLista(bruto.apelidos, { rotulo: 'apelidos', max: 60, semBarra: true });
   if (temCampo(bruto, 'seus')) d.seus = lerLista(bruto.seus, { rotulo: 'seus apelidos', max: 60, semBarra: true });
   if (temCampo(bruto, 'dono')) d.dono = bruto.dono === null || bruto.dono === '' ? null : lerIdItem(bruto.dono, 'dono');
+  if (temCampo(bruto, 'lado')) d.lado = lerLado(bruto.lado);
   if (temCampo(bruto, 'raridade')) d.raridade = lerRaridade(bruto.raridade);
   if (temCampo(bruto, 'chave')) d.chave = lerChave(bruto.chave);
   if (temCampo(bruto, 'naoTenho')) d.naoTenho = lerSimNao(bruto.naoTenho, '«não tenho»');
@@ -300,7 +349,8 @@ function lerNomeDeJogo(v) {
 }
 
 // Dados livres de uma fonte (ETag, data da leitura…): só JSON simples, sem chave perigosa
-function dadoSimples(v, nivel) {
+// (`perdas` conta a chave que fica de fora, na leitura do arquivo)
+function dadoSimples(v, nivel, perdas = null) {
   if (v === null || typeof v === 'boolean') return v;
   if (typeof v === 'number') return Number.isFinite(v) ? v : null;
   if (typeof v === 'string') {
@@ -310,15 +360,15 @@ function dadoSimples(v, nivel) {
   if (nivel >= 6) throw new ErroEntrada('dados fundos demais');
   if (Array.isArray(v)) {
     if (v.length > 2000) throw new ErroEntrada('lista longa demais nos dados da fonte');
-    return v.map((x) => { const y = dadoSimples(x, nivel + 1); return y === undefined ? null : y; });
+    return v.map((x) => { const y = dadoSimples(x, nivel + 1, perdas); return y === undefined ? null : y; });
   }
   if (ehObjeto(v)) {
     const chaves = Object.keys(v);
     if (chaves.length > 2000) throw new ErroEntrada('objeto grande demais nos dados da fonte');
     const saida = {};
     for (const k of chaves) {
-      if (CHAVES_PERIGOSAS.has(k) || k.length > 300) continue;
-      const x = dadoSimples(v[k], nivel + 1);
+      if (CHAVES_PERIGOSAS.has(k) || k.length > 300) { contarPerda(perdas); continue; }
+      const x = dadoSimples(v[k], nivel + 1, perdas);
       if (x !== undefined) saida[k] = x;
     }
     return saida;
@@ -333,13 +383,16 @@ function chaveDaFonte(f) {
 }
 
 // ── 🧱 Itens ──────────────────────────────────────────────────────────────
-// Sempre a mesma ordem de campos: a comparação «mudou?» é pelo texto JSON.
+// Sempre a mesma ordem de campos: a comparação «mudou?» é pelo texto JSON. O «lado»
+// só aparece quando há (perk geral de um lado só): o resto do arquivo não muda por ele.
 function montarItem(c) {
-  return {
+  const it = {
     id: c.id, tipo: c.tipo, nomes: c.nomes, antigos: c.antigos, apelidos: c.apelidos, seus: c.seus,
     dono: c.dono, raridade: c.raridade, imagem: c.imagem, chave: c.chave, fonte: c.fonte,
     travado: c.travado, naoTenho: c.naoTenho, desc: c.desc,
   };
+  if (c.lado) it.lado = c.lado;
+  return it;
 }
 // O JSON de cada item, guardado: item nunca é mexido depois de pronto, então o texto vale
 // para sempre — gravar 20 000 itens refaz só o texto dos que mudaram.
@@ -396,7 +449,7 @@ function juntarManual(velho, d, manual) {
   return montarItem({
     ...velho,
     nomes: pega('nomes'), antigos: pega('antigos'), apelidos: pega('apelidos'), seus: pega('seus'),
-    dono: pega('dono'), raridade: pega('raridade'), chave: pega('chave'), naoTenho: pega('naoTenho'), desc: pega('desc'),
+    dono: pega('dono'), lado: pega('lado'), raridade: pega('raridade'), chave: pega('chave'), naoTenho: pega('naoTenho'), desc: pega('desc'),
     travado: manual ? true : velho.travado,
   });
 }
@@ -416,7 +469,7 @@ function juntarAutomatico(velho, d) {
   const preenche = (campo) => (d[campo] != null && (!trav || velho[campo] == null) ? d[campo] : velho[campo]);
   return montarItem({
     ...velho, nomes, antigos, apelidos,
-    dono: preenche('dono'), raridade: preenche('raridade'), chave: preenche('chave'),
+    dono: preenche('dono'), lado: preenche('lado'), raridade: preenche('raridade'), chave: preenche('chave'),
     desc: velho.desc || d.desc || '',
   });
 }
@@ -441,7 +494,7 @@ function juntarImportado(velho, d, modo) {
   const vale = (campo) => (d[campo] != null && d[campo] !== '' ? d[campo] : velho[campo]);
   const base = montarItem({
     ...velho, nomes, antigos, apelidos, seus,
-    dono: vale('dono'), raridade: vale('raridade'), chave: vale('chave'),
+    dono: vale('dono'), lado: vale('lado'), raridade: vale('raridade'), chave: vale('chave'),
     naoTenho: typeof d.naoTenho === 'boolean' ? d.naoTenho : velho.naoTenho,
     desc: d.desc || velho.desc,
   });
@@ -457,7 +510,7 @@ function itemNovoDoLote(id, tipo, d, modo, fonte) {
     antigos: d.antigos || [],
     apelidos: csv ? [] : (d.apelidos || []),
     seus: csv ? (d.apelidos || []) : (modo === 'json' ? (d.seus || []) : []),
-    dono: d.dono || null, raridade: d.raridade || null, imagem: null, chave: d.chave || null,
+    dono: d.dono || null, lado: d.lado || null, raridade: d.raridade || null, imagem: null, chave: d.chave || null,
     fonte: automatico ? fonte : ((modo === 'json' && d.fonte) || 'importada'),
     travado: automatico ? false : (typeof d.travado === 'boolean' ? d.travado : true),
     naoTenho: automatico ? false : !!d.naoTenho,
@@ -470,6 +523,12 @@ function itemNovoDoLote(id, tipo, d, modo, fonte) {
 function acharAlvo(d, itens, porChave, tiposIds) {
   let id;
   let velho = null;
+  // O id é «<tipo>:<nome>» e o arquivo descarta item cujo tipo não é o começo do id:
+  // aceitar aqui faria o item «entrar» e sumir ao reabrir o programa.
+  if (d.id && d.tipo && d.id.slice(0, d.id.indexOf(':')) !== d.tipo) {
+    const outro = itens.get(d.id);
+    throw new ErroEntrada(outro ? `${d.id} é do tipo «${outro.tipo}», não «${d.tipo}»` : `o id ${d.id} não começa pelo tipo «${d.tipo}»`, 'tipo-diferente');
+  }
   if (d.id) {
     id = d.id;
     velho = itens.get(id) || null;
@@ -489,7 +548,8 @@ function acharAlvo(d, itens, porChave, tiposIds) {
       velho = itens.get(id) || null;
     }
   }
-  const tipo = velho ? velho.tipo : (d.tipo || id.slice(0, id.indexOf(':')));
+  // item novo: o tipo é o começo do id (o mesmo que o arquivo confere ao abrir)
+  const tipo = velho ? velho.tipo : id.slice(0, id.indexOf(':'));
   if (d.tipo && d.tipo !== tipo) {
     throw new ErroEntrada(velho ? `${id} é do tipo «${velho.tipo}», não «${d.tipo}»` : `o id ${id} não começa pelo tipo «${d.tipo}»`, 'tipo-diferente');
   }
@@ -498,20 +558,23 @@ function acharAlvo(d, itens, porChave, tiposIds) {
 }
 
 // Uma passada do lote sobre uma cópia (Map) dos itens; o que falha não deixa rastro.
-function simularLote(originais, entradas, { modo, fonte, tiposIds, soDonoAntigo }) {
+// soDonoAnterior (última volta): o dono tem de existir quando a linha é lida — no
+// catálogo ou numa linha anterior —, então nenhum dono some no fim.
+function simularLote(originais, entradas, { modo, fonte, tiposIds, soDonoAnterior }) {
   const itens = new Map(originais);
   const porChave = new Map();
   for (const it of originais.values()) if (it.chave) porChave.set(`${it.tipo}\u0000${it.chave}`, it.id);
   const criados = new Set();
   const tocados = new Set();
   const aplicadas = [];
+  const alvos = new Map(); // entrada aplicada → id do item que ela criou ou mexeu
   const falhas = [];
   for (const e of entradas) {
     const d = e.d;
     try {
       const { id, velho, tipo } = acharAlvo(d, itens, porChave, tiposIds);
       if (d.dono && d.dono === id) throw new ErroEntrada('um item não pode ser dono de si mesmo');
-      if (d.dono && soDonoAntigo && !originais.has(d.dono)) throw new ErroEntrada(`dono «${d.dono}» precisa já estar no catálogo`);
+      if (d.dono && soDonoAnterior && !itens.has(d.dono)) throw new ErroEntrada(`dono «${d.dono}» precisa vir antes no lote (ou já estar no catálogo)`);
       let novo;
       if (velho) novo = modo === 'mesclar' ? juntarAutomatico(velho, d) : juntarImportado(velho, d, modo);
       else {
@@ -524,12 +587,40 @@ function simularLote(originais, entradas, { modo, fonte, tiposIds, soDonoAntigo 
       if (!velho) criados.add(id);
       else if (!criados.has(id)) tocados.add(id);
       aplicadas.push(e);
+      alvos.set(e, id);
     } catch (err) {
       if (!(err instanceof ErroEntrada)) throw err;
       falhas.push({ linha: e.linha, motivo: err.message });
     }
   }
-  return { itens, criados, tocados, aplicadas, falhas };
+  return { itens, criados, tocados, aplicadas, alvos, falhas };
+}
+
+// Entradas cujo dono não existe no fim do lote: nem no catálogo nem feito por uma
+// entrada que fica. Sai a corrente inteira de uma vez (quem dependia de quem saiu
+// também sai), em vez de um elo por volta — uma corrente longa não esgota as voltas.
+function entradasSemDono(r, originais) {
+  const feitos = new Map();   // id → quantas entradas que ficam o criam ou mexem nele
+  const esperam = new Map();  // dono (novo neste lote) → entradas que apontam para ele
+  for (const e of r.aplicadas) {
+    const id = r.alvos.get(e);
+    feitos.set(id, (feitos.get(id) || 0) + 1);
+    const dono = e.d.dono;
+    if (!dono || originais.has(dono)) continue;
+    const l = esperam.get(dono);
+    if (l) l.push(e); else esperam.set(dono, [e]);
+  }
+  const ruins = new Set();
+  const fila = [];
+  for (const [dono, l] of esperam) if (!feitos.has(dono)) for (const e of l) { ruins.add(e); fila.push(e); }
+  while (fila.length) {
+    const id = r.alvos.get(fila.pop());
+    const resta = feitos.get(id) - 1;
+    feitos.set(id, resta);
+    if (resta > 0 || originais.has(id)) continue; // o item continua existindo
+    for (const e of esperam.get(id) || []) if (!ruins.has(e)) { ruins.add(e); fila.push(e); }
+  }
+  return r.aplicadas.filter((e) => ruins.has(e));
 }
 
 function cortarErros(erros) {
@@ -765,6 +856,26 @@ function gravarBinario(arquivo, buf) {
     try { fs.copyFileSync(tmp, arquivo); } finally { try { fs.unlinkSync(tmp); } catch { /* a próxima limpeza leva */ } }
   }
 }
+// Restos na pasta de imagens: o temporário da gravação e a reserva «-antes» da troca
+const RE_RESTO_IMAGEM = /\.tmp-\d+-[a-z0-9]+(?:-antes)?$/;
+
+// Troca com o mesmo nome (png → png): os bytes de antes ficam numa cópia ao lado até
+// o catálogo gravar — se a gravação falha, voltam (o catálogo continua apontando esse
+// nome). Cópia e não link: a gravação de reserva do Windows escreve por cima do mesmo
+// arquivo e estragaria um link. Sem a cópia não troca: melhor recusar do que deixar
+// bytes de outra origem.
+function reservarImagem(arquivo) {
+  if (!fs.existsSync(arquivo)) return null;
+  const reserva = `${arquivo}.tmp-${process.pid}-${Date.now().toString(36)}-antes`;
+  fs.copyFileSync(arquivo, reserva);
+  return reserva;
+}
+function devolverImagem(reserva, arquivo) {
+  try { fs.renameSync(reserva, arquivo); } catch {
+    fs.copyFileSync(reserva, arquivo); // Windows: o arquivo novo preso → copia por cima
+    try { fs.unlinkSync(reserva); } catch { /* a próxima limpeza leva */ }
+  }
+}
 
 // Prefixos dos ícones do jogo (iconAddon_trapperSack, T_UI_iconPerks_…) e o tipo que
 // cada um sugere quando o mesmo nome serve a mais de um item.
@@ -820,8 +931,15 @@ function nomeDaImagem(itemId, ext, ocupados) {
   const b = livre(base, (c) => { const dono = ocupados.get(`${c}.${ext}`); return dono !== undefined && dono !== itemId; }, 100);
   return `${b}.${ext}`;
 }
-function imagemDoArquivo(v) {
-  if (!ehObjeto(v) || typeof v.arquivo !== 'string' || v.arquivo.length > 120 || !RE_ARQUIVO.test(v.arquivo)) return null;
+const CAMPOS_IMAGEM = new Set(['arquivo', 'origem', 'ocultar']);
+function imagemDoArquivo(v, perdas) {
+  if (vazio(v)) return null;
+  if (!ehObjeto(v) || typeof v.arquivo !== 'string' || v.arquivo.length > 120 || !RE_ARQUIVO.test(v.arquivo)) {
+    contarPerda(perdas); // «killer-the-trapper.jpeg» escrito à mão
+    return null;
+  }
+  if (!ORIGENS_IMAGEM.includes(v.origem) || (!vazio(v.ocultar) && typeof v.ocultar !== 'boolean')) contarPerda(perdas);
+  for (const k of Object.keys(v)) if (!CAMPOS_IMAGEM.has(k) && !vazio(v[k])) contarPerda(perdas);
   return { arquivo: v.arquivo, origem: ORIGENS_IMAGEM.includes(v.origem) ? v.origem : 'importada', ocultar: v.ocultar === true };
 }
 
@@ -833,44 +951,71 @@ function serializar(cat) {
 }
 
 // Item lido do disco: o que estiver estragado num campo cai para o padrão; sem id,
-// tipo ou nome válido o item fica de fora (o arquivo inteiro ganha uma cópia antes).
-function itemDoArquivo(b, tiposIds) {
+// tipo ou nome válido o item fica de fora. As duas coisas fazem o arquivo inteiro
+// ganhar uma cópia antes (o campo largado aqui sumiria na próxima gravação): o item
+// conta em «descartados», o campo em `perdas.n`. Arquivo gravado pelo programa não
+// perde nada — senão cada abertura faria uma cópia.
+const CAMPOS_ITEM = new Set(['id', 'tipo', 'nomes', 'antigos', 'apelidos', 'seus', 'dono', 'lado', 'raridade', 'imagem',
+  'chave', 'fonte', 'travado', 'naoTenho', 'desc']);
+function itemDoArquivo(b, tiposIds, perdas) {
   if (!ehObjeto(b) || !idItemValido(b.id)) return null;
   const tipo = b.id.slice(0, b.id.indexOf(':'));
   if (b.tipo !== tipo || !tiposIds.has(tipo)) return null;
-  const nomes = lerNomes(b.nomes, { leniente: true });
+  const p = { n: 0 }; // só conta se o item fica
+  const nomes = lerNomes(b.nomes, { leniente: true, perdas: p });
   if (!Object.keys(nomes).length) return null;
-  const lista = (v, rotulo, max, semBarra) => lerLista(v, { rotulo, max, semBarra, leniente: true });
-  const tenta = (fn, padrao) => { try { return fn(); } catch { return padrao; } };
-  return montarItem({
+  const lista = (v, rotulo, max, semBarra) => lerLista(v, { rotulo, max, semBarra, leniente: true, perdas: p });
+  const tenta = (fn, padrao) => { try { return fn(); } catch { contarPerda(p); return padrao; } };
+  const campo = (v, valido, padrao) => { if (vazio(v)) return padrao; if (valido(v)) return v; contarPerda(p); return padrao; };
+  const simNao = (v) => campo(v, (x) => typeof x === 'boolean', false);
+  for (const k of Object.keys(b)) if (!CAMPOS_ITEM.has(k) && !vazio(b[k])) contarPerda(p);
+  const it = montarItem({
     id: b.id, tipo, nomes,
     antigos: lista(b.antigos, 'nomes antigos', 120, false),
     apelidos: lista(b.apelidos, 'apelidos', 60, true),
     seus: lista(b.seus, 'seus apelidos', 60, true),
-    dono: idItemValido(b.dono) ? b.dono : null,
-    raridade: RARIDADES.includes(b.raridade) ? b.raridade : null,
-    imagem: imagemDoArquivo(b.imagem),
-    chave: tenta(() => (b.chave == null ? null : lerChave(b.chave)), null),
-    fonte: fonteValida(b.fonte) ? b.fonte : 'manual',
-    travado: b.travado === true,
-    naoTenho: b.naoTenho === true,
-    desc: tenta(() => (b.desc == null ? '' : lerDesc(b.desc)), ''),
+    dono: campo(b.dono, idItemValido, null),
+    lado: campo(b.lado, (x) => LADOS.includes(x), null),
+    raridade: campo(b.raridade, (x) => RARIDADES.includes(x), null),
+    imagem: imagemDoArquivo(b.imagem, p),
+    chave: vazio(b.chave) ? null : tenta(() => lerChave(b.chave), null),
+    fonte: campo(b.fonte, fonteValida, 'manual'),
+    travado: simNao(b.travado),
+    naoTenho: simNao(b.naoTenho),
+    desc: vazio(b.desc) ? '' : tenta(() => lerDesc(b.desc), ''),
   });
+  if (perdas) perdas.n += p.n;
+  return it;
 }
 
+const CAMPOS_CATALOGO = new Set(['versao', 'jogo', 'tipos', 'itens']);
+const CAMPOS_JOGO = new Set(['id', 'nome', 'modelo', 'criadoEm', 'atualizadoEm', 'fontes']);
+const CAMPOS_TIPO = new Set(['id', 'nomes', 'icone', 'papel']);
+// → { cat, descartados, perdas } ou null (não é um catálogo que este programa abre)
 function normalizarCatalogo(dados, jogoId) {
   if (!ehObjeto(dados) || !ehObjeto(dados.jogo) || !Array.isArray(dados.itens)) return null;
   if (typeof dados.versao === 'number' && dados.versao > VERSAO) return null; // de uma versão mais nova: não mexe
+  const perdas = { n: 0 };
+  const sobrando = (o, campos) => { for (const k of Object.keys(o)) if (!campos.has(k) && !vazio(o[k])) contarPerda(perdas); };
+  sobrando(dados, CAMPOS_CATALOGO);
   const j = dados.jogo;
+  sobrando(j, CAMPOS_JOGO);
   const modelo = MODELOS.includes(j.modelo) ? j.modelo : 'generico';
+  if (!vazio(j.modelo) && modelo !== j.modelo) contarPerda(perdas);
   let nome = jogoId;
-  try { nome = lerNomeDeJogo(j.nome); } catch { /* fica o id */ }
-  const num = (v) => (Number.isFinite(v) && v >= 0 ? v : 0);
+  try { nome = lerNomeDeJogo(j.nome); } catch { if (!vazio(j.nome)) contarPerda(perdas); /* fica o id */ }
+  const num = (v) => {
+    if (Number.isFinite(v) && v >= 0) return v;
+    if (!vazio(v)) contarPerda(perdas);
+    return 0;
+  };
   let tipos;
   let descartados = 0;
   if (modelo === 'dbd') tipos = tiposDoModelo('dbd'); // fixos: valem os do programa
-  else if (!Array.isArray(dados.tipos)) tipos = tiposDoModelo('generico');
-  else {
+  else if (!Array.isArray(dados.tipos)) {
+    if (!vazio(dados.tipos)) contarPerda(perdas);
+    tipos = tiposDoModelo('generico');
+  } else {
     tipos = [];
     const vistos = new Set();
     for (const t of dados.tipos) {
@@ -878,6 +1023,7 @@ function normalizarCatalogo(dados, jogoId) {
         const l = lerTipoEntrada(t);
         if (!l.id || vistos.has(l.id) || !Object.keys(l.nomes).length) { descartados++; continue; }
         vistos.add(l.id);
+        sobrando(t, CAMPOS_TIPO);
         tipos.push(montarTipo(l.id, l.nomes, l.icone || '🏷️', l.papel || 'outro'));
       } catch { descartados++; }
     }
@@ -886,19 +1032,23 @@ function normalizarCatalogo(dados, jogoId) {
   const itens = [];
   const ids = new Set();
   for (const bruto of dados.itens) {
-    const it = itemDoArquivo(bruto, tiposIds);
+    const it = itemDoArquivo(bruto, tiposIds, perdas);
     if (!it || ids.has(it.id)) { descartados++; continue; }
     ids.add(it.id);
     itens.push(it);
   }
   for (let i = 0; i < itens.length; i++) { // dono que sumiu vira geral
     const it = itens[i];
-    if (it.dono && (!ids.has(it.dono) || it.dono === it.id)) itens[i] = montarItem({ ...it, dono: null });
+    if (it.dono && (!ids.has(it.dono) || it.dono === it.id)) { itens[i] = montarItem({ ...it, dono: null }); contarPerda(perdas); }
   }
   let fontes = {};
-  try { const f = dadoSimples(j.fontes, 0); if (ehObjeto(f)) fontes = f; } catch { /* fica vazio */ }
+  try {
+    const f = dadoSimples(j.fontes, 0, perdas);
+    if (ehObjeto(f)) fontes = f;
+    else if (!vazio(f)) contarPerda(perdas);
+  } catch { contarPerda(perdas); /* fica vazio */ }
   const jogo = { id: jogoId, nome, modelo, criadoEm: num(j.criadoEm), atualizadoEm: num(j.atualizadoEm), fontes };
-  return { cat: { versao: VERSAO, jogo, tipos, itens }, descartados };
+  return { cat: { versao: VERSAO, jogo, tipos, itens }, descartados, perdas: perdas.n };
 }
 
 const novoCatalogo = (id, nome, modelo, agora) => ({
@@ -941,6 +1091,7 @@ function criarCatalogos(baseDir) {
   const pastaCatalogos = path.join(baseDir, 'catalogos');
   const pastaImagens = path.join(baseDir, 'imagens');
   const cache = new Map();     // jogoId → catálogo valendo
+  const marcas = new Map();    // jogoId → { marca, quando }: o arquivo como ficou na nossa última leitura ou gravação
   const ilegiveis = new Map(); // jogoId → { copia, marca, resgate }: trava de gravação
 
   const arquivoDoJogo = (id) => path.join(pastaCatalogos, `${id}.json`);
@@ -956,16 +1107,17 @@ function criarCatalogos(baseDir) {
     try {
       const alvos = new Set();
       for (const f of fs.readdirSync(pastaCatalogos)) {
-        const m = /^([a-z0-9-]{1,60}\.json)\.tmp-/.exec(f);
-        if (m) alvos.add(m[1]);
+        const m = /^([a-z0-9-]{1,60})\.json\.tmp-/.exec(f);
+        if (m && jogoIdValido(m[1])) alvos.add(`${m[1]}.json`);
       }
       for (const a of alvos) limparTemporarios(path.join(pastaCatalogos, a));
     } catch { /* pasta ainda não existe */ }
   }
+  // (também a reserva «-antes» de uma troca de imagem que o programa não terminou)
   function limparRestosDeImagem(jogoId) {
     const dir = pastaDoJogo(jogoId);
     try {
-      for (const f of fs.readdirSync(dir)) if (/\.tmp-\d+-[a-z0-9]+$/.test(f)) { try { fs.unlinkSync(path.join(dir, f)); } catch { /* segue */ } }
+      for (const f of fs.readdirSync(dir)) if (RE_RESTO_IMAGEM.test(f)) { try { fs.unlinkSync(path.join(dir, f)); } catch { /* segue */ } }
     } catch { /* sem pasta de imagens */ }
   }
 
@@ -1018,15 +1170,57 @@ function criarCatalogos(baseDir) {
     }
   }
 
-  // O catálogo valendo, ou o erro. Conteúdo estragado só é lido de novo se o arquivo
-  // mudou (o streamer consertou ou trocou): ler o mesmo arquivo faria outra cópia.
-  // Arquivo preso (o antivírus ou o OneDrive segurando no Windows: erro de leitura,
-  // não de conteúdo) tenta de novo a cada segundo — não pode travar a live inteira.
-  function obter(jogoId, forcar = false) {
+  // O Bloco de Notas e o PowerShell salvam «UTF-8 com BOM», e o JSON.parse não aceita o
+  // BOM na frente: o conteúdo está bom, então abre sem ele (a próxima gravação já sai sem).
+  // Estragado de verdade, o lerJsonSeguro guarda a cópia como sempre.
+  function comecaComBom(arq) {
+    let fd = null;
+    try {
+      fd = fs.openSync(arq, 'r');
+      const b = Buffer.alloc(3);
+      return fs.readSync(fd, b, 0, 3, 0) === 3 && b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf;
+    } catch {
+      return false; // o lerJsonSeguro vê o erro (preso, sem permissão) e responde por ele
+    } finally {
+      if (fd !== null) { try { fs.closeSync(fd); } catch { /* segue */ } }
+    }
+  }
+  function lerCatalogo(arq) {
+    if (comecaComBom(arq)) {
+      try { return { ok: true, dados: JSON.parse(fs.readFileSync(arq, 'utf8').slice(1)) }; } catch { /* segue */ }
+    }
+    return lerJsonSeguro(arq);
+  }
+
+  // Memória + a marca do arquivo (tamanho:data) que ela representa
+  function guardar(jogoId, cat, marca) {
+    cache.set(jogoId, cat);
+    marcas.set(jogoId, { marca: marca === undefined ? marcaDoArquivo(arquivoDoJogo(jogoId)) : marca, quando: Date.now() });
+  }
+  function esquecer(jogoId) {
+    cache.delete(jogoId);
+    marcas.delete(jogoId);
+  }
+
+  // O catálogo valendo, ou o erro. O da memória vale enquanto o arquivo for o que lemos
+  // ou gravamos: mexido por fora com o programa aberto (à mão, outro programa) é lido de
+  // novo — sempre antes de gravar (`conferir`), e na leitura no máximo uma vez por
+  // segundo —, então nunca gravamos por cima do que o streamer escreveu, nem sem cópia.
+  // Conteúdo estragado só é lido de novo se o arquivo mudou (o streamer consertou ou
+  // trocou): ler o mesmo arquivo faria outra cópia. Arquivo preso (o antivírus ou o
+  // OneDrive segurando no Windows: erro de leitura, não de conteúdo) tenta de novo a
+  // cada segundo — não pode travar a live inteira.
+  function obter(jogoId, { forcar = false, conferir = false } = {}) {
     if (!jogoIdValido(jogoId)) return { erro: naoAchado() };
-    const emCache = cache.get(jogoId);
-    if (emCache) return { cat: emCache };
     const arq = arquivoDoJogo(jogoId);
+    const emCache = cache.get(jogoId);
+    if (emCache) {
+      const m = marcas.get(jogoId);
+      const agora = Date.now();
+      if (m && !conferir && agora - m.quando < CONFERIR_MS) return { cat: emCache };
+      if (m && m.marca !== null && marcaDoArquivo(arq) === m.marca) { m.quando = agora; return { cat: emCache }; }
+      esquecer(jogoId); // mudou (ou sumiu) por fora: lê de novo
+    }
     const marca = marcaDoArquivo(arq);
     const trava = ilegiveis.get(jogoId);
     if (trava) {
@@ -1034,18 +1228,21 @@ function criarCatalogos(baseDir) {
       const deNovo = forcar || marca !== trava.marca || (trava.preso && Date.now() - trava.quando >= 1000);
       if (!deNovo) return { erro: erroIlegivel(trava) };
     }
-    const lido = lerJsonSeguro(arq);
+    const lido = lerCatalogo(arq);
     let motivo = lido.erro || 'sem cara de catálogo';
     if (lido.ok) {
       const n = normalizarCatalogo(lido.dados, jogoId);
       if (n) {
-        if (n.descartados) {
+        // item ou campo fora do formato fica de fora na memória e sumiria na próxima
+        // gravação: o arquivo como estava ganha uma cópia antes
+        if (n.descartados || n.perdas) {
           const copia = guardarCopia(arq);
-          console.error(`  ⚠️ 🙋 Catálogo «${jogoId}»: ${n.descartados} entrada(s) estragada(s) ficaram de fora.`);
+          if (n.descartados) console.error(`  ⚠️ 🙋 Catálogo «${jogoId}»: ${n.descartados} entrada(s) estragada(s) ficaram de fora.`);
+          if (n.perdas) console.error(`  ⚠️ 🙋 Catálogo «${jogoId}»: ${n.perdas} campo(s) fora do formato ficaram de fora.`);
           console.error(copia ? `    O arquivo como estava ficou guardado em ${path.basename(copia)}.` : '    E não consegui guardar uma cópia do arquivo como estava.');
         }
         ilegiveis.delete(jogoId);
-        cache.set(jogoId, n.cat);
+        guardar(jogoId, n.cat, marca);
         limparRestosDeImagem(jogoId);
         return { cat: n.cat };
       }
@@ -1081,7 +1278,7 @@ function criarCatalogos(baseDir) {
   // Toda mudança passa por aqui: rascunho (cópia rasa) → fn → uma gravação → troca na
   // memória. Erro de validação ou de disco: nada muda, e o que fn escreveu é desfeito.
   function alterar(jogoId, fn) {
-    const r0 = obter(jogoId);
+    const r0 = obter(jogoId, { conferir: true });
     if (r0.erro) return r0.erro;
     const atual = r0.cat;
     const rascunho = { versao: atual.versao, jogo: { ...atual.jogo }, tipos: atual.tipos.slice(), itens: atual.itens.slice() };
@@ -1100,7 +1297,7 @@ function criarCatalogos(baseDir) {
     if (ctx.mudou) {
       rascunho.jogo.atualizadoEm = carimbo(atual.jogo.atualizadoEm);
       try { gravarCatalogo(jogoId, rascunho); } catch (err) { desfazer(); return falhaGravacao(jogoId, err); }
-      cache.set(jogoId, rascunho);
+      guardar(jogoId, rascunho);
     }
     for (const f of ctx.depois) { try { f(); } catch { /* arquivo velho fica para a próxima limpeza */ } }
     return r;
@@ -1162,7 +1359,7 @@ function criarCatalogos(baseDir) {
     if (!id) return falha('nome-invalido', 'não achei um nome de arquivo livre para esse jogo');
     const cat = novoCatalogo(id, n, mod, Date.now());
     try { gravarCatalogo(id, cat); } catch (e) { return falhaGravacao(id, e); }
-    cache.set(id, cat);
+    guardar(id, cat);
     return cat;
   }
 
@@ -1183,7 +1380,7 @@ function criarCatalogos(baseDir) {
     try { fs.rmSync(arq, { force: true }); } catch (e) { return falhaGravacao(jogoId, e); }
     limparTemporarios(arq);
     try { fs.rmSync(pastaDoJogo(jogoId), { recursive: true, force: true }); } catch { /* imagem presa: sobra na pasta */ }
-    cache.delete(jogoId);
+    esquecer(jogoId);
     ilegiveis.delete(jogoId);
     return { ok: true };
   }
@@ -1192,8 +1389,8 @@ function criarCatalogos(baseDir) {
   // vazio com o nome e o modelo resgatados do começo do arquivo (ou os que vierem).
   function recriarJogo(jogoId, opcoes) {
     const o = typeof opcoes === 'string' ? { nome: opcoes } : ehObjeto(opcoes) ? opcoes : {};
-    if (!jogoIdValido(jogoId) || RESERVADOS_WINDOWS.test(jogoId) || CHAVES_PERIGOSAS.has(jogoId)) return naoAchado();
-    const r = obter(jogoId, true); // lê de novo agora: pode ter sido consertado ou solto
+    if (!jogoIdValido(jogoId)) return naoAchado();
+    const r = obter(jogoId, { forcar: true }); // lê de novo agora: pode ter sido consertado ou solto
     if (r.cat) return falha('catalogo-ok', 'este catálogo abre normalmente: para começar do zero, apague o jogo e crie de novo');
     const trava = ilegiveis.get(jogoId);
     // preso não é estragado: recriar agora jogaria fora um arquivo bom
@@ -1214,7 +1411,7 @@ function criarCatalogos(baseDir) {
     const cat = novoCatalogo(jogoId, nome, modelo, Date.now());
     try { gravarCatalogo(jogoId, cat); } catch (e) { return falhaGravacao(jogoId, e); }
     ilegiveis.delete(jogoId);
-    cache.set(jogoId, cat);
+    guardar(jogoId, cat);
     return cat;
   }
 
@@ -1300,7 +1497,7 @@ function criarCatalogos(baseDir) {
       conferirDono(cat, d.dono, id);
       const novo = montarItem({
         id, tipo: d.tipo, nomes: d.nomes, antigos: d.antigos || [], apelidos: d.apelidos || [], seus: d.seus || [],
-        dono: d.dono || null, raridade: d.raridade || null, imagem: null, chave: d.chave || null,
+        dono: d.dono || null, lado: d.lado || null, raridade: d.raridade || null, imagem: null, chave: d.chave || null,
         fonte: manual ? 'manual' : (d.fonte || 'manual'), travado: manual, naoTenho: !!d.naoTenho, desc: d.desc || '',
       });
       cat.itens.push(novo);
@@ -1349,8 +1546,9 @@ function criarCatalogos(baseDir) {
   }
 
   // Lote (mesclar, importar): cada entrada sozinha primeiro; depois o lote inteiro
-  // numa cópia. Entrada cujo dono não existe no fim sai e o lote é refeito sem ela (o
-  // dono pode vir mais adiante no mesmo lote). Uma gravação só, no fim.
+  // numa cópia. Entradas cujo dono não existe no fim saem (a corrente inteira de uma
+  // vez) e o lote é refeito sem elas (o dono pode vir mais adiante no mesmo lote).
+  // Uma gravação só, no fim.
   function aplicarLote(cat, ctx, entradas, modo, fonte) {
     const tiposIds = new Set(cat.tipos.map((t) => t.id));
     const erros = [];
@@ -1364,12 +1562,18 @@ function criarCatalogos(baseDir) {
     const originais = new Map(cat.itens.map((it) => [it.id, it]));
     const fora = new Set();
     let r;
-    // depois de algumas voltas (cadeia de donos dentro do lote), dono só do que já existia
+    // Quase sempre fecha na 1ª ou 2ª volta (tirar uma entrada pode mudar o item que
+    // outra acha pela chave). Se não fechar em 8, a última vale com dono só de antes
+    // da linha — e nunca cai uma linha boa por causa de outra corrente quebrada.
     for (let volta = 0; ; volta++) {
-      r = simularLote(originais, validas.filter((e) => !fora.has(e)), { modo, fonte, tiposIds, soDonoAntigo: volta >= 8 });
-      const semDono = r.aplicadas.filter((e) => e.d.dono && !r.itens.has(e.d.dono));
+      r = simularLote(originais, validas.filter((e) => !fora.has(e)), { modo, fonte, tiposIds, soDonoAnterior: volta >= 8 });
+      const semDono = entradasSemDono(r, originais);
       if (!semDono.length) break;
-      for (const e of semDono) { fora.add(e); erros.push({ linha: e.linha, motivo: `dono «${e.d.dono}» não existe no catálogo` }); }
+      const noLote = new Set(r.alvos.values());
+      for (const e of semDono) {
+        fora.add(e);
+        erros.push({ linha: e.linha, motivo: noLote.has(e.d.dono) ? `dono «${e.d.dono}» ficou de fora deste lote` : `dono «${e.d.dono}» não existe no catálogo` });
+      }
     }
     for (const f of r.falhas) erros.push(f);
     let atualizados = 0;
@@ -1452,8 +1656,17 @@ function criarCatalogos(baseDir) {
     const it = cat.itens[pos];
     const antigo = it.imagem ? it.imagem.arquivo : null;
     const arquivo = nomeDaImagem(it.id, img.ext, ocupados);
-    gravarBinario(path.join(pastaDoJogo(jogoId), arquivo), img.buf);
-    if (arquivo !== antigo) ctx.desfazer.push(() => apagarSeSolta(jogoId, arquivo));
+    const destino = path.join(pastaDoJogo(jogoId), arquivo);
+    if (arquivo === antigo) {
+      // por cima da imagem que o catálogo valendo aponta: a de antes volta se algo
+      // falhar (e, se ela já não estava no disco, a nova sai)
+      const reserva = reservarImagem(destino);
+      if (reserva) {
+        ctx.desfazer.push(() => devolverImagem(reserva, destino));
+        ctx.depois.push(() => fs.unlinkSync(reserva));
+      } else ctx.desfazer.push(() => fs.unlinkSync(destino));
+    } else ctx.desfazer.push(() => apagarSeSolta(jogoId, arquivo));
+    gravarBinario(destino, img.buf);
     // «esconder» é escolha do streamer para o item: sobrevive à troca da imagem
     cat.itens[pos] = montarItem({ ...it, imagem: { arquivo, origem, ocultar: it.imagem ? it.imagem.ocultar : false } });
     if (antigo) ocupados.delete(antigo);
