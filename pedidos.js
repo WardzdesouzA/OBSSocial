@@ -1984,6 +1984,12 @@ function criarPedidos(opcoes) {
     if (pendente && !travado) gravarAgora();
     return { ok: true, gravado: !pendente };
   }
+  // grava já o que estiver adiado, sem parar nada (o backup copia o arquivo em
+  // seguida; a atualização ainda pode falhar e o programa segue no ar)
+  function gravar() {
+    if (pendente && !travado) gravarAgora();
+    return { ok: true, gravado: !pendente };
+  }
 
   carregarArquivo();
   carregarEspera();
@@ -2000,7 +2006,7 @@ function criarPedidos(opcoes) {
   const api = {
     lerEntrada, observar, abrir, proximo, partida, pular, retomar, confirmar, corrigir, recusar, ignorar, devolvido,
     novo, virar, escolherJogo, fimDaLive, limparTestes, remocao, liberarNome, recomecar,
-    paraPainel, paraTela, resumo, operar, fechar, diagnostico,
+    paraPainel, paraTela, resumo, operar, fechar, gravar, diagnostico,
   };
   const reservas = {
     lerEntrada: () => null,

@@ -384,9 +384,14 @@
      contadores e rascunhos somem por classe no body, porque nascem dinamicamente */
   .oculto-cfg { display: none !important; }
   body.oc-contadores .tab .count, body.oc-contadores .live-col-head .count, body.oc-contadores .live-col-head .colq,
-  body.oc-contadores .live-col-head .colp, body.oc-contadores #raffleBadge, body.oc-contadores #feedPendingBadge { display: none !important; }
+  body.oc-contadores .live-col-head .colp, body.oc-contadores #raffleBadge, body.oc-contadores #feedPendingBadge,
+  body.oc-contadores #pedidosBadge, body.oc-contadores .ped-n, body.oc-contadores .ped-contagem { display: none !important; }
   /* (os badges ▶ da Mesa e ● do OBS/vMix são estado, não contagem: ficam) */
   body.oc-transcricao .chat-item .msg-transcricao { display: none !important; }
+  /* 🙋 v0.192: a barra dos Pedidos na coluna e o «➕ Virar pedido» nascem
+     dinamicamente — somem por classe no body (a barra da aba é alvo fixo) */
+  body.oc-pedidosBarra .live-col .pedidos-barra { display: none !important; }
+  body.oc-virarPedido .virar-pedido { display: none !important; }
   .live-col-head .colq { font-size: 11px; font-weight: 600; color: var(--accent); margin-left: 6px; }
   .live-col-head .colp { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 6px; }
   /* 🔄 Recarregar só esta coluna */
@@ -660,7 +665,11 @@
      (texto, mídia e foto do autor) para mostrar o painel na live sem sustos.
      Só neste navegador; o público e as telas não mudam. */
   body.modoSeguranca .chat-item .body,
-  body.modoSeguranca .chat-item .avatar { filter: blur(var(--seg-borrao, 16px)); }
+  body.modoSeguranca .chat-item .avatar,
+  /* 🙋 v0.192: no cartão de pedido, quem pediu, a frase e o trecho em dúvida */
+  body.modoSeguranca .pedido-card .author,
+  body.modoSeguranca .pedido-card .msg-text,
+  body.modoSeguranca .pedido-card .ped-trecho { filter: blur(var(--seg-borrao, 16px)); }
   #segurancaBtn.ativo { background: var(--accent); color: #fff; }
   /* 🌀 v0.74: figurinha animada do Telegram (Lottie) */
   .chat-item .figurinha-animada { width: 140px; height: 140px; max-width: 100%; }
@@ -1005,6 +1014,78 @@
   ::-webkit-scrollbar { width: 10px; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
+
+  /* ---------- 🙋 v0.192: Pedidos (🧪 Labs) ----------
+     Cartão próprio (.pedido-card[data-pedido]), nunca .chat-item: as rotinas que
+     varrem os comentários (moderação, «lido», fila, no ar) não encostam nele.
+     Tudo encolhe em vez de estourar: no celular nada rola para o lado. */
+  .pedidos-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
+  .pedidos-barra .check { margin: 0; white-space: nowrap; }
+  .pedidos-barra select.ped-jogo { width: auto; max-width: 180px; min-width: 0; padding: 4px 6px; font-size: 12px; }
+  .pedidos-barra button { padding: 5px 10px; font-size: 12px; }
+  .pedidos-barra .ped-contagem { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .live-col .pedidos-barra { padding: 6px 8px; border-bottom: 1px solid var(--border); flex: none; }
+  /* a largura de fábrica vem daqui, não do style: largura no style é «esticada pela
+     pessoa» (.geo-esticada) e soltaria o teto de 92% da tela no celular */
+  #pedidosPop { width: 400px; }
+  #pedidosPop .pedidos-barra { margin-bottom: 10px; }
+  .pedidos-barra button:disabled, .pedidos-barra select:disabled, .pedidos-barra input:disabled,
+  .pedidos-vista button:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+  .pedidos-vista { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .pedidos-vista [hidden] { display: none !important; }
+  .pedidos-vista .hint { font-size: 12px; color: var(--muted); line-height: 1.4; margin: 0; }
+  .ped-secao { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .ped-secao-titulo { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  details.ped-secao > summary { cursor: pointer; list-style: none; }
+  details.ped-secao > summary::-webkit-details-marker { display: none; }
+  details.ped-secao > summary::before { content: '▸'; }
+  details.ped-secao[open] > summary::before { content: '▾'; }
+  .ped-n { background: var(--border); color: var(--text); border-radius: 10px; font-size: 11px; font-weight: 600; padding: 0 7px; min-width: 20px; text-align: center; }
+  .ped-lista { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .ped-mais { align-self: center; }
+  .pedido-card {
+    display: flex; flex-direction: column; gap: 5px; min-width: 0; position: relative;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-left: 4px solid var(--platform-color, var(--muted)); border-radius: 12px; padding: 8px 10px;
+  }
+  .pedido-card.agora { border-color: var(--green); border-left-color: var(--green); background: color-mix(in srgb, var(--green) 10%, var(--panel2)); }
+  .pedido-card.pulado { opacity: 0.6; }
+  .pedido-card.destaque { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pedido-card .ped-topo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; min-width: 0; }
+  .pedido-card .ped-num { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pedido-card .author { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+  .pedido-card .sc-amount { font-weight: 700; color: var(--yellow); white-space: nowrap; }
+  .pedido-card .ped-resgate { color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+  .pedido-card .msg-text {
+    font-size: 13px; line-height: 1.35; color: var(--coment-texto, inherit); white-space: pre-wrap; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; cursor: pointer;
+  }
+  .pedido-card .msg-text.inteira { display: block; -webkit-line-clamp: unset; }
+  .pedido-card .ped-itens { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+  .pedido-card .ped-item {
+    display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0;
+    font: inherit; font-size: 12px; line-height: 1.5; text-align: left; white-space: normal;
+    background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px 1px 3px;
+  }
+  .pedido-card .ped-item img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex: none; }
+  .pedido-card .ped-item.personagem img { width: 28px; height: 28px; }
+  .pedido-card .ped-item .ped-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pedido-card .ped-item.ok .ped-sinal { color: var(--green); }
+  .pedido-card .ped-item.duvida { border-color: var(--yellow); cursor: pointer; }
+  .pedido-card .ped-item.duvida .ped-sinal { color: var(--yellow); }
+  .pedido-card .ped-partidas { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--muted); }
+  .pedido-card .ped-marcas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .pedido-card .ped-marca { font-size: 10px; background: var(--border); border-radius: 4px; padding: 1px 5px; color: var(--muted); }
+  .pedido-card .ped-marca.alerta { color: var(--yellow); }
+  .pedido-card .ped-acoes { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pedido-card .ped-acoes button, .pedido-card .ped-marcas button { padding: 4px 9px; font-size: 12px; border-radius: 8px; }
+  .ped-dialogo-itens { display: flex; flex-direction: column; gap: 6px; max-height: 40vh; overflow-y: auto; }
+  .ped-dialogo-itens label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+  .ped-dialogo-itens img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: none; }
+  .ped-dialogo-campo { margin-top: 10px; }
+  .ped-dialogo-campo > label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .ped-dialogo-dica { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  .pedido-card .ped-anonimo { font-weight: 600; font-style: italic; }
 </style>
 </head>
 <body>
@@ -1726,6 +1807,20 @@
       </div>
     </div>
 
+    <!-- 🙋 v0.192: Pedidos (🧪 Labs) — a fila de pedidos da live. Nasce escondido;
+         a barra e os cartões daqui saem do MESMO montador da aba e da coluna -->
+    <div class="tool-wrap" id="pedidosWrap" style="display:none">
+      <button class="icon-btn pop-toggle" id="pedidosToolBtn" data-pop="pedidosPop" title="Pedidos (Labs)">🙋<span class="mini-badge" id="pedidosBadge" style="display:none">0</span></button>
+      <div class="popover" id="pedidosPop">
+        <div class="pop-title">🙋 Pedidos <span class="pop-extra" id="pedidosTag"></span></div>
+        <div class="pedidos-barra" id="pedidosPopBarra"></div>
+        <div id="pedidosPopLista"></div>
+        <div class="pop-row" id="pedidosAtalhoRow" style="margin-top:10px;display:none">
+          <button id="pedidosAtalhoBtn" class="secondary" type="button"></button>
+        </div>
+      </div>
+    </div>
+
     <span style="flex:1"></span>
     <div class="tool-wrap relogio-wrap">
   <button class="relogio-topo pop-toggle" id="relogioTopo" data-pop="relogioPop" title="Relógio, cronômetro e timer">
@@ -1867,6 +1962,8 @@
     <button class="tab" data-tab="pix" style="display:none">💠 Pix <span class="count" id="count-pix">0</span></button>
     <!-- 💚 v0.175: PixGG pelo canal do widget (autorizado pela PixGG, fora da API oficial); v0.176: nas Conexões -->
     <button class="tab" data-tab="pixgg" style="display:none">💚 PixGG <span class="count" id="count-pixgg">0</span></button>
+    <!-- 🙋 v0.192: a aba dos Pedidos (🧪 Labs) — aparece conforme «onde mostrar» (aba, coluna, os dois ou automático) -->
+    <button class="tab" data-tab="pedidos" style="display:none">🙋 Pedidos <span class="count" id="count-pedidos">0</span></button>
     <input type="search" id="searchBox" placeholder="🔎 Buscar (nome ou palavra)"
       title="Busca comentários pelo nome de quem escreveu ou por palavras da mensagem — vale para todas as abas">
   </div>
@@ -1875,6 +1972,7 @@
     <label class="check" title="Mostrar os chats separados por rede, em colunas lado a lado"><input type="checkbox" id="viewColsChk" class="sw"> 🧱 Colunas</label>
     <label class="check" id="colAllWrap" style="display:none" title="Além das colunas de cada rede, mostrar também a coluna com o chat unificado (todas juntas)"><input type="checkbox" id="colAllChk" class="sw"> 💬 + Unificado</label>
     <label class="check" id="colEmptyWrap" style="display:none" title="Mostrar também as colunas das redes conectadas que ainda não receberam nenhum comentário"><input type="checkbox" id="colEmptyChk" class="sw"> 🔇 + Caladas</label>
+    <label class="check" id="colPedidosWrap" style="display:none" title="Além das colunas de cada rede, mostrar também a coluna dos pedidos"><input type="checkbox" id="colPedidosChk" class="sw"> 🙋 + Pedidos</label>
     <label class="check" id="colPageWrap" style="display:none" title="Quantas mensagens aparecem por página em cada coluna">📄 <select id="colPageSel"></select></label>
     <span style="font-size:12px;color:var(--muted)" id="filtersLabel">Mostrar:</span>
     <label class="check"><input type="checkbox" checked data-filter="youtube" class="sw"> YouTube</label>
@@ -1930,6 +2028,9 @@
     <span id="pixggAviso" class="hint" style="margin:0;flex-basis:100%">ℹ️ Pelo canal do widget de alertas, com a autorização da PixGG (e-mail de 24/09/2026) — fora da API oficial dela, que só entrega webhooks. O OBS Social só escuta; a PixGG pode mudar o mecanismo a qualquer momento.</span>
   </div>
   <div class="list" id="list-pixgg"><div class="placeholder">As doações recebidas pela PixGG vão aparecer aqui, com nome, valor, mensagem e o áudio quando houver. Clique com o botão direito para mandar para a tela (destaque) ou para a fila.</div></div>
+  <!-- 🙋 v0.192: a barra e a lista da aba dos Pedidos (o vazio é desenhado pelo próprio montador) -->
+  <div id="pedidosBarra" class="tab-barra pedidos-barra" style="display:none"></div>
+  <div class="list" id="list-pedidos"></div>
 </main>
 
 <div id="somBloqueado" title="O navegador só toca som depois de um clique na página">🔇 Clique aqui para liberar o som dos alertas</div>
@@ -2107,6 +2208,7 @@ const lists = {
   livepix: document.getElementById('list-livepix'), // 💜 v0.174
   pix: document.getElementById('list-pix'),         // 💠 v0.174
   pixgg: document.getElementById('list-pixgg'),     // 💚 v0.175
+  pedidos: document.getElementById('list-pedidos'), // 🙋 v0.192 (Labs)
 };
 const MAX_LIST_ITEMS = 300;
 const filters = { youtube: true, twitch: true, kick: true, bilibili: true, telegram: true, whatsapp: true, livepix: true, pix: true, pixgg: true };
@@ -2117,6 +2219,13 @@ let settings = null;
 let defaultSettings = null;
 let applyingSettings = false;
 const changedSections = new Set();
+// 🙋 v0.192: Pedidos (Labs) — a projeção que o servidor manda para o PAPEL desta
+// tela (ou { ligado:false }), o resumo dos catálogos (o «jogo da vez») e os
+// seletores da rede (quem assiste pela rede só mexe com o seletor 🙋 ligado)
+let pedidosEstado = null;
+let pedidosCatalogos = [];
+let podeRedeAtual = null;
+let pedidosConhecidos = null; // os ids já vistos (para o recado «Pedido novo na fila»)
 
 const featuredView = document.getElementById('featuredView');
 const hideBtn = document.getElementById('hideBtn');
@@ -2215,6 +2324,11 @@ const hub = connectHub((event) => {
       // 🎙️ v0.67: rascunhos de transcrição já prontos (sobrevivem a reinício)
       transcricoes = event.transcricoes || {};
       if (event.midiaPlayer) midiaPlayerState = event.midiaPlayer; // 🎛️ v0.71
+      // 🙋 v0.192: os pedidos ANTES do applyPanel — é lá que a aba e a coluna são decididas
+      pedidosEstado = event.pedidos && typeof event.pedidos === 'object' ? event.pedidos : null;
+      pedidosCatalogos = Array.isArray(event.pedidosCatalogos) ? event.pedidosCatalogos : [];
+      podeRedeAtual = event.podeRede && typeof event.podeRede === 'object' ? event.podeRede : null;
+      pedidosConhecidos = null; // a fila do init é a base: nada nela é «pedido novo»
       applyPanel();
       for (const [platform, status] of Object.entries(event.status || {})) updateStatus(platform, status);
       liveMessages.length = 0;
@@ -2296,6 +2410,21 @@ const hub = connectHub((event) => {
         nota.textContent = 'Se o navegador disser "não é seguro", é só porque o endereço é da sua rede e não da internet — a explicação completa está em ⚙️ Configurações → 🔗 URLs para o OBS.';
         hint.appendChild(nota);
       }
+      // 🙋 v0.192: por último — um erro aqui não deixa QR, sorteio e relógio sem pintar
+      receberPedidos(pedidosEstado, null);
+      break;
+    // 🙋 v0.192: Pedidos (Labs) — a fila mudou (cada papel recebe a sua projeção)
+    case 'pedidos':
+      receberPedidos(event.pedidos && typeof event.pedidos === 'object' ? event.pedidos : null, Array.isArray(event.motivos) ? event.motivos : null);
+      break;
+    case 'pedidosCatalogos':
+      pedidosCatalogos = Array.isArray(event.catalogos) ? event.catalogos : [];
+      agendarRenderPedidos();
+      break;
+    // a resposta de um toque DESTA tela (só quem pediu recebe): o acerto vem calado
+    // (o pedido chega pelo quadro «pedidos»), o erro vem com a frase do servidor
+    case 'pedidoAviso':
+      respostaDosPedidos(event);
       break;
     case 'chatNow': {
       // Chegada imediata: entra na memória e nas colunas individuais na hora;
@@ -2467,6 +2596,8 @@ const hub = connectHub((event) => {
       break;
     case 'deckPode': // 👀 v0.179: o streamer mexeu nos seletores da rede com o painel do espectador aberto
       if (event.podeRede) aplicarModoEspectador(papelDaConexao, event.podeRede);
+      // 🙋 v0.192: o seletor 🙋 abriu ou fechou — os cartões saem da leitura (ou voltam a ela)
+      if (event.podeRede && typeof event.podeRede === 'object') { podeRedeAtual = event.podeRede; agendarRenderPedidos(); }
       break;
     case 'negado': { // 🔒 v0.179: modo restrito — o streamer não liberou essa categoria para a rede
       // só quando veio de um clique/tecla da pessoa (o que a página manda sozinha,
@@ -2487,6 +2618,7 @@ const hub = connectHub((event) => {
       renderObs();     // 🎬 e os blocos do controle do OBS obedecem aos seletores
       renderVmix();    // 🎛️ v0.122: idem para o vMix
       renderMdCookies(); // 🍪 v0.187: o seletor de cookies da Mídia direta
+      renderPedidos();   // 🙋 v0.192: Labs, onde mostrar e imagens
       break;
     case 'ytdlpEstado': // 🍪 v0.187: só o RESUMO dos cookies (arquivo sim/não e quantos sites)
       mdYdEstado = event.estado || null;
@@ -2717,6 +2849,7 @@ for (const tab of document.querySelectorAll('.tab')) {
     document.getElementById('liveFilters').style.display = tab.dataset.tab === 'live' ? '' : 'none';
     document.getElementById('livepixBarra').style.display = tab.dataset.tab === 'livepix' ? '' : 'none'; // 💜 v0.174
     document.getElementById('pixggBarra').style.display = tab.dataset.tab === 'pixgg' ? '' : 'none'; // 💚 v0.175
+    document.getElementById('pedidosBarra').style.display = tab.dataset.tab === 'pedidos' ? '' : 'none'; // 🙋 v0.192
     if (tab.dataset.tab === 'live') renderLivePage();
   };
 }
@@ -3470,6 +3603,11 @@ function abrirComentarioModal(message, inFila) {
       fecharComentarioModal();
     });
   }
+  // 🙋 v0.192: ➕ Virar pedido (Labs), o mesmo do menu do botão direito
+  if (pedidosVirarDisponivel() && !pedidoDaMensagem(message)) {
+    const virar = botao('secondary cmt-pedido virar-pedido', 'Virar pedido', () => { if (virarPedidoDaMensagem(message)) fecharComentarioModal(); });
+    virar.textContent = '➕ ' + virar.textContent;
+  }
   botao('secondary cmt-cancelar', 'Cancelar', fecharComentarioModal);
   card.appendChild(botoes);
 
@@ -3531,6 +3669,15 @@ function openCtxMenu(event, message, inFila) {
     // 🖱️ v0.130.1: em toda aba e coluna (Super Chat e membro inclusos)
     addOption('📥', 'Enviar para a fila', false, () => hub.send({ type: 'save', message }));
   }
+  // 🙋 v0.192: ➕ Virar pedido (Labs) — vai só o id e a rede: o servidor acha a
+  // mensagem que ELE guardou (a hora é a dele; nada do navegador vira dado do pedido).
+  // A mensagem que já é pedido troca a opção por «Ver o pedido».
+  if (pedidosVirarDisponivel()) {
+    const ja = pedidoDaMensagem(message);
+    if (ja) addOption('🙋', 'Ver o pedido', false, () => mostrarPedidoNaTela(ja.id));
+    else addOption('➕', 'Virar pedido', false, () => { virarPedidoDaMensagem(message); });
+    ctxMenu.lastChild.classList.add('virar-pedido');
+  }
 
   // Posiciona no cursor (compensando o zoom da interface) sem sair da janela
   const zoomFactor = (Number(uiZoom) || 100) / 100;
@@ -3562,7 +3709,8 @@ const PLACEHOLDERS = {};
 for (const [nome, el] of Object.entries(lists)) { const ph = el && el.querySelector('.placeholder'); if (ph) PLACEHOLDERS[nome] = ph.innerHTML; }
 function restorePlaceholders() {
   for (const [nome, el] of Object.entries(lists)) {
-    if (nome === 'live' || nome === 'saved' || !el || !PLACEHOLDERS[nome]) continue;
+    // 🙋 v0.192: a lista dos pedidos não tem .chat-item — o montador dela desenha o próprio vazio
+    if (nome === 'live' || nome === 'saved' || nome === 'pedidos' || !el || !PLACEHOLDERS[nome]) continue;
     if (el.querySelector('.chat-item') || el.querySelector('.placeholder')) continue;
     const ph = document.createElement('div');
     ph.className = 'placeholder';
@@ -3714,6 +3862,8 @@ function updateColBadges() {
   if (estruturaDasColunasMudou()) { agendarRenderLive(); return; }
   for (const col of document.querySelectorAll('.live-col')) {
     const key = col.dataset.colKey;
+    // 🙋 v0.192: a coluna dos pedidos não é rede — os números dela são os da fila
+    if (key === '__pedidos') { pintarCabecaColunaPedidos(col); continue; }
     const count = col.querySelector('.live-col-head .count');
     if (count) count.textContent = String(colTotalFor(key));
     const fila = col.querySelector('.live-col-head .colq');
@@ -3820,6 +3970,9 @@ function mkColReloadBtn(key) {
 
 // Seletor de ritmo do rodapé de cada coluna (🌊 Por coluna)
 function mkColGapSelect(key) {
+  // 🙋 v0.192: a coluna dos pedidos não tem ritmo (o servidor só guarda o das
+  // redes): nada a acrescentar no rodapé — o fragmento vazio não muda o appendChild
+  if (key === '__pedidos') return document.createDocumentFragment();
   const sel = document.createElement('select');
   sel.className = 'col-gap';
   sel.title = key === '__all'
@@ -3870,6 +4023,8 @@ function marcarChegada(el) {
 }
 
 function reconciliarMensagens(corpo, ordenadas) {
+  // 🙋 v0.192: os cartões de pedido não têm data-id — aqui eles seriam apagados
+  if (corpo.closest && corpo.closest('.live-col[data-col-key="__pedidos"]')) return;
   const porId = new Map();
   for (const el of [...corpo.children]) {
     if (el.dataset && el.dataset.id) porId.set(el.dataset.id, el);
@@ -3932,6 +4087,9 @@ function colunasDefs() {
     if (!mostrarCaladas && !colunaTemComentario(p)) continue;
     defs.push({ key: p, name: COL_NAMES[p] || p });
   }
+  // 🙋 v0.192: a coluna dos pedidos (Labs) — não depende de filtro nem de rede;
+  // quem manda é «onde mostrar» (automático/coluna/os dois) e o 🙋 + Pedidos
+  if (pedidosNaColuna()) defs.push({ key: '__pedidos', name: '🙋 Pedidos' });
   // Ordem escolhida arrastando as colunas (as que não estão na lista salvam
   // a posição padrão, no fim)
   const ordem = Array.isArray(settings.panel?.columnsOrder) ? settings.panel.columnsOrder : [];
@@ -3951,9 +4109,12 @@ function montarColuna(def) {
   col.dataset.colKey = def.key;
   const head = document.createElement('div');
   head.className = 'live-col-head';
-  head.title = 'Arraste para mover a coluna • clique para voltar às mensagens novas';
+  // 🙋 v0.192: a coluna dos pedidos começa pelo ▶ Agora — o clique volta ao começo
+  const ehPedidos = def.key === '__pedidos';
+  head.title = ehPedidos ? 'Arraste para mover a coluna • clique para voltar ao começo' : 'Arraste para mover a coluna • clique para voltar às mensagens novas';
   head.addEventListener('click', () => {
     if (colDragging) return;
+    if (ehPedidos) { const corpo = col.querySelector('.live-col-list'); if (corpo) corpo.scrollTop = 0; return; }
     colPage[def.key] = 0;
     renderLiveColumns();
     const corpo = document.querySelector(`.live-col[data-col-key="${def.key}"] .live-col-list`);
@@ -3963,7 +4124,7 @@ function montarColuna(def) {
   grip.className = 'grip';
   grip.textContent = '⠿';
   head.appendChild(grip);
-  if (def.key === '__all') {
+  if (def.key === '__all' || ehPedidos) {
     head.append(def.name);
   } else {
     head.appendChild(platformIcon(def.key, 16));
@@ -4000,16 +4161,27 @@ function montarColuna(def) {
   // não só o que está na memória de exibição
   const badge = document.createElement('span');
   badge.className = 'count';
-  badge.title = 'Total de mensagens da live';
+  badge.title = ehPedidos ? 'Pedidos na fila' : 'Total de mensagens da live';
   head.appendChild(badge);
   // Represadas: a unificada mostra a fila do fluxo suave geral; cada
   // coluna de rede mostra a própria fila (o compasso individual dela)
   const fila = document.createElement('span');
   fila.className = 'colq';
-  fila.title = def.key === '__all'
+  fila.title = ehPedidos ? 'Pedidos para revisar' : def.key === '__all'
     ? 'Mensagens aguardando o fluxo suave do feed unificado'
     : 'Mensagens aguardando o ritmo desta coluna';
   head.appendChild(fila);
+  // 🙋 v0.192: a coluna dos pedidos ganha a barra (interruptores, jogo, ⏩, ＋)
+  // entre o cabeçalho e o corpo, e o corpo é o MESMO montador da aba e do 🙋
+  if (ehPedidos) {
+    const barra = document.createElement('div');
+    barra.className = 'pedidos-barra';
+    montarBarraPedidos(barra);
+    const corpo = document.createElement('div');
+    corpo.className = 'live-col-list';
+    col.append(head, barra, corpo);
+    return col;
+  }
   // 👤 Quantas pessoas DIFERENTES já falaram nesta coluna
   const gente = document.createElement('span');
   gente.className = 'colp';
@@ -4034,6 +4206,9 @@ function montarColuna(def) {
 function atualizarColuna(wrap, def, direction, size) {
   const col = [...wrap.children].find((c) => c.dataset.colKey === def.key);
   if (!col) return;
+  // 🙋 v0.192: a coluna dos pedidos tem números, corpo e rodapé próprios (sem
+  // isso, o total e o 👤 de rede iriam para o cabeçalho e os cartões seriam apagados)
+  if (def.key === '__pedidos') { pintarColunaPedidos(col); return; }
   const msgs = liveMessages.filter((m) => def.key === '__all'
     ? (!m.pendingRelease && filters[m.platform] !== false)
     : (m.platform === def.key && !m.colHold));
@@ -4120,6 +4295,13 @@ function renderLiveColumns() {
     list.appendChild(wrap);
     for (const def of defs) atualizarColuna(wrap, def, direction, size);
     for (const c of wrap.querySelectorAll('.live-col')) {
+      // 🙋 v0.192: a dos pedidos volta à MESMA altura (ela começa no ▶ Agora, em
+      // cima; a regra do feed a jogaria para o fim, nas mensagens «novas»)
+      if (c.dataset.colKey === '__pedidos') {
+        const corpo = c.querySelector('.live-col-list');
+        if (corpo) corpo.scrollTop = rolagens.__pedidos ? rolagens.__pedidos.scrollTop : 0;
+        continue;
+      }
       restoreScroll(c.querySelector('.live-col-list'), rolagens[c.dataset.colKey], direction);
     }
     lastArrivedId = null;
@@ -7997,6 +8179,7 @@ function applyPanel() {
   }
   refreshPlatformVisibility();
   aplicarLabsFerramentas();
+  aplicarPedidosNoPainel(); // 🙋 v0.192: aba, barra e o 🙋 + Pedidos (antes do esconder)
   aplicarOcultos(); // 👁️ v0.188: por último — a classe vence o que as funções acima mostraram
 }
 
@@ -8025,6 +8208,8 @@ const OCULTAVEIS_ALVOS = {
   busca: () => [document.getElementById('searchBox')],
   livepixBarra: () => [document.getElementById('livepixBarra')],
   pixggBarra: () => [document.getElementById('pixggBarra')],
+  // 🙋 v0.192: a barra da aba (a da coluna nasce com ela e some pela classe no body)
+  pedidosBarra: () => [document.getElementById('pedidosBarra')],
 };
 for (const k of OBS_PAINEL_ORDEM.FERRAMENTAS) OCULTAVEIS_ALVOS[k] = () => [document.getElementById(k + 'ToolBtn')?.closest('.tool-wrap')];
 for (const a of OBS_PAINEL_ORDEM.ABAS) if (a !== 'live') OCULTAVEIS_ALVOS['aba-' + a] = () => [document.querySelector(`.tab[data-tab="${a}"]`)];
@@ -8041,6 +8226,9 @@ function aplicarOcultos() {
   }
   document.body.classList.toggle('oc-contadores', !!oc.contadores);
   document.body.classList.toggle('oc-transcricao', !!oc.transcricao);
+  // 🙋 v0.192: o que dos Pedidos nasce depois (a barra da coluna e o ➕ Virar pedido)
+  document.body.classList.toggle('oc-pedidosBarra', !!oc.pedidosBarra);
+  document.body.classList.toggle('oc-virarPedido', !!oc.virarPedido);
   // 🔎 escondida com texto dentro, a busca é limpa pelo mesmo caminho do usuário —
   // senão a aba Ao vivo ficaria presa no resultado, sem campo para desfazer
   const busca = document.getElementById('searchBox');
@@ -8066,11 +8254,866 @@ function aplicarLabsFerramentas() {
   if (tw) tw.style.display = labs.trilhas === true ? '' : 'none';
   if (ow) ow.style.display = labs.obs === true ? '' : 'none';
   if (vw) vw.style.display = labs.vmix === true ? '' : 'none';
+  // 🙋 v0.192: o botão dos Pedidos segue o Labs; desligado, o cartão fecha junto
+  const pw = document.getElementById('pedidosWrap');
+  if (pw) pw.style.display = labs.pedidos === true ? '' : 'none';
+  if (labs.pedidos !== true) document.getElementById('pedidosPop')?.classList.remove('open');
   if (labs.trilhas !== true && trilhaTocandoId) {
     TRILHA_PLAYER.parar();
     trilhaTocandoId = null;
     renderTrilhas();
   }
+}
+
+// ---------- 🙋 v0.192: Pedidos (🧪 Labs) ----------
+// A fila de pedidos da live, de qualquer jogo. O servidor manda a projeção do
+// PAPEL desta tela (quem assiste pela rede não recebe contato, chave nem, sem a
+// opção, valores) e cada toque vira uma operação de ESTADO (pedidosAbrir,
+// pedidoPartida…), nunca «settings» — o eco de settings redesenharia o painel
+// inteiro em todas as telas. UM montador desenha a aba, a coluna do 🧱 e o
+// cartão do 🙋: cada cartão é atualizado no lugar (pelo data-pedido), sem piscar
+// e sem perder o foco nem a rolagem (o rolador nunca é trocado, então nem o
+// arrasto da barra de rolagem é cortado). Texto de fora (nome, frase, item,
+// jogo) entra só por textContent: nome e frase em .author/.msg-text (o 🛡️ borra
+// e o tradutor pula), os nomes do catálogo num bloco [data-no-i18n].
+const PEDIDOS_ONDE = ['auto', 'coluna', 'aba', 'ambos'];
+const RE_PEDIDO_ID = /^p\d{1,12}$/;
+// só imagem servida pelo próprio programa, do catálogo (nunca endereço de fora)
+const RE_PEDIDO_IMG = /^\/pedidos-img\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9-]{1,120}\.(?:png|jpg|webp|gif)$/;
+const PEDIDOS_LIMITE = 100;    // cartões por seção de cada vez (o resto, em «Mostrar mais»)
+const PEDIDOS_TRAVA_MS = 1500; // o botão tocado espera o eco do servidor (ou isto)
+const PEDIDOS_SECOES = [
+  { id: 'agora', titulo: '▶ Agora', vazio: 'Ninguém jogando agora.' },
+  { id: 'fila', titulo: '📋 Fila', vazio: 'A fila está vazia.' },
+  { id: 'revisar', titulo: '⚠ Revisar' },
+  { id: 'devolver', titulo: '💸 A devolver' },
+  { id: 'feitos', titulo: '✔ Feitos' },
+];
+// Por que o pedido está ali (as marcas do núcleo), em frases curtas e fixas; as
+// que mandam para ⚠ Revisar ou pedem atenção ficam em amarelo
+const PEDIDOS_MARCAS = new Map([
+  ['pagosFechados', 'pago com os pagos fechados'], ['abaixoDoPreco', 'valor abaixo de uma partida'],
+  ['semMensagem', 'pago sem mensagem'], ['naoPareceEmPedido', 'talvez não seja pedido'],
+  ['sinalizada', 'mensagem sinalizada'], ['acimaDoMaximo', 'acima do máximo de partidas'],
+  ['cheio', 'fila cheia'], ['moedaSemCotacao', 'moeda sem cotação'], ['itemEmDuvida', 'item em dúvida'],
+  ['gratisEmDuvida', 'personagem em dúvida'], ['semItem', 'nenhum item reconhecido'],
+  ['valorConvertido', 'valor convertido'], ['atrasado', 'chegou atrasado'], ['intercalado', 'intercalado'],
+  ['naoTenho', 'não tenho'], ['moderacao', 'removido do chat pela moderação'], ['creditoUsado', 'usou crédito'],
+  ['reenviado', 'reenviado'], ['virado', 'comentário que virou pedido'], ['manual', 'feito à mão'],
+]);
+const PEDIDOS_MARCAS_ALERTA = new Set(['pagosFechados', 'abaixoDoPreco', 'semMensagem', 'naoPareceEmPedido', 'sinalizada', 'acimaDoMaximo', 'cheio', 'moedaSemCotacao', 'itemEmDuvida', 'gratisEmDuvida', 'semItem', 'naoTenho', 'moderacao']);
+// o arquivo dos pedidos travado: a frase do servidor (a mesma chave de tradução)
+const PEDIDOS_TRAVADO = new Map([
+  ['ilegivel', 'O arquivo dos pedidos não abre: nada é gravado até você escolher «começar do zero».'],
+  ['preso', 'O arquivo dos pedidos está preso por outro programa: espere ele soltar.'],
+  ['erro', 'Os pedidos não abriram por um erro: veja a janela do OBS Social.'],
+]);
+
+const pedLista = (v) => (Array.isArray(v) ? v : []);
+const pedInteiro = (v) => (Number.isFinite(Number(v)) ? Math.max(0, Math.round(Number(v))) : 0);
+function pedEl(tag, classe, texto) {
+  const e = document.createElement(tag);
+  if (classe) e.className = classe;
+  if (texto !== undefined && texto !== null) e.textContent = String(texto);
+  return e;
+}
+// 🔤 «Idioma dos nomes: do programa» = o idioma DESTA tela (como na página das
+// configurações): o servidor manda a lista { jogo, id, nomes } com os nomes de
+// cada item em todos os idiomas, e o nome sai no idioma daqui (senão inglês,
+// português e, por fim, o que o servidor escreveu). Nas outras escolhas (inglês,
+// português, os dois…) a lista não vem e o nome do servidor já é o certo.
+let pedidosNomes = new Map(); // 'jogo|id' → nomes por idioma
+let pedidosNomesAssin = '';
+let pedidosNomesFonte = null; // a lista da última leitura (o mesmo quadro não é relido)
+const PEDIDOS_SEM_NOMES = [];
+function lerNomesPedidos(est) {
+  const lista = est && Array.isArray(est.nomes) ? est.nomes : PEDIDOS_SEM_NOMES;
+  if (lista === pedidosNomesFonte) return false;
+  pedidosNomesFonte = lista;
+  const assin = JSON.stringify(lista);
+  if (assin === pedidosNomesAssin) return false;
+  pedidosNomesAssin = assin;
+  pedidosNomes = new Map();
+  for (const x of lista) {
+    if (x && typeof x.jogo === 'string' && typeof x.id === 'string' && x.nomes && typeof x.nomes === 'object' && !Array.isArray(x.nomes)) {
+      pedidosNomes.set(x.jogo + '|' + x.id, x.nomes);
+    }
+  }
+  return true;
+}
+function nomeDoItemPedido(jogo, it) {
+  const reserva = it && typeof it === 'object' ? String(it.nome || it.id || '') : '';
+  const n = typeof jogo === 'string' && it && typeof it.id === 'string' ? pedidosNomes.get(jogo + '|' + it.id) : null;
+  if (!n) return reserva;
+  const pega = (k) => (Object.hasOwn(n, k) && typeof n[k] === 'string' ? n[k] : '');
+  return pega((window.OBS_I18N && OBS_I18N.atual) || 'pt') || pega('en') || pega('pt') || reserva;
+}
+
+// ── o que vale agora ──
+const pedidosLabsLigado = () => !!settings && settings.labs?.pedidos === true;
+const pedidosLigados = () => pedidosLabsLigado() && !!pedidosEstado && pedidosEstado.ligado === true;
+function pedidosOndeAtual() {
+  const v = settings?.panel?.pedidosOnde;
+  return PEDIDOS_ONDE.includes(v) ? v : 'auto';
+}
+// 🧱 no modo Colunas: coluna, salvo «só na aba»
+function pedidosNaColuna() {
+  return pedidosLabsLigado() && settings?.panel?.liveView === 'colunas' && pedidosOndeAtual() !== 'aba';
+}
+// aba: «aba», «os dois», ou o automático fora do modo Colunas
+function pedidosNaAba() {
+  if (!pedidosLabsLigado()) return false;
+  const onde = pedidosOndeAtual();
+  return onde === 'aba' || onde === 'ambos' || (onde === 'auto' && settings?.panel?.liveView !== 'colunas');
+}
+// quem só assiste pela rede mexe só com o seletor 🙋 liberado pelo streamer
+function podeMexerPedidos() {
+  return papelDaConexao !== 'viewer' || (!!podeRedeAtual && podeRedeAtual.pedidos === true);
+}
+function todosOsPedidos(est) {
+  if (!est) return [];
+  return [...(est.agora ? [est.agora] : []), ...pedLista(est.fila), ...pedLista(est.revisar), ...pedLista(est.aDevolver), ...pedLista(est.feitos)]
+    .filter((p) => p && typeof p === 'object');
+}
+
+// ── 📡 toques: nunca com a conexão caída (a fila de reconexão do hub mandaria
+// o toque velho depois, fora de hora) e o botão tocado espera o eco ──
+const pedidosTravas = new Map(); // chave → { op, ate, eco }
+function enviarPedidos(op, trava) {
+  if (!hub.aberto()) {
+    mostrarRecadoObs(false, 'Sem conexão com o OBS Social — o toque não foi enviado.');
+    return false;
+  }
+  if (trava) travarPedidos(trava, op.type);
+  hub.send(op);
+  return true;
+}
+function travarPedidos(chave, op) {
+  pedidosTravas.set(chave, { op, ate: Date.now() + PEDIDOS_TRAVA_MS, eco: false });
+  aplicarTravasPedidos();
+  setTimeout(() => {
+    const t = pedidosTravas.get(chave);
+    if (t && t.ate <= Date.now()) { pedidosTravas.delete(chave); aplicarTravasPedidos(); }
+  }, PEDIDOS_TRAVA_MS + 20);
+}
+function aplicarTravasPedidos() {
+  const pode = podeMexerPedidos() && pedidosLigados();
+  for (const b of document.querySelectorAll('button[data-trava]')) b.disabled = !pode || pedidosTravas.has(b.dataset.trava);
+}
+// a resposta é só de quem tocou: o erro vira recado; o acerto solta o botão quando
+// o quadro «pedidos» chegar (é ele que traz o pedido novo, com o «faltavam» novo)
+function respostaDosPedidos(ev) {
+  const op = typeof ev.op === 'string' ? ev.op : '';
+  for (const [k, t] of pedidosTravas) {
+    if (t.op !== op) continue;
+    if (ev.ok === false) pedidosTravas.delete(k);
+    else t.eco = true;
+  }
+  aplicarTravasPedidos();
+  mostrarRecadoObs(ev.ok !== false, typeof ev.texto === 'string' ? ev.texto : '', '🙋 ');
+  // o interruptor ou o jogo que a pessoa mexeu voltam ao que vale de verdade
+  if (ev.ok === false) agendarRenderPedidos();
+  // o ⏩ (ou a partida que chamou o próximo sozinha) DESTA tela trouxe alguém: se
+  // ele tiver item em dúvida, a janela das opções abre aqui (a tela só mostra o confirmado)
+  if (ev.ok !== false) {
+    const chamado = op === 'pedidoProximo' ? ev.n : op === 'pedidoPartida' ? ev.proximo : null;
+    if (Number.isInteger(chamado)) { pedidosDuvidaDoChamado = chamado; abrirDuvidaDoChamado(); }
+  }
+}
+let pedidosDuvidaDoChamado = null; // nº do pedido que esta tela chamou (até o quadro dele chegar)
+function abrirDuvidaDoChamado() {
+  const a = pedidosLigados() ? pedidosEstado.agora : null;
+  if (pedidosDuvidaDoChamado === null || !a || a.n !== pedidosDuvidaDoChamado) return;
+  pedidosDuvidaDoChamado = null;
+  if (pedLista(a.duvidas).length && podeMexerPedidos() && !document.querySelector('.obs-dialog')) dialogoItensPedido(a, 'corrigir');
+}
+function receberPedidos(novo, motivos) {
+  const ligado = !!novo && novo.ligado === true;
+  // «Pedido novo na fila»: só o que ENTROU agora (nem o que já estava, nem o que
+  // voltou do ⚠ Revisar, nem a fila do init)
+  if (ligado && pedidosConhecidos && pedLista(motivos).includes('novo')) {
+    const naFila = [...(novo.agora ? [novo.agora] : []), ...pedLista(novo.fila)];
+    if (naFila.some((p) => p && !pedidosConhecidos.has(p.id))) mostrarRecadoObs(true, 'Pedido novo na fila', '🙋 ');
+  }
+  pedidosConhecidos = ligado ? new Set(todosOsPedidos(novo).map((p) => p.id)) : null;
+  pedidosEstado = novo;
+  for (const [k, t] of pedidosTravas) if (t.eco) pedidosTravas.delete(k);
+  renderPedidos();
+  abrirDuvidaDoChamado();
+}
+
+// ── 🖌️ desenhar ──
+let pedidosRenderAgendado = false;
+function agendarRenderPedidos() {
+  if (pedidosRenderAgendado) return;
+  pedidosRenderAgendado = true;
+  requestAnimationFrame(() => { pedidosRenderAgendado = false; renderPedidos(); });
+}
+function renderPedidos() {
+  if (!settings) return; // antes do init não há o que desenhar
+  const est = pedidosLigados() ? pedidosEstado : null;
+  // os nomes por idioma mudaram (item renomeado, outra escolha de idioma): os
+  // cartões se refazem (o pedido em si pode ter vindo igual)
+  if (lerNomesPedidos(est)) for (const card of document.querySelectorAll('.pedido-card')) card.__assin = '';
+  const cont = est && est.contagem && typeof est.contagem === 'object' ? est.contagem : {};
+  const espera = pedInteiro(cont.fila) + pedInteiro(cont.revisar);
+  // o 🙋 da barra: o balão conta quem espera (fila + revisar) e o botão fica
+  // verde com os pedidos abertos (pagos ou grátis)
+  const badge = document.getElementById('pedidosBadge');
+  if (badge) { badge.textContent = String(espera); badge.style.display = espera > 0 ? '' : 'none'; }
+  document.getElementById('pedidosToolBtn')?.classList.toggle('active', !!(est && est.abertos && (est.abertos.pagos === true || est.abertos.gratis === true)));
+  pintarTagPedidos(est);
+  updateCount('pedidos', espera);
+  for (const id of ['pedidosBarra', 'pedidosPopBarra']) pintarBarraPedidos(document.getElementById(id));
+  pintarVistaPedidos(pedidosVistaAba);
+  pintarVistaPedidos(pedidosVistaPop);
+  const col = document.querySelector('#list-live .live-col[data-col-key="__pedidos"]');
+  if (col) pintarColunaPedidos(col);
+  pintarAtalhoPedidos();
+  aplicarTravasPedidos();
+}
+function pintarTagPedidos(est) {
+  const tag = document.getElementById('pedidosTag');
+  if (!tag) return;
+  const ab = est && est.abertos && typeof est.abertos === 'object' ? est.abertos : null;
+  const chave = ab ? `${ab.pagos === true}|${ab.gratis === true}` : '';
+  if (tag.dataset.chave === chave) return;
+  tag.dataset.chave = chave;
+  if (!ab) { tag.replaceChildren(); return; }
+  tag.replaceChildren('💰 ', pedEl('span', '', ab.pagos === true ? 'abertos' : 'fechados'), ' · 🎁 ', pedEl('span', '', ab.gratis === true ? 'abertos' : 'fechados'));
+}
+
+// ── a barra: 💰 Pagos / 🎁 Grátis, o jogo da vez, ⏩ Próximo, ＋ Novo, 📋 n e ⚠ n ──
+function montarBarraPedidos(barra) {
+  if (!barra) return;
+  barra.replaceChildren();
+  const interruptor = (tipo, emoji, rotulo, dica) => {
+    const lbl = pedEl('label', 'check');
+    lbl.title = dica;
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.className = 'sw';
+    chk.dataset.pedAbrir = tipo;
+    chk.addEventListener('change', () => {
+      // «ligar» explícito: o toque repetido não desfaz o anterior
+      if (!enviarPedidos({ type: 'pedidosAbrir', tipo, ligar: chk.checked ? 1 : 0 })) chk.checked = !chk.checked;
+    });
+    lbl.append(chk, ` ${emoji} `, pedEl('span', '', rotulo));
+    return lbl;
+  };
+  const jogo = pedEl('select', 'ped-jogo');
+  jogo.title = 'Jogo da vez';
+  jogo.setAttribute('aria-label', 'Jogo da vez');
+  jogo.addEventListener('change', () => {
+    const v = String(jogo.value || '').slice(0, 60);
+    if (!v || !enviarPedidos({ type: 'pedidosJogo', jogo: v })) agendarRenderPedidos();
+  });
+  const prox = pedEl('button', 'secondary');
+  prox.type = 'button';
+  prox.dataset.acao = 'proximo';
+  prox.dataset.trava = 'proximo'; // dois toques no ⏩ chamariam duas pessoas
+  prox.title = 'Chamar o próximo da fila';
+  prox.append('⏩ ', pedEl('span', '', 'Próximo'));
+  prox.onclick = () => { if (!prox.disabled) enviarPedidos({ type: 'pedidoProximo' }, 'proximo'); };
+  const novo = pedEl('button', 'secondary');
+  novo.type = 'button';
+  novo.dataset.acao = 'novo';
+  novo.title = 'Pedido à mão';
+  novo.append('＋ ', pedEl('span', '', 'Novo'));
+  novo.onclick = () => { if (!novo.disabled) novoPedidoAMao(); };
+  const nFila = pedEl('span', 'ped-contagem ped-c-fila', '📋 0');
+  nFila.title = 'Na fila';
+  const nRev = pedEl('span', 'ped-contagem ped-c-revisar', '⚠ 0');
+  nRev.title = 'Para revisar';
+  barra.append(
+    interruptor('pagos', '💰', 'Pagos', 'Abrir ou fechar os pedidos pagos'),
+    interruptor('gratis', '🎁', 'Grátis', 'Abrir ou fechar os pedidos grátis'),
+    jogo, prox, novo, nFila, nRev,
+  );
+}
+function pintarBarraPedidos(barra) {
+  if (!barra || !barra.firstChild) return;
+  const est = pedidosLigados() ? pedidosEstado : null;
+  const pode = podeMexerPedidos();
+  const ab = est && est.abertos && typeof est.abertos === 'object' ? est.abertos : {};
+  for (const chk of barra.querySelectorAll('input[data-ped-abrir]')) {
+    const tipo = chk.dataset.pedAbrir === 'gratis' ? 'gratis' : 'pagos';
+    if (document.activeElement !== chk) chk.checked = ab[tipo] === true;
+    chk.disabled = !pode || !est;
+  }
+  pintarJogoPedidos(barra.querySelector('select.ped-jogo'), est, pode);
+  const novo = barra.querySelector('button[data-acao="novo"]');
+  if (novo) novo.disabled = !pode || !est;
+  const cont = est && est.contagem && typeof est.contagem === 'object' ? est.contagem : {};
+  const fila = barra.querySelector('.ped-c-fila');
+  if (fila) fila.textContent = '📋 ' + pedInteiro(cont.fila);
+  const rev = barra.querySelector('.ped-c-revisar');
+  if (rev) rev.textContent = '⚠ ' + pedInteiro(cont.revisar);
+}
+// o jogo da vez: os catálogos criados (nome escrito pelo streamer: nunca traduzido)
+function pintarJogoPedidos(sel, est, pode) {
+  if (!sel) return;
+  const atual = est && est.jogo && typeof est.jogo === 'object' && typeof est.jogo.id === 'string' ? est.jogo : null;
+  const jogos = [];
+  const vistos = new Set();
+  for (const c of pedLista(pedidosCatalogos)) {
+    if (!c || typeof c.id !== 'string' || !c.id || vistos.has(c.id)) continue;
+    vistos.add(c.id);
+    jogos.push({ id: c.id.slice(0, 60), nome: String(c.nome || c.id).slice(0, 120), erro: !!c.erro });
+  }
+  if (atual && !vistos.has(atual.id)) jogos.unshift({ id: atual.id.slice(0, 60), nome: String(atual.nome || atual.id).slice(0, 120), erro: true });
+  const assin = JSON.stringify(jogos);
+  if (sel.__assin !== assin && document.activeElement !== sel) {
+    sel.__assin = assin;
+    sel.replaceChildren(...jogos.map((j) => {
+      const o = document.createElement('option');
+      o.value = j.id;
+      o.dataset.noI18n = '1';
+      o.textContent = (j.erro ? '⚠ ' : '🎮 ') + j.nome;
+      return o;
+    }));
+  }
+  if (document.activeElement !== sel) sel.value = atual ? atual.id.slice(0, 60) : '';
+  sel.hidden = !jogos.length;
+  sel.disabled = !pode || !est || !jogos.length;
+}
+
+// ── a vista: ▶ Agora / 📋 Fila / ⚠ Revisar / 💸 A devolver / ✔ Feitos ──
+const pedidosFeitosAberto = new Map(); // vista → «✔ Feitos» aberto (nasce recolhido)
+function criarVistaPedidos(onde) {
+  const vista = pedEl('div', 'pedidos-vista');
+  vista.dataset.vista = onde;
+  vista.__limites = new Map();
+  const leitura = pedEl('div', 'hint ped-leitura', 'Sem permissão para mexer nos pedidos');
+  leitura.hidden = true;
+  const travado = pedEl('div', 'hint ped-travado');
+  travado.hidden = true;
+  vista.append(leitura, travado);
+  for (const s of PEDIDOS_SECOES) {
+    const feitos = s.id === 'feitos';
+    const sec = pedEl(feitos ? 'details' : 'section', 'ped-secao');
+    sec.dataset.secao = s.id;
+    sec.hidden = true;
+    const titulo = pedEl(feitos ? 'summary' : 'div', 'ped-secao-titulo');
+    titulo.append(pedEl('span', '', s.titulo), pedEl('span', 'ped-n'));
+    if (s.id === 'fila') {
+      const pulados = pedEl('span', 'ped-n ped-n-pulados');
+      pulados.title = 'Pulados';
+      titulo.append(pulados);
+    }
+    sec.appendChild(titulo);
+    // 🤖 a IA é opcional e não vem junto: aqui só o leitor local entende os pedidos
+    if (s.id === 'revisar') sec.appendChild(pedEl('div', 'hint ped-dica-ia', '🤖 IA desligada: só o leitor local entende os pedidos. Ela é opcional e não vem junto — chega numa próxima versão.'));
+    sec.appendChild(pedEl('div', 'ped-lista'));
+    if (s.vazio) sec.appendChild(pedEl('div', 'hint ped-vazio', s.vazio));
+    const mais = pedEl('button', 'secondary ped-mais');
+    mais.type = 'button';
+    mais.hidden = true;
+    mais.append(pedEl('span', '', 'Mostrar mais'), pedEl('span', 'ped-mais-n'));
+    mais.onclick = () => {
+      vista.__limites.set(s.id, (vista.__limites.get(s.id) || PEDIDOS_LIMITE) + PEDIDOS_LIMITE);
+      pintarVistaPedidos(vista);
+    };
+    sec.appendChild(mais);
+    if (feitos) {
+      sec.open = pedidosFeitosAberto.get(onde) === true;
+      sec.addEventListener('toggle', () => pedidosFeitosAberto.set(onde, sec.open));
+    }
+    vista.appendChild(sec);
+  }
+  // as imagens do Dead by Daylight vêm com o aviso de direitos (opção do streamer)
+  const aviso = pedEl('div', 'hint ped-aviso-dbd');
+  aviso.hidden = true;
+  const marca = pedEl('span', '', 'Dead by Daylight © Behaviour Interactive Inc.');
+  marca.dataset.noI18n = '1';
+  aviso.append(marca, ' — ', pedEl('span', '', 'As imagens ficam só no seu computador, para uso pessoal; o OBS Social não as distribui.'));
+  vista.appendChild(aviso);
+  return vista;
+}
+function pintarVistaPedidos(vista) {
+  if (!vista) return;
+  const est = pedidosLigados() ? pedidosEstado : null;
+  const pode = podeMexerPedidos();
+  vista.querySelector('.ped-leitura').hidden = !est || pode;
+  const travado = vista.querySelector('.ped-travado');
+  const textoTrava = est && typeof est.travado === 'string' ? PEDIDOS_TRAVADO.get(est.travado) : null;
+  if (travado.dataset.trava !== (textoTrava ? est.travado : '')) {
+    travado.dataset.trava = textoTrava ? est.travado : '';
+    travado.replaceChildren();
+    if (textoTrava) {
+      travado.append('⚠️ ', pedEl('span', '', textoTrava));
+      if (est.travado === 'ilegivel') travado.append(' ', pedEl('span', '', 'Em ⚙️ Configurações → 🙋 Pedidos.'));
+    }
+  }
+  travado.hidden = !textoTrava;
+  const listas = new Map([
+    ['agora', est && est.agora ? [est.agora] : []],
+    ['fila', pedLista(est && est.fila)], ['revisar', pedLista(est && est.revisar)],
+    ['devolver', pedLista(est && est.aDevolver)], ['feitos', pedLista(est && est.feitos)],
+  ]);
+  const ctx = { pode, imagens: settings?.pedidos?.imagens?.painel !== false };
+  // o foco de quem estava num botão volta ao mesmo botão se o cartão for refeito
+  const ativo = document.activeElement;
+  const foco = ativo && ativo !== document.body && vista.contains(ativo)
+    ? { pedido: ativo.closest('.pedido-card')?.dataset.pedido || '', acao: ativo.dataset?.acao || '' } : null;
+  const sobra = new Map();
+  for (const card of vista.querySelectorAll('.pedido-card')) sobra.set(card.dataset.pedido, card);
+  for (const s of PEDIDOS_SECOES) {
+    const sec = vista.querySelector(`.ped-secao[data-secao="${s.id}"]`);
+    const lista = sec.querySelector('.ped-lista');
+    const todos = listas.get(s.id).filter((p) => p && typeof p === 'object' && RE_PEDIDO_ID.test(String(p.id)));
+    const limite = vista.__limites.get(s.id) || PEDIDOS_LIMITE;
+    let anterior = null;
+    for (const p of todos.slice(0, limite)) {
+      const id = String(p.id);
+      let card = sobra.get(id);
+      if (card) sobra.delete(id);
+      else card = pedEl('div', 'pedido-card');
+      const assin = `${s.id}|${ctx.pode ? 1 : 0}${ctx.imagens ? 1 : 0}|${JSON.stringify(p)}`;
+      if (card.__assin !== assin) preencherCartaoPedido(card, p, s.id, ctx, assin);
+      const alvo = anterior ? anterior.nextSibling : lista.firstChild;
+      if (card !== alvo) lista.insertBefore(card, alvo);
+      anterior = card;
+    }
+    const n = todos.length;
+    const nEl = sec.querySelector('.ped-secao-titulo > .ped-n:not(.ped-n-pulados)');
+    const cont = est && est.contagem && typeof est.contagem === 'object' ? est.contagem : {};
+    nEl.textContent = String(s.id === 'fila' ? pedInteiro(cont.fila) : n);
+    nEl.hidden = s.id === 'agora';
+    const pul = sec.querySelector('.ped-n-pulados');
+    if (pul) { const np = pedInteiro(cont.pulados); pul.textContent = '⏭ ' + np; pul.hidden = np === 0; }
+    const vazio = sec.querySelector('.ped-vazio');
+    if (vazio) vazio.hidden = n > 0;
+    // ▶ Agora e 📋 Fila ficam sempre; as outras só com alguém dentro
+    sec.hidden = !est || (n === 0 && !s.vazio);
+    const mais = sec.querySelector('.ped-mais');
+    mais.hidden = n <= limite;
+    if (n > limite) mais.querySelector('.ped-mais-n').textContent = ` (${n - limite})`;
+  }
+  for (const card of sobra.values()) card.remove();
+  vista.querySelector('.ped-aviso-dbd').hidden = !(est && est.avisoBehaviour === true);
+  if (foco && document.activeElement !== ativo) {
+    const card = [...vista.querySelectorAll('.pedido-card')].find((c) => c.dataset.pedido === foco.pedido);
+    const volta = card && foco.acao ? [...card.querySelectorAll('[data-acao]')].find((b) => b.dataset.acao === foco.acao) : null;
+    if (volta && !volta.disabled) volta.focus({ preventScroll: true });
+  }
+}
+function pintarColunaPedidos(col) {
+  pintarCabecaColunaPedidos(col);
+  pintarBarraPedidos(col.querySelector(':scope > .pedidos-barra'));
+  const corpo = col.querySelector(':scope > .live-col-list');
+  if (!corpo) return;
+  let vista = corpo.firstElementChild;
+  if (!vista || !vista.classList.contains('pedidos-vista')) {
+    corpo.replaceChildren();
+    vista = criarVistaPedidos('coluna');
+    corpo.appendChild(vista);
+  }
+  pintarVistaPedidos(vista);
+}
+// cabeçalho da coluna: .count = na fila, .colq = ⚠ para revisar (o 🛡️ dos
+// contadores já cobre os dois)
+function pintarCabecaColunaPedidos(col) {
+  const est = pedidosLigados() ? pedidosEstado : null;
+  const cont = est && est.contagem && typeof est.contagem === 'object' ? est.contagem : {};
+  const count = col.querySelector('.live-col-head .count');
+  if (count) count.textContent = String(pedInteiro(cont.fila));
+  const rev = col.querySelector('.live-col-head .colq');
+  if (rev) {
+    const n = pedInteiro(cont.revisar);
+    rev.textContent = '⚠' + n;
+    rev.style.display = n > 0 ? '' : 'none';
+  }
+}
+
+// ── 🃏 o cartão ──
+function imgDoPedido(url, tamanho) {
+  if (typeof url !== 'string' || !RE_PEDIDO_IMG.test(url)) return null;
+  const img = document.createElement('img');
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.alt = '';
+  img.width = tamanho;
+  img.height = tamanho;
+  // imagem que não vem (apagada, escondida) some, sem ícone quebrado
+  img.addEventListener('error', () => img.remove(), { once: true });
+  img.src = url;
+  return img;
+}
+function horaDoPedido(ms) {
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  const idioma = (!OBS_I18N.atual || OBS_I18N.atual === 'pt') ? 'pt-BR' : OBS_I18N.atual;
+  // 24 h em todo idioma: o nó fica sem letras (nada de AM/PM para o tradutor)
+  try { return new Date(n).toLocaleTimeString(idioma, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); } catch { return ''; }
+}
+function marcaDoPedido(emoji, texto, alerta) {
+  const m = pedEl('span', 'ped-marca' + (alerta ? ' alerta' : ''));
+  if (emoji) m.append(emoji);
+  m.append(pedEl('span', '', texto));
+  return m;
+}
+function botaoDoPedido(ctx, emoji, rotulo, dica, acao, trava, fazer) {
+  const b = pedEl('button', 'secondary');
+  b.type = 'button';
+  b.dataset.acao = acao;
+  if (trava) b.dataset.trava = trava;
+  if (dica) b.title = dica;
+  if (emoji) b.append(emoji);
+  b.append(pedEl('span', '', rotulo));
+  b.disabled = !ctx.pode || (!!trava && pedidosTravas.has(trava));
+  // um toque = uma ação (nada de «segurar acelera»): o botão espera o eco
+  b.onclick = () => { if (!b.disabled) fazer(); };
+  return b;
+}
+function preencherCartaoPedido(card, p, secao, ctx, assin) {
+  card.__assin = assin;
+  const id = String(p.id).slice(0, 40);
+  card.className = 'pedido-card' + (secao === 'agora' ? ' agora' : '') + (p.estado === 'pulado' ? ' pulado' : '');
+  card.dataset.pedido = id;
+  card.dataset.secao = secao;
+  card.style.setProperty('--platform-color', platformColor(p.platform));
+  const partes = [];
+  // nº e hora (sem letras: o tradutor não mexe), a rede, quem pediu, o resgate e o valor
+  const topo = pedEl('div', 'ped-topo');
+  const hora = horaDoPedido(p.hora);
+  topo.append(pedEl('span', 'ped-num', `#${pedInteiro(p.n)}${hora ? ' · ' + hora : ''}`));
+  topo.append(p.platform === 'manual' ? pedEl('span', '', '✍') : platformIcon(p.platform, 14));
+  // «Anônimo» (nome segurado para quem assiste) é texto do programa: traduz
+  if (p.author === 'Anônimo') topo.append(pedEl('span', 'ped-anonimo', 'Anônimo'));
+  else topo.append(pedEl('span', 'author', p.author === undefined || p.author === null ? '' : p.author));
+  if (p.resgate && typeof p.resgate === 'object' && p.resgate.titulo) {
+    const r = pedEl('span', 'ped-resgate', '🎁 ' + String(p.resgate.titulo));
+    r.dataset.noI18n = '1';
+    topo.append(r);
+  }
+  if (p.valor && typeof p.valor === 'object' && p.valor.texto) {
+    const v = p.valor;
+    topo.append(pedEl('span', 'sc-amount', v.aproximado && v.original ? `≈ ${v.texto} (${v.original})` : v.texto));
+  }
+  partes.push(topo);
+  // a frase (curta: 3 linhas; o clique mostra inteira)
+  if (p.texto) {
+    const t = pedEl('div', 'msg-text', p.texto);
+    t.addEventListener('click', () => t.classList.toggle('inteira'));
+    partes.push(t);
+  }
+  // itens ✓ e dúvidas ⚠ (os nomes do catálogo nunca são traduzidos)
+  const itens = pedLista(p.itens).filter((it) => it && typeof it === 'object');
+  const duvidas = pedLista(p.duvidas).filter((d) => d && typeof d === 'object');
+  if (itens.length || duvidas.length) {
+    const box = pedEl('div', 'ped-itens');
+    box.dataset.noI18n = '1';
+    const personagem = p.personagem && typeof p.personagem === 'object' ? p.personagem.id : null;
+    for (const it of itens) {
+      const ehPersonagem = !!personagem && it.id === personagem;
+      const chip = pedEl('span', 'ped-item ok' + (ehPersonagem ? ' personagem' : ''));
+      const img = ctx.imagens ? imgDoPedido(it.imagem, ehPersonagem ? 28 : 20) : null;
+      if (img) chip.append(img);
+      chip.append(pedEl('span', 'ped-nome', nomeDoItemPedido(p.jogo, it)), pedEl('span', 'ped-sinal', it.naoTenho ? '🚫' : '✓'));
+      box.append(chip);
+    }
+    const resolvivel = secao !== 'feitos' && secao !== 'devolver';
+    for (const d of duvidas) {
+      const chip = pedEl('button', 'ped-item duvida');
+      chip.type = 'button';
+      chip.dataset.acao = 'duvida';
+      chip.disabled = !ctx.pode || !resolvivel;
+      chip.append(pedEl('span', 'ped-sinal', '⚠'));
+      if (d.trecho) chip.append(pedEl('span', 'ped-trecho', d.trecho));
+      const nomes = pedLista(d.opcoes).filter((o) => o && typeof o === 'object').map((o) => nomeDoItemPedido(p.jogo, o)).filter(Boolean);
+      if (nomes.length) chip.append(pedEl('span', 'ped-nome', '→ ' + nomes.join(' / ')));
+      chip.onclick = () => { if (!chip.disabled) dialogoItensPedido(p, secao === 'revisar' ? 'confirmar' : 'corrigir'); };
+      box.append(chip);
+    }
+    partes.push(box);
+  }
+  // «faltam X de Y» (frase inteira num nó: o padrão de tradução casa) e os resultados
+  const part = p.partidas && typeof p.partidas === 'object' ? p.partidas : {};
+  const total = pedInteiro(part.total);
+  const faltam = pedInteiro(part.faltam);
+  const linha = pedEl('div', 'ped-partidas');
+  if (total > 0 && secao !== 'feitos' && secao !== 'devolver') {
+    linha.append(pedEl('span', 'ped-faltam', faltam === 1 ? `falta 1 de ${total}` : `faltam ${faltam} de ${total}`));
+  }
+  const resultados = [];
+  if (pedInteiro(p.vitorias)) resultados.push(`🏆 ${pedInteiro(p.vitorias)}`);
+  if (pedInteiro(p.derrotas)) resultados.push(`💀 ${pedInteiro(p.derrotas)}`);
+  if (pedInteiro(p.jogadas)) resultados.push(`✔ ${pedInteiro(p.jogadas)}`);
+  if (resultados.length) linha.append(pedEl('span', 'ped-resultados', resultados.join(' · ')));
+  if (linha.childNodes.length) partes.push(linha);
+  // marcas: por que está ali, 🧪 teste, da live anterior, 🙈 nome segurado
+  const marcas = pedEl('div', 'ped-marcas');
+  if (p.teste === true) marcas.append(marcaDoPedido('🧪 ', 'teste'));
+  if (p.daLiveAnterior === true) marcas.append(marcaDoPedido('', 'da live anterior'));
+  for (const m of new Set(pedLista(p.marcas))) {
+    const texto = PEDIDOS_MARCAS.get(m);
+    if (texto) marcas.append(marcaDoPedido('', texto, PEDIDOS_MARCAS_ALERTA.has(m)));
+  }
+  if (p.nomeSegurado === true && p.liberado !== true) {
+    marcas.append(marcaDoPedido('🙈 ', 'nome segurado', true));
+    marcas.append(botaoDoPedido(ctx, '🔓 ', 'Liberar', 'Mostrar o nome na tela', 'liberar', `liberar:${id}`,
+      () => enviarPedidos({ type: 'pedidoLiberarNome', id }, `liberar:${id}`)));
+  }
+  if (marcas.childNodes.length) partes.push(marcas);
+  // ações de cada lugar (quem só assiste vê tudo, com os botões apagados)
+  const acoes = pedEl('div', 'ped-acoes');
+  if (secao === 'agora') {
+    // cada toque leva o nº do pedido e quantas faltavam: toque velho não baixa outra
+    const n = pedInteiro(p.n);
+    const trava = `partida:${id}`;
+    for (const [resultado, emoji, rotulo, dica] of [
+      ['vitoria', '🏆 ', 'Vitória', 'Baixa uma partida e anota a vitória'],
+      ['derrota', '💀 ', 'Derrota', 'Baixa uma partida e anota a derrota'],
+      ['jogada', '✔ ', 'Jogada', 'Baixa uma partida sem anotar o resultado'],
+    ]) {
+      acoes.append(botaoDoPedido(ctx, emoji, rotulo, dica, resultado, trava,
+        () => enviarPedidos({ type: 'pedidoPartida', resultado, n, faltavam: faltam }, trava)));
+    }
+  }
+  if (secao === 'agora' || (secao === 'fila' && p.estado === 'fila')) {
+    acoes.append(botaoDoPedido(ctx, '⏭ ', 'Pular', 'Pular este pedido', 'pular', `pular:${id}`,
+      () => enviarPedidos({ type: 'pedidoPular', id }, `pular:${id}`)));
+  }
+  if (p.estado === 'pulado' && secao === 'fila') {
+    acoes.append(botaoDoPedido(ctx, '↩ ', 'Retomar', 'Volta para a fila, no mesmo lugar', 'retomar', `retomar:${id}`,
+      () => enviarPedidos({ type: 'pedidoRetomar', id }, `retomar:${id}`)));
+  }
+  if (secao === 'agora' || secao === 'fila') {
+    acoes.append(botaoDoPedido(ctx, '✏ ', 'Corrigir', '', 'corrigir', null, () => dialogoItensPedido(p, 'corrigir')));
+  }
+  if (secao === 'revisar') {
+    acoes.append(botaoDoPedido(ctx, '＋ ', 'Montar o pedido', 'Escolher os itens e mandar para a fila', 'montar', null, () => dialogoItensPedido(p, 'confirmar')));
+    if (p.pago === true) {
+      acoes.append(botaoDoPedido(ctx, '', 'Marcar para devolver', '', 'devolver', `recusar:${id}`, async () => {
+        if (await obsConfirmar('Marcar este pagamento para devolver? O pedido sai da lista e vai para «a devolver».', { icone: '💸', ok: 'Marcar para devolver' })) {
+          enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
+        }
+      }));
+      acoes.append(botaoDoPedido(ctx, '', 'Era só apoio', '', 'ignorar', `ignorar:${id}`, async () => {
+        if (await obsConfirmar('Era só apoio? O pagamento sai da lista sem ir para «a devolver».', { icone: '🙋', ok: 'Era só apoio' })) {
+          enviarPedidos({ type: 'pedidoIgnorar', id }, `ignorar:${id}`);
+        }
+      }));
+    }
+  }
+  if (secao === 'agora' || secao === 'fila' || (secao === 'revisar' && p.pago !== true)) {
+    acoes.append(botaoDoPedido(ctx, '✖ ', 'Recusar', '', 'recusar', `recusar:${id}`, async () => {
+      const texto = p.pago === true ? 'Recusar este pedido? Ele é pago: vai para a lista «a devolver».' : 'Recusar este pedido?';
+      if (await obsConfirmar(texto, { icone: '🙋', nivel: 'perigo', ok: 'Recusar' })) enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
+    }));
+  }
+  if (secao === 'devolver') {
+    acoes.append(botaoDoPedido(ctx, '✔ ', 'Devolvido', '', 'devolvido', `devolvido:${id}`, async () => {
+      if (await obsConfirmar('Já devolveu este pagamento? Ele sai da lista «a devolver».', { icone: '💸', ok: 'Devolvido' })) {
+        enviarPedidos({ type: 'pedidoDevolvido', id }, `devolvido:${id}`);
+      }
+    }));
+  }
+  if (acoes.childNodes.length) partes.push(acoes);
+  card.replaceChildren(...partes);
+}
+
+// ── ✏ corrigir / ＋ montar: os itens do pedido e as opções das dúvidas ──
+// (a busca no catálogo inteiro é das Configurações, só no computador do streamer)
+async function dialogoItensPedido(p, modo) {
+  if (!podeMexerPedidos()) return;
+  const id = String(p.id).slice(0, 40);
+  const opcoes = [];
+  const vistos = new Set();
+  const juntar = (o, trecho, marcado) => {
+    const oid = o && typeof o.id === 'string' ? o.id.slice(0, 100) : '';
+    if (!oid || vistos.has(oid)) return;
+    vistos.add(oid);
+    opcoes.push({ id: oid, nome: nomeDoItemPedido(p.jogo, o) || oid, imagem: o.imagem, trecho, marcado });
+  };
+  for (const it of pedLista(p.itens)) juntar(it, '', true);
+  for (const d of pedLista(p.duvidas)) for (const o of pedLista(d && d.opcoes)) juntar(o, d && typeof d.trecho === 'string' ? d.trecho : '', false);
+  const antes = Math.max(1, pedInteiro(p.partidas && p.partidas.total));
+  const caixas = [];
+  let campo = null;
+  const ok = await obsDialog({
+    titulo: modo === 'confirmar' ? 'Montar o pedido' : 'Corrigir o pedido',
+    icone: '🙋',
+    texto: opcoes.length ? 'Marque o que vale neste pedido.' : 'O leitor não reconheceu nenhum item: o pedido segue assim mesmo, sem itens.',
+    ok: modo === 'confirmar' ? 'Enviar para a fila' : 'Confirmar',
+    montarExtra: (box) => {
+      if (opcoes.length) {
+        const lista = pedEl('div', 'ped-dialogo-itens');
+        lista.dataset.noI18n = '1';
+        for (const o of opcoes) {
+          const lbl = document.createElement('label');
+          const chk = document.createElement('input');
+          chk.type = 'checkbox';
+          chk.checked = o.marcado;
+          caixas.push([chk, o]);
+          lbl.append(chk);
+          const img = settings?.pedidos?.imagens?.painel !== false ? imgDoPedido(o.imagem, 24) : null;
+          if (img) lbl.append(img);
+          lbl.append(pedEl('span', '', o.nome));
+          lista.append(lbl);
+        }
+        box.append(lista);
+        if (modo === 'confirmar' && opcoes.some((o) => !o.marcado)) {
+          box.append(pedEl('div', 'ped-dialogo-dica', 'O que você confirmar numa dúvida pode virar apelido do item: o leitor aprende.'));
+        }
+      }
+      const linha = pedEl('div', 'ped-dialogo-campo');
+      campo = document.createElement('input');
+      campo.type = 'number';
+      campo.min = '1';
+      campo.max = '99';
+      campo.step = '1';
+      campo.value = String(antes);
+      linha.append(pedEl('label', '', 'Partidas'), campo);
+      box.append(linha);
+    },
+  });
+  if (!ok) return;
+  const itens = caixas.filter(([c]) => c.checked).map(([, o]) => (o.trecho ? { id: o.id, trecho: o.trecho.slice(0, 200) } : { id: o.id }));
+  const op = { type: modo === 'confirmar' ? 'pedidoConfirmar' : 'pedidoCorrigir', id, itens };
+  const partidas = Math.round(Number(campo && campo.value));
+  if (Number.isFinite(partidas) && partidas >= 1 && partidas <= 99 && partidas !== antes) op.partidas = partidas;
+  enviarPedidos(op, `${modo}:${id}`);
+}
+// ＋ pedido à mão (o servidor tapa telefone no nome e na frase, como em tudo)
+async function novoPedidoAMao() {
+  if (!podeMexerPedidos()) return;
+  const campos = {};
+  const ok = await obsDialog({
+    titulo: 'Pedido à mão',
+    icone: '🙋',
+    ok: 'Enviar para a fila',
+    montarExtra: (box) => {
+      const campo = (chave, rotulo, input) => {
+        const linha = pedEl('div', 'ped-dialogo-campo');
+        linha.append(pedEl('label', '', rotulo), input);
+        box.append(linha);
+        campos[chave] = input;
+      };
+      campo('quem', 'Quem pediu', Object.assign(document.createElement('input'), { type: 'text', maxLength: 60, autocomplete: 'off' }));
+      campo('texto', 'Pedido', Object.assign(document.createElement('input'), { type: 'text', maxLength: 600, autocomplete: 'off' }));
+      campo('partidas', 'Partidas', Object.assign(document.createElement('input'), { type: 'number', min: '1', max: '99', step: '1', value: '1' }));
+      // o cursor começa em «Quem pediu» (depois do foco do próprio diálogo, no OK),
+      // a não ser que a pessoa já tenha clicado num campo
+      setTimeout(() => { try { if (!box.contains(document.activeElement)) campos.quem.focus(); } catch {} }, 60);
+    },
+  });
+  if (!ok) return;
+  const quem = String(campos.quem.value || '').trim().slice(0, 200);
+  const texto = String(campos.texto.value || '').trim().slice(0, 600);
+  if (!quem && !texto) return;
+  const n = Math.round(Number(campos.partidas.value));
+  enviarPedidos({ type: 'pedidoNovo', quem, texto, partidas: Number.isFinite(n) && n >= 1 && n <= 99 ? n : 1 }, 'novo');
+}
+
+// ── ➕ Virar pedido (menu do botão direito e janela do comentário) ──
+function pedidosVirarDisponivel() {
+  return pedidosLigados() && podeMexerPedidos() && !ocultosDoPainel().virarPedido;
+}
+// a mensagem que já virou pedido (só o painel do streamer recebe o msgId)
+function pedidoDaMensagem(message) {
+  if (!message || message.id === undefined || message.id === null || !pedidosLigados()) return null;
+  const id = String(message.id);
+  return todosOsPedidos(pedidosEstado).find((p) => p.msgId === id && p.platform === message.platform) || null;
+}
+function virarPedidoDaMensagem(message) {
+  if (!message || message.id === undefined || message.id === null) return false;
+  return enviarPedidos({ type: 'pedidoDeMensagem', id: String(message.id).slice(0, 300), platform: String(message.platform || '').slice(0, 20) });
+}
+
+// ── onde ficam: aba, coluna, ou o 🙋 ──
+function aplicarPedidosNoPainel() {
+  const ligado = pedidosLabsLigado();
+  const verAba = pedidosNaAba();
+  const aba = document.querySelector('.tab[data-tab="pedidos"]');
+  if (aba) {
+    aba.style.display = verAba ? '' : 'none';
+    if (!verAba && aba.classList.contains('active')) document.querySelector('.tab[data-tab="live"]')?.click();
+  }
+  const barra = document.getElementById('pedidosBarra');
+  if (barra) barra.style.display = verAba && !!aba && aba.classList.contains('active') ? '' : 'none';
+  const wrap = document.getElementById('colPedidosWrap');
+  if (wrap) wrap.style.display = ligado && settings?.panel?.liveView === 'colunas' ? '' : 'none';
+  const chk = document.getElementById('colPedidosChk');
+  if (chk && document.activeElement !== chk) chk.checked = pedidosOndeAtual() !== 'aba';
+}
+function irParaPedidos() {
+  closePopovers();
+  if (pedidosNaAba()) {
+    document.querySelector('.tab[data-tab="pedidos"]')?.click();
+    return lists.pedidos;
+  }
+  if (pedidosNaColuna()) {
+    document.querySelector('.tab[data-tab="live"]')?.click();
+    const col = document.querySelector('#list-live .live-col[data-col-key="__pedidos"]');
+    if (col) col.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    return col;
+  }
+  return null;
+}
+function pintarAtalhoPedidos() {
+  const linha = document.getElementById('pedidosAtalhoRow');
+  const btn = document.getElementById('pedidosAtalhoBtn');
+  if (!linha || !btn) return;
+  const destino = pedidosNaAba() ? 'aba' : pedidosNaColuna() ? 'coluna' : '';
+  linha.style.display = destino ? '' : 'none';
+  if (btn.dataset.destino === destino) return;
+  btn.dataset.destino = destino;
+  btn.replaceChildren(destino === 'aba' ? '🗂️ ' : '🧱 ', pedEl('span', '', destino === 'aba' ? 'Ir para a aba' : 'Ir para a coluna'));
+}
+// «Ver o pedido»: abre onde ele está e acende o cartão por um instante
+function mostrarPedidoNaTela(id) {
+  const pid = String(id);
+  if (!RE_PEDIDO_ID.test(pid)) return;
+  let alvo = irParaPedidos();
+  if (!alvo) {
+    const pop = document.getElementById('pedidosPop');
+    if (pop && !pop.classList.contains('open')) document.getElementById('pedidosToolBtn')?.click();
+    alvo = pop;
+  }
+  setTimeout(() => {
+    const card = alvo ? [...alvo.querySelectorAll('.pedido-card')].find((c) => c.dataset.pedido === pid) : null;
+    if (!card) return;
+    card.scrollIntoView({ block: 'nearest' });
+    card.classList.add('destaque');
+    setTimeout(() => card.classList.remove('destaque'), 1600);
+  }, 60);
+}
+
+// ── montagem (o HTML já está no arquivo: nada aqui pode estourar na carga) ──
+const pedidosVistaAba = criarVistaPedidos('aba');
+const pedidosVistaPop = criarVistaPedidos('pop');
+lists.pedidos?.appendChild(pedidosVistaAba);
+document.getElementById('pedidosPopLista')?.appendChild(pedidosVistaPop);
+montarBarraPedidos(document.getElementById('pedidosBarra'));
+montarBarraPedidos(document.getElementById('pedidosPopBarra'));
+document.getElementById('pedidosAtalhoBtn')?.addEventListener('click', () => { irParaPedidos(); });
+// 📱 no celular o 🙋 fica no meio da barra: o cartão encaixado abre para a
+// esquerda o quanto precisar para caber na tela (a janela solta tem lugar próprio)
+document.getElementById('pedidosToolBtn')?.addEventListener('click', () => {
+  const pop = document.getElementById('pedidosPop');
+  if (!pop || pop.classList.contains('destacada')) return;
+  pop.style.left = '';
+  if (!pop.classList.contains('open')) return;
+  const zoom = parseFloat(document.body.style.zoom) || 1;
+  const r = pop.getBoundingClientRect();
+  // a largura da tela de verdade (no celular, o innerWidth cresce junto com o que vaza)
+  const limite = (document.documentElement.clientWidth || window.innerWidth) - 8;
+  if (r.right > limite) pop.style.left = Math.round(-Math.max(0, Math.min(r.right - limite, r.left - 8)) / zoom) + 'px';
+});
+// 🙋 + Pedidos (modo Colunas): marcado = coluna; desmarcado = só a aba
+document.getElementById('colPedidosChk')?.addEventListener('input', (e) => {
+  const atual = pedidosOndeAtual();
+  const onde = e.target.checked ? (atual === 'aba' ? 'ambos' : atual) : 'aba';
+  hub.send({ type: 'settings', settings: { panel: { pedidosOnde: onde } } });
+});
+// a hora dos cartões segue o idioma desta tela
+if (window.OBS_I18N && typeof OBS_I18N.aoMudar === 'function') {
+  OBS_I18N.aoMudar(() => {
+    for (const card of document.querySelectorAll('.pedido-card')) card.__assin = '';
+    agendarRenderPedidos();
+  });
 }
 
 // O teclado do painel: a MESMA tecla quadrada das configurações (render.js),

@@ -551,10 +551,18 @@ class KickConnector {
     const custoBruto = Number(d.reward_cost ?? d.cost);
     const cor = String(d.reward_background_color || d.background_color || '');
     const ts = Date.now();
+    // 🙋 v0.192: o id da recompensa (e o do resgate), quando o pacote traz. O
+    // nome do campo ainda não foi visto num resgate de verdade: só valem os nomes
+    // sem ambiguidade (reward_id ou reward.id; redemption_id). Sem o id, os
+    // Pedidos casam a recompensa pelo título.
+    const idTexto = (v) => (typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v)) ? String(v).trim().slice(0, 100) : '');
+    const idRecompensa = idTexto(d.reward_id) || idTexto(d.reward && typeof d.reward === 'object' ? d.reward.id : undefined);
+    const idResgate = idTexto(d.redemption_id);
     this.handlers.onMessage({
       platform: 'kick',
       channel: this.channel,
-      id: `kick-r-${ts}-${idEstavel(`${autor}|${titulo}|${entrada}`)}`,
+      // com o id do resgate, a mesma entrega repetida não entra duas vezes
+      id: idResgate ? `kick-r-${idResgate}` : `kick-r-${ts}-${idEstavel(`${autor}|${titulo}|${entrada}`)}`,
       author: autor,
       authorLogin: String(quem.slug || d.username || quem.username || '').toLowerCase() || null,
       authorColor: null,
@@ -562,6 +570,7 @@ class KickConnector {
       badges: ['resgate ' + titulo],
       subTier: null,
       resgate: {
+        ...(idRecompensa ? { id: idRecompensa } : {}),
         titulo,
         custo: Number.isFinite(custoBruto) && custoBruto > 0 ? custoBruto : null,
         cor: /^#[0-9a-f]{6}$/i.test(cor) ? cor : null,
