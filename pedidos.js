@@ -11,14 +11,17 @@
 // • pagamento nunca se perde: o que cita o catálogo mas não fecha (pagos
 //   fechados, valor curto, acima do máximo, fila cheia…) vai para ⚠ Revisar,
 //   e a idade não descarta pagamento — vale se os pagos estavam abertos NA
-//   HORA do pagamento (os intervalos ficam gravados);
+//   HORA do pagamento (os intervalos ficam gravados); o que chega com o
+//   arquivo travado espera (na memória e em pedidos.espera.json) e é decidido
+//   quando o arquivo abre;
 // • a fila é sempre por ordem de chegada (hora do pagamento/da mensagem;
 //   empate pelo nº do pedido), pago e grátis juntos;
 // • o pedido nasce sem telefone (nome e texto tapados) e o contato para
 //   responder fica só aqui dentro: nenhuma projeção o leva;
 // • o «message» do servidor nunca é mexido: lerEntrada copia o que precisa;
 // • arquivo que não abre ganha cópia e trava a gravação até o streamer
-//   escolher «começar do zero»; o nº do pedido (seq) nunca volta para trás;
+//   consertar o arquivo ou escolher «começar do zero»; nada grava por cima
+//   sem a cópia; o nº do pedido (seq) nunca volta para trás;
 // • chave vinda de fora nunca vira propriedade de objeto (Map, Set e listas
 //   fechadas): __proto__ e companhia não entram.
 'use strict';
@@ -33,7 +36,7 @@ const { nomeParaMostrar, IDIOMAS } = require('./pedidos-catalogo');
 const VERSAO = 1;
 const TETOS = Object.freeze({
   ativos: 2000,      // fila + revisar + pulados + agora (acima disso, pago vai para ⚠ Revisar)
-  atendidos: 500, vistos: 5000, intervalos: 1000, registro: 200, creditos: 5000, gratisNaLive: 20000,
+  atendidos: 500, vistos: 5000, intervalos: 1000, registro: 200, creditos: 5000, gratisNaLive: 20000, espera: 5000,
   texto: 600, nome: 60, itens: 30, duvidas: 12, opcoes: 12, partidas: 99, feitosNoPainel: 50,
 });
 const ATRASO_GRAVACAO_MS = 300;  // pedidos do chat: a rajada vira uma gravação só
@@ -54,6 +57,9 @@ const MARCAS = Object.freeze([
 ]);
 const MARCAS_VALIDAS = new Set(MARCAS);
 const ORIGENS_EXTERNAS = new Set(['controle', 'externo']);
+const OPERACOES_DE_PARTIDA = new Set(['partida', 'vitoria', 'derrota', 'jogada']);
+// nome que não identifica ninguém: o conector põe «Anônimo» para quem não digitou nome
+const NOMES_ANONIMOS = new Set(['anonimo', 'anonima', 'anonymous', 'anonyme', 'anonym']);
 
 // 🗣️ «Parece pedido»: palavras e expressões já na forma do leitor (sem acento,
 // gírias trocadas: «pfv» chega como «por favor», «builda» como «build»).
@@ -198,6 +204,10 @@ function sanitizarConfiguracao(bruto, padrao) {
 // ── ✂️ Texto ────────────────────────────────────────────────────────────────
 // controle, separadores de linha e marcadores de direção (viram truque na tela)
 const RE_CONTROLE = /[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g;
+// invisíveis que não fazem nada na tela, só escondem o que está no meio
+// («11<U+200B>98765<U+200B>4321» parece telefone e «Pala<U+200B>vrao», uma palavra só).
+// O ZWJ/ZWNJ e os seletores de variação ficam: montam emoji e escritas.
+const RE_INVISIVEL = /[\u00ad\u17b4\u17b5\u180e\u200b\u2060-\u2064\u206a-\u206f\ufeff]/g;
 function cortar(s, max) {
   if (s.length <= max) return s;
   let c = s.slice(0, max);
@@ -210,34 +220,128 @@ function limparLinha(v, max) {
   let s = v;
   if (typeof s === 'number' && Number.isFinite(s)) s = String(s);
   if (typeof s !== 'string') return '';
-  return cortar(cortar(s, max * 4).replace(RE_CONTROLE, ' ').replace(/\s+/g, ' ').trim(), max).trim();
+  return cortar(cortar(s, max * 4).replace(RE_CONTROLE, ' ').replace(RE_INVISIVEL, '').replace(/\s+/g, ' ').trim(), max).trim();
 }
-// 📱 telefone escrito nunca entra no pedido (8+ dígitos com espaço, ponto, traço, parênteses)
-const RE_TELEFONE = /\+?\d[\d\s().-]{6,}\d/g;
+
+// 📱 telefone escrito nunca entra no pedido: 8+ dígitos com espaço, ponto, traço
+// ou parênteses no meio. Dígito de qualquer escrita (os largos do teclado
+// japonês e chinês, os arábicos…) e o que vira dígito na forma compatível
+// (①, ², 𝟗); separador também é traço de qualquer tipo, o ponto e os parênteses
+// largos, o branco que ocupa lugar (U+3164, U+2800) e o que não aparece (marca
+// sobre o dígito, U+200C…).
+const RE_TELEFONE = /\+?\d[\d\s().-]{6,}\d/g; // o caso comum (só ASCII), direto
+const RE_TALVEZ_DIGITO = /[\p{Nd}\p{No}]/u;
+const RE_SEPARADOR_FONE = /^[\s().\-\p{Pd}\p{Cf}\p{M}\u00b7\u115f\u1160\u2024\u2027\u2212\u2800\u30fb\u30fc\u3164\uff08\uff09\uff0e\uff65\uff70\uffa0]$/u;
+const ehMais = (ch) => ch === '+' || ch === '\uff0b';
+function digitosDoCaractere(ch) {
+  if (ch >= '0' && ch <= '9') return 1;
+  if (ch.length === 1 && ch.charCodeAt(0) < 0x80) return 0;
+  if (/^\p{Nd}$/u.test(ch)) return 1;
+  if (/^\p{No}$/u.test(ch)) { const k = ch.normalize('NFKC'); return /^[0-9]{1,2}$/.test(k) ? k.length : 0; }
+  return 0;
+}
 function taparTelefones(t) {
-  if (!/\d/.test(t)) return t;
-  return t.replace(RE_TELEFONE, (m) => (m.replace(/\D/g, '').length >= 8 ? '📱' : m));
+  if (typeof t !== 'string' || !RE_TALVEZ_DIGITO.test(t)) return t;
+  if (!/[^\x00-\x7f]/.test(t)) return t.replace(RE_TELEFONE, (m) => (m.replace(/\D/g, '').length >= 8 ? '📱' : m));
+  // fora do ASCII: cada caractere vira uma letra de «sombra» (d dígito, s separador,
+  // m marca, + mais, x o resto), a mesma regra roda nela e devolve os pedaços
+  const cps = Array.from(t);
+  const pesos = new Array(cps.length);
+  let sombra = '';
+  for (let i = 0; i < cps.length; i++) {
+    const ch = cps[i];
+    pesos[i] = digitosDoCaractere(ch);
+    sombra += pesos[i] ? 'd' : ehMais(ch) ? '+' : /^\p{M}$/u.test(ch) ? 'm' : RE_SEPARADOR_FONE.test(ch) ? 's' : 'x';
+  }
+  let out = '';
+  let ult = 0;
+  for (const m of sombra.matchAll(/\+?d[dsm]{6,}dm*/g)) {
+    let n = 0;
+    for (let i = m.index; i < m.index + m[0].length; i++) n += pesos[i];
+    if (n < 8) continue;
+    out += cps.slice(ult, m.index).join('') + '📱';
+    ult = m.index + m[0].length;
+  }
+  return ult ? out + cps.slice(ult).join('') : t;
 }
-// para comparar nomes e palavras bloqueadas: minúsculas, sem acento, letra
-// repetida 3+ vezes vira uma, pontuação vira espaço
+
+// Para comparar: minúsculas, sem acento nem risco sobre a letra (o «Zalgo»
+// também), sem o que não aparece na tela, pontuação vira espaço. O NFC no fim
+// recompõe o japonês (カ + ゛ = ガ) e o coreano, que o NFKD tinha separado.
+const RE_MARCAS_LATINAS = /[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]/g;
+const RE_INVISIVEL_COMPARAR = /[\p{Cf}\u034f\u17b4\u17b5\u180b-\u180f\ufe00-\ufe0f\u{e0100}-\u{e01ef}]/gu;
+function normalizarBase(s) {
+  return String(s).normalize('NFKD').replace(RE_MARCAS_LATINAS, '').replace(RE_INVISIVEL_COMPARAR, '')
+    .replace(/[\u115f\u1160]/g, ' ') // o branco coreano ocupa lugar na tela: separa como espaço
+    .normalize('NFC').toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim();
+}
+// nomes e recompensas (chave da pessoa, listas sem repetir): letra repetida 3+ vezes vira uma
 function normalizarNome(s) {
-  return String(s).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ').replace(/(\p{L})\1{2,}/gu, '$1').trim();
+  return normalizarBase(s).replace(/(\p{L})\1{2,}/gu, '$1');
 }
-// nome bloqueado: palavra inteira, ou pedaço de um nome colado («XxPalavraxX»;
-// só palavra de 4+ letras, senão «cu» acharia «Lucas»)
-function nomeBloqueado(nome, bloqueadas) {
-  if (!bloqueadas.length) return false;
-  const n = normalizarNome(nome);
-  if (!n) return false;
-  const palavras = n.split(' ');
-  const cercado = ` ${n} `;
-  for (const b of bloqueadas) {
-    if (b.includes(' ')) { if (cercado.includes(` ${b} `)) return true; continue; }
-    if (palavras.includes(b)) return true;
-    if (b.length >= 4 && palavras.some((p) => p.length > b.length && p.includes(b))) return true;
+const semNome = (s) => { const n = normalizarNome(s || ''); return !n || NOMES_ANONIMOS.has(n); };
+
+// 🙈 Palavras bloqueadas. Cada texto vira o esqueleto (cada sequência de letras
+// iguais vira uma) com quantas vezes cada letra apareceu; a bloqueada bate
+// quando cada letra dela aparece AO MENOS tantas vezes no nome: «spammer» acha
+// «Spammmer» e «palavrao» acha «Palavraaao», mas «ass» não acha «As».
+function esqueleto(texto) {
+  let s = '';
+  const c = []; // uma contagem por unidade do texto (letra fora do BMP ocupa duas)
+  let ant = null;
+  for (const ch of texto) {
+    if (ch === ant) { for (let k = 1; k <= ch.length; k++) c[c.length - k]++; continue; }
+    s += ch;
+    for (let k = 0; k < ch.length; k++) c.push(1);
+    ant = ch;
+  }
+  return { s, c };
+}
+// em volta de palavra curta colada, só enfeite: x e números («XxFdpxX», «fdp123»)
+const RE_ENFEITE = /^[x\p{N}]*$/u;
+function contem(N, B, soComEnfeite) {
+  for (let i = N.s.indexOf(B.s); i >= 0; i = N.s.indexOf(B.s, i + 1)) {
+    let ok = true;
+    for (let k = 0; k < B.s.length && ok; k++) ok = N.c[i + k] >= B.c[k];
+    if (ok && soComEnfeite) {
+      const ini = N.s.lastIndexOf(' ', i) + 1;
+      let fim = N.s.indexOf(' ', i + B.s.length);
+      if (fim < 0) fim = N.s.length;
+      ok = RE_ENFEITE.test(N.s.slice(ini, i)) && RE_ENFEITE.test(N.s.slice(i + B.s.length, fim));
+    }
+    if (ok) return true;
   }
   return false;
+}
+// Achada como palavra inteira e, colada num nome, pelo «peso»: chinês, japonês e
+// coreano escrevem sem espaço e cada caractere vale por 2 letras («广告» acha
+// «广告机器人»); peso 4+ colada em qualquer lugar; 2 ou 3 só com enfeite em volta
+// («cu» não acha «Lucas», «pau» não acha «Paulo»); 1, só a palavra inteira.
+const RE_ESCRITA_SEM_ESPACO = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+function prepararBloqueada(texto) {
+  const w = normalizarBase(texto);
+  if (!w) return null;
+  if (w.includes(' ')) return { inteira: esqueleto(` ${w} `), colada: null, modo: 'nunca' }; // frase: só inteira
+  let peso = 0;
+  for (const ch of w) peso += RE_ESCRITA_SEM_ESPACO.test(ch) ? 2 : 1;
+  return { inteira: esqueleto(` ${w} `), colada: esqueleto(w), modo: peso >= 4 ? 'sempre' : peso >= 2 ? 'enfeite' : 'nunca' };
+}
+// `der` = as bloqueadas preparadas da configuração e o cache dos nomes já vistos
+// (o painel projeta milhares de pedidos a cada mudança)
+function nomeBloqueado(nome, der) {
+  if (!der.bloqueadas.length) return false;
+  const k = String(nome);
+  const visto = der.cacheBloqueio.get(k);
+  if (visto !== undefined) return visto;
+  const n = normalizarBase(k);
+  let sim = false;
+  if (n) {
+    const N = esqueleto(` ${n} `);
+    sim = der.bloqueadas.some((b) => contem(N, b.inteira, false) || (b.modo !== 'nunca' && contem(N, b.colada, b.modo === 'enfeite')));
+  }
+  if (der.cacheBloqueio.size >= 5000) der.cacheBloqueio.clear();
+  der.cacheBloqueio.set(k, sim);
+  return sim;
 }
 // nome civil do Pix do banco (muitas vezes em MAIÚSCULAS): primeiro nome com só a inicial maiúscula
 function capitalizar(s) {
@@ -268,12 +372,18 @@ function formatarCentavos(c, moeda) {
   return `${sinal}${moeda} ${Math.floor(v / 100)}.${dec}`;
 }
 
-// 📱 as mesmas regras do servidor, para quando ele não injeta as dele (testes)
+// 📱 as regras do servidor, também com os dígitos e traços de qualquer escrita:
+// o nome que é só um telefone (8+ dígitos e separadores) vira o apelido
 function pareceTelefonePadrao(nome) {
   const t = String(nome || '').trim();
-  if (!t) return false;
-  if (t.replace(/\D/g, '').length < 8) return false;
-  return /^[+()\-.\s\d]+$/.test(t);
+  if (!t || !RE_TALVEZ_DIGITO.test(t)) return false;
+  let n = 0;
+  for (const ch of t) {
+    const d = digitosDoCaractere(ch);
+    if (d) n += d;
+    else if (!ehMais(ch) && !RE_SEPARADOR_FONE.test(ch)) return false;
+  }
+  return n >= 8;
 }
 function apelidoDeTelefonePadrao(nome) {
   const t = String(nome || '').trim();
@@ -292,19 +402,41 @@ function criarPedidos(opcoes) {
   const o = ehObjeto(opcoes) ? opcoes : {};
   if (typeof o.baseDir !== 'string' || !o.baseDir.trim()) throw new TypeError('criarPedidos: falta a pasta base (data/pedidos)');
   const arquivo = path.join(o.baseDir, 'pedidos.json');
+  const arquivoEspera = path.join(o.baseDir, 'pedidos.espera.json');
   const catalogos = o.catalogos && typeof o.catalogos === 'object' ? o.catalogos : null;
   const lerConfiguracao = typeof o.configuracao === 'function' ? o.configuracao : () => o.configuracao;
   const relogio = typeof o.agora === 'function' ? o.agora : Date.now;
   const aoMudar = typeof o.aoMudar === 'function' ? o.aoMudar : null;
-  const apelidoDeTelefone = typeof o.apelidoDeTelefone === 'function' ? o.apelidoDeTelefone : apelidoDeTelefonePadrao;
-  const pareceTelefone = typeof o.pareceTelefone === 'function' ? o.pareceTelefone : pareceTelefonePadrao;
+  const apelidoDoServidor = typeof o.apelidoDeTelefone === 'function' ? o.apelidoDeTelefone : null;
+  const telefoneDoServidor = typeof o.pareceTelefone === 'function' ? o.pareceTelefone : null;
   const converter = typeof o.converter === 'function' ? o.converter : null;
-  const agora = () => { const t = Number(relogio()); return Number.isFinite(t) ? t : Date.now(); };
+  // função do servidor com erro nunca derruba a mensagem: cai na regra própria
+  const agora = () => {
+    let t = NaN;
+    try { t = Number(relogio()); } catch { /* relógio do servidor com erro: o do sistema */ }
+    return Number.isFinite(t) ? t : Date.now();
+  };
+  // 📱 as regras do servidor (o apelido bate com o do chat) somadas às do núcleo
+  function pareceTelefone(nome) {
+    if (pareceTelefonePadrao(nome)) return true;
+    if (!telefoneDoServidor) return false;
+    try { return !!telefoneDoServidor(nome); } catch { return false; }
+  }
+  function apelidoDeTelefone(nome) {
+    let a = null;
+    if (apelidoDoServidor) { try { a = apelidoDoServidor(nome); } catch { a = null; } }
+    if (typeof a !== 'string' || !a.trim()) a = apelidoDeTelefonePadrao(nome);
+    return taparTelefones(limparLinha(a, TETOS.nome)) || apelidoDeTelefonePadrao(nome);
+  }
 
   let E = null;              // os dados (o que vai para o arquivo)
   let travado = null;        // null | 'ilegivel' (estragado) | 'preso' (outro programa segura o arquivo)
   let copia = null;          // a cópia do arquivo que não abriu
-  let ultimaLeitura = 0;
+  let assinaturaIlegivel = null; // como o arquivo ilegível estava no disco (mudou = o streamer consertou)
+  let copiaDevida = false;   // entrada descartada sem cópia: o arquivo só é regravado depois dela
+  let espera = [];           // pagamentos que chegaram com o arquivo travado: { em, m }
+  let esperaAtrasada = false, avisouEspera = false;
+  let ultimaLeitura = 0, ultimoErro = null;
   let timerGravar = null, timerRetentar = null, timerVivo = null;
   let pendente = false, gravacoes = 0, avisouGravacao = false;
   const toques = new Map();  // operação do controle externo → hora do último toque aceito
@@ -322,7 +454,7 @@ function criarPedidos(opcoes) {
       bruto: b,
       conf,
       der: {
-        bloqueadas: conf.palavrasBloqueadas.map(normalizarNome).filter(Boolean),
+        bloqueadas: conf.palavrasBloqueadas.map(prepararBloqueada).filter(Boolean), cacheBloqueio: new Map(),
         recompensas: new Set(conf.gratis.recompensas.map(normalizarNome).filter(Boolean)),
       },
     };
@@ -355,22 +487,32 @@ function criarPedidos(opcoes) {
   function gravarAgora() {
     if (timerGravar) { clearTimeout(timerGravar); timerGravar = null; }
     if (travado) return false; // arquivo que não abriu: nada grava por cima
+    if (copiaDevida) {
+      // a entrada descartada só existe no arquivo do disco: sem a cópia dele, regravar a apagaria
+      const c = guardarCopia();
+      if (!c) { pendente = true; retentarDepois(); return false; }
+      copiaDevida = false;
+      console.error(`  ⚠️ 🙋 Pedidos: o arquivo como estava ficou guardado em ${path.basename(c)}; a fila volta a ser gravada.`);
+    }
     try {
       gravarAtomico(arquivo, serializar(), { privado: true });
       gravacoes++;
       pendente = false;
       avisouGravacao = false;
+      if (esperaAtrasada) { esperaAtrasada = false; gravarEspera(); } // o que esperava já está na fila gravada
       return true;
     } catch (err) {
       pendente = true;
       if (!avisouGravacao) console.error('  ⚠️ 🙋 Pedidos: não consegui gravar a fila (tento de novo sozinho):', (err && (err.code || err.message)) || err);
       avisouGravacao = true;
-      if (!timerRetentar) {
-        timerRetentar = setTimeout(() => { timerRetentar = null; if (pendente) gravarAgora(); }, 2000);
-        if (timerRetentar.unref) timerRetentar.unref();
-      }
+      retentarDepois();
       return false;
     }
+  }
+  function retentarDepois() {
+    if (timerRetentar) return;
+    timerRetentar = setTimeout(() => { timerRetentar = null; if (pendente) gravarAgora(); }, 2000);
+    if (timerRetentar.unref) timerRetentar.unref();
   }
   // pedidos vindos do chat: a primeira mudança marca a gravação e as próximas
   // pegam carona (uma rajada de 50 vira uma gravação, e nada espera mais que 300 ms)
@@ -381,9 +523,16 @@ function criarPedidos(opcoes) {
     timerGravar = setTimeout(() => { timerGravar = null; gravarAgora(); }, ATRASO_GRAVACAO_MS);
     if (timerGravar.unref) timerGravar.unref();
   }
+  // cópia do arquivo como está no disco agora (nunca por cima de outra cópia)
   function guardarCopia() {
-    const copiaNome = path.join(path.dirname(arquivo), `pedidos.ilegivel-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-    try { fs.copyFileSync(arquivo, copiaNome); return semCopiaRepetida(copiaNome); } catch { return null; }
+    const base = path.join(path.dirname(arquivo), `pedidos.ilegivel-${new Date().toISOString().replace(/[:.]/g, '-')}`);
+    for (let i = 0; i < 20; i++) {
+      const nome = i ? `${base}-${i}.json` : `${base}.json`;
+      try { fs.copyFileSync(arquivo, nome, fs.constants.COPYFILE_EXCL); return semCopiaRepetida(nome); } catch (err) {
+        if (!err || err.code !== 'EEXIST') return null;
+      }
+    }
+    return null;
   }
   // abrir de novo com o mesmo arquivo estragado não empilha cópias iguais
   function semCopiaRepetida(nova) {
@@ -400,6 +549,10 @@ function criarPedidos(opcoes) {
     } catch { /* fica a nova */ }
     return nova;
   }
+  // como o arquivo está no disco (outro conteúdo = outra assinatura)
+  function assinaturaDoDisco() {
+    try { const st = fs.statSync(arquivo); return `${st.ino}|${st.size}|${st.mtimeMs}`; } catch { return null; }
+  }
   function carregarArquivo() {
     try { limparTemporarios(arquivo); } catch { /* segue */ }
     ultimaLeitura = Date.now();
@@ -410,41 +563,149 @@ function criarPedidos(opcoes) {
         E = n.dados;
         travado = null;
         copia = null;
+        assinaturaIlegivel = null;
+        ultimoErro = null;
+        copiaDevida = false;
         if (n.descartados) {
           const c = guardarCopia();
           console.error(`  ⚠️ 🙋 Pedidos: ${n.descartados} entrada(s) estragada(s) do arquivo ficaram de fora.`);
-          console.error(c ? `    O arquivo como estava ficou guardado em ${path.basename(c)}.` : '    E não consegui guardar uma cópia do arquivo como estava.');
+          if (c) console.error(`    O arquivo como estava ficou guardado em ${path.basename(c)}.`);
+          else {
+            // sem a cópia, regravar apagaria a entrada para sempre: a gravação espera a cópia dar certo
+            copiaDevida = true;
+            console.error('    Não consegui guardar uma cópia do arquivo como estava: ele só é regravado quando a cópia der certo.');
+          }
           agendarGravacao();
         }
         fecharSeFicouParadoDemais();
         return;
       }
       // abre, mas não é a fila (ou foi gravado por uma versão mais nova): não grava por cima
-      copia = guardarCopia();
+      copia = guardarCopia() || copia;
       travado = 'ilegivel';
+      assinaturaIlegivel = assinaturaDoDisco();
+      ultimoErro = 'formato';
       E = dadosNovos(cfg().jogo);
-      console.error('  ⚠️ 🙋 Pedidos: o arquivo da fila não tem o formato esperado; nada grava por cima até você escolher «começar do zero».');
+      console.error('  ⚠️ 🙋 Pedidos: o arquivo da fila não tem o formato esperado; nada grava por cima até você consertar o arquivo ou escolher «começar do zero».');
       return;
     }
-    if (r.faltando) { E = dadosNovos(cfg().jogo); travado = null; copia = null; return; }
+    if (r.faltando) { E = dadosNovos(cfg().jogo); travado = null; copia = null; assinaturaIlegivel = null; ultimoErro = null; return; }
     // erro de leitura vem com o código do sistema (EBUSY, EPERM…): preso, não estragado
     const preso = typeof r.erro === 'string' && /^E[A-Z]+$/.test(r.erro);
     if (travado !== (preso ? 'preso' : 'ilegivel')) {
       console.error(preso
-        ? `  ⚠️ 🙋 Pedidos: o arquivo da fila está preso por outro programa (${r.erro}); tento de novo sozinho, sem gravar por cima.`
-        : `  ⚠️ 🙋 Pedidos: o arquivo da fila não abre (${r.erro}); ${r.copia ? `a cópia ficou em ${path.basename(r.copia)}` : 'não consegui guardar uma cópia'} e nada grava por cima até você escolher «começar do zero».`);
+        ? `  ⚠️ 🙋 Pedidos: o arquivo da fila está preso por outro programa (${r.erro}); tento de novo sozinho, sem gravar por cima (os pagamentos que chegarem esperam).`
+        : `  ⚠️ 🙋 Pedidos: o arquivo da fila não abre (${r.erro}); ${r.copia ? `a cópia ficou em ${path.basename(r.copia)}` : 'não consegui guardar uma cópia'} e nada grava por cima até você consertar o arquivo ou escolher «começar do zero».`);
     }
     travado = preso ? 'preso' : 'ilegivel';
+    assinaturaIlegivel = preso ? null : assinaturaDoDisco();
+    ultimoErro = r.erro;
     copia = semCopiaRepetida(r.copia) || copia;
     if (!E) E = dadosNovos(cfg().jogo);
   }
-  // arquivo preso (antivírus, OneDrive) é lido de novo a cada segundo: não trava a live
-  function pronto() {
-    if (travado === 'preso' && Date.now() - ultimaLeitura >= 1000) {
+  // Arquivo preso (antivírus, OneDrive) é lido de novo a cada segundo; o ilegível,
+  // assim que muda no disco (o streamer devolveu o arquivo bom): nada trava a live
+  // à toa. `forcar` relê o preso na hora (o «começar do zero» confere antes de apagar).
+  function pronto(forcar) {
+    if (!travado) return true;
+    let reler;
+    if (travado === 'preso') reler = forcar === true || Date.now() - ultimaLeitura >= 1000;
+    else { const a = assinaturaDoDisco(); reler = a !== null && a !== assinaturaIlegivel; }
+    if (reler) {
       carregarArquivo();
-      if (!travado) avisar('destravado');
+      if (!travado) { reprocessarEspera(); avisar('destravado'); }
     }
     return !travado;
+  }
+
+  // ── ⏳ espera: o pagamento que chega com o arquivo travado não se perde ──
+  // Fica na memória e em pedidos.espera.json (fechar o programa não o perde) e é
+  // decidido quando o arquivo abre, com o sal, os intervalos e a dedupe dele.
+  // Só o que o lerEntrada lê, numa cópia JSON enxuta: a mensagem do servidor
+  // nunca é guardada nem mexida.
+  const CAMPOS_DA_MENSAGEM = Object.freeze(['platform', 'id', 'author', 'authorId', 'authorLogin', 'badges', 'timestamp', 'text', 'superchat',
+    'resgate', 'livepix', 'pixgg', 'pix', 'teste', 'fromHistory', 'subTier', 'midia', 'tgChatId', 'tgMessageId', 'waChatId', 'waMessageId']);
+  function copiaRasa(v, nivel) {
+    if (typeof v === 'string') return v.slice(0, TETOS.texto * 4);
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    if (typeof v === 'boolean' || v === null) return v;
+    if (nivel > 1) return undefined;
+    if (Array.isArray(v)) return v.slice(0, 60).map((x) => copiaRasa(x, nivel + 1)).filter((x) => x !== undefined);
+    if (!ehObjeto(v)) return undefined;
+    const out = {};
+    for (const k of Object.keys(v).slice(0, 40)) {
+      if (k === '__proto__') continue;
+      const x = copiaRasa(v[k], nivel + 1);
+      if (x !== undefined) out[k] = x;
+    }
+    return out;
+  }
+  function copiaDaMensagem(m) {
+    const c = {};
+    for (const k of CAMPOS_DA_MENSAGEM) { const x = m[k] === undefined ? undefined : copiaRasa(m[k], 0); if (x !== undefined) c[k] = x; }
+    if (Array.isArray(m.runs)) {
+      let resta = TETOS.texto * 4; // os pedaços do texto até onde o lerEntrada lê (a PixGG usa só o 1º)
+      c.runs = m.runs.slice(0, 300).map((r) => {
+        const s = r && typeof r.text === 'string' ? r.text.slice(0, Math.max(0, resta)) : '';
+        resta -= s.length;
+        return { text: s };
+      });
+    }
+    return c;
+  }
+  function plataformaDe(m) {
+    const p = limparLinha(m.platform, 20).toLowerCase() || 'chat';
+    return p === 'doacao' ? 'pix' : p; // o nome antigo do Pix nos logs
+  }
+  // só pagamento espera (o grátis que chega com o arquivo travado não vira pedido)
+  function guardarNaEspera(message) {
+    if (!ehObjeto(message) || !FONTES_PAGAS.has(fonteDe(message, plataformaDe(message)))) return false;
+    espera.push({ em: agora(), m: copiaDaMensagem(message) });
+    if (espera.length > TETOS.espera) espera.splice(0, espera.length - TETOS.espera);
+    gravarEspera();
+    avisar('espera');
+    return true;
+  }
+  function gravarEspera() {
+    try {
+      if (espera.length) gravarAtomico(arquivoEspera, JSON.stringify({ versao: VERSAO, mensagens: espera }), { privado: true });
+      else fs.rmSync(arquivoEspera, { force: true });
+      avisouEspera = false;
+    } catch (err) {
+      if (!avisouEspera) console.error('  ⚠️ 🙋 Pedidos: não consegui guardar no disco o pagamento que espera o arquivo (fica na memória):', (err && (err.code || err.message)) || err);
+      avisouEspera = true;
+    }
+  }
+  function carregarEspera() {
+    try { limparTemporarios(arquivoEspera); } catch { /* segue */ }
+    const r = lerJsonSeguro(arquivoEspera);
+    if (!r.ok) {
+      if (!r.faltando) console.error(`  ⚠️ 🙋 Pedidos: o arquivo dos pagamentos em espera não abre (${r.erro})${r.copia ? `; a cópia ficou em ${path.basename(r.copia)}` : ''}.`);
+      return;
+    }
+    const lista = ehObjeto(r.dados) && Array.isArray(r.dados.mensagens) ? r.dados.mensagens : [];
+    for (const x of lista.slice(-TETOS.espera)) {
+      if (ehObjeto(x) && ehObjeto(x.m) && typeof x.em === 'number' && Number.isFinite(x.em)) espera.push({ em: x.em, m: x.m });
+    }
+  }
+  // o arquivo abriu (soltou, foi consertado ou recomeçado): cada pagamento que
+  // esperava é decidido agora, pela hora em que chegou
+  function reprocessarEspera() {
+    if (travado || !espera.length) return 0;
+    const lista = espera;
+    espera = [];
+    let entraram = 0;
+    for (const x of lista) {
+      try {
+        if (observarEm(x.m, x.em).virou) entraram++;
+      } catch (err) {
+        espera.push(x); // erro inesperado: continua esperando (e no disco)
+        console.error('  ⚠️ 🙋 Pedidos: um pagamento em espera não entrou (fica guardado):', (err && err.message) || err);
+      }
+    }
+    esperaAtrasada = true; // o arquivo da espera só muda depois que a fila foi gravada
+    gravarAgora();
+    return entraram;
   }
 
   // ── 🧹 o que vem do arquivo é conferido campo a campo ──
@@ -515,6 +776,7 @@ function criarPedidos(opcoes) {
     for (const k of ['chamadoEm', 'partidaEm', 'atendidoEm', 'recusadoEm']) if (typeof b[k] === 'number' && Number.isFinite(b[k])) p[k] = b[k];
     if (typeof b.motivoRecusa === 'string') p.motivoRecusa = limparLinha(b.motivoRecusa, 30);
     if (Number.isInteger(b.creditoUsadoCentavos) && b.creditoUsadoCentavos > 0) p.creditoUsadoCentavos = b.creditoUsadoCentavos;
+    if (b.estado === 'revisar' && Number.isInteger(b.creditoAoConfirmar) && b.creditoAoConfirmar > 0 && b.creditoAoConfirmar <= 1e11) p.creditoAoConfirmar = b.creditoAoConfirmar;
     if (ehObjeto(b.midia) && typeof b.midia.url === 'string' && b.midia.url.startsWith('/midia-inscritos/')) {
       p.midia = { tipo: limparLinha(b.midia.tipo, 20), url: limparLinha(b.midia.url, 300) };
     }
@@ -746,15 +1008,15 @@ function criarPedidos(opcoes) {
     if (fonte === 'superchat' && plataforma === 'youtube' && msgId) return `youtube:${msgId}`;
     return null;
   }
-  function lerEntrada(message) {
+  // `t` = quando a mensagem chegou (o pagamento que esperou o arquivo é lido depois)
+  function lerEntradaEm(message, t) {
     if (!ehObjeto(message)) return null;
     const conf = cfg();
-    let plataforma = limparLinha(message.platform, 20).toLowerCase() || 'chat';
-    if (plataforma === 'doacao') plataforma = 'pix'; // o nome antigo do Pix nos logs
+    const plataforma = plataformaDe(message);
     const msgId = limparLinha(message.id, 200);
     const badges = Array.isArray(message.badges) ? message.badges.slice(0, 60).filter((b) => typeof b === 'string') : [];
     const fonte = fonteDe(message, plataforma);
-    const t = agora();
+    const pago = FONTES_PAGAS.has(fonte);
     let hora = Number(message.timestamp);
     if (!Number.isFinite(hora) || hora <= 0) hora = t;
     const atrasado = t - hora > ATRASADO_MS;
@@ -765,14 +1027,24 @@ function criarPedidos(opcoes) {
     let telefone = false;
     if (pareceTelefone(nome) || pareceTelefone(nomeBruto)) {
       // o mesmo texto que o servidor usa: o apelido bate com o do chat
-      nome = String(apelidoDeTelefone(typeof message.author === 'string' ? message.author : nomeBruto)).slice(0, TETOS.nome);
+      nome = apelidoDeTelefone(typeof message.author === 'string' ? message.author : nomeBruto);
       telefone = true;
     } else {
       const tapado = taparTelefones(nome);
       if (tapado !== nome) { nome = tapado; telefone = true; }
     }
-    const idAutor = limparLinha(message.authorId, 200) || limparLinha(message.authorLogin, 200);
-    const chave = hash(`${plataforma}|${idAutor ? `id:${idAutor.toLowerCase()}` : `nome:${normalizarNome(nomeBruto)}`}`);
+    const chaveMsg = msgId ? `msg:${plataforma}:${msgId}` : null;
+    const chavePagamento = pago ? chaveDePagamento(message, fonte, plataforma, msgId) : null;
+    // A chave da pessoa: o id do autor, ou o nome. Sem nome digitado («Anônimo»,
+    // e o login da LivePix/PixGG é o nome em minúsculas) não há pessoa: cada
+    // mensagem é uma (dois anônimos não dividem crédito nem o «um por pessoa»).
+    const authorId = limparLinha(message.authorId, 200);
+    const login = limparLinha(message.authorLogin, 200);
+    const anonimo = !authorId && semNome(nomeBruto) && (!login || semNome(login));
+    const idAutor = authorId || login;
+    const chave = anonimo
+      ? hash(`${plataforma}|anonimo:${chavePagamento || chaveMsg || crypto.randomBytes(8).toString('hex')}`)
+      : hash(`${plataforma}|${idAutor ? `id:${idAutor.toLowerCase()}` : `nome:${normalizarNome(nomeBruto)}`}`);
     // para a moderação achar o pedido pelo login, id ou nome (o mesmo critério do servidor)
     const hashes = [...new Set([message.authorLogin, message.authorId, message.author]
       .filter((v) => typeof v === 'string' && v).map((v) => hash(`${plataforma}|m:${v.slice(0, 200).toLowerCase()}`)))];
@@ -785,17 +1057,15 @@ function criarPedidos(opcoes) {
       contato = { waChatId: limparLinha(String(message.waChatId), 120), waMessageId: limparLinha(String(message.waMessageId ?? ''), 120) };
       privado = !/@(g\.us|newsletter|broadcast)$/i.test(String(message.waChatId));
     }
-    const pago = FONTES_PAGAS.has(fonte);
     const v = pago ? valorDe(message, fonte, conf) : { valor: null, semCotacao: false };
     const r = ehObjeto(message.resgate) ? message.resgate : null;
     const midia = ehObjeto(message.midia) && typeof message.midia.url === 'string' && message.midia.url.startsWith('/midia-inscritos/')
       ? { tipo: limparLinha(message.midia.tipo, 20), url: limparLinha(message.midia.url, 300) } : null;
     return {
-      fonte, plataforma, msgId: msgId || null, chaveMsg: msgId ? `msg:${plataforma}:${msgId}` : null,
-      chavePagamento: pago ? chaveDePagamento(message, fonte, plataforma, msgId) : null,
+      fonte, plataforma, msgId: msgId || null, chaveMsg, chavePagamento,
       hora, atrasado, pago, valor: v.valor, semCotacao: !!(pago && v.semCotacao),
       texto: textoDaMensagem(message, plataforma),
-      quem: { nome, chave, hashes, contato, telefone, civil: plataforma === 'pix' },
+      quem: { nome, chave, hashes, contato, telefone, civil: plataforma === 'pix', anonimo },
       teste: msgId.startsWith('test-') || badges.includes('teste') || message.teste === true,
       historico: message.fromHistory === true, sinalizada: badges.includes('sinalizada'), robo: badges.includes('bot'), privado,
       inscrito: ehInscrito(message, plataforma, badges),
@@ -803,6 +1073,7 @@ function criarPedidos(opcoes) {
       midia, reenviado: plataforma === 'pixgg' && ehObjeto(message.pixgg) && message.pixgg.forcado === true,
     };
   }
+  const lerEntrada = (message) => lerEntradaEm(message, agora());
 
   // ── 🧮 regras ──
   function fonteLigada(e, conf) {
@@ -819,6 +1090,8 @@ function criarPedidos(opcoes) {
     if (u && u.ate === null) u.ate = Math.max(u.de, quando);
   }
   const creditoDe = (chave) => { const c = E.creditos.get(chave); return c ? c.centavos : 0; };
+  // crédito só com a opção, em reais e para quem tem nome (o anônimo não é reconhecido depois)
+  const usaCredito = (e, conf) => conf.sobra === 'credito' && !!e.valor && e.valor.moeda === 'BRL' && !e.quem.anonimo;
   function guardarCredito(chave, centavos) {
     E.creditos.delete(chave);
     if (centavos > 0) E.creditos.set(chave, { centavos, em: agora() });
@@ -832,7 +1105,7 @@ function criarPedidos(opcoes) {
     if (!v || e.semCotacao || typeof v.centavos !== 'number') return nada;
     const preco = v.moeda === 'BRL' ? conf.precoCentavos : (Object.hasOwn(conf.precoPorMoeda, v.moeda) ? conf.precoPorMoeda[v.moeda] : 0);
     if (!preco) return nada;
-    const credito = conf.sobra === 'credito' && v.moeda === 'BRL' ? creditoDe(e.quem.chave) : 0;
+    const credito = usaCredito(e, conf) ? creditoDe(e.quem.chave) : 0;
     const total = v.centavos + credito;
     const pagas = Math.floor(total / preco);
     // «o que a pessoa escrever, até o pago»: sem número na frase, vale o pago
@@ -913,10 +1186,16 @@ function criarPedidos(opcoes) {
     if (q.creditoUsado) marcas.push('creditoUsado');
     if (e.reenviado) marcas.push('reenviado');
     const vaiRevisar = forcado ? marcas.includes('cheio') : revisarPor(marcas, conf);
+    const credito = usaCredito(e, conf);
+    const sobra = q.semCotacao ? 0 : Math.max(0, q.sobra);
     return {
       virou: true, estado: vaiRevisar ? 'revisar' : 'fila', partidas: forcado ? Math.max(1, q.partidas) : q.partidas,
-      pagas: q.pagas, sobra: q.semCotacao ? 0 : Math.max(0, q.sobra), creditoUsado: q.creditoUsado,
-      novoCredito: !vaiRevisar && conf.sobra === 'credito' && e.valor && e.valor.moeda === 'BRL' ? Math.max(0, q.sobra) : null,
+      pagas: q.pagas, sobra, creditoUsado: q.creditoUsado,
+      novoCredito: !vaiRevisar && credito ? sobra : null,
+      // no ⚠ Revisar o crédito usado já saiu da carteira: a sobra volta a ela se o
+      // streamer confirmar (como com os pagos abertos); recusado ou ignorado, volta o usado.
+      // Sem uma partida paga, a partida que o streamer aceitar gasta a sobra.
+      creditoAoConfirmar: vaiRevisar && credito && q.pagas >= 1 ? sobra : 0,
       itens, duvidas, marcas,
     };
   }
@@ -991,6 +1270,7 @@ function criarPedidos(opcoes) {
     if (d.pagas > d.partidas) p.partidas.pagas = d.pagas;
     if (d.creditoUsado) { p.creditoUsadoCentavos = d.creditoUsado; guardarCredito(e.quem.chave, 0); }
     if (d.novoCredito !== null && d.novoCredito !== undefined) guardarCredito(e.quem.chave, d.novoCredito);
+    if (d.creditoAoConfirmar > 0 && p.estado === 'revisar') p.creditoAoConfirmar = d.creditoAoConfirmar;
     if (e.midia) p.midia = e.midia;
     if (e.resgate) p.resgate = { titulo: e.resgate.titulo };
     inserir(p);
@@ -1004,9 +1284,14 @@ function criarPedidos(opcoes) {
   }
 
   // ── 👀 observar: cada mensagem do onChatMessage ──
+  // Com o arquivo travado, o pagamento espera e é decidido quando ele abrir
+  // (`espera: true`); o grátis não vira pedido.
   function observar(message) {
-    if (!pronto()) return nao('travado');
-    const e = lerEntrada(message);
+    if (!pronto()) return guardarNaEspera(message) ? nao('travado', { espera: true }) : nao('travado');
+    return observarEm(message, agora());
+  }
+  function observarEm(message, quando) {
+    const e = lerEntradaEm(message, quando);
     if (!e) return nao('invalida');
     const conf = cfg();
     if (e.teste && !conf.testeViraPedido) return nao('teste');
@@ -1143,6 +1428,7 @@ function criarPedidos(opcoes) {
     p.estado = 'recusado';
     p.recusadoEm = agora();
     p.motivoRecusa = motivo;
+    delete p.creditoAoConfirmar; // não confirmado: a sobra não vira crédito
     if (p.pago) {
       // o crédito usado volta para a pessoa; o pagamento vai para «a devolver»
       if (p.creditoUsadoCentavos && p.quem.chave) guardarCredito(p.quem.chave, creditoDe(p.quem.chave) + p.creditoUsadoCentavos);
@@ -1181,6 +1467,7 @@ function criarPedidos(opcoes) {
     if (!p) return naoAchou();
     if (p.estado !== 'revisar') return erro('estado-invalido', 'Só dá para ignorar o que está no ⚠ Revisar.');
     tirar(p);
+    delete p.creditoAoConfirmar;
     if (p.creditoUsadoCentavos && p.quem.chave) guardarCredito(p.quem.chave, creditoDe(p.quem.chave) + p.creditoUsadoCentavos);
     registrar('ignorado', p, 'apoio');
     return feito('ignorar', { n: p.seq });
@@ -1258,7 +1545,12 @@ function criarPedidos(opcoes) {
     p.duvidas = [];
     p.marcas = p.marcas.filter((m) => m !== 'naoTenho');
     if (p.itens.some((i) => i.naoTenho)) p.marcas.push('naoTenho');
-    if (ensinar && p.estado === 'revisar') p.estado = 'fila';
+    if (ensinar && p.estado === 'revisar') {
+      p.estado = 'fila';
+      // o pago aceito faz a conta de quem chegou com os pagos abertos: a sobra vira crédito
+      if (p.creditoAoConfirmar && p.quem.chave) guardarCredito(p.quem.chave, creditoDe(p.quem.chave) + p.creditoAoConfirmar);
+      delete p.creditoAoConfirmar;
+    }
     const feitas = p.partidas.total - p.partidas.faltam;
     if (novoTotal !== null) {
       const total = Math.max(novoTotal, feitas + 1);
@@ -1281,9 +1573,10 @@ function criarPedidos(opcoes) {
     if (E.pedidos.length >= TETOS.ativos) return erro('cheio', 'A fila chegou ao teto de 2000 pedidos.');
     const texto = taparTelefones(limparLinha(d.texto, TETOS.texto));
     const bruto = limparLinha(typeof d.quem === 'string' ? d.quem : proprio(d.quem, 'nome'), 200);
-    let nome = cortar(bruto, TETOS.nome).trim();
+    // sem nome, «Anônimo» como no lerEntrada e no arquivo (o mesmo antes e depois de reabrir)
+    let nome = cortar(bruto, TETOS.nome).trim() || 'Anônimo';
     let telefone = false;
-    if (nome && pareceTelefone(nome)) { nome = String(apelidoDeTelefone(nome)).slice(0, TETOS.nome); telefone = true; } else {
+    if (pareceTelefone(nome)) { nome = apelidoDeTelefone(nome); telefone = true; } else {
       const tapado = taparTelefones(nome);
       if (tapado !== nome) { nome = tapado; telefone = true; }
     }
@@ -1396,14 +1689,15 @@ function criarPedidos(opcoes) {
     return feito('moderacao', { marcados });
   }
 
-  // «começar do zero» com o arquivo que não abre: a cópia já ficou guardada
-  // e o nº continua de onde dá para saber (o seq nunca volta)
-  function resgatarSeq() {
+  // «começar do zero» com o arquivo que não abre: o nº continua de onde dá para
+  // saber, no arquivo e nas cópias dele (o seq nunca volta)
+  function resgatarSeq(qual) {
     let maior = 0;
+    if (!qual) return 0;
     try {
-      const st = fs.statSync(arquivo);
+      const st = fs.statSync(qual);
       if (st.size > 64 * 1024 * 1024) return 0;
-      const txt = fs.readFileSync(arquivo, 'utf8');
+      const txt = fs.readFileSync(qual, 'utf8');
       for (const m of txt.matchAll(/"(?:seq|n)"\s*:\s*(\d{1,12})|"id"\s*:\s*"p(\d{1,12})"/g)) {
         const v = Number(m[1] || m[2]);
         if (v > maior) maior = v;
@@ -1412,19 +1706,28 @@ function criarPedidos(opcoes) {
     return maior;
   }
   function recomecar() {
-    if (travado === 'preso') pronto();
+    pronto(true); // relê antes: o preso que soltou e o ilegível que foi consertado abrem sem apagar nada
     if (!travado) return erro('nao-travado', 'O arquivo dos pedidos abre normalmente: não há o que recomeçar.');
     if (travado === 'preso') return erro('preso', 'O arquivo dos pedidos está preso por outro programa: espere ele soltar (nada foi apagado).');
-    if (!copia && fs.existsSync(arquivo)) copia = guardarCopia(); // a cópia antes de tudo
-    const seq = Math.max(resgatarSeq(), E ? E.seq : 0);
+    // a cópia do que está no disco AGORA (pode ter mudado desde que travou), antes de
+    // tudo; sem ela, nada grava por cima
+    let copiaFeita = null;
+    if (fs.existsSync(arquivo)) {
+      copiaFeita = guardarCopia();
+      if (!copiaFeita) return erro('sem-copia', 'Não consegui guardar uma cópia do arquivo dos pedidos (disco cheio ou sem permissão): nada foi apagado.');
+    }
+    const seq = Math.max(resgatarSeq(arquivo), resgatarSeq(copia), resgatarSeq(copiaFeita), E ? E.seq : 0);
     E = dadosNovos(cfg().jogo);
     E.seq = seq;
     travado = null;
-    const copiaFeita = copia;
     copia = null;
+    assinaturaIlegivel = null;
+    ultimoErro = null;
     gravarAgora();
+    // os pagamentos que esperavam entram na fila nova (sem os intervalos antigos: ⚠ Revisar)
+    const entraram = reprocessarEspera();
     avisar('recomecar');
-    return { ok: true, seq, copia: copiaFeita ? path.basename(copiaFeita) : null };
+    return { ok: true, seq, copia: copiaFeita ? path.basename(copiaFeita) : null, entraram };
   }
 
   // ── 🕹️ operar: a porta única das ações (painel, Mini Mesa, controle externo) ──
@@ -1452,11 +1755,11 @@ function criarPedidos(opcoes) {
     remocao: (a) => remocao(a),
     recomecar: () => recomecar(),
   };
-  // assinatura estável dos argumentos (sem o token n/faltavam) para «a mesma operação»
+  // assinatura estável dos argumentos para «a mesma operação» (o nº faz parte:
+  // «pular 5» e «pular 6» são toques diferentes)
   function assinatura(a) {
     const partes = [];
     for (const k of Object.keys(a).sort().slice(0, 20)) {
-      if (k === 'n' || k === 'faltavam') continue;
       const v = a[k];
       partes.push(`${k}=${typeof v === 'object' ? JSON.stringify(v) : String(v)}`.slice(0, 200));
     }
@@ -1466,8 +1769,11 @@ function criarPedidos(opcoes) {
     if (typeof nome !== 'string' || !Object.hasOwn(OPERACOES, nome)) return erro('operacao-desconhecida', 'Operação desconhecida dos pedidos.');
     const a = ehObjeto(args) ? args : {};
     const origem = ehObjeto(contexto) && typeof contexto.origem === 'string' ? contexto.origem : '';
-    // Stream Deck e reconexões repetem o toque: sem o token, o igual em menos de 3 s é ignorado
-    if (ORIGENS_EXTERNAS.has(origem) && !temValor(a.n) && !temValor(a.faltavam)) {
+    // Stream Deck e reconexões repetem o toque: o igual em menos de 3 s é ignorado.
+    // Só a partida com o «faltavam» dispensa a trava, porque ela mesma recusa o toque
+    // velho; o nº sozinho continua batendo no toque repetido (e baixaria outra partida).
+    const comToken = OPERACOES_DE_PARTIDA.has(nome) && temValor(a.faltavam);
+    if (ORIGENS_EXTERNAS.has(origem) && !comToken) {
       const t = agora();
       for (const [k, quando] of toques) if (t - quando >= REPETIDO_MS || quando > t) toques.delete(k);
       const chave = `${nome}|${assinatura(a)}`;
@@ -1488,11 +1794,12 @@ function criarPedidos(opcoes) {
   }
   const urlImagem = (jogo, item) => (item && ehObjeto(item.imagem) && item.imagem.ocultar !== true && typeof item.imagem.arquivo === 'string' && /^[a-z0-9-]+\.(?:png|jpg|webp|gif)$/.test(item.imagem.arquivo)
     ? `/pedidos-img/${jogo}/${item.imagem.arquivo}` : null);
-  function itemVisto(it, jogo, ctx, comImagem, completo) {
+  // `semTrecho`: o pedaço da frase também é a frase (sinalizada para quem só assiste)
+  function itemVisto(it, jogo, ctx, comImagem, completo, semTrecho) {
     const c = acharItem(jogo, it.id);
     const out = { id: it.id, tipo: c ? c.tipo : it.tipo, nome: c ? nomeDoItem(c, ctx.conf, ctx.idioma) : (it.nome || it.id) };
     if (completo) {
-      if (it.trecho !== undefined) out.trecho = it.trecho;
+      if (it.trecho !== undefined) out.trecho = semTrecho ? '' : it.trecho;
       if (it.certeza !== undefined) out.certeza = it.certeza;
       if (it.naoTenho || (c && c.naoTenho)) out.naoTenho = true;
     }
@@ -1516,11 +1823,19 @@ function criarPedidos(opcoes) {
   function nomeNaTela(p, conf, der, ignorarOpcao) {
     if (!ignorarOpcao && !conf.nomeNaTela) return { quem: null, anonimo: false, segurado: false };
     const q = p.quem;
-    if (!q.liberado && (q.sinalizada || nomeBloqueado(q.nome, der.bloqueadas))) return { quem: 'Anônimo', anonimo: true, segurado: true };
+    if (!q.liberado && (q.sinalizada || nomeBloqueado(q.nome, der))) return { quem: 'Anônimo', anonimo: true, segurado: true };
     if (q.civil && !q.telefone) return { quem: nomeCivil(q.nome, conf.nomePix), anonimo: conf.nomePix === 'anonimo', segurado: false };
     return { quem: q.nome, anonimo: false, segurado: false };
   }
-  const segurado = (p, der) => !p.quem.liberado && (p.quem.sinalizada || nomeBloqueado(p.quem.nome, der.bloqueadas));
+  const segurado = (p, der) => !p.quem.liberado && (p.quem.sinalizada || nomeBloqueado(p.quem.nome, der));
+  // fora do painel local (painel pela rede, controle externo) o nome civil do Pix
+  // do banco vai pela opção: o completo fica só no local
+  const nomeForaDoLocal = (p, conf) => (p.quem.civil && !p.quem.telefone ? nomeCivil(p.quem.nome, conf.nomePix) : p.quem.nome);
+  function nomeDoPapel(p, ctx) {
+    if (ctx.papel === 'local') return p.quem.nome;
+    if (ctx.papel === 'viewer') return nomeNaTela(p, ctx.conf, ctx.der, true).quem;
+    return nomeForaDoLocal(p, ctx.conf);
+  }
   function valorVisto(p) {
     const v = p.valor;
     const out = { centavos: v.centavos, moeda: v.moeda, texto: v.centavos === null ? v.original : formatarCentavos(v.centavos, v.moeda), original: v.original, aproximado: v.aproximado };
@@ -1531,15 +1846,17 @@ function criarPedidos(opcoes) {
     const comImagem = ctx.imagens && (!p.pago || ctx.conf.imagens.pagos);
     const viewer = ctx.papel === 'viewer';
     const seg = segurado(p, ctx.der);
+    // texto da mensagem sinalizada: só o painel local e o de senha, até liberar
+    // (os trechos dos itens e das dúvidas são pedaços dele: saem junto)
+    const semTexto = viewer && seg && p.quem.sinalizada;
     const out = {
       id: p.id, n: p.seq, estado: p.estado, fonte: p.origem.fonte, platform: p.origem.plataforma,
-      author: viewer ? nomeNaTela(p, ctx.conf, ctx.der, true).quem : p.quem.nome,
+      author: nomeDoPapel(p, ctx),
       hora: p.chegada, atrasado: p.origem.atrasado, pago: p.pago, jogo: p.jogo,
       partidas: { ...p.partidas }, vitorias: p.vitorias, derrotas: p.derrotas, jogadas: p.jogadas,
-      // texto da mensagem sinalizada: só o painel local e o de senha, até liberar
-      texto: viewer && seg && p.quem.sinalizada ? '' : p.texto,
-      itens: p.itens.map((it) => itemVisto(it, p.jogo, ctx, comImagem, true)),
-      duvidas: p.duvidas.map((d) => ({ trecho: d.trecho, motivo: d.motivo, opcoes: d.opcoes.map((x) => itemVisto(x, p.jogo, ctx, comImagem, true)) })),
+      texto: semTexto ? '' : p.texto,
+      itens: p.itens.map((it) => itemVisto(it, p.jogo, ctx, comImagem, true, semTexto)),
+      duvidas: p.duvidas.map((d) => ({ trecho: semTexto ? '' : d.trecho, motivo: d.motivo, opcoes: d.opcoes.map((x) => itemVisto(x, p.jogo, ctx, comImagem, true, semTexto)) })),
       marcas: p.marcas.slice(), teste: p.teste, daLiveAnterior: p.daLiveAnterior,
       personagem: personagemDe(p, ctx, comImagem), nomeSegurado: seg, liberado: p.quem.liberado,
     };
@@ -1584,6 +1901,7 @@ function criarPedidos(opcoes) {
     };
     if (travado) {
       if (pp === 'local' && copia) out.copia = path.basename(copia);
+      if (pp !== 'viewer') out.esperando = espera.length; // pagamentos guardados, que entram quando o arquivo abrir
       Object.assign(out, vazio, pp === 'viewer' && !conf.viewerVeValores ? {} : { aDevolver: [] });
       out.contagem = { fila: 0, pulados: 0, revisar: 0, feitos: 0 };
       return out;
@@ -1641,19 +1959,22 @@ function criarPedidos(opcoes) {
     out.avisoBehaviour = !!(conf.avisoBehaviour && ctx.comImagens && jogo && jogo.modelo === 'dbd');
     return out;
   }
-  // para o estado do controle externo: sem valor e sem mensagem
+  // para o estado do controle externo: sem valor e sem mensagem (e o nome civil pela opção)
   function resumo() {
     const a = pedidoAgora();
     let per = null;
     if (a) { const v = personagemDe(a, contexto('tela', null, false), false); per = v ? v.nome : null; }
     return {
       travado: travado || null, pagos: E.abertos.pagos, gratis: E.abertos.gratis, jogo: E.jogo,
-      agora: a ? { n: a.seq, personagem: per, quem: a.quem.nome, faltam: a.partidas.faltam, total: a.partidas.total } : null,
+      agora: a ? { n: a.seq, personagem: per, quem: nomeForaDoLocal(a, cfg()), faltam: a.partidas.faltam, total: a.partidas.total } : null,
       fila: E.pedidos.filter((p) => p.estado === 'fila').length, revisar: E.pedidos.filter((p) => p.estado === 'revisar').length,
     };
   }
   function diagnostico() {
-    return { travado: travado || null, copia: copia ? path.basename(copia) : null, gravacoes, pendente, ativos: E.pedidos.length, seq: E.seq, arquivo };
+    return {
+      travado: travado || null, copia: copia ? path.basename(copia) : null, gravacoes, pendente, ativos: E.pedidos.length, seq: E.seq, arquivo,
+      espera: espera.length, copiaDevida, erroLeitura: ultimoErro,
+    };
   }
   // grava o que estiver pendente (fechar o programa, ♻️, atualização)
   function fechar() {
@@ -1665,7 +1986,14 @@ function criarPedidos(opcoes) {
   }
 
   carregarArquivo();
-  timerVivo = setInterval(() => { if (!travado && (E.abertos.pagos || E.abertos.gratis)) gravarAgora(); }, VIVO_MS);
+  carregarEspera();
+  reprocessarEspera(); // pagamento que esperava quando o programa fechou entra agora (se o arquivo abriu)
+  timerVivo = setInterval(() => {
+    try {
+      if (travado) pronto(); // sem mensagem nem toque, o arquivo que soltou destrava assim mesmo
+      else if (E.abertos.pagos || E.abertos.gratis) gravarAgora();
+    } catch (err) { console.error('  ⚠️ 🙋 Pedidos: erro na conferência periódica:', (err && err.message) || err); }
+  }, VIVO_MS);
   if (timerVivo.unref) timerVivo.unref();
 
   // Nenhuma função derruba o servidor: erro inesperado vira resposta de erro
@@ -1676,7 +2004,11 @@ function criarPedidos(opcoes) {
   };
   const reservas = {
     lerEntrada: () => null,
-    observar: () => nao('erro'),
+    // pagamento com erro inesperado não some: espera (no disco) e é tentado de novo ao abrir o programa
+    observar: (message) => {
+      try { if (guardarNaEspera(message)) return nao('erro', { espera: true }); } catch { /* segue */ }
+      return nao('erro');
+    },
     paraPainel: () => ({ ligado: true, travado: 'erro', agora: null, fila: [], revisar: [], feitos: [] }),
     paraTela: () => ({ jogo: null, abertos: { pagos: false, gratis: false, fechados: true, preco: null }, agora: null, proximos: [], avisoBehaviour: false }),
   };
@@ -1687,7 +2019,7 @@ function criarPedidos(opcoes) {
         return fn(...args);
       } catch (err) {
         console.error(`  ⚠️ 🙋 Pedidos: erro inesperado em ${nome}:`, (err && err.stack) || err);
-        return reservas[nome] ? reservas[nome]() : erro('erro-interno', 'Erro inesperado nos pedidos.');
+        return reservas[nome] ? reservas[nome](...args) : erro('erro-interno', 'Erro inesperado nos pedidos.');
       }
     };
   }
