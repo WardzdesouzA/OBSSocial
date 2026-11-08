@@ -1,4 +1,11 @@
 {
+  "0.190.0": {
+    "titulo": "📱 WhatsApp’ta @ bahsetme, bahsedilen kişinin numarası olmadan",
+    "itens": [
+      "📱 Biri bir WhatsApp grubunda başka birinden bahsettiğinde (@), uygulama adı gösterir ama gelen metin bahsedilen kişinin telefon numarasını taşır — ve bu numara panelde, izleyenlerde ve açık ekran olan sabit sohbette görünüyordu. Artık bahsetme, kişi yayında zaten yazdıysa «@Ad» olur; yazmadıysa kendi mesajlarındaki aynı «📱 Convidado» takma adı olur. Yerel kütüphanede ve ağ geçidinde, metinde ve açıklamada, numara yerine kod kullanan yeni gruplarda da geçerlidir. Bahsedilen kişinin numarası günlük kayıtta da kalmaz.",
+      "🛟 Bu sürümden önce gelenler de (günlük kayıtta ya da geçmişte) izleyenlere, 🕹️ Dış kontrole ve açık ekranlara bahsetmesi gizlenmiş olarak ulaşır; izleyenlerin 🔎 araması artık bir mesajı bahsedilen kişinin numarasıyla bulmaz. Yayıncının bilgisayarındaki panel, yanıtlamak ve yönetmek için yazan kişinin numarasını görmeye devam eder."
+    ]
+  },
   "0.189.0": {
     "titulo": "🛟 Sıfırlanmayan sayaçlar, korunan numaralar, temiz kapanış ve doğrulanmış indirmeler",
     "itens": [

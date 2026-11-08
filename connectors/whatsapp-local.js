@@ -435,6 +435,36 @@ class WhatsAppLocalConnector {
     return '';
   }
 
+  // 📱 v0.190: a @menção chega no texto como «@<número>» (ou «@<lid>» nos
+  // grupos novos) — o aplicativo mostra o nome, mas o texto cru traz o número
+  // de quem foi mencionado. A lista vem no contextInfo do próprio conteúdo
+  // (texto ou legenda): mentionedJid para pessoas e groupMentions para um
+  // grupo da comunidade, com o nome dele. Só os dígitos (e o nome do grupo)
+  // seguem para o servidor, que troca a menção (taparMencoesWa) e descarta a
+  // lista antes de gravar ou mandar para qualquer tela
+  mencoesDe(msg) {
+    const c = this.conteudoDe(msg);
+    const out = [];
+    const vistos = new Set();
+    const digitos = (v) => String(v || '').replace(/@.*$/, '').replace(/:.*$/, '').replace(/\D/g, '');
+    for (const v of Object.values(c || {})) {
+      const ci = v && typeof v === 'object' ? v.contextInfo : null;
+      if (!ci || typeof ci !== 'object') continue;
+      for (const jid of (Array.isArray(ci.mentionedJid) ? ci.mentionedJid : []).slice(0, 50)) {
+        const d = digitos(jid);
+        if (d.length >= 5 && !vistos.has(d)) { vistos.add(d); out.push({ ids: [d] }); }
+      }
+      for (const g of (Array.isArray(ci.groupMentions) ? ci.groupMentions : []).slice(0, 20)) {
+        const d = digitos(g && g.groupJid);
+        if (d.length < 5 || vistos.has(d)) continue;
+        vistos.add(d);
+        const nome = String((g && g.groupSubject) || '').trim();
+        out.push(nome ? { ids: [d], nome, grupo: true } : { ids: [d], grupo: true });
+      }
+    }
+    return out;
+  }
+
   async processar(msg) {
     if (!msg?.key || msg.key.fromMe) return;
     const idMsg = String(msg.key.id || '');
@@ -463,6 +493,7 @@ class WhatsAppLocalConnector {
     const fone = autorJid.replace(/@.*$/, '').replace(/:.*$/, '');
     const avatarPronto = this.avatares.get(autorJid);
     if (avatarPronto === undefined) this.buscarAvatar(autorJid, fone || this.autorDe(msg, autorJid));
+    const mencoes = this.mencoesDe(msg);
     this.handlers.onMessage({
       platform: 'whatsapp',
       channel: jid,
@@ -479,6 +510,8 @@ class WhatsAppLocalConnector {
       // 🧾 v0.142: o arquivo não veio — o cartão do painel mostra o porquê e
       // deixa copiar a ficha. Antes isso morria no console, que ninguém lê.
       anexoErro: anexoFalhou ? { nome: anexo.nome, motivo: anexo.falhou, ficha: anexo.ficha || '' } : undefined,
+      // 📱 v0.190: quem foi mencionado — o servidor usa e descarta (não grava)
+      ...(mencoes.length ? { mencoes } : {}),
       waChatId: jid,
       waMessageId: idMsg,
       timestamp: (Number(msg.messageTimestamp) || Math.floor(Date.now() / 1000)) * 1000,

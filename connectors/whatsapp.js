@@ -129,6 +129,31 @@ class WhatsAppConnector {
     return fone ? '+' + fone.replace(/^\+/, '') : 'WhatsApp';
   }
 
+  // 📱 v0.190: a @menção chega no texto como «@<número>» (ou «@<lid>» nos
+  // grupos novos) — o aplicativo mostra o nome, mas o texto cru traz o número
+  // de quem foi mencionado. A lista vem em context.mentions: cada item é o id
+  // («5511…@s.whatsapp.net», «…@lid») ou, conforme o modo de dados do gateway,
+  // um objeto { id, phone, username }. Só os dígitos (e o nome de usuário)
+  // seguem para o servidor, que troca a menção (taparMencoesWa) e descarta a
+  // lista antes de gravar ou mandar para qualquer tela
+  mencoesDe(m) {
+    const lista = m && m.context && Array.isArray(m.context.mentions) ? m.context.mentions : [];
+    const out = [];
+    for (const item of lista.slice(0, 50)) {
+      const obj = item && typeof item === 'object';
+      const ids = [];
+      // o telefone vem primeiro: é ele que o autorDe usa para o nome da pessoa
+      for (const v of obj ? [item.phone, item.id] : [item]) {
+        const d = String(v || '').replace(/@.*$/, '').replace(/:.*$/, '').replace(/\D/g, '');
+        if (d.length >= 5 && !ids.includes(d)) ids.push(d);
+      }
+      if (!ids.length) continue;
+      const nome = obj ? String(item.username || '').trim().replace(/^@+/, '') : '';
+      out.push(nome ? { ids, nome } : { ids });
+    }
+    return out;
+  }
+
   async baixar(arquivo, nomeSugerido) {
     if (typeof this.handlers.salvarMidia !== 'function' || !arquivo) return null;
     try {
@@ -279,6 +304,7 @@ class WhatsAppConnector {
     // paralelo (sem atrasar a mensagem) e chega depois via onAvatar
     const avatarPronto = this.avatares.get(autorId.replace(/@.*$/, ''));
     if (avatarPronto === undefined) this.buscarAvatar(m);
+    const mencoes = this.mencoesDe(m);
     this.handlers.onMessage({
       platform: 'whatsapp',
       channel: String(m.chat_name || m.chat_id || ''),
@@ -291,6 +317,8 @@ class WhatsAppConnector {
       badges: [],
       runs: runsDoTexto(texto || (midia ? `[${midia.nome}]` : '')),
       midia: midia || undefined,
+      // 📱 v0.190: quem foi mencionado — o servidor usa e descarta (não grava)
+      ...(mencoes.length ? { mencoes } : {}),
       // para responder e moderar direto do painel
       waChatId: m.chat_id,
       waMessageId: m.id,

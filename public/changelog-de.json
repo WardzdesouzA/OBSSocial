@@ -1,4 +1,11 @@
 {
+  "0.190.0": {
+    "titulo": "📱 WhatsApp-@-Erwähnung ohne die Nummer der erwähnten Person",
+    "itens": [
+      "📱 Wenn jemand in einer WhatsApp-Gruppe eine andere Person erwähnt (@), zeigt die App den Namen, aber der ankommende Text enthält die Telefonnummer der erwähnten Person — und die erschien im Dashboard, bei Zuschauern und im angehefteten Chat, der ein öffentlicher Bildschirm ist. Jetzt wird die Erwähnung zu „@Name“, wenn die Person schon im Stream geschrieben hat, oder zum gleichen Spitznamen „📱 Convidado“ wie bei ihren eigenen Nachrichten, wenn nicht. Das gilt für die lokale Bibliothek und für das Gateway, im Text und in Bildunterschriften, und in neueren Gruppen, die statt der Nummer einen Code verwenden. Die Nummer der erwähnten Person bleibt auch nicht im Tagesprotokoll.",
+      "🛟 Was vor dieser Version angekommen ist (im Tagesprotokoll oder im Verlauf), erreicht Zuschauer, die 🕹️ Externe Steuerung und die öffentlichen Bildschirme ebenfalls mit verdeckter Erwähnung, und die 🔎 Suche von Zuschauern findet keine Nachricht mehr über die Nummer der erwähnten Person. Das Dashboard auf dem Rechner des Streamers sieht die Nummer der schreibenden Person weiterhin, um zu antworten und zu moderieren."
+    ]
+  },
   "0.189.0": {
     "titulo": "🛟 Zähler, die nicht mehr zurückspringen, geschützte Nummern, sauberes Beenden und geprüfte Downloads",
     "itens": [
