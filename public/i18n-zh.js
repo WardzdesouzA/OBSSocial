@@ -12,7 +12,7 @@ window.OBS_I18N_DICTS.zh = {
   textos: {
     // 🧩 v0.191: FAQ dos componentes recolhíveis
     "🧩 Onde vejo os componentes que o programa usa e se há versão nova?": "🧩 在哪里查看程序使用的组件以及是否有新版本？",
-    "Em Configurações → ℹ️ Sobre, na seção 🧩 Componentes. Ela começa fechada: clique no título (ou aperte Enter ou Espaço) para abrir a tabela com cada componente, a versão em uso, a arquitetura, de onde veio e a situação. Fechada, o título mostra 🆕 e quantos têm versão nova, e o aviso de versão nova do painel abre direto nela. Os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) ganham ali o botão ⬇️ Atualizar agora.": "在 设置 → ℹ️ 关于 的「🧩 组件」部分。它默认收起：点击标题（或按 Enter 或空格）即可打开表格，查看每个组件正在使用的版本、架构、来源和状态。收起时，标题会显示 🆕 和有新版本的组件数量，面板上的新版本提醒也会直接打开这一部分。可选组件（yt-dlp、whisper.cpp、ffmpeg、WhatsApp 库）在那里会有「⬇️ 立即更新」按钮。",
+    "Em Configurações → ℹ️ Sobre, na seção 🧩 Componentes. Ela começa fechada: clique no título (ou aperte Enter ou Espaço) para abrir a tabela com cada componente, a versão em uso, a arquitetura, de onde veio e a situação. Fechada, o título mostra 🆕 e quantos têm versão nova para instalar, e o aviso de versão nova do painel abre direto nela. Os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) ganham ali o botão ⬇️ Atualizar agora.": "在 设置 → ℹ️ 关于 的「🧩 组件」部分。它默认收起：点击标题（或按 Enter 或空格）即可打开表格，查看每个组件正在使用的版本、架构、来源和状态。收起时，标题会显示 🆕 和有可安装新版本的组件数量，面板上的新版本提醒也会直接打开这一部分。可选组件（yt-dlp、whisper.cpp、ffmpeg、WhatsApp 库）在那里会有「⬇️ 立即更新」按钮。",
     // 🛟 v0.189: modelo que não deu para ler (fica no disco)
     "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ 暂时无法读取模型（它仍在磁盘上）— 点击重试",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados

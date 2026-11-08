@@ -2,7 +2,7 @@
   "0.191.0": {
     "titulo": "🧩 Componentes plegables",
     "itens": [
-      "🧩 En Configuración → ℹ️ Acerca de, la sección 🧩 Componentes ahora se abre y se cierra desde su título, como las tarjetas, y empieza cerrada: la tabla es larga y casi nunca hace falta verla. Cerrada, el título muestra 🆕 y cuántos componentes tienen versión nueva; el aviso de versión nueva del panel la abre directamente, y el navegador recuerda si la dejaste abierta. También se abre y se cierra con el teclado (Enter o Espacio). Una pregunta nueva en el ❓ FAQ explica la sección."
+      "🧩 En Configuración → ℹ️ Acerca de, la sección 🧩 Componentes ahora se abre y se cierra desde su título, como las tarjetas, y empieza cerrada: la tabla es larga y casi nunca hace falta verla. Cerrada, el título muestra 🆕 y cuántos componentes tienen versión nueva para instalar (lo que viene en el ZIP solo cambia con una actualización de OBS Social); el aviso de versión nueva del panel la abre directamente, y el navegador recuerda si la dejaste abierta. También se abre y se cierra con el teclado (Enter o Espacio). Una pregunta nueva en el ❓ FAQ explica la sección."
     ]
   },
   "0.190.0": {
