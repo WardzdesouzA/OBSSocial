@@ -141,6 +141,8 @@ class WhatsAppConnector {
     const out = [];
     for (const item of lista.slice(0, 50)) {
       const obj = item && typeof item === 'object';
+      // um grupo da comunidade também pode ser mencionado: não é pessoa
+      const grupo = /@g\.us$/i.test(String((obj ? item.id : item) || '').trim());
       const ids = [];
       // o telefone vem primeiro: é ele que o autorDe usa para o nome da pessoa
       for (const v of obj ? [item.phone, item.id] : [item]) {
@@ -149,7 +151,7 @@ class WhatsAppConnector {
       }
       if (!ids.length) continue;
       const nome = obj ? String(item.username || '').trim().replace(/^@+/, '') : '';
-      out.push(nome ? { ids, nome } : { ids });
+      out.push({ ids, ...(nome ? { nome } : {}), ...(grupo ? { grupo: true } : {}) });
     }
     return out;
   }

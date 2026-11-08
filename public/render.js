@@ -381,8 +381,9 @@ function nomeParaTela(nome) {
 }
 // 📱 v0.190: a @menção do WhatsApp («@<número>», ou «@<lid>» nos grupos novos)
 // já sai tapada do servidor; aqui fica a última barreira, para o que veio de
-// antes (log do dia, histórico): o que tem cara de menção vira o mesmo apelido
-const MENCAO_WA_TELA = /@(\d{8,20})(?!\d)/g;
+// antes (log do dia, histórico): o que tem cara de menção vira o mesmo apelido.
+// A sequência INTEIRA de dígitos (quem cola números depois da menção também)
+const MENCAO_WA_TELA = /@(\d{8,})/g;
 function runsParaTela(runs) {
   if (!Array.isArray(runs)) return runs;
   let out = null;

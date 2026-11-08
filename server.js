@@ -4799,27 +4799,59 @@ function canalWaDeVolta(c) {
 // mandam a lista de quem foi mencionado (mencoes) e aqui, antes de gravar ou
 // mandar para qualquer lugar, a menção vira «@<nome já visto daquele número>»
 // ou, sem nome, o mesmo «📱 Convidado XYZ» das mensagens da própria pessoa. A
-// lista é descartada. O que tem cara de menção («@» + 8 a 20 dígitos) e chegou
-// sem lista também é tapado — aqui, para quem só assiste, na busca dele e nas
-// telas (render.js), o que cobre as mensagens antigas do log.
+// lista é descartada. O que tem cara de menção («@» + 8 ou mais dígitos) e
+// chegou sem lista também é tapado — aqui, para quem só assiste, na busca dele
+// e nas telas (render.js), o que cobre as mensagens antigas do log.
 const nomesWaPorNumero = new Map(); // dígitos do id → nome (pushname) visto nesta sessão
 const NOMES_WA_MAX = 5000;
-const MENCAO_WA = /@(\d{5,20})(?!\d)/g;
+const ROTULO_WA_MAX = 80;
+// o mesmo teto do texto recebido nos conectores (LIMITE_TEXTO_MSG, v0.179)
+const LIMITE_TEXTO_WA = 60000;
+// a sequência INTEIRA de dígitos: quem apaga o espaço depois da menção e cola
+// números («@<número>2024») não pode deixar o número passar
+const MENCAO_WA = /@(\d{5,})/g;
+// Nome que pode entrar no lugar da menção: curto e sem cara de telefone nem de
+// outra menção (as barreiras de quem só assiste e das telas tapariam de novo)
+function rotuloWa(nome) {
+  const t = String(nome || '').trim().slice(0, ROTULO_WA_MAX);
+  return t && !pareceTelefoneSrv(t) && !/^\d{8}/.test(t) ? t : '';
+}
 function lembrarNomeWa(message) {
   const d = semSufixoJid(message.authorId).replace(/\D/g, '');
-  const nome = String(message.author || '').trim();
-  if (d.length < 5 || !nome || nome === 'WhatsApp' || pareceTelefoneSrv(nome)) return;
+  const nome = rotuloWa(message.author);
+  if (d.length < 5 || !nome || nome === 'WhatsApp') return;
   nomesWaPorNumero.delete(d);
   nomesWaPorNumero.set(d, nome);
   if (nomesWaPorNumero.size > NOMES_WA_MAX) nomesWaPorNumero.delete(nomesWaPorNumero.keys().next().value);
 }
 function trocarMencoesWa(texto, porDigitos) {
+  // ids da lista, o mais comprido primeiro (um pode ser o começo de outro)
+  const ids = porDigitos && porDigitos.size ? [...porDigitos.keys()].sort((a, b) => b.length - a.length) : null;
   return texto.replace(MENCAO_WA, (tudo, d) => {
-    const daLista = porDigitos && porDigitos.get(d);
-    if (daLista) return '@' + daLista;
+    // dígitos colados depois da menção: o id da lista é o COMEÇO da sequência,
+    // e o que vem depois fica como a pessoa escreveu («@Maria2024»)
+    const id = ids && ids.find((x) => d.startsWith(x));
+    if (id) return '@' + porDigitos.get(id) + d.slice(id.length);
     if (d.length < 8) return tudo;
+    // sem lista: a sequência inteira sai, com o mesmo apelido que as telas calculam
     return '@' + (nomesWaPorNumero.get(d) || apelidoDeTelefone('+' + d));
   });
+}
+// A troca pode crescer o texto («@12345» vira «@<nome de até 80>»): o resultado
+// não passa do teto da v0.179, sem partir um emoji ao meio
+function cortarTextoWa(runs) {
+  let resta = LIMITE_TEXTO_WA;
+  for (let i = 0; i < runs.length; i++) {
+    const r = runs[i];
+    const t = r && typeof r.text === 'string' ? r.text : '';
+    if (t.length <= resta) { resta -= t.length; continue; }
+    let corte = t.slice(0, resta);
+    if (/[\uD800-\uDBFF]$/.test(corte)) corte = corte.slice(0, -1);
+    const out = runs.slice(0, i);
+    if (corte) out.push({ ...r, text: corte });
+    return out;
+  }
+  return runs;
 }
 // Devolve os MESMOS runs quando nada mudou
 function runsSemMencaoWa(runs, porDigitos) {
@@ -4831,7 +4863,7 @@ function runsSemMencaoWa(runs, porDigitos) {
     const t = trocarMencoesWa(r.text, porDigitos);
     if (t !== r.text) { if (!out) out = runs.slice(); out[i] = { ...r, text: t }; }
   }
-  return out || runs;
+  return out ? cortarTextoWa(out) : runs;
 }
 function taparMencoesWa(message) {
   const lista = Array.isArray(message.mencoes) ? message.mencoes : [];
@@ -4840,9 +4872,8 @@ function taparMencoesWa(message) {
   for (const m of lista.slice(0, 50)) {
     const ids = (Array.isArray(m && m.ids) ? m.ids : []).map((d) => String(d || '').replace(/\D/g, '')).filter((d) => d.length >= 5).slice(0, 4);
     if (!ids.length) continue;
-    const nomeDado = String((m && m.nome) || '').trim().slice(0, 80);
     const rotulo = ids.map((d) => nomesWaPorNumero.get(d)).find(Boolean)
-      || (nomeDado && !pareceTelefoneSrv(nomeDado) ? nomeDado : '')
+      || rotuloWa(m && m.nome)
       || (m && m.grupo ? '👥 grupo' : apelidoDeTelefone('+' + ids[0]));
     for (const d of ids) porDigitos.set(d, rotulo);
   }
