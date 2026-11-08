@@ -10,6 +10,27 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ いまはモデルを読み込めませんでした（ディスクには残っています）— クリックで再試行",
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ 整合性チェックの前にダウンロードされたものです — もう一度ダウンロードしてください",
+    "Clique para fechar": "クリックで閉じる",
+    "⚠️ o modelo não conferiu com a soma SHA-256 oficial e foi apagado — baixe de novo (Configurações → Conexões) e clique para tentar de novo": "⚠️ モデルが公式の SHA-256 チェックサムと一致しなかったため削除しました — もう一度ダウンロードして(設定 → 接続)、クリックで再試行",
+    "⬇️ Baixe o extrator de novo (Configurações → 🔌 Conexões): a cópia antiga não passou pela conferência de integridade e não é usada.": "⬇️ 抽出ツールをもう一度ダウンロードしてください（設定 → 🔌 接続）。古いコピーは整合性チェックを経ていないため使われません。",
+    "o «latest» apontou para um endereço inesperado": "「latest」が想定外のアドレスを指していました",
+    "o GitHub não publicou a soma desse arquivo": "GitHub はこのファイルのチェックサムを公開していません",
+    "a API do GitHub não respondeu JSON": "GitHub の API が JSON で応答しませんでした",
+    "endereço fora do padrão dos releases": "リリースの形式に合わないアドレスです",
+    "tempo esgotado": "タイムアウトしました",
+    "endereço inválido": "アドレスが正しくありません",
+    "endereço não permitido": "許可されていないアドレスです",
+    "redirecionamento inválido": "リダイレクトが正しくありません",
+    "redirecionamento para um endereço não permitido": "許可されていないアドレスへのリダイレクトです",
+    "redirecionamento de https para http recusado": "https から http へのリダイレクトは拒否しました",
+    "redirecionamento demais": "リダイレクトが多すぎます",
+    "resposta maior que o esperado": "応答が想定より大きすぎます",
+    "sem resposta": "応答がありません",
+    "o zip não trouxe o executável esperado": "zip に想定した実行ファイルが入っていませんでした",
     // v0.188 — esconder elementos do painel
     "OBS Social — nome e versão": "OBS Social — 名前とバージョン",
     "Estado das conexões (um chip por rede)": "接続状態（ネットワークごとに 1 つのチップ）",
@@ -3470,6 +3491,14 @@ window.OBS_I18N_DICTS.ja = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "使うものだけチェックしてください。パネルの 🎛️ ツールが変わります — サウンドボードの 🎛️ キーはどちらでも動きます。",
   },
   padroes: [
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    [/^o arquivo baixado \((.+)\) não confere com a soma SHA-256 oficial — foi apagado e não será usado\. Pode ter sido corrompido ou trocado no caminho; tente de novo mais tarde\.$/, "ダウンロードしたファイル（$1）が公式の SHA-256 チェックサムと一致しません — 削除したので使われません。途中で壊れたか差し替えられた可能性があります。しばらくしてからもう一度お試しください。"],
+    [/^não consegui a soma SHA-256 oficial de (.+?) \((.+)\) — por segurança, nada foi baixado\. Tente de novo mais tarde\.$/, "$1 の公式 SHA-256 チェックサムを取得できませんでした（$2）— 安全のため何もダウンロードしていません。しばらくしてからもう一度お試しください。"],
+    [/^o modelo (.+), baixado antes, não confere com a soma SHA-256 oficial — foi apagado; baixe de novo\.$/, "以前にダウンロードしたモデル $1 が公式の SHA-256 チェックサムと一致しません — 削除しました。もう一度ダウンロードしてください。"],
+    [/^o arquivo de somas respondeu (\d+)$/, "チェックサムのファイルが $1 を返しました"],
+    [/^o arquivo de somas do release não traz (.+)$/, "リリースのチェックサムファイルに $1 がありません"],
+    [/^a API do GitHub respondeu (\d+)$/, "GitHub の API が $1 を返しました"],
+    [/^o release não traz (.+)$/, "リリースに $1 が含まれていません"],
     [/^O canal do widget da PixGG recusou a conexão \((.+)\)\. Nova tentativa sozinha em (\d+)s\.$/, "PixGG ウィジェットのチャンネルが接続を拒否しました（$1）。$2 秒後に自動で再試行します。"],
     [/^Conectado como (.+) \(@(\S+)\)$/, "$1 (@$2) として接続"],
     [/^💜 (.+) \(@(\S+)\)$/, "💜 $1 (@$2)"],

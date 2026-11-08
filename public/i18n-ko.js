@@ -10,6 +10,27 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ 지금은 모델을 읽을 수 없었습니다(디스크에는 그대로 있습니다) — 클릭하면 다시 시도",
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ 무결성 검사 이전에 내려받은 파일입니다 — 다시 내려받으세요",
+    "Clique para fechar": "클릭하면 닫힙니다",
+    "⚠️ o modelo não conferiu com a soma SHA-256 oficial e foi apagado — baixe de novo (Configurações → Conexões) e clique para tentar de novo": "⚠️ 모델이 공식 SHA-256 체크섬과 일치하지 않아 삭제했습니다 — 다시 내려받은 뒤(설정 → 연결) 클릭하면 다시 시도",
+    "⬇️ Baixe o extrator de novo (Configurações → 🔌 Conexões): a cópia antiga não passou pela conferência de integridade e não é usada.": "⬇️ 추출기를 다시 내려받으세요(설정 → 🔌 연결). 예전 사본은 무결성 검사를 거치지 않아 사용하지 않습니다.",
+    "o «latest» apontou para um endereço inesperado": "«latest»가 예상하지 못한 주소를 가리켰습니다",
+    "o GitHub não publicou a soma desse arquivo": "GitHub가 이 파일의 체크섬을 공개하지 않았습니다",
+    "a API do GitHub não respondeu JSON": "GitHub API가 JSON으로 응답하지 않았습니다",
+    "endereço fora do padrão dos releases": "릴리스 형식에 맞지 않는 주소입니다",
+    "tempo esgotado": "시간이 초과됐습니다",
+    "endereço inválido": "잘못된 주소",
+    "endereço não permitido": "허용되지 않은 주소",
+    "redirecionamento inválido": "잘못된 리디렉션",
+    "redirecionamento para um endereço não permitido": "허용되지 않은 주소로의 리디렉션",
+    "redirecionamento de https para http recusado": "https에서 http로의 리디렉션은 거부했습니다",
+    "redirecionamento demais": "리디렉션이 너무 많습니다",
+    "resposta maior que o esperado": "응답이 예상보다 큽니다",
+    "sem resposta": "응답 없음",
+    "o zip não trouxe o executável esperado": "zip에 예상한 실행 파일이 들어 있지 않았습니다",
     // v0.188 — esconder elementos do painel
     "OBS Social — nome e versão": "OBS Social — 이름과 버전",
     "Estado das conexões (um chip por rede)": "연결 상태(네트워크마다 칩 하나)",
@@ -3470,6 +3491,14 @@ window.OBS_I18N_DICTS.ko = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "쓰는 것만 체크하세요. 패널의 🎛️ 도구가 달라집니다 — 사운드보드의 🎛️ 키는 어느 쪽이든 그대로 작동합니다.",
   },
   padroes: [
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    [/^o arquivo baixado \((.+)\) não confere com a soma SHA-256 oficial — foi apagado e não será usado\. Pode ter sido corrompido ou trocado no caminho; tente de novo mais tarde\.$/, "내려받은 파일($1)이 공식 SHA-256 체크섬과 일치하지 않습니다 — 삭제했으며 사용하지 않습니다. 도중에 손상되었거나 바뀌었을 수 있습니다. 잠시 후 다시 시도해 보세요."],
+    [/^não consegui a soma SHA-256 oficial de (.+?) \((.+)\) — por segurança, nada foi baixado\. Tente de novo mais tarde\.$/, "$1의 공식 SHA-256 체크섬을 가져오지 못했습니다($2) — 안전을 위해 아무것도 내려받지 않았습니다. 잠시 후 다시 시도해 보세요."],
+    [/^o modelo (.+), baixado antes, não confere com a soma SHA-256 oficial — foi apagado; baixe de novo\.$/, "이전에 내려받은 모델 $1이(가) 공식 SHA-256 체크섬과 일치하지 않습니다 — 삭제했습니다. 다시 내려받으세요."],
+    [/^o arquivo de somas respondeu (\d+)$/, "체크섬 파일이 $1을(를) 응답했습니다"],
+    [/^o arquivo de somas do release não traz (.+)$/, "릴리스의 체크섬 파일에 $1이(가) 없습니다"],
+    [/^a API do GitHub respondeu (\d+)$/, "GitHub API가 $1을(를) 응답했습니다"],
+    [/^o release não traz (.+)$/, "릴리스에 $1이(가) 없습니다"],
     [/^O canal do widget da PixGG recusou a conexão \((.+)\)\. Nova tentativa sozinha em (\d+)s\.$/, "PixGG 위젯 채널이 연결을 거부했습니다($1). $2초 후 자동으로 다시 시도합니다."],
     [/^Conectado como (.+) \(@(\S+)\)$/, "$1 (@$2)(으)로 연결됨"],
     [/^💜 (.+) \(@(\S+)\)$/, "💜 $1 (@$2)"],

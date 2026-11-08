@@ -10,6 +10,27 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ 暂时无法读取模型（它仍在磁盘上）— 点击重试",
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ 在完整性校验之前下载的 — 请重新下载",
+    "Clique para fechar": "点击关闭",
+    "⚠️ o modelo não conferiu com a soma SHA-256 oficial e foi apagado — baixe de novo (Configurações → Conexões) e clique para tentar de novo": "⚠️ 模型与官方 SHA-256 校验和不一致，已删除 — 请重新下载(设置 → 连接)，然后点击重试",
+    "⬇️ Baixe o extrator de novo (Configurações → 🔌 Conexões): a cópia antiga não passou pela conferência de integridade e não é usada.": "⬇️ 请重新下载提取器（设置 → 🔌 连接）：旧副本没有经过完整性校验，不会被使用。",
+    "o «latest» apontou para um endereço inesperado": "「latest」指向了意料之外的地址",
+    "o GitHub não publicou a soma desse arquivo": "GitHub 没有公布这个文件的校验和",
+    "a API do GitHub não respondeu JSON": "GitHub API 没有返回 JSON",
+    "endereço fora do padrão dos releases": "地址不符合 release 的格式",
+    "tempo esgotado": "超时",
+    "endereço inválido": "地址无效",
+    "endereço não permitido": "地址不被允许",
+    "redirecionamento inválido": "重定向无效",
+    "redirecionamento para um endereço não permitido": "重定向到了不被允许的地址",
+    "redirecionamento de https para http recusado": "已拒绝从 https 重定向到 http",
+    "redirecionamento demais": "重定向次数过多",
+    "resposta maior que o esperado": "响应比预期的大",
+    "sem resposta": "没有响应",
+    "o zip não trouxe o executável esperado": "zip 里没有预期的可执行文件",
     // v0.188 — esconder elementos do painel
     "OBS Social — nome e versão": "OBS Social — 名称和版本",
     "Estado das conexões (um chip por rede)": "连接状态（每个平台一个小标签）",
@@ -3470,6 +3491,14 @@ window.OBS_I18N_DICTS.zh = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "只勾选你会用的。这会改变面板的 🎛️ 工具 — 音板上的 🎛️ 按键无论如何都能用。",
   },
   padroes: [
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    [/^o arquivo baixado \((.+)\) não confere com a soma SHA-256 oficial — foi apagado e não será usado\. Pode ter sido corrompido ou trocado no caminho; tente de novo mais tarde\.$/, "下载的文件（$1）与官方 SHA-256 校验和不一致 — 已删除，不会被使用。它可能在途中损坏或被替换；请稍后再试。"],
+    [/^não consegui a soma SHA-256 oficial de (.+?) \((.+)\) — por segurança, nada foi baixado\. Tente de novo mais tarde\.$/, "没能拿到 $1 的官方 SHA-256 校验和（$2）— 为了安全，什么都没有下载。请稍后再试。"],
+    [/^o modelo (.+), baixado antes, não confere com a soma SHA-256 oficial — foi apagado; baixe de novo\.$/, "之前下载的模型 $1 与官方 SHA-256 校验和不一致 — 已删除；请重新下载。"],
+    [/^o arquivo de somas respondeu (\d+)$/, "校验和文件返回了 $1"],
+    [/^o arquivo de somas do release não traz (.+)$/, "release 的校验和文件里没有 $1"],
+    [/^a API do GitHub respondeu (\d+)$/, "GitHub API 返回了 $1"],
+    [/^o release não traz (.+)$/, "release 里没有 $1"],
     [/^O canal do widget da PixGG recusou a conexão \((.+)\)\. Nova tentativa sozinha em (\d+)s\.$/, "PixGG 小组件频道拒绝了连接（$1）。$2 秒后自动重试。"],
     [/^Conectado como (.+) \(@(\S+)\)$/, "已连接为 $1 (@$2)"],
     [/^💜 (.+) \(@(\S+)\)$/, "💜 $1 (@$2)"],

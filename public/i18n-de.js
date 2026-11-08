@@ -10,6 +10,27 @@ window.OBS_I18N_DICTS.de = {
     ru: 'Russisch', tr: 'Türkisch', ja: 'Japanisch', ko: 'Koreanisch', zh: 'Chinesisch (vereinfacht)',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ das Modell konnte gerade nicht gelesen werden (es liegt noch auf der Festplatte) — klicke zum erneuten Versuch",
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ vor der Integritätsprüfung heruntergeladen — lade es erneut herunter",
+    "Clique para fechar": "Zum Schließen klicken",
+    "⚠️ o modelo não conferiu com a soma SHA-256 oficial e foi apagado — baixe de novo (Configurações → Conexões) e clique para tentar de novo": "⚠️ das Modell stimmte nicht mit der offiziellen SHA-256-Prüfsumme überein und wurde gelöscht — lade es erneut herunter (Einstellungen → Verbindungen) und klicke zum erneuten Versuch",
+    "⬇️ Baixe o extrator de novo (Configurações → 🔌 Conexões): a cópia antiga não passou pela conferência de integridade e não é usada.": "⬇️ Lade den Extraktor erneut herunter (Einstellungen → 🔌 Verbindungen): Die alte Kopie hat die Integritätsprüfung nicht durchlaufen und wird nicht verwendet.",
+    "o «latest» apontou para um endereço inesperado": "„latest“ zeigte auf eine unerwartete Adresse",
+    "o GitHub não publicou a soma desse arquivo": "GitHub hat für diese Datei keine Prüfsumme veröffentlicht",
+    "a API do GitHub não respondeu JSON": "die GitHub-API hat nicht mit JSON geantwortet",
+    "endereço fora do padrão dos releases": "Adresse außerhalb des Release-Schemas",
+    "tempo esgotado": "Zeitüberschreitung",
+    "endereço inválido": "ungültige Adresse",
+    "endereço não permitido": "Adresse nicht erlaubt",
+    "redirecionamento inválido": "ungültige Weiterleitung",
+    "redirecionamento para um endereço não permitido": "Weiterleitung auf eine nicht erlaubte Adresse",
+    "redirecionamento de https para http recusado": "Weiterleitung von https auf http abgelehnt",
+    "redirecionamento demais": "zu viele Weiterleitungen",
+    "resposta maior que o esperado": "Antwort größer als erwartet",
+    "sem resposta": "keine Antwort",
+    "o zip não trouxe o executável esperado": "das ZIP enthielt die erwartete ausführbare Datei nicht",
     // v0.188 — esconder elementos do painel
     "OBS Social — nome e versão": "OBS Social — Name und Version",
     "Estado das conexões (um chip por rede)": "Verbindungsstatus (ein Chip pro Netzwerk)",
@@ -3470,6 +3491,14 @@ window.OBS_I18N_DICTS.de = {
     "Marque só o que você usa. Isso muda a ferramenta 🎛️ do painel — as teclas 🎛️ da Mesa de Trilhas continuam funcionando de qualquer jeito.": "Haken Sie nur an, was Sie nutzen. Das ändert das 🎛️-Werkzeug des Panels — die 🎛️-Tasten des Soundboards funktionieren so oder so.",
   },
   padroes: [
+    // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
+    [/^o arquivo baixado \((.+)\) não confere com a soma SHA-256 oficial — foi apagado e não será usado\. Pode ter sido corrompido ou trocado no caminho; tente de novo mais tarde\.$/, "die heruntergeladene Datei ($1) stimmt nicht mit der offiziellen SHA-256-Prüfsumme überein — sie wurde gelöscht und wird nicht verwendet. Sie könnte unterwegs beschädigt oder ausgetauscht worden sein; versuche es später erneut."],
+    [/^não consegui a soma SHA-256 oficial de (.+?) \((.+)\) — por segurança, nada foi baixado\. Tente de novo mais tarde\.$/, "ich konnte die offizielle SHA-256-Prüfsumme von $1 nicht bekommen ($2) — zur Sicherheit wurde nichts heruntergeladen. Versuche es später erneut."],
+    [/^o modelo (.+), baixado antes, não confere com a soma SHA-256 oficial — foi apagado; baixe de novo\.$/, "das zuvor heruntergeladene Modell $1 stimmt nicht mit der offiziellen SHA-256-Prüfsumme überein — es wurde gelöscht; lade es erneut herunter."],
+    [/^o arquivo de somas respondeu (\d+)$/, "die Prüfsummendatei antwortete mit $1"],
+    [/^o arquivo de somas do release não traz (.+)$/, "die Prüfsummendatei des Releases führt $1 nicht auf"],
+    [/^a API do GitHub respondeu (\d+)$/, "die GitHub-API antwortete mit $1"],
+    [/^o release não traz (.+)$/, "das Release enthält $1 nicht"],
     [/^O canal do widget da PixGG recusou a conexão \((.+)\)\. Nova tentativa sozinha em (\d+)s\.$/, "Der PixGG-Widget-Kanal hat die Verbindung abgelehnt ($1). Neuer Versuch von selbst in $2 s."],
     [/^Conectado como (.+) \(@(\S+)\)$/, "Verbunden als $1 (@$2)"],
     [/^💜 (.+) \(@(\S+)\)$/, "💜 $1 (@$2)"],

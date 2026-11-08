@@ -18,17 +18,35 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 const zlib = require('zlib');
+const crypto = require('crypto');
 const { spawn, spawnSync } = require('child_process');
+const integridade = require('./integridade');
 
-// Modelos oficiais do whisper.cpp (ggerganov) — tamanho só para mostrar na UI
+// Modelos oficiais do whisper.cpp (ggerganov) — «mb» só para mostrar na UI.
+// 🛟 v0.189: «bytes» e «sha256» são o tamanho e o «oid» do LFS que a API do
+// Hugging Face publica para cada arquivo no commit fixado abaixo
+// (api/models/ggerganov/whisper.cpp/paths-info/<commit>) — o download só
+// vira modelo se a soma bater; o teto de bytes corta um servidor que mande mais
 const MODELOS = {
-  tiny: { arquivo: 'ggml-tiny.bin', mb: 75 },
-  base: { arquivo: 'ggml-base.bin', mb: 142 },
-  small: { arquivo: 'ggml-small.bin', mb: 466 },
-  medium: { arquivo: 'ggml-medium.bin', mb: 1463 },
-  large: { arquivo: 'ggml-large-v3-turbo.bin', mb: 1550 }, // large-v3-turbo: o mais preciso que ainda roda bem
+  tiny: { arquivo: 'ggml-tiny.bin', mb: 75, bytes: 77691713, sha256: 'be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21' },
+  base: { arquivo: 'ggml-base.bin', mb: 142, bytes: 147951465, sha256: '60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe' },
+  small: { arquivo: 'ggml-small.bin', mb: 466, bytes: 487601967, sha256: '1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b' },
+  medium: { arquivo: 'ggml-medium.bin', mb: 1463, bytes: 1533763059, sha256: '6c14d5adee5f86394037b4e4e8b59f1673b6cee10e3cf0b11bbdbee79c156208' },
+  large: { arquivo: 'ggml-large-v3-turbo.bin', mb: 1550, bytes: 1624555275, sha256: '1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69' }, // large-v3-turbo: o mais preciso que ainda roda bem
 };
-const BASE_MODELOS = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/';
+// 🛟 v0.189: um commit fixo no lugar de «main» — o «main» pode trocar um
+// arquivo e a soma fixada deixaria de bater; o commit não muda nunca
+const COMMIT_MODELOS = '5359861c739e955e79d9a303bcbc70fb988958b1';
+const BASE_MODELOS = `https://huggingface.co/ggerganov/whisper.cpp/resolve/${COMMIT_MODELOS}/`;
+// 🛟 v0.189: a soma SHA-256 dos zips da versão FIXADA do motor (o «digest» dos
+// arquivos do release v1.8.2 no GitHub). Outra tag (o «Atualizar» do
+// inventário) busca o digest na API do GitHub na hora; o ffmpeg «latest»
+// lê o checksums.sha256 do mesmo release.
+const SOMAS_FIXAS = {
+  'v1.8.2/whisper-bin-x64.zip': 'b1514ebc099765e39fa37eb780b92a140a94c86bb0b3b3d98226b38825979732',
+  'v1.8.2/whisper-bin-Win32.zip': '49244b4d13cc95f2f27a0098809a8514a835929fa0d24d1a8db6b9073650ba96',
+};
+const API_GITHUB = 'https://api.github.com';
 // Motor e conversor prontos para Windows (a maioria dos streamers do OBS), por
 // arquitetura (v0.184) — um zip x64 não serve num Windows de 32 bits:
 //   • o whisper.cpp publica x64 e Win32 (32 bits); não publica ARM64 — o
@@ -64,7 +82,8 @@ function idiomaOk(v) {
 
 class Transcritor {
   // opcoes: { dirModelos, dirMotor, dirTmp, aoEvento(evento),
-  //           baseModelos?, urlMotor?, urlFfmpeg? }  (os 3 últimos p/ testes)
+  //           baseModelos?, urlMotor?, urlFfmpeg?, somas?, apiGithub? }
+  //           (os 5 últimos p/ testes — somas: { 'ggml-tiny.bin' | '<tag>/<zip>': sha256 })
   constructor(opcoes = {}) {
     this.dirModelos = opcoes.dirModelos;
     this.dirMotor = opcoes.dirMotor;
@@ -72,7 +91,15 @@ class Transcritor {
     this.baseModelos = opcoes.baseModelos || BASE_MODELOS;
     this.urlMotor = opcoes.urlMotor || URL_MOTOR_WIN;
     this.urlFfmpeg = opcoes.urlFfmpeg || URL_FFMPEG_WIN;
+    // 🛟 v0.189: as somas oficiais fixadas (modelos pelo nome do arquivo, zips
+    // por «tag/arquivo»); um teste com servidor de mentira declara as dele
+    this.somas = { ...SOMAS_FIXAS, ...Object.fromEntries(Object.values(MODELOS).map((m) => [m.arquivo, m.sha256])) };
+    for (const [k, v] of Object.entries(opcoes.somas || {})) if (integridade.somaValida(String(v).toLowerCase())) this.somas[k] = String(v).toLowerCase();
+    this.apiGithub = String(opcoes.apiGithub || API_GITHUB).replace(/\/$/, '');
     this.aoEvento = typeof opcoes.aoEvento === 'function' ? opcoes.aoEvento : () => {};
+    // 🛟 v0.189: vigiar(proc) anota cada programa aberto (whisper-cli, ffmpeg)
+    // no registro do servidor, que os encerra quando o OBS Social fecha
+    this.vigiar = typeof opcoes.vigiar === 'function' ? opcoes.vigiar : null;
     this.downloads = new Map();  // chave → { pct, mb, req, cancelado }
     this.fila = [];              // [{ url, arquivo, conf }]
     this.rodando = null;
@@ -98,8 +125,10 @@ class Transcritor {
     return {
       modelos,
       // v0.184: baixavel = existe um zip pronto para este sistema/arquitetura
-      motor: { pronto: !!motor, origem: motor ? motor.origem : null, baixandoPct: dm ? dm.pct : null, baixavel: !!this.urlMotor },
-      ffmpeg: { pronto: !!ffmpeg, origem: ffmpeg ? ffmpeg.origem : null, baixandoPct: df ? df.pct : null, baixavel: !!this.urlFfmpeg },
+      // 🛟 v0.189: semConferencia = há uma cópia baixada antes da conferência
+      // de integridade; ela não roda e o painel oferece baixar de novo
+      motor: { pronto: !!motor, origem: motor ? motor.origem : null, baixandoPct: dm ? dm.pct : null, baixavel: !!this.urlMotor, semConferencia: this._semConferencia('motor') },
+      ffmpeg: { pronto: !!ffmpeg, origem: ffmpeg ? ffmpeg.origem : null, baixandoPct: df ? df.pct : null, baixavel: !!this.urlFfmpeg, semConferencia: this._semConferencia('ffmpeg') },
       plataformaWin: process.platform === 'win32',
       arquitetura: process.arch,
       fila: this.fila.length + (this.rodando ? 1 : 0),
@@ -126,7 +155,8 @@ class Transcritor {
     if (conf && this._temArquivo(conf)) return { comando: conf, origem: 'config' };
     const exe = process.platform === 'win32' ? 'whisper-cli.exe' : 'whisper-cli';
     const baixado = path.join(this.dirMotor, exe);
-    if (this._temArquivo(baixado)) return { comando: baixado, origem: 'baixado' };
+    // 🛟 v0.189: o baixado só roda se passou pela conferência (_pecaConferida)
+    if (this._temArquivo(baixado) && (!this._baixaAqui('motor') || this._pecaConferida('motor'))) return { comando: baixado, origem: 'baixado' };
     for (const nome of ['whisper-cli', 'whisper-cpp']) {
       const s = this._noSistema(nome);
       if (s) return { comando: s, origem: 'sistema' };
@@ -137,10 +167,94 @@ class Transcritor {
   _ondeFfmpeg() {
     const exe = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
     const baixado = path.join(this.dirMotor, exe);
-    if (this._temArquivo(baixado)) return { comando: baixado, origem: 'baixado' };
+    if (this._temArquivo(baixado) && (!this._baixaAqui('ffmpeg') || this._pecaConferida('ffmpeg'))) return { comando: baixado, origem: 'baixado' }; // 🛟 v0.189
     const s = this._noSistema('ffmpeg');
     if (s) return { comando: s, origem: 'sistema' };
     return null;
+  }
+
+  // 🛟 v0.189: só vale o motor/ffmpeg baixado E conferido (v0.189 em diante):
+  // o download anota em versoes.json cada arquivo tirado do zip conferido, com
+  // o tamanho — o executável e todos esses arquivos têm de estar lá, iguais.
+  // Uma cópia de antes (sem a anotação) fica no disco, mas não roda.
+  _exe(chave) { return (chave === 'ffmpeg' ? 'ffmpeg' : 'whisper-cli') + (process.platform === 'win32' ? '.exe' : ''); }
+  _pecaConferida(chave) {
+    const todas = this.versoes();
+    const v = todas[chave];
+    const arquivos = v && v.arquivos && typeof v.arquivos === 'object' ? v.arquivos : null;
+    if (!arquivos || !arquivos[this._exe(chave)]) return false;
+    // uma DLL na pasta que não saiu do zip conferido do motor (sobra de uma
+    // extração antiga, por exemplo) seria carregada pelo whisper-cli.exe E pelo
+    // ffmpeg.exe — no Windows a pasta do executável vem antes do sistema na busca.
+    // Bloqueia até o «baixar de novo» limpar a pasta (minúsculas: o NTFS guarda a
+    // grafia antiga ao sobrescrever)
+    const dlls = new Set(Object.keys((todas.motor && todas.motor.arquivos) || {}).map((n) => n.toLowerCase()));
+    try { if (fs.readdirSync(this.dirMotor).some((n) => /\.dll$/i.test(n) && !dlls.has(n.toLowerCase()))) return false; } catch { return false; }
+    return Object.entries(arquivos).every(([nome, a]) => {
+      try { return !!a && fs.statSync(path.join(this.dirMotor, path.basename(nome))).size === a.bytes; } catch { return false; }
+    });
+  }
+  // 🛟 só se exige a conferência onde o programa baixa (Windows): no Mac/Linux, e
+  // no ffmpeg do Windows 32 bits, o que está nesta pasta foi posto pela pessoa
+  // — a mesma confiança do PATH e do «Avançado — caminho»
+  _baixaAqui(chave) { return !!(chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor); }
+  _semConferencia(chave) { return this._baixaAqui(chave) && this._temArquivo(path.join(this.dirMotor, this._exe(chave))) && !this._pecaConferida(chave); }
+
+  // 🛟 v0.189: a soma oficial do zip ANTES do download:
+  //   • tag fixada no programa → SOMAS_FIXAS (no código);
+  //   • ffmpeg «latest» → o checksums.sha256 do MESMO release (mesma pasta);
+  //   • outra tag do whisper.cpp → o «digest» do arquivo na API do GitHub.
+  async _somaOficial(chave, url) {
+    const p = /\/([^/]+)\/([^/]+)\/releases\/download\/([^/]+)\/([^/]+)$/.exec(new URL(url).pathname);
+    if (!p) throw new Error('endereço fora do padrão dos releases');
+    const [, dono, repo, tagUrl, arquivoUrl] = p;
+    const arquivo = decodeURIComponent(arquivoUrl);
+    const fixa = this.somas[`${decodeURIComponent(tagUrl)}/${arquivo}`];
+    if (fixa) return fixa;
+    if (chave === 'ffmpeg') {
+      const r = await integridade.buscarTexto(new URL('checksums.sha256', url).toString());
+      if (r.status !== 200) throw new Error('o arquivo de somas respondeu ' + r.status);
+      const soma = integridade.lerSomas(r.texto).get(arquivo);
+      if (!soma) throw new Error('o arquivo de somas do release não traz ' + arquivo);
+      return soma;
+    }
+    const r = await integridade.buscarTexto(`${this.apiGithub}/repos/${dono}/${repo}/releases/tags/${tagUrl}`,
+      { cabecalhos: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } });
+    if (r.status !== 200) throw new Error('a API do GitHub respondeu ' + r.status);
+    let rel = null;
+    try { rel = JSON.parse(r.texto); } catch { throw new Error('a API do GitHub não respondeu JSON'); }
+    const item = (Array.isArray(rel && rel.assets) ? rel.assets : []).find((a) => a && a.name === arquivo);
+    if (!item) throw new Error('o release não traz ' + arquivo);
+    const soma = integridade.somaDoDigest(item.digest);
+    if (!soma) throw new Error('o GitHub não publicou a soma desse arquivo');
+    return soma;
+  }
+
+  // 🛟 v0.189: o modelo baixado nesta versão já nasce anotado (conferidos.json);
+  // o de antes é conferido UMA vez, em fluxo, contra a soma oficial — bateu,
+  // fica anotado; não bateu, é apagado e o painel avisa
+  async _modeloConferido(nome) {
+    const m = MODELOS[nome];
+    const esperada = this.somas[m.arquivo];
+    const anot = integridade.lerConferidos(this.dirModelos)[m.arquivo];
+    if (anot && anot.sha256 === esperada && integridade.estaConferido(this.dirModelos, m.arquivo)) return true;
+    const caminho = path.join(this.dirModelos, m.arquivo);
+    let soma = null;
+    // soma não lida ≠ soma errada: o arquivo fica e a pessoa tenta de novo
+    try { soma = await integridade.somaDoArquivo(caminho); } catch (err) { console.warn(`  🛟 Integridade: não consegui ler ${m.arquivo} para conferir (${(err && err.code) || err}) — fica para a próxima tentativa.`); return null; }
+    if (soma === esperada) {
+      let bytes = 0;
+      try { bytes = fs.statSync(caminho).size; } catch { /* sumiu no meio: a próxima vez confere de novo */ }
+      integridade.anotarConferido(this.dirModelos, m.arquivo, { sha256: soma, bytes });
+      return true;
+    }
+    console.warn(`  🛟 Integridade: o modelo ${m.arquivo} já baixado não confere com a soma SHA-256 oficial (esperada ${esperada}, veio ${soma}) — apagado.`);
+    try { fs.unlinkSync(caminho); } catch { /* já saiu */ }
+    integridade.anotarConferido(this.dirModelos, m.arquivo, null);
+    this.aoEvento({ type: 'transcricaoAviso', chave: 'modelo:' + nome, integridade: true,
+      erro: `o modelo ${m.arquivo}, baixado antes, não confere com a soma SHA-256 oficial — foi apagado; baixe de novo.` });
+    this._avisaEstado();
+    return false;
   }
 
   _avisaEstado() { this.aoEvento({ type: 'transcricaoEstado', estado: this.estado() }); }
@@ -167,7 +281,15 @@ class Transcritor {
   _baixar(chave, url, destinoPart, aoPronto, aoErroBruto, redirecionos = 0, limiteBytes = 0) {
     // 🔒 v0.127.1: req e res avisam erro cada um — o chamador ouve UMA vez
     let avisou = false;
-    const aoErro = (err) => { if (avisou) return; avisou = true; aoErroBruto(err); };
+    // 🛟 v0.189: no erro (cancelar, teto, queda) o .part é FECHADO antes de quem
+    // chamou apagá-lo — o pipe não fecha a escrita sozinho, e o descritor (e o
+    // espaço em disco) ficava preso até fechar o programa
+    let escrita = null;
+    const aoErro = (err) => {
+      if (avisou) return;
+      avisou = true;
+      if (escrita && !escrita.closed) { escrita.once('close', () => aoErroBruto(err)); escrita.destroy(); } else aoErroBruto(err);
+    };
     if (redirecionos > 5) { aoErro(new Error('redirecionamento demais')); return; }
     const mod = url.startsWith('http://') ? http : https;
     const req = mod.get(url, (res) => {
@@ -187,9 +309,12 @@ class Transcritor {
       if (limiteBytes && total > limiteBytes) { res.resume(); aoErro(new Error('arquivo maior que o limite de ' + Math.round(limiteBytes / 1048576) + ' MB')); return; }
       let lidos = 0;
       let ultimoAviso = 0;
-      const escrita = fs.createWriteStream(destinoPart);
+      escrita = fs.createWriteStream(destinoPart);
       const d = this.downloads.get(chave);
       if (d) d.req = req;
+      // 🛟 v0.189: a soma SHA-256 sai daqui, pedaço a pedaço, enquanto o arquivo
+      // chega (sem ler de novo do disco); quem chama compara com a oficial
+      const conta = crypto.createHash('sha256');
       res.on('data', (peca) => {
         lidos += peca.length;
         if (limiteBytes && lidos > limiteBytes) {
@@ -197,6 +322,7 @@ class Transcritor {
           req.destroy(new Error('arquivo maior que o limite de ' + Math.round(limiteBytes / 1048576) + ' MB'));
           return;
         }
+        conta.update(peca);
         const dd = this.downloads.get(chave);
         if (dd) {
           dd.pct = total ? Math.min(99, Math.floor((lidos / total) * 100)) : null;
@@ -205,8 +331,9 @@ class Transcritor {
         }
       });
       res.pipe(escrita);
-      escrita.on('finish', () => aoPronto(destinoPart));
-      escrita.on('error', aoErro);
+      escrita.on('finish', () => aoPronto(destinoPart, { sha256: conta.digest('hex'), bytes: lidos }));
+      // (o disco recusou: o download para — antes seguia baixando para o nada)
+      escrita.on('error', (e) => { try { req.destroy(); } catch {} aoErro(e); });
       res.on('error', aoErro);
     });
     const d0 = this.downloads.get(chave);
@@ -216,7 +343,8 @@ class Transcritor {
 
   _terminaDownload(chave, erro) {
     this.downloads.delete(chave);
-    if (erro) this.aoEvento({ type: 'transcricaoAviso', erro: String(erro.message || erro), chave });
+    // 🛟 v0.189: integridade = a soma não bateu — o painel deixa esse recado na tela
+    if (erro) this.aoEvento({ type: 'transcricaoAviso', erro: String(erro.message || erro), chave, ...(erro.integridade ? { integridade: true } : {}) });
     this._avisaEstado();
   }
 
@@ -230,14 +358,23 @@ class Transcritor {
     this.downloads.set(chave, { pct: 0, mb: m.mb, req: null });
     this._avisaEstado();
     const part = destino + '.part';
-    this._baixar(chave, this.baseModelos + m.arquivo, part, () => {
+    this._baixar(chave, this.baseModelos + m.arquivo, part, (p, conta) => {
       if (this.downloads.get(chave)?.cancelado) { try { fs.unlinkSync(part); } catch {} this._terminaDownload(chave); return; }
-      try { fs.renameSync(part, destino); this._terminaDownload(chave); }
-      catch (err) { this._terminaDownload(chave, err); }
+      // 🛟 v0.189: só vira modelo se a soma bater com a oficial; senão sai do disco
+      if (conta.sha256 !== this.somas[m.arquivo]) {
+        try { fs.unlinkSync(part); } catch {}
+        this._terminaDownload(chave, integridade.erroNaoConfere(m.arquivo, this.somas[m.arquivo], conta.sha256));
+        return;
+      }
+      try {
+        fs.renameSync(part, destino);
+        integridade.anotarConferido(this.dirModelos, m.arquivo, { sha256: conta.sha256, bytes: conta.bytes });
+        this._terminaDownload(chave);
+      } catch (err) { this._terminaDownload(chave, err); }
     }, (err) => {
       try { fs.unlinkSync(part); } catch {}
       this._terminaDownload(chave, this.downloads.get(chave)?.cancelado ? null : err);
-    });
+    }, 0, m.bytes);
   }
 
   cancelarDownload(chave) {
@@ -251,6 +388,7 @@ class Transcritor {
     const m = MODELOS[nome];
     if (!m) return;
     try { fs.unlinkSync(path.join(this.dirModelos, m.arquivo)); } catch {}
+    integridade.anotarConferido(this.dirModelos, m.arquivo, null); // 🛟 v0.189
     this._avisaEstado();
   }
 
@@ -278,32 +416,72 @@ class Transcritor {
     this.downloads.set(chave, { pct: 0, req: null });
     this._avisaEstado();
     const part = path.join(this.dirMotor, chave + '.zip.part');
-    this._baixar(chave, url, part, () => {
-      if (this.downloads.get(chave)?.cancelado) { try { fs.unlinkSync(part); } catch {} this._terminaDownload(chave); return; }
-      try {
-        const zip = fs.readFileSync(part);
-        const quer = chave === 'ffmpeg'
-          ? (nome) => (nome.endsWith('/ffmpeg.exe') ? 'ffmpeg.exe' : null)
-          : (nome) => {
-            const base = nome.split('/').pop();
-            return (base === 'whisper-cli.exe' || base.endsWith('.dll')) ? base : null;
-          };
-        const tirados = zipExtrair(zip, quer, this.dirMotor);
-        fs.unlinkSync(part);
-        if (tirados) {
-          // 🧩 v0.185: anota a versão baixada (a tag da URL) para o inventário
-          const mTag = /\/releases\/download\/([^/]+)\//.exec(url);
-          this._anotarVersao(chave, chave === 'motor' ? { tag: mTag ? decodeURIComponent(mTag[1]) : null, url } : { url });
+    const arquivoZip = decodeURIComponent(new URL(url).pathname.split('/').pop() || chave + '.zip');
+    // 🛟 v0.189: primeiro a soma oficial (_somaOficial); sem ela, nada é baixado
+    this._somaOficial(chave, url).then((esperada) => {
+      if (this.downloads.get(chave)?.cancelado) { this._terminaDownload(chave); return; }
+      this._baixar(chave, url, part, async (p, conta) => {
+        if (this.downloads.get(chave)?.cancelado) { try { fs.unlinkSync(part); } catch {} this._terminaDownload(chave); return; }
+        let confere = conta.sha256 === esperada;
+        if (!confere && chave === 'ffmpeg') {
+          // 🛟 v0.189: o «latest» do BtbN é republicado todo dia — se a soma
+          // publicada mudou durante o download e o arquivo bate com a NOVA,
+          // era o build novo chegando no meio do caminho: vale
+          try { confere = (await this._somaOficial(chave, url)) === conta.sha256; } catch { confere = false; }
         }
-        this._terminaDownload(chave, tirados ? null : new Error('o zip não trouxe o executável esperado'));
-      } catch (err) {
+        if (!confere) {
+          // 🛟 v0.189: não bateu — o zip sai do disco ANTES de abrir qualquer coisa
+          try { fs.unlinkSync(part); } catch {}
+          this._terminaDownload(chave, integridade.erroNaoConfere(arquivoZip, esperada, conta.sha256));
+          return;
+        }
+        try {
+          const zip = fs.readFileSync(part);
+          const quer = chave === 'ffmpeg'
+            ? (nome) => (nome.endsWith('/ffmpeg.exe') ? 'ffmpeg.exe' : null)
+            : (nome) => {
+              const base = nome.split('/').pop();
+              return (base === 'whisper-cli.exe' || base.endsWith('.dll')) ? base : null;
+            };
+          // 🛟 v0.189: cada arquivo tirado do zip conferido fica anotado (soma e
+          // tamanho) — é essa anotação que libera o executável (_pecaConferida)
+          const arquivos = {};
+          const tirados = zipExtrair(zip, quer, this.dirMotor, (nome, dados) => {
+            arquivos[nome] = { sha256: integridade.somaDoBuffer(dados), bytes: dados.length };
+          });
+          fs.unlinkSync(part);
+          if (tirados && arquivos[this._exe(chave)]) {
+            // 🛟 v0.189: o que sobrou de uma extração antiga (sem conferência) sai da
+            // pasta — uma DLL estranha seria carregada pelo executável conferido. Fica
+            // só o que acabou de sair do zip conferido e o que o OUTRO componente tem
+            // anotado (ou o executável dele posto à mão, onde não há download). Se o
+            // Windows não deixar apagar, cai no catch: nada é anotado, segue bloqueado
+            const outroChave = chave === 'motor' ? 'ffmpeg' : 'motor';
+            const outro = (this.versoes()[outroChave] || {}).arquivos || {};
+            const manter = new Set([...Object.keys(arquivos), ...Object.keys(outro)].map((n) => n.toLowerCase()));
+            if (!this._baixaAqui(outroChave)) manter.add(this._exe(outroChave).toLowerCase());
+            for (const n of fs.readdirSync(this.dirMotor)) {
+              if (/\.(dll|exe)$/i.test(n) && !manter.has(n.toLowerCase())) fs.rmSync(path.join(this.dirMotor, n), { force: true });
+            }
+          }
+          if (tirados) {
+            // 🧩 v0.185: anota a versão baixada (a tag da URL) para o inventário
+            const mTag = /\/releases\/download\/([^/]+)\//.exec(url);
+            const conferido = { url, sha256: conta.sha256, arquivos };
+            this._anotarVersao(chave, chave === 'motor' ? { tag: mTag ? decodeURIComponent(mTag[1]) : null, ...conferido } : conferido);
+          }
+          this._terminaDownload(chave, tirados ? null : new Error('o zip não trouxe o executável esperado'));
+        } catch (err) {
+          try { fs.unlinkSync(part); } catch {}
+          this._terminaDownload(chave, err);
+        }
+      }, (err) => {
         try { fs.unlinkSync(part); } catch {}
-        this._terminaDownload(chave, err);
-      }
-    }, (err) => {
-      try { fs.unlinkSync(part); } catch {}
-      this._terminaDownload(chave, this.downloads.get(chave)?.cancelado ? null : err);
-    }, 0, LIMITE_ZIP);
+        this._terminaDownload(chave, this.downloads.get(chave)?.cancelado ? null : err);
+      }, 0, LIMITE_ZIP);
+    }).catch((err) => {
+      this._terminaDownload(chave, this.downloads.get(chave)?.cancelado ? null : integridade.erroSemSoma(arquivoZip, err && err.message));
+    });
   }
 
   // ---------- a fila de transcrição ----------
@@ -340,6 +518,12 @@ class Transcritor {
     const modeloArq = path.join(this.dirModelos, MODELOS[nomeModelo].arquivo);
     if (!this._temArquivo(modeloArq)) {
       this._resultado(job.url, { estado: 'erro', erro: 'modelo-nao-baixado' });
+      return;
+    }
+    // 🛟 v0.189: o modelo só vai para o motor conferido (o de antes, uma vez)
+    const conferido = await this._modeloConferido(nomeModelo);
+    if (conferido !== true) {
+      this._resultado(job.url, { estado: 'erro', erro: conferido === null ? 'modelo-ilegivel' : 'modelo-nao-confere' });
       return;
     }
     const motor = this._ondeMotor(conf.comando);
@@ -403,6 +587,7 @@ class Transcritor {
         proc = spawn(comando, args, { windowsHide: true });
       } catch (err) { resolve({ codigo: -1, saida: '' }); return; }
       this.procCorrente = proc;
+      if (this.vigiar) this.vigiar(proc); // 🛟 v0.189
       const relogio = setTimeout(() => { try { proc.kill(); } catch {} fim(-2); }, tempoMax);
       proc.stdout.on('data', (d) => { if (saida.length < 2 * LIMITE_TEXTO) saida += d; });
       proc.stderr.on('data', () => {});
@@ -420,7 +605,8 @@ class Transcritor {
 
 // ---------- unzip mínimo (diretório central) ----------
 // quer(nomeEntrada) → nome do arquivo de destino (ou null para pular)
-function zipExtrair(buf, quer, dirDestino) {
+// 🛟 v0.189: aoGravar(nome, dados), se vier, ouve cada arquivo gravado
+function zipExtrair(buf, quer, dirDestino, aoGravar) {
   // acha o End Of Central Directory de trás pra frente
   let eocd = -1;
   for (let i = buf.length - 22; i >= 0 && i > buf.length - 70000; i--) {
@@ -461,6 +647,7 @@ function zipExtrair(buf, quer, dirDestino) {
     if (process.platform !== 'win32' && /\.(exe|dll)$/i.test(alvo) === false) {
       try { fs.chmodSync(alvo, 0o755); } catch {}
     }
+    if (aoGravar) aoGravar(path.basename(alvo), dados);
     tirados++;
   }
   return tirados;

@@ -852,6 +852,9 @@ const ANIM_CHAT_ANTIGA = { slide: 'slide-up', 'slide-side': 'slide-left' };
 
 let migrarArteDosPerfis = false; // 🖼️ v0.102: os moldes passam pela mesma migração da arte
 let gravarMarcaAnimacao = false; // 🎬 v0.179: a marca animPadraoV81 acabou de nascer e precisa ir ao disco
+// 🛟 v0.189: o settings.json existe, não abriu e nem a cópia deu certo — a
+// subida não grava o de fábrica por cima (só uma mudança de verdade grava)
+let settingsSemCopia = false;
 // 🔊 v0.77: os overlays que têm som e os quatro momentos. Ficam AQUI, antes
 // de `state` nascer, porque sanitizeAudiosOverlay roda já na carga do
 // settings.json (mergeSettings) — declarados mais abaixo, davam ReferenceError
@@ -1105,6 +1108,20 @@ const CHAVE_LOCAL_FILE = path.join(DATA_DIR, 'chave-local.key');
 // erro e devolvia vazio: as marcas de «lido» nunca sobreviviam ao reinício.
 const READ_FILE = path.join(DATA_DIR, 'read.json');
 const MAX_READ_IDS = 2000;
+
+// 🖼️ Toda arte do overlay é do streamer: /uploads/ é o que ele enviou
+// (v0.95: a pasta /artes/ que vinha com o programa saiu — a limpeza única
+// mais abaixo apaga o que tiver sobrado apontando para lá).
+// 🛟 v0.189: as duas listas moram AQUI, antes do state, pelo mesmo motivo do
+// READ_FILE e do clipboard: o state chama loadQrs/loadWinstreaks/loadAvisos ao
+// nascer, e o sanitizeStyle de cada item passa toda chave de estilo terminada
+// em «url» (a mediaUrl que o 🧩 Personalizar widgets grava, mesmo vazia, em
+// todo adicional que ele edita) por urlLocalDeArquivo(valor, PASTAS_MIDIA).
+// Declaradas lá embaixo, estavam na zona morta: o ReferenceError era engolido
+// pelo catch, a lista INTEIRA (o principal junto) voltava ao padrão no
+// reinício e a primeira mudança seguinte regravava o arquivo zerado.
+const PASTAS_MIDIA = ['/uploads/'];
+const PASTAS_SOM = ['/uploads/', '/sons/'];
 
 const state = {
   settings: loadSettings(),
@@ -1442,11 +1459,8 @@ function urlLocalDeArquivo(valor, pastas) {
   try { decodeURIComponent(v); } catch { return ''; }
   return pastas.some((pasta) => v.startsWith(pasta)) ? v.slice(0, 500) : '';
 }
-// 🖼️ Toda arte do overlay é do streamer: /uploads/ é o que ele enviou.
-// (v0.95: a pasta /artes/ que vinha com o programa saiu — ver a limpeza
-// única mais abaixo, que apaga o que tiver sobrado apontando para lá.)
-const PASTAS_MIDIA = ['/uploads/'];
-const PASTAS_SOM = ['/uploads/', '/sons/'];
+// (🛟 v0.189: PASTAS_MIDIA e PASTAS_SOM moram lá em cima, antes do state —
+// o sanitizeStyle usa a de mídia já na criação dele; veja o comentário lá.)
 
 function numeroEntre(valor, min, max, padrao) {
   const n = Number(valor);
@@ -1544,8 +1558,9 @@ function sanitizeAudiosOverlay(bruto) {
 // foi configurado, é a escolha mais recente e vence). Depois disso os campos
 // antigos são apagados e não voltam: saíram dos padrões e do sanitizador.
 //
-// Roda na carga, ANTES de PASTAS_SOM (e de qualquer const daqui) existir:
-// o state nasce na linha ~867 e estas funções só valem porque são içadas.
+// Roda na carga, ANTES das const desta parte do arquivo existirem: o state
+// nasce bem mais acima e estas funções só valem porque são içadas.
+// (🛟 v0.189: PASTAS_SOM subiu para antes do state, mas a regra continua.)
 // Por isso valida a URL pelo próprio sanitizeAudiosOverlay (função içada,
 // regex inline) e guarda as tabelas DENTRO das funções, nunca em const solto.
 function sonsLegados() { return [['relogio', 'relogio'], ['raffle', 'raffle']]; }
@@ -1750,7 +1765,7 @@ state.perfisOverlay = loadPerfisOverlay();
 // (inofensiva, mas a marca `arteTamanhoReal` precisa ficar guardada)
 // 🎬 v0.179: a marca `animPadraoV81` segue o mesmo caminho
 if (migrarArteDosPerfis || gravarMarcaAnimacao) {
-  try {
+  if (!settingsSemCopia) try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(state.settings, null, 2));
   } catch { /* o debounce normal grava depois */ }
@@ -1812,25 +1827,74 @@ function defaultWinstreak() {
   return { id: newInstanceId('ws'), label: 'Solo', wins: 0, record: 0, visible: false, x: null, y: null, style: {} };
 }
 
-function loadWinstreaks() {
+// 🛟 v0.189: a leitura das listas de ferramentas (winstreak.json, qrcodes.json
+// e avisos.json) não zera mais calada. Antes um catch só devolvia a lista
+// padrão por QUALQUER erro — arquivo quebrado, sem permissão ou um bug na
+// limpeza (a zona morta do PASTAS_MIDIA) — e a primeira mudança seguinte
+// regravava o arquivo com a lista zerada. Agora:
+//  · arquivo que não existe = primeira vez (lista vazia, sem recado);
+//  · arquivo que existe mas não abre = recado no console e uma cópia dele ao
+//    lado (data/<nome>.ilegivel-<marca>.json) antes que a gravação o apague;
+//  · cada item passa SOZINHO pela limpeza: um item com problema fica de fora
+//    (recado + cópia) e os outros ficam.
+// Roda na criação do state: só usa funções (içadas) e o que foi declarado
+// antes dele — e nada de tcons aqui (ele lê state.settings, ainda na zona morta).
+function lerListaDeFerramentas(nome, aceitaObjetoSo, limparItem) {
+  const arquivo = path.join(DATA_DIR, nome);
+  let bruto;
   try {
-    // Caminho direto: esta funcao roda na criacao do state, antes das constantes
-    const raw = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'winstreak.json'), 'utf8'));
-    const list = Array.isArray(raw) ? raw : [raw]; // formato antigo: um so objeto
-    const out = list.filter((w) => w && typeof w === 'object').map((w) => ({
-      id: String(w.id || newInstanceId('ws')),
-      label: String(w.label || 'Solo').slice(0, 30),
-      wins: Math.max(0, Number(w.wins) || 0),
-      record: Math.max(0, Number(w.record) || 0),
-      visible: !!w.visible,
-      x: Number.isFinite(Number(w.x)) && w.x !== null ? Number(w.x) : null,
-      y: Number.isFinite(Number(w.y)) && w.y !== null ? Number(w.y) : null,
-      style: sanitizeStyle(w.style),
-    }));
-    return out.length ? out : [defaultWinstreak()];
-  } catch {
-    return [defaultWinstreak()];
+    bruto = JSON.parse(fs.readFileSync(arquivo, 'utf8'));
+  } catch (err) {
+    if (!err || err.code !== 'ENOENT') guardarCopiaIlegivel(arquivo, (err && err.message) || String(err));
+    return [];
   }
+  // formato antigo do winstreak e do aviso: um só objeto em vez da lista
+  const lista = Array.isArray(bruto) ? bruto : (aceitaObjetoSo && bruto && typeof bruto === 'object' ? [bruto] : null);
+  if (!lista) { guardarCopiaIlegivel(arquivo, 'o conteúdo não é uma lista'); return []; }
+  const out = [];
+  const problemas = [];
+  lista.forEach((item, i) => {
+    if (!item || typeof item !== 'object') return; // sem dado nenhum: fica de fora, como sempre
+    try { out.push(limparItem(item)); } catch (err) { problemas.push(`item ${i + 1}: ${(err && err.message) || err}`); }
+  });
+  if (problemas.length) guardarCopiaIlegivel(arquivo, problemas.slice(0, 3).join('; '));
+  return out;
+}
+function guardarCopiaIlegivel(arquivo, motivo) {
+  const nome = path.basename(arquivo);
+  let copia = '';
+  try {
+    const conteudo = fs.readFileSync(arquivo);
+    // a marca é do CONTEÚDO: reiniciar com o mesmo arquivo quebrado não empilha cópias
+    const marca = crypto.createHash('sha256').update(conteudo).digest('hex').slice(0, 10);
+    copia = path.join(path.dirname(arquivo), nome.replace(/\.json$/i, '') + '.ilegivel-' + marca + '.json');
+    if (!fs.existsSync(copia)) fs.copyFileSync(arquivo, copia);
+  } catch { copia = ''; }
+  console.error(`  ⚠️ Não consegui ler tudo de data/${nome} (${motivo}).`);
+  console.error(copia
+    ? `    O arquivo como estava ficou guardado em data/${path.basename(copia)} — a próxima gravação regrava data/${nome}.`
+    : `    E não consegui guardar uma cópia: copie data/${nome} para outro lugar antes de mudar algo no programa — a próxima gravação o substitui.`);
+  return !!copia;
+}
+
+function loadWinstreaks() {
+  // Caminho direto (só o nome do arquivo): roda na criacao do state, antes das
+  // constantes. O formato antigo (um so objeto) continua valendo.
+  const out = lerListaDeFerramentas('winstreak.json', true, (w) => ({
+    id: String(w.id || newInstanceId('ws')),
+    label: String(w.label || 'Solo').slice(0, 30),
+    wins: Math.max(0, Number(w.wins) || 0),
+    record: Math.max(0, Number(w.record) || 0),
+    visible: !!w.visible,
+    x: Number.isFinite(Number(w.x)) && w.x !== null ? Number(w.x) : null,
+    y: Number.isFinite(Number(w.y)) && w.y !== null ? Number(w.y) : null,
+    // 🛟 v0.189: a posição no overlay VERTICAL (o winstreakMove grava vx/vy)
+    // volta do disco — antes sumia no reinício e o adicional caía na horizontal
+    vx: Number.isFinite(Number(w.vx)) && w.vx !== null && w.vx !== undefined ? Number(w.vx) : undefined,
+    vy: Number.isFinite(Number(w.vy)) && w.vy !== null && w.vy !== undefined ? Number(w.vy) : undefined,
+    style: sanitizeStyle(w.style, 'winstreak'), // 🛟 v0.189: a mesma régua do winstreakStyle
+  }));
+  return out.length ? out : [defaultWinstreak()];
 }
 
 function persistWinstreaks() {
@@ -1875,26 +1939,21 @@ function sanitizeSumir(s) {
 }
 
 function loadAvisos() {
-  try {
-    // Caminho direto: roda na criação do state, antes das constantes
-    const raw = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'avisos.json'), 'utf8'));
-    const list = Array.isArray(raw) ? raw : [raw];
-    const out = list.filter((a) => a && typeof a === 'object').map((a) => ({
-      id: String(a.id || newInstanceId('av')),
-      label: String(a.label || 'Aviso').slice(0, 30),
-      texto: String(a.texto || '').slice(0, 1000),
-      visible: !!a.visible,
-      sumir: sanitizeSumir(a.sumir),
-      x: Number.isFinite(Number(a.x)) && a.x !== null ? Number(a.x) : null,
-      y: Number.isFinite(Number(a.y)) && a.y !== null ? Number(a.y) : null,
-      vx: Number.isFinite(Number(a.vx)) && a.vx !== null && a.vx !== undefined ? Number(a.vx) : undefined,
-      vy: Number.isFinite(Number(a.vy)) && a.vy !== null && a.vy !== undefined ? Number(a.vy) : undefined,
-      style: sanitizeStyle(a.style),
-    })).slice(0, 30); // = MAX_INSTANCIAS (declarada depois do state)
-    return out.length ? out : [defaultAviso()];
-  } catch {
-    return [defaultAviso()];
-  }
+  // Caminho direto: roda na criação do state, antes das constantes.
+  // 🛟 v0.189: pela lerListaDeFerramentas (recado + cópia em vez de zerar calado)
+  const out = lerListaDeFerramentas('avisos.json', true, (a) => ({
+    id: String(a.id || newInstanceId('av')),
+    label: String(a.label || 'Aviso').slice(0, 30),
+    texto: String(a.texto || '').slice(0, 1000),
+    visible: !!a.visible,
+    sumir: sanitizeSumir(a.sumir),
+    x: Number.isFinite(Number(a.x)) && a.x !== null ? Number(a.x) : null,
+    y: Number.isFinite(Number(a.y)) && a.y !== null ? Number(a.y) : null,
+    vx: Number.isFinite(Number(a.vx)) && a.vx !== null && a.vx !== undefined ? Number(a.vx) : undefined,
+    vy: Number.isFinite(Number(a.vy)) && a.vy !== null && a.vy !== undefined ? Number(a.vy) : undefined,
+    style: sanitizeStyle(a.style, 'aviso'), // 🛟 v0.189: a mesma régua do avisoStyle
+  })).slice(0, 30); // = MAX_INSTANCIAS (declarada depois do state)
+  return out.length ? out : [defaultAviso()];
 }
 
 function persistAvisos() {
@@ -2125,28 +2184,26 @@ function emptyQr() {
 }
 
 function loadQrs() {
-  try {
-    // Caminho direto: esta funcao roda na criacao do state, antes das constantes
-    const raw = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'qrcodes.json'), 'utf8'));
-    const list = Array.isArray(raw) ? raw : [];
-    const out = list.filter((q) => q && typeof q === 'object').map((q) => ({
-      id: String(q.id || newInstanceId('qr')),
-      name: String(q.name || '').slice(0, 60),
-      url: String(q.url || '').slice(0, 1000),
-      matrix: null,
-      visible: !!q.visible,
-      x: Number.isFinite(Number(q.x)) && q.x !== null ? Number(q.x) : null,
-      y: Number.isFinite(Number(q.y)) && q.y !== null ? Number(q.y) : null,
-      style: sanitizeStyle(q.style),
-    }));
-    for (const q of out) {
-      if (q.url) { try { q.matrix = makeQrMatrix(q.url); } catch {} }
-      if (!q.matrix) q.visible = false;
-    }
-    return out.length ? out : [emptyQr()];
-  } catch {
-    return [emptyQr()];
+  // Caminho direto: esta funcao roda na criacao do state, antes das constantes.
+  // 🛟 v0.189: pela lerListaDeFerramentas (recado + cópia em vez de zerar calado)
+  const out = lerListaDeFerramentas('qrcodes.json', false, (q) => ({
+    id: String(q.id || newInstanceId('qr')),
+    name: String(q.name || '').slice(0, 60),
+    url: String(q.url || '').slice(0, 1000),
+    matrix: null,
+    visible: !!q.visible,
+    x: Number.isFinite(Number(q.x)) && q.x !== null ? Number(q.x) : null,
+    y: Number.isFinite(Number(q.y)) && q.y !== null ? Number(q.y) : null,
+    // 🛟 v0.189: a posição no overlay VERTICAL (o qrMove grava vx/vy) volta do disco
+    vx: Number.isFinite(Number(q.vx)) && q.vx !== null && q.vx !== undefined ? Number(q.vx) : undefined,
+    vy: Number.isFinite(Number(q.vy)) && q.vy !== null && q.vy !== undefined ? Number(q.vy) : undefined,
+    style: sanitizeStyle(q.style, 'qr'), // 🛟 v0.189: a mesma régua do qrStyle
+  }));
+  for (const q of out) {
+    if (q.url) { try { q.matrix = makeQrMatrix(q.url); } catch {} }
+    if (!q.matrix) q.visible = false;
   }
+  return out.length ? out : [emptyQr()];
 }
 
 function persistQrs() {
@@ -2281,7 +2338,12 @@ function saveRespiraPorIp(ws) {
 function loadSettings() {
   try {
     return mergeSettings(JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')));
-  } catch {
+  } catch (err) {
+    // 🛟 v0.189: um settings.json que existe mas não abre (cortado, sem
+    // permissão) ganha uma cópia ao lado ANTES de a subida regravar o de
+    // fábrica — antes tudo voltava ao padrão calado e o original sumia na hora.
+    // (guardarCopiaIlegivel é içada e só usa o que nasce antes do state.)
+    if (!err || err.code !== 'ENOENT') settingsSemCopia = !guardarCopiaIlegivel(SETTINGS_FILE, (err && err.message) || String(err));
     return mergeSettings(null);
   }
 }
@@ -2304,9 +2366,48 @@ function saveSettingsAgora() {
     console.error('Não consegui salvar as configurações:', err.message);
   }
 }
+// 🛟 v0.189: os programas que o OBS Social abre e que trabalham sozinhos —
+// whisper-cli e ffmpeg (🎙️ transcrição), yt-dlp (🎞️ mídia direta), npm (💬
+// biblioteca do WhatsApp) e curl/PowerShell (caminhos de reserva das redes) —
+// ficam anotados aqui enquanto rodam, e o fechamento do programa leva todos
+// junto. Antes, no Mac e no Linux, o filho seguia vivo depois que o servidor
+// saía: um whisper-cli órfão continuava transcrevendo (CPU a 100%) até tentar
+// escrever a próxima frase num cano já fechado. (No Windows o próprio Node já
+// encerra os filhos DIRETOS junto com o node.exe — o libuv os põe num «job»
+// do sistema —, mas não os netos: ver os comentários do npm e do yt-dlp.)
+// Os relançamentos de relaunchApp() (atualização, ♻️, «apagar tudo») são
+// destacados DE PROPÓSITO e nunca entram aqui.
+const filhosVivos = new Set();
+function vigiarFilho(proc) {
+  // sem pid = o programa nem chegou a nascer (ENOENT etc.): nada a encerrar
+  if (!proc || !(proc.pid > 0)) return proc;
+  filhosVivos.add(proc);
+  proc.once('exit', () => filhosVivos.delete(proc));
+  return proc;
+}
+// Encerra TODOS na hora, sem esperar ninguém (o fechamento não pode atrasar
+// nem travar por causa de um filho): um SIGTERM por filho — no Windows, o
+// TerminateProcess. Quem recebe faz a própria faxina: o yt-dlp de arquivo
+// único (PyInstaller) repassa o SIGTERM ao processo de verdade e apaga a
+// pasta temporária dele; um SIGKILL aqui deixaria esse processo órfão.
+// Síncrono, para valer também dentro do 'exit' do processo.
+function encerrarFilhos() {
+  for (const proc of filhosVivos) {
+    filhosVivos.delete(proc);
+    try { proc.kill(); } catch { /* já tinha saído */ }
+  }
+}
+// o curl/PowerShell dos caminhos de reserva nasce em connectors/caminhos.js
+require('./connectors/caminhos').configurarVigia(vigiarFilho);
 // Fechando o programa (Ctrl+C / kill), o que estiver pendente é gravado antes
-for (const sinal of ['SIGINT', 'SIGTERM']) {
+// 🛟 v0.189: e também ao fechar a JANELA — SIGHUP (o «X» do console no
+// Windows; fechar o Terminal no Mac/Linux): sem ouvinte, o Node saía na hora,
+// sem gravar o que estava adiado. SIGBREAK é o Ctrl+Break do Windows (nos
+// outros sistemas não existe e nunca dispara). Os filhos vão primeiro: morrem
+// enquanto o disco grava.
+for (const sinal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
   process.on(sinal, () => {
+    encerrarFilhos();
     if (saveSettingsTimer) saveSettingsAgora();
     // 📋 v0.155.1: a gravação adiada (250 ms) do histórico da área de
     // transferência também vai já — o que foi mandado logo antes de fechar
@@ -2316,6 +2417,10 @@ for (const sinal of ['SIGINT', 'SIGTERM']) {
     process.exit(0);
   });
 }
+// 🛟 v0.189: qualquer outra saída — relaunchApp() (atualização, ♻️, «apagar
+// tudo»), a porta ocupada — também leva os filhos junto. O servidor novo que
+// o relaunchApp abre não está na lista: é destacado e tem de sobreviver.
+process.on('exit', encerrarFilhos);
 
 // ---------------------------------------------------------------------------
 // Servidor HTTP (arquivos do painel e do overlay)
@@ -3188,10 +3293,15 @@ const transcritor = new Transcritor({
   dirModelos: path.join(DATA_DIR, 'modelos-transcricao'),
   dirMotor: path.join(DATA_DIR, 'motor-transcricao'),
   dirTmp: path.join(DATA_DIR, 'tmp'),
+  vigiar: vigiarFilho, // 🛟 v0.189: whisper-cli e ffmpeg saem junto com o programa
   // Ganchos de teste: apontam os downloads para um servidor local de mentira
   baseModelos: process.env.OBS_TESTE_MODELOS_BASE || undefined,
   urlMotor: process.env.OBS_TESTE_MOTOR_URL || undefined,
   urlFfmpeg: process.env.OBS_TESTE_FFMPEG_URL || undefined,
+  // 🛟 v0.189: …e as somas SHA-256 «fixas» dele (JSON { 'ggml-tiny.bin' |
+  // 'v1.8.2/whisper-bin-x64.zip': soma }) e a API do GitHub de mentira
+  somas: (() => { try { return JSON.parse(process.env.OBS_TESTE_SOMAS || '{}'); } catch { return {}; } })(),
+  apiGithub: process.env.OBS_TESTE_GITHUB_API || undefined,
   aoEvento: (ev) => {
     if (ev.type === 'transcricao') {
       const { type, url, ...resto } = ev;
@@ -4671,6 +4781,17 @@ function apelidoDeTelefone(nome) {
 }
 // (o JID do WhatsApp é «número@s.whatsapp.net» ou «número:aparelho@…»)
 const semSufixoJid = (v) => String(v || '').replace(/@.*$/, '').replace(/:.*$/, '');
+// 📱 o grupo ANTIGO do WhatsApp tem id «<telefone de quem criou>-<hora>@g.us»
+// (os criados de ~2021 para cá são «120363…@g.us», sem telefone). Para quem só
+// assiste e para o 🕹️ controle externo, o telefone sai do id; o servidor segue
+// com o verdadeiro (connect/reconnect reconhecem o tapado — canalWaDeVolta)
+function canalWaSemTelefone(c) {
+  return typeof c === 'string' && /^\+?\d{8,}-\d+$/.test(semSufixoJid(c)) ? c.replace(/^\+?\d+/, '📱') : c;
+}
+function canalWaDeVolta(c) {
+  const lembrado = state.connections.whatsapp?.channel;
+  return lembrado && c && c !== lembrado && canalWaSemTelefone(lembrado) === c ? lembrado : c;
+}
 function mensagemComTelefone(m) {
   return !!m && typeof m === 'object' && !Array.isArray(m)
     && (m.platform === 'whatsapp' || pareceTelefoneSrv(m.author) || pareceTelefoneSrv(semSufixoJid(m.authorLogin)) || pareceTelefoneSrv(semSufixoJid(m.authorId)));
@@ -4680,6 +4801,12 @@ function mensagemParaViewer(m) {
   const { authorId, authorLogin, waChatId, ...resto } = m;
   if (pareceTelefoneSrv(resto.author)) resto.author = apelidoDeTelefone(resto.author);
   if (pareceTelefoneSrv(semSufixoJid(resto.channel))) resto.channel = '';
+  // 📱 v0.189: o ganhador do sorteio tem platform e author, então cai aqui — e a
+  // troca da chave «whatsapp:id:<número>» lá embaixo, em semTelefonesParaViewer,
+  // nunca era alcançada por ele: o init e o 'raffle' levavam os números inteiros
+  // a quem só assiste
+  if (typeof resto.chave === 'string' && /^whatsapp:/i.test(resto.chave)) resto.chave = 'whatsapp:oculto';
+  if (resto.platform === 'whatsapp' && typeof resto.conta === 'string') resto.conta = canalWaSemTelefone(resto.conta);
   return resto;
 }
 // Percorre um quadro qualquer trocando as mensagens que carregam telefone.
@@ -4697,6 +4824,8 @@ function semTelefonesParaViewer(v, prof = 0) {
   if (typeof v.platform === 'string' && ('author' in v || 'runs' in v || 'authorId' in v)) return mensagemParaViewer(v);
   // a correção de avatar chega com o «login» da pessoa — no WhatsApp é o número
   if (v.type === 'avatarFix' && (v.platform === 'whatsapp' || pareceTelefoneSrv(semSufixoJid(v.login)))) return { ...v, login: '' };
+  if (v.type === 'apagadas' && v.platform === 'whatsapp' && v.troca && (canalWaSemTelefone(v.troca.de) !== v.troca.de || canalWaSemTelefone(v.troca.para) !== v.troca.para)) v = { ...v, troca: { ...v.troca, de: canalWaSemTelefone(v.troca.de), para: canalWaSemTelefone(v.troca.para) } };
+  if (v.type === 'status' && v.platform === 'whatsapp' && v.status && canalWaSemTelefone(v.status.channel) !== v.status.channel) return { ...v, status: { ...v.status, channel: canalWaSemTelefone(v.status.channel) } };
   if (v.type === 'apagadas' && pareceTelefoneSrv(v.autor)) return { ...v, autor: null };
   // o ganhador do sorteio guarda a chave do participante (whatsapp:id:<número>) e
   // o avatar ampliado leva o nome cru — os dois saem mascarados para o viewer
@@ -5786,8 +5915,11 @@ function limparDados(escopo) {
     feito.push('conexoes');
   }
   if (tudo || escopo === 'ferramentas') {
-    state.qrs = [];
-    state.winstreaks = [];
+    // 🛟 v0.189: o principal fica (vazio), como no aviso e como volta no
+    // reinício — com a lista vazia, mostrar um QR derrubava o pedido
+    // (TypeError) e o ➕ do winstreak não fazia nada até reiniciar
+    state.qrs = [emptyQr()];
+    state.winstreaks = [defaultWinstreak()];
     state.trilhas = [];
     state.avisos = [defaultAviso()]; // 📢 v0.128: o principal fica (vazio)
     pararTrilha();
@@ -6217,9 +6349,10 @@ function normSearch(value) {
   return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function messageSearchText(message) {
+function messageSearchText(message, semTelefone = false) {
   const text = (message.runs || []).map((r) => (r.type === 'emote' ? (r.alt || '') : (r.text || ''))).join('');
-  return normSearch((message.author || '') + ' ' + text);
+  const autor = semTelefone && pareceTelefoneSrv(message.author) ? apelidoDeTelefone(message.author) : (message.author || '');
+  return normSearch(autor + ' ' + text);
 }
 
 // 🔒 v0.179: a varredura era SÍNCRONA (até 40 MB lidos e analisados de uma vez
@@ -6257,7 +6390,7 @@ async function searchLogs(query, opts = {}) {
       const entry = JSON.parse(line);
       // (v0.177: comentários de TESTE não voltam pela busca — o 🧹 os tirou de tudo)
       if (entry.t === 'chat' && entry.m && entry.m.id && !seen.has(entry.m.id)
-          && !ehMensagemDeTeste(entry.m) && messageSearchText(entry.m).includes(q)) {
+          && !ehMensagemDeTeste(entry.m) && messageSearchText(entry.m, opts.semTelefone === true).includes(q)) {
         seen.add(entry.m.id);
         dayMatches.push(entry.m);
       }
@@ -6347,6 +6480,7 @@ function pedirBusca(ws, query) {
     const executar = async () => {
       if (ctrl.cancelado || ws.readyState !== 1) return;
       const r = await searchLogs(q, {
+        semTelefone: ws.role === 'viewer',
         maxBytes: local ? SEARCH_MAX_BYTES : SEARCH_MAX_BYTES_REDE,
         cpuMs: local ? SEARCH_CPU_MS_LOCAL : SEARCH_CPU_MS_REDE,
         ctrl,
@@ -7665,6 +7799,11 @@ function waLibInstalar(versaoPedida) {
       .map((a) => (comShell && /[\s&^|<>()"]/.test(a) ? '"' + a.replace(/"/g, '') + '"' : a));
     // rodando DENTRO da pasta da biblioteca: o npm não tem para onde subir
     proc = waSpawn(npmCmd, args, { windowsHide: true, shell: comShell, cwd: WA_LIB_DIR });
+    // 🛟 v0.189: fechar o programa no meio da instalação encerra o npm junto.
+    // (No Windows o filho é o cmd.exe do shell: o npm de verdade é neto, fica
+    // fora do alcance do kill() e termina sozinho — o mesmo limite do tempo
+    // limite logo abaixo.)
+    vigiarFilho(proc);
   } catch (err) {
     waLib.instalando = false;
     waLib.erro = String(err.message || err).slice(0, 200);
@@ -8768,6 +8907,7 @@ const extratorYtDlp = new ExtratorYtDlp({
   dir: path.join(DATA_DIR, 'ytdlp'),
   ehPublico: hostPublicoDaSonda,
   base: process.env.OBS_TESTE_YTDLP_BASE || undefined,
+  vigiar: vigiarFilho, // 🛟 v0.189: o yt-dlp sai junto com o programa
   aoEvento: (ev) => broadcast(ev),
 });
 
@@ -11613,7 +11753,7 @@ wss.on('connection', (ws, req) => {
     midiaPlayer: state.midiaPlayer,
     avatarZoom: state.avatarZoom,
     avatarZooms: state.avatarZooms, // 🪟 v0.79: instâncias extras do 🔍
-    status: state.status,
+    status: ws.role === 'viewer' && state.status.whatsapp ? { ...state.status, whatsapp: { ...state.status.whatsapp, channel: canalWaSemTelefone(state.status.whatsapp.channel) } } : state.status,
     recent: state.recent,
     recentPorRede: recentesPorRede(),
     feedPending: feedQueue.length + feedReleasing.length,
@@ -11642,7 +11782,7 @@ wss.on('connection', (ws, req) => {
     dados: resumoDados(),
     clipboard: podeVerClipboard(ws) ? clipboardPublico() : [],
     clipboardFechado: !podeVerClipboard(ws), // 📋 v0.155.1: a tela diz o porquê do vazio
-    connections: conexoesPublicas(),
+    connections: (() => { const c = conexoesPublicas(); if (ws.role === 'viewer' && c.whatsapp) c.whatsapp = { ...c.whatsapp, channel: canalWaSemTelefone(c.whatsapp.channel) }; return c; })(),
     trilhas: trilhasParaTela(),
     perfisOverlay: state.perfisOverlay,
     // 🏭 v0.59: os moldes de fábrica originais viajam junto — é o botão de
@@ -11824,7 +11964,9 @@ function tratarMensagem(ws, raw) {
         if (!Object.prototype.hasOwnProperty.call(CONNECTORS, plat)) break; // rede desconhecida não entra na memória do respiro
         if (!respiroRede(ws, 'connect:' + plat, 2000)) break;
       }
-      connect(plat, String(msg.channel || '').slice(0, 200), opcoes);
+      let canalPedido = String(msg.channel || '').slice(0, 200);
+      if (ws.role !== 'local' && plat === 'whatsapp') canalPedido = canalWaDeVolta(canalPedido);
+      connect(plat, canalPedido, opcoes);
       break;
     }
     case 'disconnect': {
@@ -11944,7 +12086,8 @@ function tratarMensagem(ws, raw) {
       // Reinicia uma conexao (se algo travou ou quebrou): derruba e conecta
       // de novo com o canal informado ou com o lembrado da ultima vez
       const platform = String(msg.platform || '');
-      const channel = String(msg.channel || '').trim().slice(0, 200) || state.connections[platform]?.channel;
+      let channel = String(msg.channel || '').trim().slice(0, 200) || state.connections[platform]?.channel;
+      if (ws.role !== 'local' && platform === 'whatsapp') channel = canalWaDeVolta(channel);
       // 🔒 v0.179: reiniciar = derrubar e buscar tudo de novo lá fora — pela rede, um a cada 2 s por rede
       if (Object.prototype.hasOwnProperty.call(CONNECTORS, platform) && channel) {
         if (!respiroRede(ws, 'connect:' + platform, 2000)) break;
@@ -14458,7 +14601,7 @@ function controleCatalogo() {
   for (const rede of Object.keys(CONNECTORS)) {
     const c = state.connections[rede] || {};
     for (const [verbo, desc] of [['ligar', 'Conecta (com o canal lembrado ou o informado)'], ['desligar', 'Desconecta'], ['reiniciar', 'Derruba e conecta de novo']]) {
-      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc, params: verbo === 'desligar' ? [] : [CP.canal], rede, canalLembrado: c.channel || null });
+      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc, params: verbo === 'desligar' ? [] : [CP.canal], rede, canalLembrado: (rede === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null });
     }
   }
   for (const [id, spec] of Object.entries(OBS_ACOES)) acoes.push({ id: 'obs/' + id, grupo: 'obs', nome: '🎬 ' + id, desc: '', params: controleParamsDoSpec(spec), obsAcao: id });
@@ -14476,12 +14619,17 @@ function controleCatalogo() {
 // O retrato do momento, para aparelhos que mostram estado (Companion etc.)
 function controleEstado() {
   const f = state.featured;
+  // 📱 v0.189: o retrato vai para aparelhos que mostram o nome numa tecla ou
+  // numa tela (Companion, Stream Deck...) — o autor que É um número sai com o
+  // mesmo apelido da tela pública e de quem só assiste (📱 Convidado XYZ); o
+  // nome de verdade (pushname) fica como está
+  const nomeSemTelefone = (n) => (pareceTelefoneSrv(n) ? apelidoDeTelefone(n) : n);
   const obs = state.settings.labs?.obs === true ? obsResumo() : null;
   const vmix = state.settings.labs?.vmix === true ? vmixResumo() : null;
   return {
     ok: true, versao: APP_VERSION,
-    destaque: f ? { id: f.id, autor: f.author, rede: f.platform, texto: String(f.message ?? f.text ?? '').slice(0, 200) } : null,
-    sorteio: { visivel: !!(state.raffle && state.raffle.visible), participantes: state.participants.size, ganhadores: state.raffle ? (state.raffle.winners || []).map((w) => (w && (w.author || w.name || w.nome)) || '') : [] },
+    destaque: f ? { id: f.id, autor: nomeSemTelefone(f.author), rede: f.platform, texto: String(f.message ?? f.text ?? '').slice(0, 200) } : null,
+    sorteio: { visivel: !!(state.raffle && state.raffle.visible), participantes: state.participants.size, ganhadores: state.raffle ? (state.raffle.winners || []).map((w) => nomeSemTelefone((w && (w.author || w.name || w.nome)) || '')) : [] },
     likometro: !!(state.likemeter && state.likemeter.enabled), audiencia: !!(state.audience && state.audience.visible),
     aviso: { visivel: !!state.avisos[0].visible, texto: state.avisos[0].texto },
     livepix: state.livepix ? { conectada: !!state.connectors.livepix, conta: state.livepix.conta ? state.livepix.conta.username : null, autoPlay: state.livepix.controles ? state.livepix.controles.autoPlay : null } : { conectada: false }, // 💜 v0.174
@@ -14498,7 +14646,7 @@ function controleEstado() {
     qrs: state.qrs.map((q) => ({ id: q.id, nome: q.name, visivel: !!q.visible })),
     fila: feedQueue.length + feedReleasing.length,
     totais: { ...platformTotals }, categorias: { ...categoryTotals },
-    conexoes: Object.fromEntries(Object.entries(state.connections || {}).map(([r, c]) => [r, { ativa: !!(c && c.active), canal: c ? c.channel || null : null, status: state.status[r] ? state.status[r].state : null }])),
+    conexoes: Object.fromEntries(Object.entries(state.connections || {}).map(([r, c]) => [r, { ativa: !!(c && c.active), canal: c ? (r === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null : null, status: state.status[r] ? state.status[r].state : null }])),
     mesa: { tocando: state.trilhaTocando, pasta: pastaFila ? pastaFila.id : null, tela: state.trilhaTela ? { id: state.trilhaTela.id, tipo: state.trilhaTela.tipo } : null },
     // 🎞️ v0.129
     midiaDireta: state.midiaDireta.item ? { visivel: !!state.midiaDireta.visible, tipo: state.midiaDireta.item.tipo, nome: state.midiaDireta.item.nome, fonte: state.midiaDireta.item.fonte, provedor: state.midiaDireta.item.embed ? state.midiaDireta.item.embed.provedor : null, telaCheia: !!state.midiaDireta.telaCheia, tocando: state.midiaDireta.player.estado === 'tocando', credito: state.midiaDireta.credito.mostrar ? state.midiaDireta.credito.texto : '' } : null,
@@ -14518,7 +14666,13 @@ function controleExecutar(msg, ip) {
   const wsFalso = {
     role: 'full', clientIp: ip, addressClass: classifyAddress(ip), deviceInfo: 'Controle externo', deviceName: null,
     readyState: 1, controleExterno: true, respiros: controleRespiros.get(ip),
-    send: (s) => { try { const d = JSON.parse(s); if (d && d.type && respostas.length < 20) respostas.push(d); } catch {} },
+    // 📱 v0.189: o que volta para o aparelho passa pelo MESMO filtro de quem só
+    // assiste (semTelefonesParaViewer). O papel 'full' diz o que o token pode
+    // FAZER; o JSON vai para Stream Deck, Companion, atalhos e automações, que
+    // mostram e guardam o que recebem sem a máscara do painel — a revisão do dia
+    // (logDia) e a recarga de coluna (recarregarColuna) devolviam
+    // author/authorId/authorLogin/waChatId com o número do WhatsApp
+    send: (s) => { try { const d = JSON.parse(s); if (d && d.type && respostas.length < 20) respostas.push(semTelefonesParaViewer(d)); } catch {} },
   };
   tratarMensagem(wsFalso, JSON.stringify(msg));
   // 🕹️ v0.179: operação inventada (typo, maiúscula) não é «ok» — antes caía fora
@@ -14689,7 +14843,7 @@ server.listen(PORT, () => {
   // Quem ja usava a Bilibili antes do seletor do Labs continua com ela ativa
   if (state.settings.labs?.bilibili !== true && state.connections?.bilibili?.channel) {
     state.settings.labs.bilibili = true;
-    saveSettings();
+    if (!settingsSemCopia) saveSettings(); // 🛟 v0.189: sem cópia do que não abriu, não grava por cima
   }
   // Memoria das conexoes: reconecta sozinho o que estava ligado da ultima vez
   setTimeout(() => {

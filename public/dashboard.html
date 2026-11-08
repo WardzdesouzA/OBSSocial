@@ -5183,6 +5183,10 @@ function abrirMidiaZoom(url, nome) {
 let transcricoes = {};
 const TRANSCRICAO_ERROS = {
   'modelo-nao-baixado': '⚠️ o modelo ainda não foi baixado (Configurações → Conexões) — clique para tentar de novo',
+  // 🛟 v0.189: o modelo de antes não bateu com a soma SHA-256 oficial e saiu do disco
+  'modelo-nao-confere': '⚠️ o modelo não conferiu com a soma SHA-256 oficial e foi apagado — baixe de novo (Configurações → Conexões) e clique para tentar de novo',
+  // 🛟 v0.189: não deu para LER o modelo (trava passageira, disco fora): ele fica e nada foi apagado
+  'modelo-ilegivel': '⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo',
   'motor-nao-encontrado': '⚠️ o motor de transcrição ainda não está pronto (Configurações → Conexões) — clique para tentar de novo',
   'precisa-ffmpeg': '⚠️ este formato precisa do conversor ffmpeg (Configurações → Conexões) — clique para tentar de novo',
   'conversao-falhou': '⚠️ a conversão do áudio falhou — clique para tentar de novo',
@@ -6603,6 +6607,8 @@ const MD_MOTIVOS = {
   demorou: '⏳ O site demorou demais para o extrator — tente carregar de novo.',
   ocupado: '⏳ O extrator já está cuidando de dois links — tente de novo em instantes.',
   semPrograma: '⬇️ O extrator ainda não foi baixado (Configurações → 🔌 Conexões).',
+  // 🛟 v0.189: a cópia de antes da conferência de integridade não roda
+  semConferencia: '⬇️ Baixe o extrator de novo (Configurações → 🔌 Conexões): a cópia antiga não passou pela conferência de integridade e não é usada.',
   erro: '⚠️ O extrator não conseguiu:',
 };
 function mdSonda(estado, motivo, detalhe) {

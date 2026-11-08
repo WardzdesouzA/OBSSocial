@@ -3768,23 +3768,26 @@ const hub = connectHub((event) => {
       pedirInventarioComponentes(); // 🧩 v0.185: a versão do yt-dlp entra no inventário
       renderYtDlp();
       break;
-    case 'ytdlpAviso': {
-      const av = document.getElementById('ydAviso');
-      if (av) {
-        av.style.display = '';
-        av.textContent = '⚠️ ' + (event.erro || 'erro no download');
-        clearTimeout(av._timer);
-        av._timer = setTimeout(() => { av.style.display = 'none'; }, 8000);
-      }
-      break;
-    }
+    case 'ytdlpAviso':
     case 'transcricaoAviso': {
-      const av = document.getElementById('trAviso');
+      const av = document.getElementById(event.type === 'ytdlpAviso' ? 'ydAviso' : 'trAviso');
       if (av) {
         av.style.display = '';
         av.textContent = '⚠️ ' + (event.erro || 'erro no download');
         clearTimeout(av._timer);
-        av._timer = setTimeout(() => { av.style.display = 'none'; }, 8000);
+        // 🛟 v0.189: um download que não conferiu com a soma SHA-256 oficial é
+        // recado para LER — fica na tela até um clique (os outros somem em 8 s)
+        if (event.integridade) {
+          av.style.cursor = 'pointer';
+          av.title = 'Clique para fechar';
+          av.onclick = () => { av.style.display = 'none'; };
+        } else {
+          // um recado comum depois de um de integridade volta ao jeito de sempre
+          av.style.cursor = '';
+          av.removeAttribute('title');
+          av.onclick = null;
+          av._timer = setTimeout(() => { av.style.display = 'none'; }, 8000);
+        }
       }
       break;
     }
@@ -6251,7 +6254,8 @@ function renderTranscricao() {
         : info.origem === 'baixado' ? '✔ pronto (baixado)'
         : '✔ pronto (instalado no computador)';
     } else {
-      estado.textContent = '❌ não encontrado';
+      // 🛟 v0.189: a cópia baixada antes da conferência de integridade não roda
+      estado.textContent = info && info.semConferencia ? '⚠️ baixado antes da conferência de integridade — baixe de novo' : '❌ não encontrado';
       // v0.184: só oferece o download quando existe um zip para esta
       // arquitetura (o ffmpeg não tem versão para Windows de 32 bits)
       if (trEstado.plataformaWin && !(info && info.baixavel === false)) {
@@ -6301,7 +6305,8 @@ function renderYtDlp() {
       botoes.push(trBotao('🗑️', 'Apagar o extrator do disco', () => hub.send({ type: 'ytdlpMotor', acao: 'apagar' })));
     }
   } else {
-    estado.textContent = '— não baixado';
+    // 🛟 v0.189: a cópia baixada antes da conferência de integridade não roda
+    estado.textContent = ydEstado.semConferencia ? '⚠️ baixado antes da conferência de integridade — baixe de novo' : '— não baixado';
     // v0.184: sem executável pronto para este sistema/arquitetura (ex.: Linux
     // ARM de 32 bits) não se oferece um download que não rodaria
     if (ydEstado.baixavel !== false) botoes.push(trBotao('⬇️', 'Baixar o extrator agora (~30 MB, um arquivo só)', () => hub.send({ type: 'ytdlpMotor', acao: 'baixar' })));
