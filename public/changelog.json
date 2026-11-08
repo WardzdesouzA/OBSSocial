@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.190.0",
+    "titulo": "📱 Menção @ no WhatsApp sem o número de quem foi mencionado",
+    "itens": [
+      "📱 Quando alguém menciona outra pessoa num grupo do WhatsApp (@), o aplicativo mostra o nome, mas o texto que chega traz o número de telefone de quem foi mencionado — e ele aparecia no painel, para quem só assiste e no chat fixo, que é tela pública. Agora a menção vira «@Nome» quando a pessoa já escreveu na live, ou o mesmo apelido «📱 Convidado» das mensagens dela quando não escreveu. Vale para a biblioteca local e para o gateway, no texto e na legenda, nos grupos novos, que usam um código no lugar do número, e mesmo com números colados logo depois da menção; a menção a um grupo aparece como «@👥 grupo». O número de quem foi mencionado também não fica no log do dia.",
+      "🛟 O que chegou antes desta versão (no log do dia ou no histórico) também sai com a menção tapada para quem só assiste, no 🕹️ Controle externo e nas telas públicas, e a 🔎 busca de quem só assiste não acha mais uma mensagem pelo número de quem foi mencionado. O painel no computador do streamer continua vendo o número de quem escreveu, para responder e moderar."
+    ]
+  },
+  {
     "version": "0.189.0",
     "titulo": "🛟 Placares que não zeram, número protegido, fechamento limpo e downloads conferidos",
     "itens": [

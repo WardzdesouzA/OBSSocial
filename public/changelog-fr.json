@@ -1,4 +1,11 @@
 {
+  "0.190.0": {
+    "titulo": "📱 Mention @ sur WhatsApp sans le numéro de la personne mentionnée",
+    "itens": [
+      "📱 Quand quelqu’un mentionne une autre personne dans un groupe WhatsApp (@), l’application affiche le nom, mais le texte qui arrive contient le numéro de téléphone de la personne mentionnée — et il apparaissait dans le panneau, chez les spectateurs et dans le chat épinglé, qui est un écran public. Désormais la mention devient « @Nom » quand cette personne a déjà écrit pendant le live, ou le même surnom « 📱 Convidado » que ses propres messages quand elle n’a pas écrit. Cela vaut pour la bibliothèque locale et pour la passerelle, dans le texte et dans la légende, dans les groupes récents, qui utilisent un code à la place du numéro, et même avec des chiffres collés juste après la mention ; la mention d’un groupe s’affiche « @👥 grupo ». Le numéro de la personne mentionnée ne reste pas non plus dans le journal du jour.",
+      "🛟 Ce qui est arrivé avant cette version (dans le journal du jour ou dans l’historique) arrive aussi avec la mention masquée chez les spectateurs, dans le 🕹️ Contrôle externe et sur les écrans publics, et la 🔎 recherche des spectateurs ne trouve plus un message par le numéro de la personne mentionnée. Le panneau sur l’ordinateur du streamer voit toujours le numéro de la personne qui a écrit, pour répondre et modérer."
+    ]
+  },
   "0.189.0": {
     "titulo": "🛟 Des compteurs qui ne se remettent plus à zéro, des numéros protégés, une fermeture propre et des téléchargements vérifiés",
     "itens": [

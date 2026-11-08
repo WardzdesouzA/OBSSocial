@@ -379,11 +379,33 @@ function nomeParaTela(nome) {
   for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
   return '📱 Convidado ' + h.toString(36).slice(-3).toUpperCase();
 }
-// Uma mensagem pronta para a TELA: o autor mascarado quando for telefone
-// (cópia rasa — o painel continua vendo a mensagem original)
+// 📱 v0.190: a @menção do WhatsApp («@<número>», ou «@<lid>» nos grupos novos)
+// já sai tapada do servidor; aqui fica a última barreira, para o que veio de
+// antes (log do dia, histórico): o que tem cara de menção vira o mesmo apelido.
+// A sequência INTEIRA de dígitos (quem cola números depois da menção também)
+const MENCAO_WA_TELA = /@(\d{8,})/g;
+function runsParaTela(runs) {
+  if (!Array.isArray(runs)) return runs;
+  let out = null;
+  for (let i = 0; i < runs.length; i++) {
+    const r = runs[i];
+    if (!r || typeof r.text !== 'string' || r.text.indexOf('@') < 0) continue;
+    const t = r.text.replace(MENCAO_WA_TELA, (tudo, d) => '@' + nomeParaTela('+' + d));
+    if (t !== r.text) { if (!out) out = runs.slice(); out[i] = { ...r, text: t }; }
+  }
+  return out || runs;
+}
+// Uma mensagem pronta para a TELA: o autor mascarado quando for telefone, e a
+// menção do WhatsApp também (cópia rasa — o painel continua vendo a original)
 function mensagemParaTela(message) {
-  if (!message || !pareceTelefone(message.author)) return message;
-  return { ...message, author: nomeParaTela(message.author) };
+  if (!message) return message;
+  let m = message;
+  if (pareceTelefone(m.author)) m = { ...m, author: nomeParaTela(m.author) };
+  if (m.platform === 'whatsapp' && Array.isArray(m.runs)) {
+    const runs = runsParaTela(m.runs);
+    if (runs !== m.runs) m = { ...m, runs };
+  }
+  return m;
 }
 
 function initialsAvatar(name) {
