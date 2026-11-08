@@ -613,8 +613,8 @@ function lerCsv(texto, separador) {
   return lerRegistrosCsv(texto, separador).registros.map((r) => r.celulas);
 }
 // lista de linhas → CSV com BOM (o Excel reconhece o UTF-8) e CRLF
-function escreverCsv(linhas, { separador = ',' } = {}) {
-  const sep = separador === ';' ? ';' : ',';
+function escreverCsv(linhas, opcoes) {
+  const sep = opcoes && opcoes.separador === ';' ? ';' : ',';
   if (!linhas.length) return '﻿';
   const precisaAspas = /[",;\r\n]|^\s|\s$/;
   const cel = (v) => {
@@ -1452,7 +1452,10 @@ function criarCatalogos(baseDir) {
 
   function guardarImagem(jogoId, itemId, buffer, ext, origem) {
     let img;
-    try { img = conferirImagem(buffer, ext); } catch (e) { return falha(e.erro, e.message); }
+    try { img = conferirImagem(buffer, ext); } catch (e) {
+      if (!(e instanceof ErroEntrada)) throw e;
+      return falha(e.erro, e.message);
+    }
     if (!ORIGENS_IMAGEM.includes(origem)) return falha('origem-invalida', `origem da imagem desconhecida (vale ${ORIGENS_IMAGEM.join(', ')})`);
     return alterar(jogoId, (cat, ctx) => {
       const pos = posicao(cat, itemId);
@@ -1546,7 +1549,8 @@ function criarCatalogos(baseDir) {
         const itemId = ids[0];
         if (recebidos.has(itemId)) { erros.push({ arquivo: nome, motivo: `outro arquivo deste envio já é a imagem de ${itemId}` }); continue; }
         let img;
-        try { img = conferirImagem(a.buffer, nome); } catch (e) {
+        const ext = /\.([^.\\/]{1,10})$/.exec(nome);
+        try { img = conferirImagem(a.buffer, ext ? ext[1] : null); } catch (e) {
           if (!(e instanceof ErroEntrada)) throw e;
           erros.push({ arquivo: nome, motivo: e.message });
           continue;
