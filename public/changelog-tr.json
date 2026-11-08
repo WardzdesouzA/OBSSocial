@@ -1,4 +1,10 @@
 {
+  "0.191.0": {
+    "titulo": "🧩 Daraltılabilir bileşenler",
+    "itens": [
+      "🧩 Ayarlar → ℹ️ Hakkında’daki 🧩 Bileşenler bölümü artık kartlar gibi başlığından açılıp kapanıyor ve kapalı başlıyor: tablo uzun ve nadiren gerekiyor. Kapalıyken başlık 🆕 ve kaç bileşenin yeni sürümü olduğunu gösterir; paneldeki yeni sürüm uyarısı doğrudan bu bölümü açar ve tarayıcı açık bırakıp bırakmadığınızı hatırlar. Klavyeyle de açılıp kapanır (Enter veya Boşluk)."
+    ]
+  },
   "0.190.0": {
     "titulo": "📱 WhatsApp’ta @ bahsetme, bahsedilen kişinin numarası olmadan",
     "itens": [

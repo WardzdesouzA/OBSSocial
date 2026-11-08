@@ -180,6 +180,12 @@
   .card--recolhivel.recolhido > :not(h3):not(.status) { display: none !important; }
   .card--recolhivel.recolhido > h3 { margin-bottom: 0; }
   .card--recolhivel.recolhido > .status { margin-top: 6px; }
+  /* 🧩 v0.191: a seção dos componentes recolhe/expande pelo título, como os
+     cards — nasce recolhida e lembra o estado neste navegador */
+  .campo-recolhivel > .campo-titulo { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .campo-recolhivel > .campo-titulo:hover { color: var(--accent); }
+  .campo-recolhivel > .campo-titulo .card-seta { display: inline-block; width: 1em; color: var(--muted); text-align: center; flex: none; }
+  .campo-recolhivel.recolhido > :not(.campo-titulo) { display: none !important; }
   .card .hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
   .row { display: flex; gap: 8px; margin-bottom: 8px; }
   /* type=password incluso: senha do OBS, senhas da rede e URLs secretas —
@@ -3409,8 +3415,8 @@
         <label class="check lab-toggle" style="margin-bottom:0"><input type="checkbox" id="updAutoChk" class="sw" checked> <span>🔁 Procurar atualização sozinho <b>ao abrir o programa</b> e <b>1x por dia</b>, e me avisar quando houver versão nova (nunca instala sem a sua confirmação)</span></label>
       </div>
 
-      <div class="field">
-        <label>🧩 Componentes</label>
+      <div class="field campo-recolhivel recolhido" id="componentes">
+        <label class="campo-titulo" role="button" tabindex="0" aria-expanded="false"><span class="card-seta" aria-hidden="true">▸</span><span>🧩 Componentes</span><span id="compNovas" class="hint" style="display:none;margin:0"></span></label>
         <div class="hint" style="margin-bottom:6px">Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e, quando há versão nova, ganham o botão ⬇️ Atualizar aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.</div>
         <div class="row">
           <button id="compVerificarBtn" class="icon-btn" style="width:auto;padding:0 14px">🔄 Verificar atualizações dos componentes</button>
@@ -14128,7 +14134,45 @@ function showCfgPage(name) {
 // Os cards dos Labs nascem .cardOculto até as settings chegarem: a rolagem fica
 // pendente e acontece assim que o cartão aparecer (fillSettings → cfgRolarPendente).
 let cfgCartaoPendente = null;
+// 🧩 v0.191: a seção dos componentes recolhe/expande pelo título — nasce
+// recolhida (a tabela é longa e quase nunca precisa ser vista) e lembra o
+// estado neste navegador. Recolhida, o título mostra 🆕 e quantos têm versão
+// nova; o aviso do painel abre direto nela (#sec-sobre/componentes)
+function compDefinirRecolhido(recolhido, lembrar) {
+  const campo = document.getElementById('componentes');
+  if (!campo) return;
+  campo.classList.toggle('recolhido', recolhido);
+  const titulo = campo.querySelector(':scope > .campo-titulo');
+  const seta = titulo && titulo.querySelector('.card-seta');
+  if (seta) seta.textContent = recolhido ? '▸' : '▾';
+  if (titulo) titulo.setAttribute('aria-expanded', recolhido ? 'false' : 'true');
+  if (lembrar) { try { localStorage.setItem('obsComponentesRecolhido', recolhido ? '1' : '0'); } catch {} }
+}
+function compIniciarRecolhivel() {
+  const campo = document.getElementById('componentes');
+  const titulo = campo && campo.querySelector(':scope > .campo-titulo');
+  if (!titulo || campo.dataset.recolhivel) return;
+  campo.dataset.recolhivel = '1';
+  let recolhido = true;
+  try { const v = localStorage.getItem('obsComponentesRecolhido'); if (v !== null) recolhido = v === '1'; } catch {}
+  compDefinirRecolhido(recolhido, false);
+  const alternar = () => compDefinirRecolhido(!campo.classList.contains('recolhido'), true);
+  titulo.addEventListener('click', alternar);
+  titulo.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(); } });
+}
 function cfgRolarAte(id) {
+  if (id === 'componentes') {
+    const campo = document.getElementById('componentes');
+    cfgCartaoPendente = null;
+    if (!campo || campo.style.display === 'none') return;
+    const card = campo.closest('.card');
+    if (card && card.classList.contains('recolhido')) card.querySelector(':scope > h3')?.click();
+    compDefinirRecolhido(false, true);
+    const rolar = () => campo.scrollIntoView({ block: 'start' });
+    rolar();
+    setTimeout(rolar, 500);
+    return;
+  }
   const card = id && /^[A-Za-z0-9_-]{1,60}$/.test(id) ? document.getElementById(id) : null;
   if (!card || !card.classList.contains('card')) { cfgCartaoPendente = null; return; }
   if (card.classList.contains('cardOculto') || card.style.display === 'none') { cfgCartaoPendente = id; return; }
@@ -14147,6 +14191,7 @@ function irPeloHash() {
   cfgRolarAte(cartao);
 }
 window.addEventListener('hashchange', irPeloHash);
+compIniciarRecolhivel();
 irPeloHash();
 
 // ---------- 🧲 Organizar o painel (arrastar ícones e abas) ----------
@@ -14586,6 +14631,10 @@ function renderComponentes(dados) {
     tabela.appendChild(tr);
   }
   compTabela.appendChild(tabela);
+  // 🧩 v0.191: com a seção recolhida, o título conta quantos têm versão nova
+  const selo = document.getElementById('compNovas');
+  const novas = dados.itens.filter((it) => it.estado === 'nova' || it.estado === 'semSuporte').length;
+  if (selo) { selo.textContent = novas ? '🆕 ' + novas : ''; selo.style.display = novas ? '' : 'none'; }
 }
 // Um download do yt-dlp/motor/ffmpeg ou a biblioteca do WhatsApp instalada
 // mudam a versão em uso: pede o inventário de novo (sem ir à internet)
