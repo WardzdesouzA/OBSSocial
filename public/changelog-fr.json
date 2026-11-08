@@ -2,7 +2,7 @@
   "0.191.0": {
     "titulo": "🧩 Composants repliables",
     "itens": [
-      "🧩 Dans Réglages → ℹ️ À propos, la section 🧩 Composants s’ouvre et se ferme maintenant depuis son titre, comme les cartes, et démarre fermée : le tableau est long et sert rarement. Fermée, le titre affiche 🆕 et le nombre de composants qui ont une nouvelle version ; l’avis de nouvelle version du panneau l’ouvre directement, et le navigateur se souvient si vous l’avez laissée ouverte. Elle s’ouvre et se ferme aussi au clavier (Entrée ou Espace)."
+      "🧩 Dans Réglages → ℹ️ À propos, la section 🧩 Composants s’ouvre et se ferme maintenant depuis son titre, comme les cartes, et démarre fermée : le tableau est long et sert rarement. Fermée, le titre affiche 🆕 et le nombre de composants qui ont une nouvelle version ; l’avis de nouvelle version du panneau l’ouvre directement, et le navigateur se souvient si vous l’avez laissée ouverte. Elle s’ouvre et se ferme aussi au clavier (Entrée ou Espace). Une nouvelle question dans la ❓ FAQ explique la section."
     ]
   },
   "0.190.0": {

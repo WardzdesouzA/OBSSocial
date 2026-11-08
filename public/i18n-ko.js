@@ -10,6 +10,9 @@ window.OBS_I18N_DICTS.ko = {
     ru: '러시아어', tr: '터키어', ja: '일본어', ko: '한국어', zh: '중국어(간체)',
   },
   textos: {
+    // 🧩 v0.191: FAQ dos componentes recolhíveis
+    "🧩 Onde vejo os componentes que o programa usa e se há versão nova?": "🧩 프로그램이 쓰는 구성 요소와 새 버전이 있는지는 어디서 보나요?",
+    "Em Configurações → ℹ️ Sobre, na seção 🧩 Componentes. Ela começa fechada: clique no título (ou aperte Enter ou Espaço) para abrir a tabela com cada componente, a versão em uso, a arquitetura, de onde veio e a situação. Fechada, o título mostra 🆕 e quantos têm versão nova, e o aviso de versão nova do painel abre direto nela. Os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) ganham ali o botão ⬇️ Atualizar agora.": "설정 → ℹ️ 정보의 🧩 구성 요소 섹션이에요. 처음에는 닫혀 있어요. 제목을 클릭하면(또는 Enter나 Space를 누르면) 각 구성 요소의 사용 중인 버전, 아키텍처, 출처, 상태가 담긴 표가 열려요. 닫혀 있을 때는 제목에 🆕와 새 버전이 있는 개수가 보이고, 대시보드의 새 버전 알림은 이 섹션을 바로 열어요. 선택 구성 요소(yt-dlp, whisper.cpp, ffmpeg, WhatsApp 라이브러리)에는 거기에 ⬇️ 지금 업데이트 버튼이 생겨요.",
     // 🛟 v0.189: modelo que não deu para ler (fica no disco)
     "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ 지금은 모델을 읽을 수 없었습니다(디스크에는 그대로 있습니다) — 클릭하면 다시 시도",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados

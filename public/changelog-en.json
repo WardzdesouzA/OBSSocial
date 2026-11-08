@@ -2,7 +2,7 @@
   "0.191.0": {
     "titulo": "🧩 Collapsible components",
     "itens": [
-      "🧩 In Settings → ℹ️ About, the 🧩 Components section now opens and closes from its title, like the cards, and starts closed: the table is long and rarely needs to be seen. When closed, the title shows 🆕 and how many components have a new version; the dashboard’s new-version notice opens it directly, and the browser remembers if you left it open. It also opens and closes from the keyboard (Enter or Space)."
+      "🧩 In Settings → ℹ️ About, the 🧩 Components section now opens and closes from its title, like the cards, and starts closed: the table is long and rarely needs to be seen. When closed, the title shows 🆕 and how many components have a new version; the dashboard’s new-version notice opens it directly, and the browser remembers if you left it open. It also opens and closes from the keyboard (Enter or Space). A new question in the ❓ FAQ explains the section."
     ]
   },
   "0.190.0": {

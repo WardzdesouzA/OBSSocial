@@ -10,6 +10,9 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // 🧩 v0.191: FAQ dos componentes recolhíveis
+    "🧩 Onde vejo os componentes que o programa usa e se há versão nova?": "🧩 プログラムが使うコンポーネントと、新しいバージョンがあるかはどこで見られますか？",
+    "Em Configurações → ℹ️ Sobre, na seção 🧩 Componentes. Ela começa fechada: clique no título (ou aperte Enter ou Espaço) para abrir a tabela com cada componente, a versão em uso, a arquitetura, de onde veio e a situação. Fechada, o título mostra 🆕 e quantos têm versão nova, e o aviso de versão nova do painel abre direto nela. Os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) ganham ali o botão ⬇️ Atualizar agora.": "設定 → ℹ️ 情報 の「🧩 コンポーネント」セクションです。最初は閉じています。タイトルをクリック（または Enter か Space を押す）すると、各コンポーネントの使用中のバージョン、アーキテクチャ、入手元、状態の表が開きます。閉じているときはタイトルに 🆕 と新しいバージョンがある数が表示され、パネルの新バージョン通知からは直接このセクションが開きます。オプションのもの（yt-dlp、whisper.cpp、ffmpeg、WhatsApp ライブラリ）には、そこに「⬇️ 今すぐ更新」ボタンが付きます。",
     // 🛟 v0.189: modelo que não deu para ler (fica no disco)
     "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ いまはモデルを読み込めませんでした（ディスクには残っています）— クリックで再試行",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados

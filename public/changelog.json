@@ -3,7 +3,7 @@
     "version": "0.191.0",
     "titulo": "🧩 Componentes recolhíveis",
     "itens": [
-      "🧩 Em Configurações → ℹ️ Sobre, a seção 🧩 Componentes agora abre e fecha pelo título, como os cartões, e começa fechada: a tabela é longa e quase nunca precisa ser vista. Fechada, o título mostra 🆕 e quantos componentes têm versão nova; o aviso de versão nova do painel abre direto nela, e o navegador lembra se você a deixou aberta. Também abre e fecha pelo teclado (Enter ou Espaço)."
+      "🧩 Em Configurações → ℹ️ Sobre, a seção 🧩 Componentes agora abre e fecha pelo título, como os cartões, e começa fechada: a tabela é longa e quase nunca precisa ser vista. Fechada, o título mostra 🆕 e quantos componentes têm versão nova; o aviso de versão nova do painel abre direto nela, e o navegador lembra se você a deixou aberta. Também abre e fecha pelo teclado (Enter ou Espaço). Uma pergunta nova no ❓ FAQ explica a seção."
     ]
   },
   {

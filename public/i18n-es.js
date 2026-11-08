@@ -10,6 +10,9 @@ window.OBS_I18N_DICTS.es = {
     ru: 'Ruso', tr: 'Turco', ja: 'Japonés', ko: 'Coreano', zh: 'Chino (simplificado)',
   },
   textos: {
+    // 🧩 v0.191: FAQ dos componentes recolhíveis
+    "🧩 Onde vejo os componentes que o programa usa e se há versão nova?": "🧩 ¿Dónde veo los componentes que usa el programa y si hay una versión nueva?",
+    "Em Configurações → ℹ️ Sobre, na seção 🧩 Componentes. Ela começa fechada: clique no título (ou aperte Enter ou Espaço) para abrir a tabela com cada componente, a versão em uso, a arquitetura, de onde veio e a situação. Fechada, o título mostra 🆕 e quantos têm versão nova, e o aviso de versão nova do painel abre direto nela. Os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) ganham ali o botão ⬇️ Atualizar agora.": "En Configuración → ℹ️ Acerca de, en la sección 🧩 Componentes. Empieza cerrada: haz clic en el título (o pulsa Enter o Espacio) para abrir la tabla con cada componente, la versión en uso, la arquitectura, de dónde vino y su situación. Cerrada, el título muestra 🆕 y cuántos tienen versión nueva, y el aviso de versión nueva del panel la abre directamente. Los opcionales (yt-dlp, whisper.cpp, ffmpeg, la biblioteca de WhatsApp) tienen allí el botón ⬇️ Actualizar ahora.",
     // 🛟 v0.189: modelo que não deu para ler (fica no disco)
     "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ no pude leer el modelo ahora (sigue en el disco) — haz clic para intentar de nuevo",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
