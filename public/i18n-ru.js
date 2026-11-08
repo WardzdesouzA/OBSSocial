@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ru = {
     ru: 'Русский', tr: 'Турецкий', ja: 'Японский', ko: 'Корейский', zh: 'Китайский (упрощённый)',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ сейчас не удалось прочитать модель (она по-прежнему на диске) — нажмите, чтобы повторить",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
     "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ скачано до проверки целостности — скачайте заново",
     "Clique para fechar": "Нажмите, чтобы закрыть",

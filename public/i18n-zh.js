@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.zh = {
     ru: '俄语', tr: '土耳其语', ja: '日语', ko: '韩语', zh: '简体中文',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ 暂时无法读取模型（它仍在磁盘上）— 点击重试",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
     "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ 在完整性校验之前下载的 — 请重新下载",
     "Clique para fechar": "点击关闭",

@@ -156,7 +156,7 @@ class Transcritor {
     const exe = process.platform === 'win32' ? 'whisper-cli.exe' : 'whisper-cli';
     const baixado = path.join(this.dirMotor, exe);
     // 🛟 v0.189: o baixado só roda se passou pela conferência (_pecaConferida)
-    if (this._temArquivo(baixado) && this._pecaConferida('motor')) return { comando: baixado, origem: 'baixado' };
+    if (this._temArquivo(baixado) && (!this._baixaAqui('motor') || this._pecaConferida('motor'))) return { comando: baixado, origem: 'baixado' };
     for (const nome of ['whisper-cli', 'whisper-cpp']) {
       const s = this._noSistema(nome);
       if (s) return { comando: s, origem: 'sistema' };
@@ -167,7 +167,7 @@ class Transcritor {
   _ondeFfmpeg() {
     const exe = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
     const baixado = path.join(this.dirMotor, exe);
-    if (this._temArquivo(baixado) && this._pecaConferida('ffmpeg')) return { comando: baixado, origem: 'baixado' }; // 🛟 v0.189
+    if (this._temArquivo(baixado) && (!this._baixaAqui('ffmpeg') || this._pecaConferida('ffmpeg'))) return { comando: baixado, origem: 'baixado' }; // 🛟 v0.189
     const s = this._noSistema('ffmpeg');
     if (s) return { comando: s, origem: 'sistema' };
     return null;
@@ -179,14 +179,26 @@ class Transcritor {
   // Uma cópia de antes (sem a anotação) fica no disco, mas não roda.
   _exe(chave) { return (chave === 'ffmpeg' ? 'ffmpeg' : 'whisper-cli') + (process.platform === 'win32' ? '.exe' : ''); }
   _pecaConferida(chave) {
-    const v = this.versoes()[chave];
+    const todas = this.versoes();
+    const v = todas[chave];
     const arquivos = v && v.arquivos && typeof v.arquivos === 'object' ? v.arquivos : null;
     if (!arquivos || !arquivos[this._exe(chave)]) return false;
+    // uma DLL na pasta que não saiu do zip conferido do motor (sobra de uma
+    // extração antiga, por exemplo) seria carregada pelo whisper-cli.exe E pelo
+    // ffmpeg.exe — no Windows a pasta do executável vem antes do sistema na busca.
+    // Bloqueia até o «baixar de novo» limpar a pasta (minúsculas: o NTFS guarda a
+    // grafia antiga ao sobrescrever)
+    const dlls = new Set(Object.keys((todas.motor && todas.motor.arquivos) || {}).map((n) => n.toLowerCase()));
+    try { if (fs.readdirSync(this.dirMotor).some((n) => /\.dll$/i.test(n) && !dlls.has(n.toLowerCase()))) return false; } catch { return false; }
     return Object.entries(arquivos).every(([nome, a]) => {
       try { return !!a && fs.statSync(path.join(this.dirMotor, path.basename(nome))).size === a.bytes; } catch { return false; }
     });
   }
-  _semConferencia(chave) { return this._temArquivo(path.join(this.dirMotor, this._exe(chave))) && !this._pecaConferida(chave); }
+  // 🛟 só se exige a conferência onde o programa baixa (Windows): no Mac/Linux, e
+  // no ffmpeg do Windows 32 bits, o que está nesta pasta foi posto pela pessoa
+  // — a mesma confiança do PATH e do «Avançado — caminho»
+  _baixaAqui(chave) { return !!(chave === 'ffmpeg' ? this.urlFfmpeg : this.urlMotor); }
+  _semConferencia(chave) { return this._baixaAqui(chave) && this._temArquivo(path.join(this.dirMotor, this._exe(chave))) && !this._pecaConferida(chave); }
 
   // 🛟 v0.189: a soma oficial do zip ANTES do download:
   //   • tag fixada no programa → SOMAS_FIXAS (no código);
@@ -228,7 +240,8 @@ class Transcritor {
     if (anot && anot.sha256 === esperada && integridade.estaConferido(this.dirModelos, m.arquivo)) return true;
     const caminho = path.join(this.dirModelos, m.arquivo);
     let soma = null;
-    try { soma = await integridade.somaDoArquivo(caminho); } catch { return false; }
+    // soma não lida ≠ soma errada: o arquivo fica e a pessoa tenta de novo
+    try { soma = await integridade.somaDoArquivo(caminho); } catch (err) { console.warn(`  🛟 Integridade: não consegui ler ${m.arquivo} para conferir (${(err && err.code) || err}) — fica para a próxima tentativa.`); return null; }
     if (soma === esperada) {
       let bytes = 0;
       try { bytes = fs.statSync(caminho).size; } catch { /* sumiu no meio: a próxima vez confere de novo */ }
@@ -268,7 +281,15 @@ class Transcritor {
   _baixar(chave, url, destinoPart, aoPronto, aoErroBruto, redirecionos = 0, limiteBytes = 0) {
     // 🔒 v0.127.1: req e res avisam erro cada um — o chamador ouve UMA vez
     let avisou = false;
-    const aoErro = (err) => { if (avisou) return; avisou = true; aoErroBruto(err); };
+    // 🛟 v0.189: no erro (cancelar, teto, queda) o .part é FECHADO antes de quem
+    // chamou apagá-lo — o pipe não fecha a escrita sozinho, e o descritor (e o
+    // espaço em disco) ficava preso até fechar o programa
+    let escrita = null;
+    const aoErro = (err) => {
+      if (avisou) return;
+      avisou = true;
+      if (escrita && !escrita.closed) { escrita.once('close', () => aoErroBruto(err)); escrita.destroy(); } else aoErroBruto(err);
+    };
     if (redirecionos > 5) { aoErro(new Error('redirecionamento demais')); return; }
     const mod = url.startsWith('http://') ? http : https;
     const req = mod.get(url, (res) => {
@@ -288,7 +309,7 @@ class Transcritor {
       if (limiteBytes && total > limiteBytes) { res.resume(); aoErro(new Error('arquivo maior que o limite de ' + Math.round(limiteBytes / 1048576) + ' MB')); return; }
       let lidos = 0;
       let ultimoAviso = 0;
-      const escrita = fs.createWriteStream(destinoPart);
+      escrita = fs.createWriteStream(destinoPart);
       const d = this.downloads.get(chave);
       if (d) d.req = req;
       // 🛟 v0.189: a soma SHA-256 sai daqui, pedaço a pedaço, enquanto o arquivo
@@ -311,7 +332,8 @@ class Transcritor {
       });
       res.pipe(escrita);
       escrita.on('finish', () => aoPronto(destinoPart, { sha256: conta.digest('hex'), bytes: lidos }));
-      escrita.on('error', aoErro);
+      // (o disco recusou: o download para — antes seguia baixando para o nada)
+      escrita.on('error', (e) => { try { req.destroy(); } catch {} aoErro(e); });
       res.on('error', aoErro);
     });
     const d0 = this.downloads.get(chave);
@@ -428,6 +450,20 @@ class Transcritor {
             arquivos[nome] = { sha256: integridade.somaDoBuffer(dados), bytes: dados.length };
           });
           fs.unlinkSync(part);
+          if (tirados && arquivos[this._exe(chave)]) {
+            // 🛟 v0.189: o que sobrou de uma extração antiga (sem conferência) sai da
+            // pasta — uma DLL estranha seria carregada pelo executável conferido. Fica
+            // só o que acabou de sair do zip conferido e o que o OUTRO componente tem
+            // anotado (ou o executável dele posto à mão, onde não há download). Se o
+            // Windows não deixar apagar, cai no catch: nada é anotado, segue bloqueado
+            const outroChave = chave === 'motor' ? 'ffmpeg' : 'motor';
+            const outro = (this.versoes()[outroChave] || {}).arquivos || {};
+            const manter = new Set([...Object.keys(arquivos), ...Object.keys(outro)].map((n) => n.toLowerCase()));
+            if (!this._baixaAqui(outroChave)) manter.add(this._exe(outroChave).toLowerCase());
+            for (const n of fs.readdirSync(this.dirMotor)) {
+              if (/\.(dll|exe)$/i.test(n) && !manter.has(n.toLowerCase())) fs.rmSync(path.join(this.dirMotor, n), { force: true });
+            }
+          }
           if (tirados) {
             // 🧩 v0.185: anota a versão baixada (a tag da URL) para o inventário
             const mTag = /\/releases\/download\/([^/]+)\//.exec(url);
@@ -485,8 +521,9 @@ class Transcritor {
       return;
     }
     // 🛟 v0.189: o modelo só vai para o motor conferido (o de antes, uma vez)
-    if (!(await this._modeloConferido(nomeModelo))) {
-      this._resultado(job.url, { estado: 'erro', erro: 'modelo-nao-confere' });
+    const conferido = await this._modeloConferido(nomeModelo);
+    if (conferido !== true) {
+      this._resultado(job.url, { estado: 'erro', erro: conferido === null ? 'modelo-ilegivel' : 'modelo-nao-confere' });
       return;
     }
     const motor = this._ondeMotor(conf.comando);

@@ -271,7 +271,15 @@ class Extrator {
   // teto de tamanho e o mesmo cuidado do downloader da transcrição
   _buscar(url, destinoPart, aoPronto, aoErroBruto, saltos = 0) {
     let avisou = false;
-    const aoErro = (err) => { if (avisou) return; avisou = true; aoErroBruto(err); };
+    // 🛟 v0.189: no erro (cancelar, teto, queda) o .part é FECHADO antes de quem
+    // chamou apagá-lo — o pipe não fecha a escrita sozinho, e o descritor ficava
+    // preso até fechar o programa
+    let escrita = null;
+    const aoErro = (err) => {
+      if (avisou) return;
+      avisou = true;
+      if (escrita && !escrita.closed) { escrita.once('close', () => aoErroBruto(err)); escrita.destroy(); } else aoErroBruto(err);
+    };
     if (saltos > 5) { aoErro(new Error('redirecionamento demais')); return; }
     const mod = url.startsWith('http://') ? http : https;
     const req = mod.get(url, (res) => {
@@ -290,7 +298,7 @@ class Extrator {
       if (total > LIMITE_BYTES) { res.resume(); aoErro(new Error('arquivo maior que o limite')); return; }
       let lidos = 0;
       let ultimoAviso = 0;
-      const escrita = fs.createWriteStream(destinoPart);
+      escrita = fs.createWriteStream(destinoPart);
       if (this.download) this.download.req = req;
       // 🛟 v0.189: a soma SHA-256 sai daqui, pedaço a pedaço, enquanto chega
       const conta = crypto.createHash('sha256');
@@ -309,7 +317,8 @@ class Extrator {
       // 'finish' o descritor de escrita ainda está aberto e o --version que
       // mede a versão falhava com ETXTBSY, deixando o painel sem a versão
       escrita.on('close', () => { if (!avisou) aoPronto(destinoPart, { sha256: conta.digest('hex'), bytes: lidos }); });
-      escrita.on('error', aoErro);
+      // (o disco recusou: o download para — antes seguia baixando para o nada)
+      escrita.on('error', (e) => { try { req.destroy(); } catch {} aoErro(e); });
       res.on('error', aoErro);
     });
     if (this.download) this.download.req = req;

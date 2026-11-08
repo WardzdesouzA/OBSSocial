@@ -852,6 +852,9 @@ const ANIM_CHAT_ANTIGA = { slide: 'slide-up', 'slide-side': 'slide-left' };
 
 let migrarArteDosPerfis = false; // 🖼️ v0.102: os moldes passam pela mesma migração da arte
 let gravarMarcaAnimacao = false; // 🎬 v0.179: a marca animPadraoV81 acabou de nascer e precisa ir ao disco
+// 🛟 v0.189: o settings.json existe, não abriu e nem a cópia deu certo — a
+// subida não grava o de fábrica por cima (só uma mudança de verdade grava)
+let settingsSemCopia = false;
 // 🔊 v0.77: os overlays que têm som e os quatro momentos. Ficam AQUI, antes
 // de `state` nascer, porque sanitizeAudiosOverlay roda já na carga do
 // settings.json (mergeSettings) — declarados mais abaixo, davam ReferenceError
@@ -1762,7 +1765,7 @@ state.perfisOverlay = loadPerfisOverlay();
 // (inofensiva, mas a marca `arteTamanhoReal` precisa ficar guardada)
 // 🎬 v0.179: a marca `animPadraoV81` segue o mesmo caminho
 if (migrarArteDosPerfis || gravarMarcaAnimacao) {
-  try {
+  if (!settingsSemCopia) try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(state.settings, null, 2));
   } catch { /* o debounce normal grava depois */ }
@@ -1871,6 +1874,7 @@ function guardarCopiaIlegivel(arquivo, motivo) {
   console.error(copia
     ? `    O arquivo como estava ficou guardado em data/${path.basename(copia)} — a próxima gravação regrava data/${nome}.`
     : `    E não consegui guardar uma cópia: copie data/${nome} para outro lugar antes de mudar algo no programa — a próxima gravação o substitui.`);
+  return !!copia;
 }
 
 function loadWinstreaks() {
@@ -2339,7 +2343,7 @@ function loadSettings() {
     // permissão) ganha uma cópia ao lado ANTES de a subida regravar o de
     // fábrica — antes tudo voltava ao padrão calado e o original sumia na hora.
     // (guardarCopiaIlegivel é içada e só usa o que nasce antes do state.)
-    if (!err || err.code !== 'ENOENT') guardarCopiaIlegivel(SETTINGS_FILE, (err && err.message) || String(err));
+    if (!err || err.code !== 'ENOENT') settingsSemCopia = !guardarCopiaIlegivel(SETTINGS_FILE, (err && err.message) || String(err));
     return mergeSettings(null);
   }
 }
@@ -4777,6 +4781,17 @@ function apelidoDeTelefone(nome) {
 }
 // (o JID do WhatsApp é «número@s.whatsapp.net» ou «número:aparelho@…»)
 const semSufixoJid = (v) => String(v || '').replace(/@.*$/, '').replace(/:.*$/, '');
+// 📱 o grupo ANTIGO do WhatsApp tem id «<telefone de quem criou>-<hora>@g.us»
+// (os criados de ~2021 para cá são «120363…@g.us», sem telefone). Para quem só
+// assiste e para o 🕹️ controle externo, o telefone sai do id; o servidor segue
+// com o verdadeiro (connect/reconnect reconhecem o tapado — canalWaDeVolta)
+function canalWaSemTelefone(c) {
+  return typeof c === 'string' && /^\+?\d{8,}-\d+$/.test(semSufixoJid(c)) ? c.replace(/^\+?\d+/, '📱') : c;
+}
+function canalWaDeVolta(c) {
+  const lembrado = state.connections.whatsapp?.channel;
+  return lembrado && c && c !== lembrado && canalWaSemTelefone(lembrado) === c ? lembrado : c;
+}
 function mensagemComTelefone(m) {
   return !!m && typeof m === 'object' && !Array.isArray(m)
     && (m.platform === 'whatsapp' || pareceTelefoneSrv(m.author) || pareceTelefoneSrv(semSufixoJid(m.authorLogin)) || pareceTelefoneSrv(semSufixoJid(m.authorId)));
@@ -4791,6 +4806,7 @@ function mensagemParaViewer(m) {
   // nunca era alcançada por ele: o init e o 'raffle' levavam os números inteiros
   // a quem só assiste
   if (typeof resto.chave === 'string' && /^whatsapp:/i.test(resto.chave)) resto.chave = 'whatsapp:oculto';
+  if (resto.platform === 'whatsapp' && typeof resto.conta === 'string') resto.conta = canalWaSemTelefone(resto.conta);
   return resto;
 }
 // Percorre um quadro qualquer trocando as mensagens que carregam telefone.
@@ -4808,6 +4824,8 @@ function semTelefonesParaViewer(v, prof = 0) {
   if (typeof v.platform === 'string' && ('author' in v || 'runs' in v || 'authorId' in v)) return mensagemParaViewer(v);
   // a correção de avatar chega com o «login» da pessoa — no WhatsApp é o número
   if (v.type === 'avatarFix' && (v.platform === 'whatsapp' || pareceTelefoneSrv(semSufixoJid(v.login)))) return { ...v, login: '' };
+  if (v.type === 'apagadas' && v.platform === 'whatsapp' && v.troca && (canalWaSemTelefone(v.troca.de) !== v.troca.de || canalWaSemTelefone(v.troca.para) !== v.troca.para)) v = { ...v, troca: { ...v.troca, de: canalWaSemTelefone(v.troca.de), para: canalWaSemTelefone(v.troca.para) } };
+  if (v.type === 'status' && v.platform === 'whatsapp' && v.status && canalWaSemTelefone(v.status.channel) !== v.status.channel) return { ...v, status: { ...v.status, channel: canalWaSemTelefone(v.status.channel) } };
   if (v.type === 'apagadas' && pareceTelefoneSrv(v.autor)) return { ...v, autor: null };
   // o ganhador do sorteio guarda a chave do participante (whatsapp:id:<número>) e
   // o avatar ampliado leva o nome cru — os dois saem mascarados para o viewer
@@ -6331,9 +6349,10 @@ function normSearch(value) {
   return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function messageSearchText(message) {
+function messageSearchText(message, semTelefone = false) {
   const text = (message.runs || []).map((r) => (r.type === 'emote' ? (r.alt || '') : (r.text || ''))).join('');
-  return normSearch((message.author || '') + ' ' + text);
+  const autor = semTelefone && pareceTelefoneSrv(message.author) ? apelidoDeTelefone(message.author) : (message.author || '');
+  return normSearch(autor + ' ' + text);
 }
 
 // 🔒 v0.179: a varredura era SÍNCRONA (até 40 MB lidos e analisados de uma vez
@@ -6371,7 +6390,7 @@ async function searchLogs(query, opts = {}) {
       const entry = JSON.parse(line);
       // (v0.177: comentários de TESTE não voltam pela busca — o 🧹 os tirou de tudo)
       if (entry.t === 'chat' && entry.m && entry.m.id && !seen.has(entry.m.id)
-          && !ehMensagemDeTeste(entry.m) && messageSearchText(entry.m).includes(q)) {
+          && !ehMensagemDeTeste(entry.m) && messageSearchText(entry.m, opts.semTelefone === true).includes(q)) {
         seen.add(entry.m.id);
         dayMatches.push(entry.m);
       }
@@ -6461,6 +6480,7 @@ function pedirBusca(ws, query) {
     const executar = async () => {
       if (ctrl.cancelado || ws.readyState !== 1) return;
       const r = await searchLogs(q, {
+        semTelefone: ws.role === 'viewer',
         maxBytes: local ? SEARCH_MAX_BYTES : SEARCH_MAX_BYTES_REDE,
         cpuMs: local ? SEARCH_CPU_MS_LOCAL : SEARCH_CPU_MS_REDE,
         ctrl,
@@ -11733,7 +11753,7 @@ wss.on('connection', (ws, req) => {
     midiaPlayer: state.midiaPlayer,
     avatarZoom: state.avatarZoom,
     avatarZooms: state.avatarZooms, // 🪟 v0.79: instâncias extras do 🔍
-    status: state.status,
+    status: ws.role === 'viewer' && state.status.whatsapp ? { ...state.status, whatsapp: { ...state.status.whatsapp, channel: canalWaSemTelefone(state.status.whatsapp.channel) } } : state.status,
     recent: state.recent,
     recentPorRede: recentesPorRede(),
     feedPending: feedQueue.length + feedReleasing.length,
@@ -11762,7 +11782,7 @@ wss.on('connection', (ws, req) => {
     dados: resumoDados(),
     clipboard: podeVerClipboard(ws) ? clipboardPublico() : [],
     clipboardFechado: !podeVerClipboard(ws), // 📋 v0.155.1: a tela diz o porquê do vazio
-    connections: conexoesPublicas(),
+    connections: (() => { const c = conexoesPublicas(); if (ws.role === 'viewer' && c.whatsapp) c.whatsapp = { ...c.whatsapp, channel: canalWaSemTelefone(c.whatsapp.channel) }; return c; })(),
     trilhas: trilhasParaTela(),
     perfisOverlay: state.perfisOverlay,
     // 🏭 v0.59: os moldes de fábrica originais viajam junto — é o botão de
@@ -11944,7 +11964,9 @@ function tratarMensagem(ws, raw) {
         if (!Object.prototype.hasOwnProperty.call(CONNECTORS, plat)) break; // rede desconhecida não entra na memória do respiro
         if (!respiroRede(ws, 'connect:' + plat, 2000)) break;
       }
-      connect(plat, String(msg.channel || '').slice(0, 200), opcoes);
+      let canalPedido = String(msg.channel || '').slice(0, 200);
+      if (ws.role !== 'local' && plat === 'whatsapp') canalPedido = canalWaDeVolta(canalPedido);
+      connect(plat, canalPedido, opcoes);
       break;
     }
     case 'disconnect': {
@@ -12064,7 +12086,8 @@ function tratarMensagem(ws, raw) {
       // Reinicia uma conexao (se algo travou ou quebrou): derruba e conecta
       // de novo com o canal informado ou com o lembrado da ultima vez
       const platform = String(msg.platform || '');
-      const channel = String(msg.channel || '').trim().slice(0, 200) || state.connections[platform]?.channel;
+      let channel = String(msg.channel || '').trim().slice(0, 200) || state.connections[platform]?.channel;
+      if (ws.role !== 'local' && platform === 'whatsapp') channel = canalWaDeVolta(channel);
       // 🔒 v0.179: reiniciar = derrubar e buscar tudo de novo lá fora — pela rede, um a cada 2 s por rede
       if (Object.prototype.hasOwnProperty.call(CONNECTORS, platform) && channel) {
         if (!respiroRede(ws, 'connect:' + platform, 2000)) break;
@@ -14578,7 +14601,7 @@ function controleCatalogo() {
   for (const rede of Object.keys(CONNECTORS)) {
     const c = state.connections[rede] || {};
     for (const [verbo, desc] of [['ligar', 'Conecta (com o canal lembrado ou o informado)'], ['desligar', 'Desconecta'], ['reiniciar', 'Derruba e conecta de novo']]) {
-      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc, params: verbo === 'desligar' ? [] : [CP.canal], rede, canalLembrado: c.channel || null });
+      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc, params: verbo === 'desligar' ? [] : [CP.canal], rede, canalLembrado: (rede === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null });
     }
   }
   for (const [id, spec] of Object.entries(OBS_ACOES)) acoes.push({ id: 'obs/' + id, grupo: 'obs', nome: '🎬 ' + id, desc: '', params: controleParamsDoSpec(spec), obsAcao: id });
@@ -14623,7 +14646,7 @@ function controleEstado() {
     qrs: state.qrs.map((q) => ({ id: q.id, nome: q.name, visivel: !!q.visible })),
     fila: feedQueue.length + feedReleasing.length,
     totais: { ...platformTotals }, categorias: { ...categoryTotals },
-    conexoes: Object.fromEntries(Object.entries(state.connections || {}).map(([r, c]) => [r, { ativa: !!(c && c.active), canal: c ? c.channel || null : null, status: state.status[r] ? state.status[r].state : null }])),
+    conexoes: Object.fromEntries(Object.entries(state.connections || {}).map(([r, c]) => [r, { ativa: !!(c && c.active), canal: c ? (r === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null : null, status: state.status[r] ? state.status[r].state : null }])),
     mesa: { tocando: state.trilhaTocando, pasta: pastaFila ? pastaFila.id : null, tela: state.trilhaTela ? { id: state.trilhaTela.id, tipo: state.trilhaTela.tipo } : null },
     // 🎞️ v0.129
     midiaDireta: state.midiaDireta.item ? { visivel: !!state.midiaDireta.visible, tipo: state.midiaDireta.item.tipo, nome: state.midiaDireta.item.nome, fonte: state.midiaDireta.item.fonte, provedor: state.midiaDireta.item.embed ? state.midiaDireta.item.embed.provedor : null, telaCheia: !!state.midiaDireta.telaCheia, tocando: state.midiaDireta.player.estado === 'tocando', credito: state.midiaDireta.credito.mostrar ? state.midiaDireta.credito.texto : '' } : null,
@@ -14820,7 +14843,7 @@ server.listen(PORT, () => {
   // Quem ja usava a Bilibili antes do seletor do Labs continua com ela ativa
   if (state.settings.labs?.bilibili !== true && state.connections?.bilibili?.channel) {
     state.settings.labs.bilibili = true;
-    saveSettings();
+    if (!settingsSemCopia) saveSettings(); // 🛟 v0.189: sem cópia do que não abriu, não grava por cima
   }
   // Memoria das conexoes: reconecta sozinho o que estava ligado da ultima vez
   setTimeout(() => {

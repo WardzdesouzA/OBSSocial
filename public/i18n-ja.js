@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.ja = {
     ru: 'ロシア語', tr: 'トルコ語', ja: '日本語', ko: '韓国語', zh: '中国語（簡体字）',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ いまはモデルを読み込めませんでした（ディスクには残っています）— クリックで再試行",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
     "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ 整合性チェックの前にダウンロードされたものです — もう一度ダウンロードしてください",
     "Clique para fechar": "クリックで閉じる",

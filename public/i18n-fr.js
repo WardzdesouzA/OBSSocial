@@ -10,6 +10,8 @@ window.OBS_I18N_DICTS.fr = {
     ru: 'Russe', tr: 'Turc', ja: 'Japonais', ko: 'Coréen', zh: 'Chinois (simplifié)',
   },
   textos: {
+    // 🛟 v0.189: modelo que não deu para ler (fica no disco)
+    "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ impossible de lire le modèle pour l’instant (il est toujours sur le disque) — cliquez pour réessayer",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados
     "⚠️ baixado antes da conferência de integridade — baixe de novo": "⚠️ téléchargé avant la vérification d’intégrité — téléchargez-le à nouveau",
     "Clique para fechar": "Cliquez pour fermer",
