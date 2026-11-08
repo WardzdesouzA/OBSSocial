@@ -13,6 +13,9 @@
 //      (para vários itens → dúvida com as opções)
 //   3. erro de digitação (Damerau-Levenshtein) → média
 //   4. som parecido (chave fonética simples PT/EN) → média
+// Duas exceções na ordem, ambas pelo «trecho mais longo ganha»: a cor de
+// raridade perto de «addon» e o erro de digitação numa expressão de várias
+// palavras («trap fixs») são vistos antes da palavra solta.
 // Se «média» entra direto ou vira dúvida é decisão do núcleo (pedidos.js).
 'use strict';
 
@@ -25,6 +28,8 @@ const MAX_APROX = 32;         // palavra mais longa que entra na busca aproximad
 const ORCAMENTO = 1500000;    // passos da busca aproximada por leitura: segura o pior caso
 const MAX_COMPARACOES = 6000; // contas de distância por leitura (idem)
 const MAX_TEXTO_ITEM = 200;   // nome/apelido mais longo lido do catálogo
+const MAX_CJK = 40;           // nome japonês/chinês mais longo procurado no texto
+const MAX_INTERSECAO = 1000;  // palavra ambígua em mais itens que isso não se junta à vizinha
 const MAX_TEXTOS_ITEM = 100;  // nomes/apelidos lidos por item
 
 // ── 📚 listas (já na forma normalizada: minúsculas, sem acento) ───────────
@@ -32,10 +37,13 @@ const MAX_TEXTOS_ITEM = 100;  // nomes/apelidos lidos por item
 const VAZIAS = new Set((
   'a o as os um uma uns umas de do da dos das d em no na nos nas num numa com e ou para pra pro pras pros ' +
   'por pelo pela pelos pelas ao aos que se me te eu tu ele ela eles elas seu sua seus suas meu minha teu tua ' +
-  'isso esse essa este esta isto mas so ja la ai aqui nao sim ' +
+  'isso esse essa este esta isto mas so ja la ai aqui nao sim ta to ne tem ter ser foi era sao estou pode quer ' +
+  'qual quem cade ' +
   'the an of and or to in on at for with by from as is it its this that my your his her our their i you he she ' +
-  'we they be are was not ' +
-  'el los las unos del y con en mi su al lo le les es muy sin ' +
+  'we they be are was not can could would will just too very do does did have has had what which who how why ' +
+  'when where if then than there here now also only into over about get got let lets us them him all any some ' +
+  'more most one ' +
+  'el los las unos del y con en mi su al lo le les es muy sin pero si ya hay ' +
   'l une des du et avec pour au aux qui ce cette mon ma mes ton ta ses je il nous vous ne pas est ' +
   'der die das den dem ein eine einen einem einer und oder mit von zu zum zur im am auf fur ist ' +
   'и в на с со по к но или для от из у об ve ile bir bu'
@@ -149,8 +157,8 @@ function prepararBase(texto) {
 
 // Palavra = letras/números/marcas, com apóstrofo no meio («nurse's»). O ponto
 // do katakana fica dentro («ザ・トラッパー») e some na normalização.
-const RE_PALAVRA = /[\p{L}\p{M}\p{N}・･]+(?:['’‘ʼ`´][\p{L}\p{M}\p{N}・･]+)*/gu;
-const RE_TEM_CJK = /[々-〇぀-ヿㇰ-ㇿ㐀-䶿一-鿿豈-﫿･-ﾟ]|[\ud840-\ud884][\udc00-\udfff]/;
+const RE_PALAVRA = /[\p{L}\p{M}\p{N}\u30fb\uff65]+(?:['\u2019\u2018\u02bc`\u00b4][\p{L}\p{M}\p{N}\u30fb\uff65]+)*/gu;
+const RE_TEM_CJK = /[\u3005-\u3007\u3040-\u30ff\u31f0-\u31ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff65-\uff9f]|[\ud840-\ud884][\udc00-\udfff]/;
 function cpCjk(cp) {
   return (cp >= 0x3040 && cp <= 0x30ff) || (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf) ||
     (cp >= 0x3005 && cp <= 0x3007) || (cp >= 0x31f0 && cp <= 0x31ff) || (cp >= 0xf900 && cp <= 0xfaff) ||
@@ -158,6 +166,8 @@ function cpCjk(cp) {
 }
 
 const ESPECIAIS = { 'ß': 'ss', 'æ': 'ae', 'œ': 'oe', 'ø': 'o', 'đ': 'd', 'ł': 'l', 'ı': 'i', 'þ': 'th', 'ð': 'd', 'ŀ': 'l' };
+const RE_APOSTROFO = /['\u2019\u2018\u02bc`\u00b4]/;
+const RE_APOSTROFOS = /['\u2019\u2018\u02bc`\u00b4]/g;
 const RE_ESPECIAIS = /[ßæœøđłıþðŀ]/g;
 const RE_REPETIDA_ASCII = /([a-z])\1\1+/g;
 const RE_REPETIDA = /(\p{L})\1\1+/gu;
@@ -170,11 +180,15 @@ function normalizarPalavra(bruto) {
   if (RE_ASCII.test(bruto)) {
     s = bruto.toLowerCase();
     if (s.indexOf("'") >= 0 || s.indexOf('`') >= 0) s = s.replace(/['`]/g, '');
-    return s.replace(RE_REPETIDA_ASCII, '$1');
+    for (let i = 2; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      if (c === s.charCodeAt(i - 1) && c === s.charCodeAt(i - 2)) return s.replace(RE_REPETIDA_ASCII, '$1');
+    }
+    return s;
   }
   s = bruto.normalize('NFKC').toLowerCase().replace(RE_ESPECIAIS, (c) => ESPECIAIS[c]);
   // tira só os acentos latinos (0300–036F): o «゛» do japonês e o hangul se recompõem no NFC
-  s = s.normalize('NFD').replace(/[̀-ͯ]/g, '').normalize('NFC');
+  s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
   return s.replace(RE_NAO_PALAVRA, '').replace(RE_REPETIDA, '$1');
 }
 
@@ -215,7 +229,7 @@ function palavrasSimples(texto) {
 // Mapa: primeira palavra → [{ de: [...], para: [...] }], as mais longas primeiro.
 function montarGirias(extra) {
   const mapa = new Map();
-  const juntar = (de, para) => {
+  const incluir = (de, para) => {
     if (typeof de !== 'string' || typeof para !== 'string') return;
     const d = palavrasSimples(de), p = palavrasSimples(para);
     if (!d.length || d.length > 3 || p.length > 3) return;
@@ -225,16 +239,19 @@ function montarGirias(extra) {
     lista.push({ de: d, para: p });
     mapa.set(d[0], lista);
   };
-  for (const [de, para] of Object.entries(GIRIAS)) juntar(de, para);
+  for (const [de, para] of Object.entries(GIRIAS)) incluir(de, para);
   if (extra && typeof extra === 'object') {
     const pares = Array.isArray(extra) ? extra : Object.entries(extra);
-    for (const par of pares.slice(0, 500)) if (Array.isArray(par)) juntar(par[0], par[1]);
+    for (const par of pares.slice(0, 500)) if (Array.isArray(par)) incluir(par[0], par[1]);
   }
   for (const lista of mapa.values()) lista.sort((a, b) => b.de.length - a.de.length);
   return mapa;
 }
 
 function aplicarGirias(lista, girias) {
+  let alguma = false; // quase sempre nenhuma: devolve a mesma lista sem copiar
+  for (let i = 0; i < lista.length && !alguma; i++) alguma = !lista[i].cjk && girias.has(lista[i].n);
+  if (!alguma) return lista;
   const saida = [];
   for (let i = 0; i < lista.length;) {
     const t = lista[i];
@@ -305,13 +322,18 @@ function errosAceitos(la, lb) {
   return menor < 4 ? -1 : menor >= 8 ? 2 : 1;
 }
 
-// Trigramas com duas bordas de cada lado, como número (cabe em 48 bits).
+// Trigramas com duas bordas de cada lado, como inteiro pequeno (30 bits: 10 por
+// letra). Letra acima de 1023 (coreano, por exemplo) dobra e pode coincidir
+// com outra: isso só traz candidato a mais, que a distância confere depois —
+// nunca faz perder um acerto. Inteiro pequeno não aloca (número grande alocava
+// um objeto por trigrama e o índice de 20 mil itens passava metade do tempo
+// coletando lixo).
 function trigramas(p, saida) {
   saida.length = 0;
   let a = 1, b = 1;
   for (let i = 0; i < p.length + 2; i++) {
-    const c = i < p.length ? p.charCodeAt(i) : 1;
-    saida.push(a * 4294967296 + b * 65536 + c);
+    const c = i < p.length ? p.charCodeAt(i) & 1023 : 1;
+    saida.push((a << 20) | (b << 10) | c);
     a = b; b = c;
   }
   return saida;
@@ -319,10 +341,11 @@ function trigramas(p, saida) {
 
 // 🔊 chave fonética simples PT/EN: consoantes com os dígrafos dos dois idiomas
 // (ph→f, th→t, sh/ch→x, lh, nh, qu→k, c→s/k, g→j antes de e/i, gh mudo…), cada
-// grupo de vogais vira «*», e o fim que some na fala (vogal final, «r» final)
-// sai. «trapper» e «trépa» dão «tr*p»; «nightmare» e «naitmer» dão «n*tm».
-// Só palavras latinas de 4+ letras e chaves com 3+ consoantes (menos que isso
-// junta palavras demais).
+// grupo de vogais vira «*», e o fim que some na fala sai: o «e» mudo depois de
+// consoante («nightmare», «plague») e o «r» depois de vogal («trapper» soa
+// «trépa»). «trapper» e «trépa» dão «tr*p*» (e «trap» fica «tr*p»);
+// «nightmare» e «naitmer» dão «n*tm*». Só palavras latinas de 4+ letras e
+// chaves com 3+ consoantes (menos que isso junta palavras demais).
 const RE_LATINA = /^[a-z]+$/;
 function chaveFonetica(p, hComoR) {
   if (p.length < 4 || p.length > MAX_APROX || !RE_LATINA.test(p)) return null;
@@ -332,6 +355,7 @@ function chaveFonetica(p, hComoR) {
   const emite = (c) => { if (c !== ult) { out += c; ult = c; } };
   for (let i = 0; i < s.length; i++) {
     const c = s[i], d = s[i + 1] || '', d2 = s[i + 2] || '';
+    if (c === 'e' && !d && ult && ult !== '*') continue; // «e» mudo no fim
     switch (c) {
       case 'a': case 'e': case 'i': case 'o': case 'u': case 'y': emite('*'); break;
       case 'w': if (i === 0 && d === 'r') break; emite('*'); break;
@@ -354,8 +378,7 @@ function chaveFonetica(p, hComoR) {
       default: emite(c);
     }
   }
-  if (out.endsWith('*')) out = out.slice(0, -1);
-  if (out.length > 2 && out.endsWith('r') && out[out.length - 2] === '*') out = out.slice(0, -2);
+  if (out.length > 2 && out.endsWith('*r')) out = out.slice(0, -1);
   let consoantes = 0;
   for (let i = 0; i < out.length; i++) if (out[i] !== '*') consoantes++;
   return consoantes >= 3 ? out : null;
@@ -377,7 +400,31 @@ function textosDe(v, max) {
   return saida;
 }
 
-const arred = (n) => Math.round(n * 100) / 100;
+// certeza de uma opção com duas casas; nunca 0 (é uma opção, só que entre muitas)
+const arred = (n) => Math.max(0.01, Math.round(n * 100) / 100);
+
+// Mapas do índice guardam o valor sozinho e só viram lista no segundo valor:
+// quase toda palavra/chave aponta para uma coisa só (economiza ~100 mil listas).
+function juntar(mapa, chave, valor) {
+  const a = mapa.get(chave);
+  if (a === undefined) mapa.set(chave, valor);
+  else if (Array.isArray(a)) a.push(valor);
+  else mapa.set(chave, [a, valor]);
+}
+const listaDe = (v) => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
+// Junta itens numa lista sem repetir (termo exato: [p, k, item, como, item, como…]). Na busca aproximada, passar de MAX_OPCOES
+// já é vago demais (a palavra fica na sobra): para de crescer ali, o que segura
+// o custo num catálogo com milhares de itens de nome parecido.
+function unirLimitado(xs, novos) {
+  for (let i = 0; i < novos.length && xs.length <= MAX_OPCOES; i++) if (xs.indexOf(novos[i]) < 0) xs.push(novos[i]);
+}
+function unirDoTermo(xs, e) {
+  for (let i = 2; i < e.length && xs.length <= MAX_OPCOES; i += 2) if (xs.indexOf(e[i]) < 0) xs.push(e[i]);
+}
+function soDigitos(n) {
+  for (let i = 0; i < n.length; i++) { const c = n.charCodeAt(i); if (c < 48 || c > 57) return false; }
+  return true;
+}
 
 // ── 🧭 o leitor ───────────────────────────────────────────────────────────
 function criarLeitor(catalogo, opcoes) {
@@ -392,51 +439,70 @@ function criarLeitor(catalogo, opcoes) {
   // os itens, por número interno
   const ids = [], tipos = [], mostrar = [], donos = [], raridades = [], naoTem = [];
   const porId = new Map();
-  // termo exato (palavras normalizadas, separadas por espaço) → { p, k, x: [itens], c: [como] }
+  // termo exato (palavras normalizadas, separadas por espaço) → [p, k, item, como, item, como…]
+  // (um array só por termo: com 20 mil itens são ~80 mil termos, e objeto + duas
+  // listas por termo deixavam a montagem lenta só de coletar lixo)
   // p = prioridade: 0 «seus» (o streamer ensinou), 1 nome/antigo/apelido,
-  // 2 variante (sem artigo, depois dos dois-pontos, palavras juntas)
+  // 2 variante (sem artigo, depois dos dois-pontos, palavras juntas); k = nº de palavras
   const exatos = new Map();
   const maxPalavras = new Map(); // primeira palavra → maior expressão que começa com ela
-  const palavras = new Map();    // palavra significativa → itens que a têm no nome
+  const palavras = new Map();    // palavra significativa → item (número) ou itens (lista) que a têm no nome
   const cjkExatos = new Map();   // nome japonês/chinês (sem espaço) → como em `exatos`
-  const cjkInicio = new Map();   // dois primeiros caracteres → nomes CJK
+  const cjkTamanhos = new Set(); // tamanhos que existem: a busca tenta só esses em cada posição
+  // Âncoras dos nomes de várias palavras: «arrogance» na posição 1 de um nome
+  // de 2 palavras → «dark arrogance». O erro de digitação numa expressão é
+  // procurado só onde uma das palavras bate certinho.
+  const ancoras = new Map();     // «palavra|nº de palavras|posição» → termo (texto) ou termos (lista)
+  const vocabTermo = new Set();  // palavras soltas de 4+ letras que são nome/apelido inteiro
 
   function registrar(mapa, chave, k, x, como, p) {
     const e = mapa.get(chave);
     if (e === undefined) {
-      mapa.set(chave, { p, k, x: [x], c: [como] });
-      if (k > 1) { const prim = chave.slice(0, chave.indexOf(' ')); if ((maxPalavras.get(prim) || 1) < k) maxPalavras.set(prim, k); }
+      mapa.set(chave, [p, k, x, como]);
       return true;
     }
-    if (p > e.p) return false;
-    if (p < e.p) { e.p = p; e.x = [x]; e.c = [como]; return false; }
-    if (e.x.indexOf(x) < 0) { e.x.push(x); e.c.push(como); }
+    if (p > e[0]) return false;
+    if (p < e[0]) { e.length = 2; e[0] = p; e.push(x, como); return false; }
+    for (let i = 2; i < e.length; i += 2) if (e[i] === x) return false;
+    e.push(x, como);
     return false;
+  }
+  function novoTermo(chave, ns) { // primeira vez que um termo aparece: âncoras e vocabulário
+    const k = ns.length;
+    if (k === 1) {
+      if (chave.length >= 4 && chave.length <= MAX_APROX && !COMUNS.has(chave) && !VAZIAS.has(chave)) vocabTermo.add(chave);
+      return;
+    }
+    if ((maxPalavras.get(ns[0]) || 1) < k) maxPalavras.set(ns[0], k);
+    for (let j = 0; j < k; j++) {
+      const p = ns[j];
+      if (p.length < 3 || VAZIAS.has(p)) continue;
+      juntar(ancoras, p + '|' + k + '|' + j, chave);
+    }
   }
   function registrarSeq(ns, x, como, p) {
     if (!ns.length || ns.length > MAX_PALAVRAS) return;
     if (ns.every((n) => VAZIAS.has(n))) return; // palavra vazia nunca casa sozinha
-    registrar(exatos, ns.join(' '), ns.length, x, como, p);
+    const chave = ns.length === 1 ? ns[0] : ns.join(' ');
+    if (registrar(exatos, chave, ns.length, x, como, p)) novoTermo(chave, ns);
   }
   function registrarJunto(ns, x, como) { // «ghost face» também como «ghostface»
-    if (ns.length < 2 || ns.length > 3) return;
+    if (ns.length < 2 || ns.length > 3 || ns.every((n) => VAZIAS.has(n))) return;
     const j = ns.join('');
-    if (j.length >= 4) registrar(exatos, j, 1, x, como, 2);
+    if (j.length >= 4 && registrar(exatos, j, 1, x, como, 2)) novoTermo(j, [j]);
   }
   function registrarCjk(ts, x, como, p) {
     const termo = ts.map((t) => t.n).join('');
-    if (Array.from(termo).length < 2) return; // 2+ caracteres
-    if (registrar(cjkExatos, termo, 1, x, como, p)) {
-      const ini = termo.slice(0, 2);
-      const l = cjkInicio.get(ini);
-      if (l) l.push(termo); else cjkInicio.set(ini, [termo]);
-    }
+    if (Array.from(termo).length < 2 || termo.length > MAX_CJK) return; // 2+ caracteres
+    if (registrar(cjkExatos, termo, 1, x, como, p)) cjkTamanhos.add(termo.length);
   }
   function significativas(ns, x) {
     for (const n of ns) {
-      if (n.length < 3 || VAZIAS.has(n) || COMUNS.has(n) || !/\p{L}/u.test(n)) continue;
+      if (n.length < 3 || VAZIAS.has(n) || COMUNS.has(n) || soDigitos(n)) continue;
       const l = palavras.get(n);
-      if (!l) palavras.set(n, [x]); else if (l[l.length - 1] !== x) l.push(x);
+      if (l === undefined) palavras.set(n, x);
+      else if (typeof l === 'number') { if (l !== x) palavras.set(n, [l, x]); }
+      else if (l[l.length - 1] !== x) l.push(x);
     }
   }
   function indexarNome(texto, x, como) {
@@ -447,8 +513,8 @@ function criarLeitor(catalogo, opcoes) {
     registrarSeq(ns, x, como, 1);
     significativas(ns, x);
     const bases = [ns];
-    if (/['’‘ʼ`´]/.test(texto)) { // «L'Infirmière» também como «l infirmiere» (e, sem artigo, «infirmiere»)
-      const alt = tokenizar(texto.replace(/['’‘ʼ`´]/g, ' '), girias).filter((t) => !t.cjk).map((t) => t.n);
+    if (RE_APOSTROFO.test(texto)) { // «L'Infirmière» também como «l infirmiere» (e, sem artigo, «infirmiere»)
+      const alt = tokenizar(texto.replace(RE_APOSTROFOS, ' '), girias).filter((t) => !t.cjk).map((t) => t.n);
       if (alt.length && alt.join(' ') !== ns.join(' ')) { bases.push(alt); registrarSeq(alt, x, como, 2); significativas(alt, x); }
     }
     const dp = texto.lastIndexOf(':');
@@ -491,51 +557,33 @@ function criarLeitor(catalogo, opcoes) {
 
   // 🔤 vocabulário da busca aproximada: palavras soltas que já identificam algo
   // (nome/apelido de uma palavra só e palavras significativas), com 4+ letras.
-  const vocab = [], vocabTermo = [], vocabSignif = [];
+  const vocab = [];
   const vocabIdx = new Map();
-  const noVocab = (w) => {
-    let v = vocabIdx.get(w);
-    if (v === undefined) { v = vocab.length; vocabIdx.set(w, v); vocab.push(w); vocabTermo.push(null); vocabSignif.push(null); }
-    return v;
-  };
-  for (const [chave, e] of exatos) {
-    if (e.k !== 1 || chave.length < 4 || chave.length > MAX_APROX || COMUNS.has(chave) || VAZIAS.has(chave)) continue;
-    vocabTermo[noVocab(chave)] = e.x;
-  }
-  for (const [p, xs] of palavras) if (p.length >= 4 && p.length <= MAX_APROX) vocabSignif[noVocab(p)] = xs;
+  for (const w of vocabTermo) { vocabIdx.set(w, vocab.length); vocab.push(w); }
+  for (const p of palavras.keys()) if (p.length >= 4 && p.length <= MAX_APROX && !vocabIdx.has(p)) { vocabIdx.set(p, vocab.length); vocab.push(p); }
   const vocabLen = new Uint8Array(vocab.length);
   const postagens = new Map(); // trigrama → palavras do vocabulário
-  const fonetica = new Map();  // chave fonética → palavras do vocabulário
+  const fonetica = new Map();  // chave fonética → palavra(s) do vocabulário
   const buf = [];
   for (let v = 0; v < vocab.length; v++) {
     const w = vocab[v];
     vocabLen[v] = w.length;
-    for (const c of trigramas(w, buf)) { const l = postagens.get(c); if (l) l.push(v); else postagens.set(c, [v]); }
+    trigramas(w, buf);
+    for (let i = 0; i < buf.length; i++) { const l = postagens.get(buf[i]); if (l) l.push(v); else postagens.set(buf[i], [v]); }
     const k1 = chaveFonetica(w, false);
-    if (k1) { const l = fonetica.get(k1); if (l) l.push(v); else fonetica.set(k1, [v]); }
-    if (w[0] === 'h') {
+    if (k1) juntar(fonetica, k1, v);
+    if (w.charCodeAt(0) === 104) { // começa com «h»
       const k2 = chaveFonetica(w, true);
-      if (k2 && k2 !== k1) { const l = fonetica.get(k2); if (l) l.push(v); else fonetica.set(k2, [v]); }
+      if (k2 && k2 !== k1) juntar(fonetica, k2, v);
     }
   }
   const contagem = new Uint16Array(vocab.length);
-  const itensDoVocab = (v) => vocabTermo[v] || vocabSignif[v] || [];
-
-  // Âncoras dos nomes de várias palavras: «arrogance» na posição 1 de um
-  // nome de 2 palavras → «dark arrogance». O erro de digitação numa expressão
-  // é procurado só onde uma das palavras bate certinho.
-  const ancoras = new Map();
-  for (const [chave, e] of exatos) {
-    if (e.k < 2) continue;
-    const ps = chave.split(' ');
-    for (let j = 0; j < ps.length; j++) {
-      const p = ps[j];
-      if (p.length < 3 || VAZIAS.has(p)) continue;
-      const a = p + '\u0001' + ps.length + '\u0001' + j;
-      const l = ancoras.get(a);
-      if (l) l.push(chave); else ancoras.set(a, [chave]);
-    }
-  }
+  // itens de uma palavra do vocabulário: o nome/apelido inteiro vale mais que a palavra do nome
+  const unirDoVocab = (xs, v) => {
+    const w = vocab[v];
+    if (vocabTermo.has(w)) unirDoTermo(xs, exatos.get(w));
+    else unirLimitado(xs, listaDe(palavras.get(w)));
+  };
 
   // 🎨 add-ons de cada killer, com raridade (o dono pode ser o killer ou o poder dele)
   const addonsPorKiller = new Map();
@@ -589,9 +637,15 @@ function criarLeitor(catalogo, opcoes) {
       if (a === undefined) marcar(ini, fim, idx);
     }
     function deExato(e, ini, fim, a, b) {
-      if (e.x.length === 1) return novoItem(e.x[0], ini, fim, 'alta', COMOS[e.c[0]], a, b);
-      const apelido = e.c.some((c) => c >= COMO_APELIDO);
-      novaDuvida(e.x, e.x.length, ini, fim, apelido ? 'apelido em mais de um item' : 'nome em mais de um item', a, b);
+      if (e.length === 4) return novoItem(e[2], ini, fim, 'alta', COMOS[e[3]], a, b);
+      // dúvida: guarda só as opções que vão sair (o total entra na certeza)
+      let apelido = false;
+      const xs = [];
+      for (let i = 2; i < e.length; i += 2) {
+        if (e[i + 1] >= COMO_APELIDO) apelido = true;
+        if (xs.length < MAX_OPCOES) xs.push(e[i]);
+      }
+      novaDuvida(xs, (e.length - 2) / 2, ini, fim, apelido ? 'apelido em mais de um item' : 'nome em mais de um item', a, b);
     }
     function deAproximado(xs, ini, fim, como, motivo) {
       if (xs.length === 1) novoItem(xs[0], ini, fim, 'media', como);
@@ -599,15 +653,20 @@ function criarLeitor(catalogo, opcoes) {
       // mais que isso é vago demais: a palavra fica na sobra
     }
 
-    // 1) 🈶 japonês e chinês: sem espaço entre palavras → o nome inteiro como pedaço do texto
+    // 1) 🈶 japonês e chinês: sem espaço entre palavras → o nome inteiro como pedaço do
+    //    texto. Em cada posição tenta só os tamanhos de nome que existem (no máximo
+    //    40): o custo não cresce com quantos nomes começam igual.
     if (cjkExatos.size) {
       for (let i = 0; i < N; i++) {
         const t = tokens[i];
         if (!t.cjk) continue;
         const s = t.n, cands = [];
         for (let p = 0; p + 1 < s.length; p++) {
-          const l = cjkInicio.get(s.slice(p, p + 2));
-          if (l) for (const termo of l) if (s.startsWith(termo, p)) cands.push([p, termo.length, termo]);
+          for (const L of cjkTamanhos) {
+            if (p + L > s.length) continue;
+            const termo = s.slice(p, p + L);
+            if (cjkExatos.has(termo)) cands.push([p, L, termo]);
+          }
         }
         if (!cands.length) continue;
         cands.sort((u, v) => v[1] - u[1] || u[0] - v[0]);
@@ -641,15 +700,17 @@ function criarLeitor(catalogo, opcoes) {
           const e = exatos.get(chave);
           if (e !== undefined) cands.push({ i, L, e, junto: 0 });
         }
-        // «ghost face» escrito separado de um nome de uma palavra só («Ghostface»)
-        let junto = t.n;
+        // «ghost face» escrito separado de um nome de uma palavra só («Ghostface»);
+        // só palavras vazias juntas («com um» → «comum») não valem
+        let junto = t.n, cheia = !VAZIAS.has(t.n);
         for (let L = 2; L <= 3 && i + L <= N; L++) {
           const u = tokens[i + L - 1];
           if (u.cjk) break;
           junto += u.n;
-          if (junto.length < 4) continue;
+          if (!VAZIAS.has(u.n)) cheia = true;
+          if (junto.length < 4 || !cheia) continue;
           const e = exatos.get(junto);
-          if (e !== undefined && e.k === 1) cands.push({ i, L, e, junto: 1 });
+          if (e !== undefined && e[1] === 1) cands.push({ i, L, e, junto: 1 });
         }
       }
       cands.sort((u, v) => v.L - u.L || u.junto - v.junto || u.i - v.i);
@@ -682,57 +743,51 @@ function criarLeitor(catalogo, opcoes) {
       }
     }
 
-    // 4) 🔑 palavra significativa que aponta para UM item só
-    for (let i = 0; i < N; i++) {
-      const t = tokens[i];
-      if (usado[i] >= 0 || t.cjk || t.n.length < 3) continue;
-      const xs = palavras.get(t.n);
-      if (xs && xs.length === 1) novoItem(xs[0], i, i + 1, 'alta', 'palavra');
-    }
-
     const elegivel = (i) => {
       const t = tokens[i];
       return usado[i] < 0 && !t.cjk && t.n.length >= 4 && t.n.length <= MAX_APROX && !VAZIAS.has(t.n) &&
-        !COMUNS.has(t.n) && !vocabIdx.has(t.n) && !/^\d+$/.test(t.n);
+        !COMUNS.has(t.n) && !vocabIdx.has(t.n) && !soDigitos(t.n);
     };
 
-    // 5) ✏️ erro de digitação numa expressão de várias palavras (ancorada numa palavra certa)
+    // 4) ✏️ erro de digitação numa expressão de várias palavras, ancorada numa
+    //    palavra certa. Vem antes da palavra solta porque o trecho mais longo
+    //    ganha: «trap fixs» é o apelido «trap fixa», não o «trap» de «Bear Trap».
     if (ancoras.size) {
-      const grupos = new Map(); // início/tamanho → { i, L, d, xs }
-      for (let i = 0; i < N && estado.comparacoes < MAX_COMPARACOES; i++) {
+      const cands = [];
+      const porExpressao = new Map(); // a mesma expressão repetida no texto é conferida uma vez
+      for (let i = 0; i < N; i++) {
         if (usado[i] >= 0 || tokens[i].cjk) continue;
         let q = tokens[i].n;
         for (let L = 2; L <= MAX_PALAVRAS && i + L <= N; L++) {
           const u = tokens[i + L - 1];
           if (usado[i + L - 1] >= 0 || u.cjk) break;
           q += ' ' + u.n;
-          const letrasQ = q.length - (L - 1);
-          if (letrasQ < 4) continue;
-          const vistos = new Set();
-          for (let j = 0; j < L; j++) {
-            const p = tokens[i + j].n;
-            if (p.length < 3 || VAZIAS.has(p)) continue;
-            const l = ancoras.get(p + '\u0001' + L + '\u0001' + j);
-            if (!l) continue;
-            for (const termo of l) {
-              if (vistos.has(termo)) continue;
-              vistos.add(termo);
-              const k = errosAceitos(letrasQ, termo.length - (L - 1));
-              if (k < 0 || Math.abs(q.length - termo.length) > k) continue;
-              if (++estado.comparacoes > MAX_COMPARACOES) break;
-              const d = distancia(q, termo, k);
-              if (d === 0 || d > k) continue;
-              const chaveG = i * 16 + L;
-              const g = grupos.get(chaveG);
-              const xs = exatos.get(termo).x;
-              if (!g || d < g.d) grupos.set(chaveG, { i, L, d, xs: xs.slice() });
-              else if (d === g.d) for (const x of xs) if (g.xs.indexOf(x) < 0) g.xs.push(x);
-            }
+          if (q.length - (L - 1) < 4) continue;
+          let r = porExpressao.get(q);
+          if (r === undefined) {
+            r = expressaoAproximada(tokens, i, L, q, estado);
+            porExpressao.set(q, r);
           }
+          if (r) cands.push({ i, L, d: r.d, xs: r.xs });
         }
       }
-      const cands = [...grupos.values()].sort((u, v) => v.L - u.L || u.d - v.d || u.i - v.i);
-      for (const c of cands) if (livres(c.i, c.i + c.L)) deAproximado(c.xs, c.i, c.i + c.L, 'digitacao', 'erro de digitação');
+      cands.sort((u, v) => v.L - u.L || u.d - v.d || u.i - v.i);
+      for (const c of cands) {
+        if (!livres(c.i, c.i + c.L)) continue;
+        // com uma palavra do trecho que só existe nesse item («pain resonanse»), é alta
+        let certa = false;
+        if (c.xs.length === 1) for (let k = c.i; k < c.i + c.L && !certa; k++) certa = palavras.get(tokens[k].n) === c.xs[0];
+        if (certa) novoItem(c.xs[0], c.i, c.i + c.L, 'alta', 'palavra');
+        else deAproximado(c.xs, c.i, c.i + c.L, 'digitacao', 'erro de digitação');
+      }
+    }
+
+    // 5) 🔑 palavra significativa que aponta para UM item só
+    for (let i = 0; i < N; i++) {
+      const t = tokens[i];
+      if (usado[i] >= 0 || t.cjk || t.n.length < 3) continue;
+      const x = palavras.get(t.n);
+      if (typeof x === 'number') novoItem(x, i, i + 1, 'alta', 'palavra');
     }
 
     // 6) ✏️ erro de digitação numa palavra solta
@@ -746,14 +801,18 @@ function criarLeitor(catalogo, opcoes) {
 
     // 7) 🔊 som parecido
     if (fonetica.size) {
+      const porSom = new Map();
       for (let i = 0; i < N; i++) {
         if (!elegivel(i)) continue;
-        const k = chaveFonetica(tokens[i].n, false);
-        const l = k && fonetica.get(k);
-        if (!l) continue;
-        const xs = [];
-        for (const v of l) for (const x of itensDoVocab(v)) if (xs.indexOf(x) < 0) xs.push(x);
-        deAproximado(xs, i, i + 1, 'som', 'som parecido');
+        let xs = porSom.get(tokens[i].n);
+        if (xs === undefined) {
+          const k = chaveFonetica(tokens[i].n, false);
+          const l = k ? fonetica.get(k) : undefined;
+          xs = [];
+          if (l !== undefined) { const vs = listaDe(l); for (let j = 0; j < vs.length && xs.length <= MAX_OPCOES; j++) unirDoVocab(xs, vs[j]); }
+          porSom.set(tokens[i].n, xs);
+        }
+        if (xs.length) deAproximado(xs, i, i + 1, 'som', 'som parecido');
       }
     }
 
@@ -768,7 +827,7 @@ function criarLeitor(catalogo, opcoes) {
         grupo = null;
         const esq = g.ini > 0 ? usado[g.ini - 1] : -1, dir = g.fim < N ? usado[g.fim] : -1;
         for (const lado of [esq, dir]) {
-          if (lado < 0) continue;
+          if (lado < 0 || g.xs.length > MAX_INTERSECAO) continue;
           const viz = achados[lado];
           if (viz.duvida || viz.a !== undefined || g.xs.indexOf(viz.x) < 0) continue;
           if (lado === esq && viz.fim === g.ini) { viz.fim = g.fim; marcar(g.ini, g.fim, lado); return; }
@@ -780,14 +839,15 @@ function criarLeitor(catalogo, opcoes) {
       for (let i = 0; i < N; i++) {
         const t = tokens[i];
         const xs = usado[i] < 0 && !t.cjk && t.n.length >= 3 ? palavras.get(t.n) : undefined;
-        if (!xs || xs.length < 2) { fechar(); continue; }
-        if (grupo && grupo.fim === i) {
+        if (!Array.isArray(xs)) { fechar(); continue; } // lista = palavra de 2+ itens
+        // vizinhas se juntam pelo que têm em comum (palavra em itens demais fica sozinha: custo)
+        if (grupo && grupo.fim === i && xs.length <= MAX_INTERSECAO && grupo.xs.length <= MAX_INTERSECAO) {
           const conj = new Set(xs);
           const comum = grupo.xs.filter((x) => conj.has(x));
           if (comum.length) { grupo.xs = comum; grupo.total = comum.length; grupo.fim = i + 1; continue; }
         }
         fechar();
-        grupo = { ini: i, fim: i + 1, xs: xs.slice(), total: xs.length };
+        grupo = { ini: i, fim: i + 1, xs, total: xs.length }; // a lista do índice: só é lida, nunca alterada
       }
       fechar();
     }
@@ -796,11 +856,24 @@ function criarLeitor(catalogo, opcoes) {
     if (cores.length) {
       const killers = [];
       for (const a of achados) if (!a.duvida && tipos[a.x] === 'killer' && killers.indexOf(a.x) < 0) killers.push(a.x);
+      const porCor = new Map(); // a mesma cor repetida usa a mesma lista
       for (const idx of cores) {
-        const a = achados[idx], xs = [];
-        for (const r of a.cor) for (const k of killers) for (const x of addonsPorKiller.get(k) || []) if (raridades[x] === r && xs.indexOf(x) < 0) xs.push(x);
-        a.xs = xs.slice(0, MAX_OPCOES_COR);
-        a.total = a.xs.length;
+        const a = achados[idx];
+        let xs = porCor.get(a.cor);
+        if (xs === undefined) {
+          xs = [];
+          for (const r of a.cor) {
+            for (const k of killers) {
+              for (const x of addonsPorKiller.get(k) || []) {
+                if (xs.length >= MAX_OPCOES_COR) break;
+                if (raridades[x] === r && xs.indexOf(x) < 0) xs.push(x);
+              }
+            }
+          }
+          porCor.set(a.cor, xs);
+        }
+        a.xs = xs;
+        a.total = xs.length;
       }
     }
 
@@ -821,7 +894,7 @@ function criarLeitor(catalogo, opcoes) {
     for (const idx of ordem) {
       const a = achados[idx];
       if (!a.duvida) continue;
-      if (!a.cor && a.xs.every((x) => posItem.has(x))) continue; // todas as opções já estão nos itens
+      if (!a.cor && a.total <= a.xs.length && a.xs.every((x) => posItem.has(x))) continue; // todas as opções já estão nos itens
       const parte = a.cor ? 1 / Math.max(1, a.xs.length) : 1 / Math.max(1, a.total);
       const lim = a.cor ? MAX_OPCOES_COR : MAX_OPCOES;
       duvidas.push({
@@ -891,12 +964,41 @@ function criarLeitor(catalogo, opcoes) {
       }
       if (vs.length) {
         const xs = [];
-        for (const v of vs) for (const x of itensDoVocab(v)) if (xs.indexOf(x) < 0) xs.push(x);
+        for (let i = 0; i < vs.length && xs.length <= MAX_OPCOES; i++) unirDoVocab(xs, vs[i]);
         r = { d: melhor, xs };
       }
     }
     cache.set(p, r);
     return r;
+  }
+
+  // Erro de digitação numa expressão de L palavras: só os nomes de L palavras com
+  // uma palavra igual na mesma posição (a âncora); a menor distância ganha.
+  function expressaoAproximada(tokens, i, L, q, estado) {
+    if (estado.gasto > ORCAMENTO || estado.comparacoes >= MAX_COMPARACOES) return null;
+    const letrasQ = q.length - (L - 1);
+    const vistos = new Set();
+    let melhor = 3, xs = null;
+    for (let j = 0; j < L; j++) {
+      const p = tokens[i + j].n;
+      if (p.length < 3 || VAZIAS.has(p)) continue;
+      const l = ancoras.get(p + '|' + L + '|' + j);
+      if (l === undefined) continue;
+      const termos = listaDe(l);
+      estado.gasto += termos.length;
+      for (const termo of termos) {
+        if (vistos.has(termo)) continue;
+        vistos.add(termo);
+        const k = errosAceitos(letrasQ, termo.length - (L - 1));
+        if (k < 0 || Math.abs(q.length - termo.length) > k) continue;
+        if (++estado.comparacoes > MAX_COMPARACOES) break;
+        const d = distancia(q, termo, Math.min(k, melhor));
+        if (d === 0 || d > k || d > melhor) continue;
+        if (d < melhor) { melhor = d; xs = []; }
+        unirDoTermo(xs, exatos.get(termo));
+      }
+    }
+    return xs && xs.length ? { d: melhor, xs } : null;
   }
 
   return { ler, total: ids.length, modelo };

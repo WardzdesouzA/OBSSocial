@@ -69,7 +69,7 @@ const RE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const RE_ITEM = /^([a-z0-9]+(?:-[a-z0-9]+)*):([a-z0-9]+(?:-[a-z0-9]+)*)$/;
 const RE_ARQUIVO = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:png|jpg|webp|gif)$/;
 // C0/C1, separadores de linha e os marcadores de direção (viram truque na tela)
-const RE_CONTROLE = /[\u0000-\u001f\u007f-\u009f  ‪-‮⁦-⁩]/;
+const RE_CONTROLE = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069]/;
 // o Windows não deixa criar con.json, nul.json… nem a pasta com esse nome
 const RESERVADOS_WINDOWS = /^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])$/;
 const CHAVES_PERIGOSAS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -88,7 +88,7 @@ function idItemValido(v) {
 // Tira só os acentos latinos (a faixa das marcas combinantes): o ゛ do japonês
 // fica fora dela, e o NFC no fim junta de novo o que o NFD separou (kana, hangul).
 function semAcento(texto) {
-  return String(texto).normalize('NFD').replace(/[̀-ͯ]/g, '').normalize('NFC');
+  return String(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
 }
 const TROCAS_SLUG = { 'ß': 'ss', 'æ': 'ae', 'œ': 'oe', 'ø': 'o', 'ł': 'l', 'đ': 'd', 'ð': 'd', 'þ': 'th', 'ı': 'i' };
 // «Pokémon Édition» → «pokemon-edition»; nome só em japonês dá vazio (quem chama decide)
@@ -235,7 +235,7 @@ function lerDesc(v) {
   if (v === null || v === '') return '';
   if (typeof v !== 'string') throw new ErroEntrada('descrição: precisa ser texto');
   const t = v.replace(/\r\n?/g, '\n').trim();
-  if (/[\u0000-\u0009\u000b-\u001f\u007f-\u009f‪-‮⁦-⁩]/.test(t)) throw new ErroEntrada('descrição: tem caractere de controle');
+  if (/[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/.test(t)) throw new ErroEntrada('descrição: tem caractere de controle');
   if (t.length > 500) throw new ErroEntrada('descrição: passa de 500 caracteres');
   return t;
 }
@@ -277,7 +277,8 @@ function lerTipoEntrada(bruto) {
   if (!ehObjeto(bruto)) throw new ErroEntrada('o tipo precisa ser um objeto', 'tipo-invalido');
   let id = null;
   if (temCampo(bruto, 'id') && bruto.id !== null && bruto.id !== '') {
-    if (typeof bruto.id !== 'string' || bruto.id.length > 30 || !RE_SLUG.test(bruto.id)) {
+    // «constructor»/«prototype» passam no formato, mas quebram quem indexa por id num objeto
+    if (typeof bruto.id !== 'string' || bruto.id.length > 30 || !RE_SLUG.test(bruto.id) || CHAVES_PERIGOSAS.has(bruto.id)) {
       throw new ErroEntrada(`id de tipo inválido «${amostra(bruto.id)}» (a-z, 0-9 e -, até 30)`, 'tipo-invalido');
     }
     id = bruto.id;
@@ -615,13 +616,13 @@ function lerCsv(texto, separador) {
 // lista de linhas → CSV com BOM (o Excel reconhece o UTF-8) e CRLF
 function escreverCsv(linhas, opcoes) {
   const sep = opcoes && opcoes.separador === ';' ? ';' : ',';
-  if (!linhas.length) return '﻿';
+  if (!linhas.length) return '\ufeff';
   const precisaAspas = /[",;\r\n]|^\s|\s$/;
   const cel = (v) => {
     const s = v === null || v === undefined ? '' : String(v);
     return precisaAspas.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  return `﻿${linhas.map((l) => l.map(cel).join(sep)).join('\r\n')}\r\n`;
+  return `\ufeff${linhas.map((l) => l.map(cel).join(sep)).join('\r\n')}\r\n`;
 }
 
 function csvDoCatalogo(cat) {
@@ -654,7 +655,7 @@ function entradasDoCsv(texto, tipos) {
   if (!registros.length) return { erro: falha('csv-vazio', 'a planilha está vazia') };
   const col = new Map();
   registros[0].celulas.forEach((c, i) => {
-    const nome = limparCelula(c).replace(/^﻿/, '').toLowerCase();
+    const nome = limparCelula(c).replace(/^\ufeff/, '').toLowerCase();
     if (COLUNAS_CSV.includes(nome) && !col.has(nome)) col.set(nome, i);
   });
   if (!col.has('tipo') && !col.has('id')) {
@@ -693,7 +694,7 @@ function entradasDoCsv(texto, tipos) {
 // JSON: o catálogo exportado ({ jogo, tipos, itens }) ou só a lista de itens
 function entradasDoJson(texto) {
   let dados;
-  try { dados = JSON.parse(texto.replace(/^﻿/, '')); } catch (e) {
+  try { dados = JSON.parse(texto.replace(/^\ufeff/, '')); } catch (e) {
     return { erro: falha('json-invalido', `o arquivo não é um JSON válido (${String(e.message).slice(0, 120)})`) };
   }
   let itens;
@@ -946,8 +947,9 @@ function criarCatalogos(baseDir) {
   const pastaDoJogo = (id) => path.join(pastaImagens, id);
   const marcaDoArquivo = (arq) => { try { const st = fs.statSync(arq); return `${st.size}:${st.mtimeMs}`; } catch { return null; } };
   const naoAchado = () => falha('jogo-inexistente', 'jogo não encontrado');
-  const erroIlegivel = (t) => falha('catalogo-ilegivel',
-    'o arquivo deste catálogo não abre: nada é gravado por cima até ele abrir de novo ou você recriar o jogo', { copia: t.copia || null });
+  const erroIlegivel = (t) => falha('catalogo-ilegivel', t.preso
+    ? 'o arquivo deste catálogo está preso por outro programa (antivírus, OneDrive…): nada é gravado até ele abrir de novo'
+    : 'o arquivo deste catálogo não abre: nada é gravado por cima até ele abrir de novo ou você recriar o jogo', { copia: t.copia || null });
 
   // Restos de gravação interrompida (o programa caiu no meio): saem ao abrir
   function limparRestos() {
@@ -1016,9 +1018,11 @@ function criarCatalogos(baseDir) {
     }
   }
 
-  // O catálogo valendo, ou o erro. Ilegível só é lido de novo se o arquivo mudou
-  // (o streamer consertou ou trocou): ler o mesmo arquivo quebrado faria outra cópia.
-  function obter(jogoId) {
+  // O catálogo valendo, ou o erro. Conteúdo estragado só é lido de novo se o arquivo
+  // mudou (o streamer consertou ou trocou): ler o mesmo arquivo faria outra cópia.
+  // Arquivo preso (o antivírus ou o OneDrive segurando no Windows: erro de leitura,
+  // não de conteúdo) tenta de novo a cada segundo — não pode travar a live inteira.
+  function obter(jogoId, forcar = false) {
     if (!jogoIdValido(jogoId)) return { erro: naoAchado() };
     const emCache = cache.get(jogoId);
     if (emCache) return { cat: emCache };
@@ -1027,7 +1031,8 @@ function criarCatalogos(baseDir) {
     const trava = ilegiveis.get(jogoId);
     if (trava) {
       if (marca === null) { ilegiveis.delete(jogoId); return { erro: naoAchado() }; }
-      if (marca === trava.marca) return { erro: erroIlegivel(trava) };
+      const deNovo = forcar || marca !== trava.marca || (trava.preso && Date.now() - trava.quando >= 1000);
+      if (!deNovo) return { erro: erroIlegivel(trava) };
     }
     const lido = lerJsonSeguro(arq);
     let motivo = lido.erro || 'sem cara de catálogo';
@@ -1049,13 +1054,18 @@ function criarCatalogos(baseDir) {
       ilegiveis.delete(jogoId);
       return { erro: naoAchado() };
     }
-    const copia = lido.ok ? guardarCopia(arq) : semCopiaRepetida(arq, lido.copia);
-    const nova = { copia, marca, resgate: resgatarNomeEModelo(arq) };
+    // erro de leitura vem com o código do sistema (EBUSY, EPERM…); conteúdo ruim, não
+    const preso = !lido.ok && typeof lido.erro === 'string' && /^E[A-Z]+$/.test(lido.erro);
+    const copia = (lido.ok ? guardarCopia(arq) : semCopiaRepetida(arq, lido.copia)) || (trava && trava.copia) || null;
+    const resgate = resgatarNomeEModelo(arq);
+    const nova = { copia, marca, preso, quando: Date.now(), resgate: resgate.nome || !trava ? resgate : trava.resgate };
     ilegiveis.set(jogoId, nova);
-    console.error(`  ⚠️ 🙋 Catálogo «${jogoId}» não abre (${motivo}).`);
-    console.error(copia
-      ? `    O arquivo como estava ficou guardado em ${path.basename(copia)}; nada grava por cima até ele abrir ou o jogo ser recriado.`
-      : '    E não consegui guardar uma cópia: nada grava por cima até ele abrir ou o jogo ser recriado.');
+    if (!trava || trava.marca !== marca || trava.preso !== preso) { // avisa uma vez por estado, não a cada tentativa
+      console.error(`  ⚠️ 🙋 Catálogo «${jogoId}» não abre (${motivo}).`);
+      console.error(preso ? '    Parece preso por outro programa: tento de novo sozinho; nada grava por cima até ele abrir.'
+        : copia ? `    O arquivo como estava ficou guardado em ${path.basename(copia)}; nada grava por cima até ele abrir ou o jogo ser recriado.`
+          : '    E não consegui guardar uma cópia: nada grava por cima até ele abrir ou o jogo ser recriado.');
+    }
     return { erro: erroIlegivel(nova) };
   }
 
@@ -1147,7 +1157,7 @@ function criarCatalogos(baseDir) {
     if (!MODELOS.includes(mod)) return falha('modelo-invalido', `modelo desconhecido (vale ${MODELOS.join(' ou ')})`);
     if (contarJogos() >= TETOS.jogos) return falha('teto-jogos', `no máximo ${TETOS.jogos} jogos`);
     let base = slug(n) || `jogo-${hash8(n)}`;
-    if (RESERVADOS_WINDOWS.test(base)) base += '-jogo';
+    if (RESERVADOS_WINDOWS.test(base) || CHAVES_PERIGOSAS.has(base)) base += '-jogo';
     const id = livre(base, (c) => cache.has(c) || ilegiveis.has(c) || fs.existsSync(arquivoDoJogo(c)), 60);
     if (!id) return falha('nome-invalido', 'não achei um nome de arquivo livre para esse jogo');
     const cat = novoCatalogo(id, n, mod, Date.now());
@@ -1181,11 +1191,13 @@ function criarCatalogos(baseDir) {
   // «Começar do zero» de propósito, só para catálogo que não abre (ou sumiu): grava um
   // vazio com o nome e o modelo resgatados do começo do arquivo (ou os que vierem).
   function recriarJogo(jogoId, opcoes) {
-    const o = ehObjeto(opcoes) ? opcoes : {};
-    if (!jogoIdValido(jogoId) || RESERVADOS_WINDOWS.test(jogoId)) return naoAchado();
-    const r = obter(jogoId);
+    const o = typeof opcoes === 'string' ? { nome: opcoes } : ehObjeto(opcoes) ? opcoes : {};
+    if (!jogoIdValido(jogoId) || RESERVADOS_WINDOWS.test(jogoId) || CHAVES_PERIGOSAS.has(jogoId)) return naoAchado();
+    const r = obter(jogoId, true); // lê de novo agora: pode ter sido consertado ou solto
     if (r.cat) return falha('catalogo-ok', 'este catálogo abre normalmente: para começar do zero, apague o jogo e crie de novo');
     const trava = ilegiveis.get(jogoId);
+    // preso não é estragado: recriar agora jogaria fora um arquivo bom
+    if (trava && trava.preso) return falha('arquivo-preso', 'o arquivo do catálogo está preso por outro programa: espere ele soltar (nada foi apagado)');
     const resgate = (trava && trava.resgate) || {};
     let nome = resgate.nome || jogoId;
     if (o.nome !== undefined && o.nome !== null && o.nome !== '') {
@@ -1226,6 +1238,7 @@ function criarCatalogos(baseDir) {
       if (!id) {
         const n = primeiroNome(l.nomes);
         id = slug(n, 30) || `tipo-${hash8(n)}`;
+        if (CHAVES_PERIGOSAS.has(id)) id += '-tipo';
         if (cat.tipos.some((t) => t.id === id)) return falha('tipo-existe', `já existe o tipo «${id}»`);
       }
       const novo = montarTipo(id, l.nomes, l.icone || '🏷️', l.papel || 'outro');
