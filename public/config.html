@@ -1103,6 +1103,9 @@
   .ped-acoes { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 100%; justify-content: flex-end; }
   .ped-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0 10px; font-size: 13px; }
   .ped-tipos { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* 🖼️ imagens por tipo: cada seletor junto do nome dele, com folga até o próximo */
+  #ped-imagensTipos { gap: 6px 22px; }
+  #ped-imagensTipos label.check { margin: 0; }
   .ped-tipo { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 9px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; background: var(--panel); }
   .ped-moedas { display: flex; flex-direction: column; gap: 6px; margin: 2px 0 6px; }
   .ped-moeda { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -7559,12 +7562,14 @@ function pedPintarCampos(forcar) {
   const ondeAtual = (settings.panel || {}).pedidosOnde;
   if (onde && (forcar || document.activeElement !== onde)) onde.value = ['auto', 'coluna', 'aba', 'ambos'].includes(ondeAtual) ? ondeAtual : 'auto';
 }
-// O eco do próprio ajuste: as listas e os campos SEM o foco acompanham (o ◀ ▶ ↺
-// manda logo depois de outro ajuste, ainda na janela do eco, e o campo ficaria
-// mostrando o valor de antes); o campo com o foco não é mexido
+// O eco do próprio ajuste repinta só as listas (moedas, fichas, tipos): um campo
+// repintado com o eco de um ajuste ANTERIOR piscaria de volta. Depois do ◀ ▶ ↺
+// dos Pedidos — que pode sair ainda na janela do eco do ajuste anterior —, os ecos
+// dos instantes seguintes repintam também os campos sem o foco, com o que voltou
+let pedRepintarAte = 0;
 function pedAposEco(jaPintou) {
   if (!settings) return;
-  if (!jaPintou) pedPintarCampos(false);
+  if (!jaPintou && Date.now() < pedRepintarAte) pedPintarCampos(false);
   pedPintarMoedas();
   pedFichasRecompensas.pintar();
   pedFichasPalavras.pintar();
@@ -11757,6 +11762,7 @@ function sendSnapshot(key, snap) {
     else if (key === 'panel') hub.send({ type: 'settings', settings: { panel: { ...snap, ocultos: Object.fromEntries(OBS_PAINEL_ORDEM.OCULTAVEIS.map((k) => [k, !!(snap.ocultos && snap.ocultos[k] === true)])) } } });
     else if (key === 'raffle') { marcarEnvioSorteio(snap); hub.send({ type: 'settings', settings: { raffle: JSON.parse(JSON.stringify(snap)) } }); } // 🎁 v0.116
     else if (key === 'pedidos') { // 🙋 v0.192 (o jogo em uso fica; o «Onde a fila aparece» vai ao panel)
+      pedRepintarAte = Date.now() + 2000; // os ecos que chegam agora repintam os campos
       const onde = ['auto', 'coluna', 'aba', 'ambos'].includes(snap.__onde) ? snap.__onde : null;
       hub.send({ type: 'settings', settings: { pedidos: pedidosDaFoto(snap), ...(onde ? { panel: { pedidosOnde: onde } } : {}) } });
     }

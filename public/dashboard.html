@@ -8831,7 +8831,7 @@ function botaoDoPedido(ctx, emoji, rotulo, dica, acao, trava, fazer) {
 // Sem ação possível (quem só assiste, ✔ Feitos), fica o menu do navegador.
 function abrirMenuDoPedido(e, card) {
   const botoes = [...card.querySelectorAll('button[data-acao][data-rotulo]')].filter((b) => !botaoParadoPedidos(b) && b.isConnected);
-  if (!botoes.length) return;
+  if (!botoes.length) { closeCtxMenu(); return; } // (o menu de outro cartão não fica aberto)
   e.preventDefault();
   ctxMenu.innerHTML = '';
   for (const b of botoes) {
