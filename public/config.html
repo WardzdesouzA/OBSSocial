@@ -180,6 +180,14 @@
   .card--recolhivel.recolhido > :not(h3):not(.status) { display: none !important; }
   .card--recolhivel.recolhido > h3 { margin-bottom: 0; }
   .card--recolhivel.recolhido > .status { margin-top: 6px; }
+  /* 🧩 v0.191: a seção dos componentes recolhe/expande pelo título, como os
+     cards — nasce recolhida e lembra o estado neste navegador */
+  .campo-recolhivel > .campo-titulo { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .campo-recolhivel > .campo-titulo:hover { color: var(--accent); }
+  .campo-recolhivel > .campo-titulo .card-seta { display: inline-block; width: 1em; color: var(--muted); text-align: center; flex: none; }
+  .campo-recolhivel.recolhido > :not(.campo-titulo) { display: none !important; }
+  /* a mesma folga dos cards para o cabeçalho fixo (o atalho ajusta pela altura real) */
+  .campo-recolhivel { scroll-margin-top: 80px; }
   .card .hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
   .row { display: flex; gap: 8px; margin-bottom: 8px; }
   /* type=password incluso: senha do OBS, senhas da rede e URLs secretas —
@@ -3290,6 +3298,7 @@
       <details class="faq-item"><summary>O navegador diz que o endereço "não é seguro". E agora?</summary><div class="faq-resposta">É normal: o endereço é da SUA rede local (http), não da internet — nada sai do seu computador. A explicação completa está em 🔗 URLs para o OBS.</div></details>
       <details class="faq-item"><summary>O overlay não aparece no OBS. O que eu confiro?</summary><div class="faq-resposta">Três coisas: o OBS Social está aberto? A URL da fonte "Navegador" é exatamente a da página 🔗? Clicou em "Atualizar" na fonte? A 📺 prévia real do Organizar a tela mostra exatamente o que o OBS captura — se aparece lá, aparece no OBS.</div></details>
       <details class="faq-item"><summary>Como atualizo o OBS Social?</summary><div class="faq-resposta">Em ℹ️ Sobre: o programa avisa quando existe versão nova (ele procura ao abrir e uma vez por dia) e se atualiza sozinho quando você confirmar — depois fecha e abre sozinho, e seus dados, senha, logs e configurações são mantidos. Isso só funciona no computador onde o OBS Social roda (http://localhost:3000): pela rede, a página Sobre esconde os botões e avisa.</div></details>
+      <details class="faq-item"><summary>🧩 Onde vejo os componentes que o programa usa e se há versão nova?</summary><div class="faq-resposta">Em Configurações → ℹ️ Sobre, na seção 🧩 Componentes. Ela começa fechada: clique no título (ou aperte Enter ou Espaço) para abrir a tabela com cada componente, a versão em uso, a arquitetura, de onde veio e a situação. Fechada, o título mostra 🆕 e quantos têm versão nova para instalar, e o aviso de versão nova do painel abre direto nela. Os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) ganham ali o botão ⬇️ Atualizar agora.</div></details>
       <details class="faq-item"><summary>O programa ficou fechado e perdi comentários. Dá para recuperar?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🕘 Recuperar mensagens perdidas: ao conectar, o OBS Social busca o que cada serviço ainda guarda do chat recente — sem duplicar nada.</div></details>
       <details class="faq-item"><summary>Como controlo o OBS pelo painel?</summary><div class="faq-resposta">Ligue 🧪 Labs → 🎬 OBS Studio pelo painel (experimental). Para linkar: no OBS (28+), abra Ferramentas → Configurações do Servidor WebSocket, marque Ativar servidor WebSocket, clique em Mostrar senha das conexões e copie a porta (4455) e a senha para a página 🎬 OBS Studio Remoto (que aparece no menu com o seletor ligado) — o passo a passo numerado está lá. Se o OBS estiver em OUTRO computador da rede, ponha o IP dele no campo Endereço (e libere a porta 4455 no firewall daquela máquina). A ferramenta 🎬 do painel comanda tudo: transmitir, gravar (com pausa e marcador de capítulo), câmera virtual, replay buffer, cenas, modo estúdio, transições, mostrar/esconder fontes, mixer de áudio, controle de mídia, filtros, coleções, perfis e print da tela — e cada bloco tem um liga/desliga nessa página, para a ferramenta ficar do tamanho que você usa. Tudo dentro do seu computador, sem internet.</div></details>
       <details class="faq-item"><summary>Dá para transformar as coisas do OBS em botões?</summary><div class="faq-resposta">Dá — é a tecla <b>🎬 Ação do OBS</b> na 🎵 Mesa de trilhas. Crie uma tecla, escolha o tipo 🎬 e depois a ação (trocar de cena, gravar, mudo do microfone, mostrar uma fonte, ligar um filtro, tocar uma mídia...). As listas de cenas, fontes e filtros vêm do OBS conectado; o ▶ Testar agora dispara na hora para você conferir. A tecla <b>acende sozinha</b> quando o que ela controla está ligado (gravando, no ar, fonte visível). Essas teclas também entram dentro de um 🎛️ Botão de multi ação: a fila mistura som e comando — trocar de cena, esperar 2s e tocar a vinheta, por exemplo.</div></details>
@@ -3409,8 +3418,8 @@
         <label class="check lab-toggle" style="margin-bottom:0"><input type="checkbox" id="updAutoChk" class="sw" checked> <span>🔁 Procurar atualização sozinho <b>ao abrir o programa</b> e <b>1x por dia</b>, e me avisar quando houver versão nova (nunca instala sem a sua confirmação)</span></label>
       </div>
 
-      <div class="field">
-        <label>🧩 Componentes</label>
+      <div class="field campo-recolhivel recolhido" id="componentes">
+        <label class="campo-titulo" role="button" tabindex="0" aria-expanded="false"><span class="card-seta" aria-hidden="true">▸</span><span>🧩 Componentes</span><span id="compNovas" class="hint" style="display:none;margin:0"></span></label>
         <div class="hint" style="margin-bottom:6px">Tudo o que o programa usa para funcionar, com a versão e a arquitetura em uso e de onde veio cada um. O que vem no ZIP (ws, qrcode-generator, lottie-web) atualiza junto com o OBS Social; os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) são baixados quando você liga a função e, quando há versão nova, ganham o botão ⬇️ Atualizar aqui; o Node.js você atualiza pelo site oficial. A verificação acontece ao abrir o programa e 1x por dia, junto com a do OBS Social (o mesmo seletor acima), e o painel avisa quando há versão nova que importa.</div>
         <div class="row">
           <button id="compVerificarBtn" class="icon-btn" style="width:auto;padding:0 14px">🔄 Verificar atualizações dos componentes</button>
@@ -14128,7 +14137,55 @@ function showCfgPage(name) {
 // Os cards dos Labs nascem .cardOculto até as settings chegarem: a rolagem fica
 // pendente e acontece assim que o cartão aparecer (fillSettings → cfgRolarPendente).
 let cfgCartaoPendente = null;
+// 🧩 v0.191: a seção dos componentes recolhe/expande pelo título — nasce
+// recolhida (a tabela é longa e quase nunca precisa ser vista) e lembra o
+// estado neste navegador. Recolhida, o título mostra 🆕 e quantos têm versão
+// nova; o aviso do painel abre direto nela (#sec-sobre/componentes)
+function compDefinirRecolhido(recolhido, lembrar) {
+  const campo = document.getElementById('componentes');
+  if (!campo) return;
+  campo.classList.toggle('recolhido', recolhido);
+  const titulo = campo.querySelector(':scope > .campo-titulo');
+  const seta = titulo && titulo.querySelector('.card-seta');
+  if (seta) seta.textContent = recolhido ? '▸' : '▾';
+  if (titulo) titulo.setAttribute('aria-expanded', recolhido ? 'false' : 'true');
+  if (lembrar) { try { localStorage.setItem('obsComponentesRecolhido', recolhido ? '1' : '0'); } catch {} }
+}
+function compIniciarRecolhivel() {
+  const campo = document.getElementById('componentes');
+  const titulo = campo && campo.querySelector(':scope > .campo-titulo');
+  if (!titulo || campo.dataset.recolhivel) return;
+  campo.dataset.recolhivel = '1';
+  let recolhido = true;
+  try { const v = localStorage.getItem('obsComponentesRecolhido'); if (v !== null) recolhido = v === '1'; } catch {}
+  compDefinirRecolhido(recolhido, false);
+  const alternar = () => compDefinirRecolhido(!campo.classList.contains('recolhido'), true);
+  titulo.addEventListener('click', alternar);
+  titulo.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(); } });
+}
 function cfgRolarAte(id) {
+  if (id === 'componentes') {
+    const campo = document.getElementById('componentes');
+    cfgCartaoPendente = null;
+    if (!campo || campo.style.display === 'none') return;
+    const card = campo.closest('.card');
+    if (card && card.classList.contains('recolhido')) card.querySelector(':scope > h3')?.click();
+    // abre só nesta visita: chegar pelo atalho não é uma escolha, e o que a
+    // pessoa deixou guardado (aberta ou recolhida) continua valendo
+    compDefinirRecolhido(false, false);
+    // a folga acompanha o cabeçalho fixo, que cresce quando a versão chega com
+    // o init — por isso é medida a cada rolagem, não uma vez só
+    const rolar = () => {
+      const cab = document.querySelector('.cfg-header');
+      campo.style.scrollMarginTop = ((cab ? cab.offsetHeight : 68) + 12) + 'px';
+      campo.scrollIntoView({ block: 'start' });
+    };
+    rolar();
+    setTimeout(rolar, 500);
+    // o F5 volta à página Sobre com a seção como a pessoa a deixou
+    try { history.replaceState(null, '', '#sec-sobre'); } catch {}
+    return;
+  }
   const card = id && /^[A-Za-z0-9_-]{1,60}$/.test(id) ? document.getElementById(id) : null;
   if (!card || !card.classList.contains('card')) { cfgCartaoPendente = null; return; }
   if (card.classList.contains('cardOculto') || card.style.display === 'none') { cfgCartaoPendente = id; return; }
@@ -14147,6 +14204,7 @@ function irPeloHash() {
   cfgRolarAte(cartao);
 }
 window.addEventListener('hashchange', irPeloHash);
+compIniciarRecolhivel();
 irPeloHash();
 
 // ---------- 🧲 Organizar o painel (arrastar ícones e abas) ----------
@@ -14586,6 +14644,12 @@ function renderComponentes(dados) {
     tabela.appendChild(tr);
   }
   compTabela.appendChild(tabela);
+  // 🧩 v0.191: com a seção recolhida, o título conta quantos têm versão nova que
+  // a pessoa pode instalar; o que vem no ZIP (acao 'programa') só muda numa
+  // atualização do OBS Social e não acende o selo
+  const selo = document.getElementById('compNovas');
+  const novas = dados.itens.filter((it) => (it.estado === 'nova' || it.estado === 'semSuporte') && it.acao !== 'programa').length;
+  if (selo) { selo.textContent = novas ? '🆕 ' + novas : ''; selo.style.display = novas ? '' : 'none'; }
 }
 // Um download do yt-dlp/motor/ffmpeg ou a biblioteca do WhatsApp instalada
 // mudam a versão em uso: pede o inventário de novo (sem ir à internet)

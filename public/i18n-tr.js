@@ -10,6 +10,9 @@ window.OBS_I18N_DICTS.tr = {
     ru: 'Rusça', tr: 'Türkçe', ja: 'Japonca', ko: 'Korece', zh: 'Çince (basitleştirilmiş)',
   },
   textos: {
+    // 🧩 v0.191: FAQ dos componentes recolhíveis
+    "🧩 Onde vejo os componentes que o programa usa e se há versão nova?": "🧩 Programın kullandığı bileşenleri ve yeni sürüm olup olmadığını nerede görürüm?",
+    "Em Configurações → ℹ️ Sobre, na seção 🧩 Componentes. Ela começa fechada: clique no título (ou aperte Enter ou Espaço) para abrir a tabela com cada componente, a versão em uso, a arquitetura, de onde veio e a situação. Fechada, o título mostra 🆕 e quantos têm versão nova para instalar, e o aviso de versão nova do painel abre direto nela. Os opcionais (yt-dlp, whisper.cpp, ffmpeg, biblioteca do WhatsApp) ganham ali o botão ⬇️ Atualizar agora.": "Ayarlar → ℹ️ Hakkında’da, 🧩 Bileşenler bölümünde. Kapalı başlar: her bileşeni, kullanılan sürümü, mimariyi, nereden geldiğini ve durumunu gösteren tabloyu açmak için başlığa tıklayın (veya Enter ya da Boşluk’a basın). Kapalıyken başlık 🆕 ve kaçının kurulabilecek yeni sürümü olduğunu gösterir; paneldeki yeni sürüm uyarısı da doğrudan bu bölümü açar. İsteğe bağlı olanlar (yt-dlp, whisper.cpp, ffmpeg, WhatsApp kütüphanesi) orada ⬇️ Şimdi güncelle düğmesini alır.",
     // 🛟 v0.189: modelo que não deu para ler (fica no disco)
     "⚠️ não consegui ler o modelo agora (ele continua no disco) — clique para tentar de novo": "⚠️ model şu anda okunamadı (hâlâ diskte duruyor) — yeniden denemek için tıklayın",
     // 🛟 v0.189: conferência de integridade (SHA-256) dos componentes baixados

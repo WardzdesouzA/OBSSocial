@@ -1,4 +1,10 @@
 {
+  "0.191.0": {
+    "titulo": "🧩 Einklappbare Komponenten",
+    "itens": [
+      "🧩 In Einstellungen → ℹ️ Über lässt sich der Abschnitt 🧩 Komponenten jetzt über seinen Titel auf- und zuklappen, wie die Karten, und startet zugeklappt: Die Tabelle ist lang und wird selten gebraucht. Zugeklappt zeigt der Titel 🆕 und wie viele Komponenten eine neue Version zum Installieren haben (was im ZIP steckt, ändert sich nur mit einem OBS-Social-Update); der Hinweis auf eine neue Version im Dashboard öffnet ihn direkt, und der Browser merkt sich, ob du ihn offen gelassen hast. Er lässt sich auch per Tastatur öffnen und schließen (Enter oder Leertaste). Eine neue Frage in den ❓ FAQ erklärt den Abschnitt."
+    ]
+  },
   "0.190.0": {
     "titulo": "📱 WhatsApp-@-Erwähnung ohne die Nummer der erwähnten Person",
     "itens": [
