@@ -194,23 +194,38 @@ function dicionarioDoServidor(l) {
   DICIONARIOS_SERVIDOR.set(l, d);
   return d;
 }
-function traduzirComDicionario(d, texto, prof) {
+// (os rótulos soltos do dicionário só valem para o texto inteiro, como no navegador:
+// dentro de uma frase, o pedaço capturado é o que alguém escreveu)
+const ROTULOS_DO_SERVIDOR = new WeakMap();
+function ehRotuloDoDicionario(d, chave) {
+  let s = ROTULOS_DO_SERVIDOR.get(d);
+  if (!s) { s = new Set(Array.isArray(d.rotulos) ? d.rotulos : []); ROTULOS_DO_SERVIDOR.set(d, s); }
+  return s.has(chave);
+}
+// `guardados`: o que estava entre «» (a marca ⟦n⟧ no lugar). A frase que, com o «…»
+// de volta, é chave inteira do dicionário é do programa («Esse pedido não está na
+// lista «a devolver».», sozinha ou dentro de outra): vale a chave
+function traduzirComDicionario(d, texto, prof, guardados) {
   const chave = String(texto).replace(/\s+/g, ' ').trim();
   if (!chave || !/[A-Za-zÀ-ÿ]/.test(chave)) return null;
-  if (Object.hasOwn(d.textos, chave) && typeof d.textos[chave] === 'string') return d.textos[chave];
+  const inteira = guardados && guardados.length ? chave.replace(/⟦(\d+)⟧/g, (tudo, i) => guardados[Number(i)] ?? tudo) : chave;
+  for (const k of inteira === chave ? [chave] : [inteira, chave]) {
+    if (Object.hasOwn(d.textos, k) && typeof d.textos[k] === 'string' && !(prof && ehRotuloDoDicionario(d, k))) return d.textos[k];
+  }
   if (prof >= 3) return null;
   for (const par of d.padroes) {
     const m = Array.isArray(par) && par[0] ? chave.match(par[0]) : null;
     if (m) {
       // (os grupos passam pelo tradutor de novo, como no navegador)
-      const grupos = m.slice(1).map((g) => (g === undefined ? '' : (traduzirComDicionario(d, g, prof + 1) ?? g)));
+      const grupos = m.slice(1).map((g) => (g === undefined ? '' : (traduzirComDicionario(d, g, prof + 1, guardados) ?? g)));
       return String(par[1]).replace(/\$(\d)/g, (tudo, i) => grupos[Number(i) - 1] ?? '');
     }
   }
   return null;
 }
-// entre «» vai o que a pessoa digitou — menos estes, que são do próprio programa
-const LITERAIS_DO_PROGRAMA = new Set(['|', 'não tenho', 'começar do zero']);
+// entre «» vai o que a pessoa digitou — menos estes, que são do próprio programa e
+// aparecem no meio de um padrão («|» separa os apelidos, «começar do zero»)
+const LITERAIS_DO_PROGRAMA = new Set(['|', 'começar do zero']);
 function traduzirNoIdioma(texto, idioma) {
   const s = typeof texto === 'string' ? texto : String(texto ?? '');
   if (!idioma || idioma === 'pt' || !CONSOLE_IDIOMAS.includes(idioma) || !/[A-Za-zÀ-ÿ]/.test(s)) return s;
@@ -218,7 +233,7 @@ function traduzirNoIdioma(texto, idioma) {
   if (!d) return s;
   const guardados = [];
   const marcado = s.replace(/«([^«»]*)»/g, (tudo, v) => (LITERAIS_DO_PROGRAMA.has(v) ? tudo : `«⟦${guardados.push(v) - 1}⟧»`));
-  const t = traduzirComDicionario(d, marcado, 0);
+  const t = traduzirComDicionario(d, marcado, 0, guardados);
   if (t === null) return s;
   const bordas = /^(\s*)[\s\S]*?(\s*)$/.exec(s);
   return bordas[1] + t.replace(/⟦(\d+)⟧/g, (tudo, i) => guardados[Number(i)] ?? tudo) + bordas[2];
@@ -16225,7 +16240,8 @@ function controleResolver(caminho, p) {
     }
     return { erro: 'Use ligar, desligar ou reiniciar.', status: 404 };
   }
-  return { erro: 'Ação desconhecida: ' + caminho.slice(0, 80) + ' — veja a lista em /api/controle/catalogo', status: 404 };
+  // (o caminho é o que a pessoa escreveu no aparelho: entre «», o tradutor não mexe nele)
+  return { erro: 'Ação desconhecida: «' + caminho.slice(0, 80).replace(/[«»]/g, '') + '» — veja a lista em /api/controle/catalogo', status: 404 };
 }
 
 // O catálogo completo, com o que existe AGORA (teclas da Mesa, cenas do OBS,
@@ -16417,7 +16433,7 @@ function tratarControleHttp(req, res, urlPath) {
     try { respostas = controleExecutar(msg, ip); } catch (err) {
       // 🕹️ v0.179: nome de operação que o painel não conhece → 404 como as ações
       // prontas (sem contar como ação, sem recado no painel)
-      if (err && err.opDesconhecida) return json(404, { ok: false, erro: 'Operação desconhecida: ' + String(msg.type).slice(0, 60) + ' — use o nome exato da operação do painel (maiúsculas e minúsculas contam), ou uma ação pronta da lista em /api/controle/catalogo.' });
+      if (err && err.opDesconhecida) return json(404, { ok: false, erro: 'Operação desconhecida: «' + String(msg.type).slice(0, 60).replace(/[«»]/g, '') + '» — use o nome exato da operação do painel (maiúsculas e minúsculas contam), ou uma ação pronta da lista em /api/controle/catalogo.' });
       console.error('  ⚠️ Erro numa ação do controle externo:', err && err.message);
       return json(500, { ok: false, erro: 'Deu erro executando a ação: ' + (err && err.message) });
     }

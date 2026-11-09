@@ -1076,6 +1076,8 @@
   .ped-selo.erro { background: var(--red); color: #fff; }
   .ped-caixa { border: 1px dashed var(--border); border-radius: 10px; padding: 10px; margin: 8px 0; }
   .ped-status { font-size: 12px; color: var(--muted); min-height: 16px; margin: 4px 0; overflow-wrap: anywhere; line-height: 1.45; }
+  /* (a dica do 📥 traz o cabeçalho da planilha no idioma da tela, sem espaços: quebra onde der) */
+  #pedJogoCard .hint { overflow-wrap: anywhere; }
   .ped-status.ok { color: var(--green); }
   .ped-status.erro { color: var(--red); }
   .ped-detalhe { display: block; font-family: monospace; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
@@ -7168,12 +7170,13 @@ function fillControleLab() {
   tok.value = c.token || '';
   document.getElementById('controleBase').textContent = [c.urlRede, c.urlLocal].filter(Boolean).map((b) => b + '/api/controle/…').join('   ou   ');
   const st = document.getElementById('controleStatus');
-  const t = (x) => (typeof OBS_I18N !== 'undefined' && OBS_I18N ? OBS_I18N.t(x) : x);
-  if (!c.ligado) st.textContent = '⚪ ' + t('desligado (ligue o seletor acima)');
+  // (cada pedaço no seu nó, em português: o motor de idiomas traduz e acompanha a troca)
+  const pedaco = (x) => Object.assign(document.createElement('span'), { textContent: x });
+  st.textContent = '';
+  if (!c.ligado) st.append('⚪ ', pedaco('desligado (ligue o seletor acima)'));
   else {
-    let s = '🟢 ' + t('ligado') + ' — ' + (c.total || 0) + ' ' + t('ação(ões) recebida(s)');
-    if (c.ultimo) s += ' · ' + t('última:') + ' ' + t(c.ultimo.nome || c.ultimo.acao) + ' (' + c.ultimo.ip + ', ' + new Date(c.ultimo.em).toLocaleTimeString() + ')';
-    st.textContent = s;
+    st.append('🟢 ', pedaco('ligado'), ' — ' + (c.total || 0) + ' ', pedaco('ação(ões) recebida(s)'));
+    if (c.ultimo) st.append(' · ', pedaco('última:'), ' ', pedaco(c.ultimo.nome || c.ultimo.acao), ' (' + c.ultimo.ip + ', ' + new Date(c.ultimo.em).toLocaleTimeString() + ')');
   }
   const cat = document.getElementById('controleLinkCatalogo');
   if (cat && c.token) {
@@ -7231,6 +7234,10 @@ function controleNomeBonito(a) {
   }
   return a.nome;
 }
+// 🌐 v0.192: a lista vai para a página em português (as chaves), cada texto no seu
+// nó, e o motor de idiomas traduz: a troca de idioma na própria página (ou noutra
+// aba) e o dicionário que chega depois da lista (rede lenta) refazem tudo no idioma
+// novo. Texto traduzido na hora de pintar (OBS_I18N.t) congelava no idioma de antes.
 function renderControleLista() {
   const caixa = document.getElementById('controleLista');
   if (!caixa) return;
@@ -7238,9 +7245,14 @@ function renderControleLista() {
   const t = (x) => (typeof OBS_I18N !== 'undefined' && OBS_I18N ? OBS_I18N.t(x) : x);
   const filtro = (document.getElementById('controleFiltro').value || '').trim().toLowerCase();
   caixa.innerHTML = '';
-  const aviso = (texto) => { const d = document.createElement('div'); d.className = 'hint'; d.textContent = texto; caixa.appendChild(d); };
-  if (!c.ligado) { aviso(t('Ligue o seletor 🕹️ na aba Labs para ver os endereços.')); return; }
-  if (!controleCatalogo) { aviso(controleCarregando ? '⏳ ' + t('Carregando a lista de ações...') : '⚠️ ' + t('Não consegui carregar a lista — aperte 🔄.') + (controleErro ? ' (' + t(controleErro) + ')' : '')); return; }
+  // (cada pedaço vira um nó próprio: o emoji solto e a frase, que é a chave)
+  const aviso = (...partes) => { const d = document.createElement('div'); d.className = 'hint'; d.append(...partes); caixa.appendChild(d); };
+  if (!c.ligado) { aviso('Ligue o seletor 🕹️ na aba Labs para ver os endereços.'); return; }
+  if (!controleCatalogo) {
+    if (controleCarregando) aviso('⏳ ', 'Carregando a lista de ações...');
+    else aviso('⚠️ ', 'Não consegui carregar a lista — aperte 🔄.', ...(controleErro ? [' (', controleErro, ')'] : []));
+    return;
+  }
   const grupos = controleCatalogo.grupos || {};
   let total = 0;
   for (const [g, rotulo] of Object.entries(grupos)) {
@@ -7256,12 +7268,13 @@ function renderControleLista() {
     det.open = aberto;
     det.addEventListener('toggle', () => { try { localStorage.setItem(chave, det.open ? '1' : '0'); } catch {} });
     const sum = document.createElement('summary');
-    sum.textContent = t(rotulo) + ' (' + itens.length + ')';
+    // o nome do grupo (a chave) e a contagem em nós separados
+    sum.append(Object.assign(document.createElement('span'), { textContent: rotulo }), ' (' + itens.length + ')');
     det.appendChild(sum);
     for (const a of itens) det.appendChild(controleLinha(a));
     caixa.appendChild(det);
   }
-  if (!total) aviso(t('Nenhuma ação com esse nome.'));
+  if (!total) aviso('Nenhuma ação com esse nome.');
 }
 function controleLinha(a) {
   const t = (x) => (typeof OBS_I18N !== 'undefined' && OBS_I18N ? OBS_I18N.t(x) : x);
@@ -7270,13 +7283,15 @@ function controleLinha(a) {
   const cab = document.createElement('div');
   cab.className = 'controle-acao-cab';
   const nome = document.createElement('b');
-  nome.textContent = t(controleNomeBonito(a));
+  nome.textContent = controleNomeBonito(a);
+  // a tecla da Mesa leva o nome que a pessoa deu: fica como veio
+  if (a.grupo === 'mesa') nome.dataset.noI18n = '1';
   cab.appendChild(nome);
   if (a.desc) {
     const d = document.createElement('span');
     d.className = 'hint';
     d.style.margin = '0';
-    d.textContent = t(a.desc);
+    d.textContent = a.desc;
     cab.appendChild(d);
   }
   linha.appendChild(cab);
@@ -7299,11 +7314,11 @@ function controleLinha(a) {
       } else {
         inp = document.createElement('input');
         inp.type = 'text';
-        inp.placeholder = t(p.desc || p.nome);
+        inp.placeholder = p.desc || p.nome;
         inp.value = p.ex || '';
         if (inp.value) params[p.nome] = inp.value;
       }
-      inp.title = t(p.desc || '');
+      if (p.desc) inp.title = p.desc;
       inp.addEventListener('input', () => { params[p.nome] = inp.value; atualizar(); });
       l.appendChild(inp);
       pr.appendChild(l);
@@ -7319,7 +7334,7 @@ function controleLinha(a) {
   const copiar = document.createElement('button');
   copiar.className = 'icon-btn';
   copiar.textContent = '📋';
-  copiar.title = t('Copiar o endereço');
+  copiar.title = 'Copiar o endereço';
   copiar.onclick = async () => {
     try { await navigator.clipboard.writeText(url.value); } catch { url.select(); document.execCommand('copy'); }
     copiar.textContent = '✅';
@@ -7328,7 +7343,7 @@ function controleLinha(a) {
   const testar = document.createElement('button');
   testar.className = 'icon-btn';
   testar.textContent = '▶';
-  testar.title = t('Testar agora (dispara a ação de verdade)');
+  testar.title = 'Testar agora (dispara a ação de verdade)';
   const res = document.createElement('span');
   res.className = 'hint';
   res.style.margin = '0';
@@ -7924,7 +7939,7 @@ function pedNomeNoDialogo(nome) {
 // tradução: a pessoa perderia a informação (o teste das frases cobre cada frase
 // dos módulos e do servidor nos 9 idiomas). Os mesmos passos do tradutor do
 // servidor (traduzirNoIdioma, para o Stream Deck e a janela do programa).
-const PED_LITERAIS = new Set(['|', 'não tenho', 'começar do zero']); // entre «», mas do próprio programa
+const PED_LITERAIS = new Set(['|', 'começar do zero']); // entre «», mas do próprio programa (no meio de um padrão)
 function pedTraduzirDetalhe(s, idioma) {
   if (!s || !idioma || idioma === 'pt' || typeof OBS_I18N === 'undefined' || !OBS_I18N) return s;
   const guardados = [];

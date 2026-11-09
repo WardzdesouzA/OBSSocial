@@ -55,19 +55,32 @@
     return 'en';
   }
 
+  // 🙋 v0.192: os rótulos soltos do dicionário (`rotulos`: botão, aba, título,
+  // opção, selo) só se traduzem quando são o texto INTEIRO do nó ou do atributo.
+  // No meio de uma frase, o pedaço que um padrão captura é, quase sempre, o que
+  // alguém escreveu — a tecla «Vitória» da Mesa, o perfil «Pedidos» do OBS, quem
+  // se chama «Anônimo» no WhatsApp — e fica como veio.
+  const rotulosDe = new WeakMap();
+  function ehRotulo(d, chave) {
+    let s = rotulosDe.get(d);
+    if (!s) { s = new Set(Array.isArray(d.rotulos) ? d.rotulos : []); rotulosDe.set(d, s); }
+    return s.has(chave);
+  }
+
   // Traduz um texto (já normalizado ou não). Devolve null se não conhecer.
   function traduzir(texto, prof) {
     if (!dic) return null;
     const chave = norm(texto);
     if (!chave || !/[A-Za-zÀ-ÿ]/.test(chave)) return null;
     const direto = dic.textos[chave];
-    if (direto !== undefined) return direto;
+    if (direto !== undefined && !(prof && ehRotulo(dic, chave))) return direto;
     if ((prof || 0) >= 3) return null;
     for (const par of dic.padroes) {
       const m = chave.match(par[0]);
       if (m) {
         // Grupos capturados também passam pelo tradutor (frases aninhadas,
-        // como "1 aba aberta" dentro de "Este computador — 1 aba aberta").
+        // como "1 aba aberta" dentro de "Este computador — 1 aba aberta"),
+        // menos os rótulos soltos (veja ehRotulo).
         const grupos = m.slice(1).map((g) => (g === undefined ? '' : (traduzir(g, (prof || 0) + 1) ?? g)));
         return String(par[1]).replace(/\$(\d)/g, (tudo, i) => grupos[Number(i) - 1] ?? '');
       }

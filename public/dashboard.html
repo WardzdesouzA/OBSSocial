@@ -8381,6 +8381,9 @@ function nomeDoItemPedido(jogo, it) {
 function ehRotuloDoPrograma(nome) {
   return nome === 'Anônimo' || nome === 'Apoiador Pix' || (typeof nome === 'string' && /^📱 Convidado [0-9A-Z]{1,7}$/u.test(nome));
 }
+// o título que os conectores põem no resgate quando a recompensa não tem um (Twitch:
+// a recompensa ainda não lida e a «Destacar minha mensagem»; Kick: sem reward_title)
+const RESGATES_DO_PROGRAMA = new Set(['Resgate', 'Destacar mensagem']);
 
 // ── o que vale agora ──
 const pedidosLabsLigado = () => !!settings && settings.labs?.pedidos === true;
@@ -8890,7 +8893,10 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
   else topo.append(pedEl('span', 'author', p.author === undefined || p.author === null ? '' : p.author));
   if (p.resgate && typeof p.resgate === 'object' && p.resgate.titulo) {
     const r = pedEl('span', 'ped-resgate', '🎁 ' + String(p.resgate.titulo));
-    r.dataset.noI18n = '1';
+    // o título que o streamer deu à recompensa fica como veio; o que o conector põe
+    // quando não há título («Resgate», «Destacar mensagem») é texto do programa e
+    // traduz, como no chat do painel
+    if (!RESGATES_DO_PROGRAMA.has(String(p.resgate.titulo))) r.dataset.noI18n = '1';
     topo.append(r);
   }
   if (p.valor && typeof p.valor === 'object' && p.valor.texto) {

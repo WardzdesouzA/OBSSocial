@@ -2723,6 +2723,9 @@ function montarBotaoTrilha(t, opts = {}) {
   if (t.textoPos !== 'oculto' && (t.nome || t.origem)) {
     const nm = document.createElement('span');
     nm.className = 'trilha-rotulo pos-' + (t.textoPos || 'baixo');
+    // 🙋 v0.192: o nome que a pessoa deu à tecla (ou o do arquivo) fica como veio,
+    // em qualquer idioma — «Vitória» e «Fim da live» também são textos do programa
+    nm.dataset.noI18n = '1';
     nm.textContent = t.nome || t.origem;
     b.appendChild(nm);
   }
@@ -2751,6 +2754,8 @@ const medidorPct = (db) => Math.max(0, Math.min(100, (Number(db) - MEDIDOR_CHAO_
 function montarMedidorObs(fonte) {
   const el = document.createElement('div');
   el.className = 'trilha-tecla trilha-medidor' + (fonte.mudo ? ' mudo' : '');
+  // (o nome da fonte é o que a pessoa escreveu no OBS; o resto são números e 🔇)
+  el.dataset.noI18n = '1';
   el.dataset.fonte = fonte.nome;
   el.title = fonte.nome + (fonte.mudo ? ' · 🔇' : '') + (Number.isFinite(Number(fonte.db)) ? ' · ' + fonte.db + ' dB' : '');
   const nome = document.createElement('span');

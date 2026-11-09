@@ -333,7 +333,9 @@ function lerItemEntrada(bruto, tiposIds) {
   if (temCampo(bruto, 'lado')) d.lado = lerLado(bruto.lado);
   if (temCampo(bruto, 'raridade')) d.raridade = lerRaridade(bruto.raridade);
   if (temCampo(bruto, 'chave')) d.chave = lerChave(bruto.chave);
-  if (temCampo(bruto, 'naoTenho')) d.naoTenho = lerSimNao(bruto.naoTenho, '«não tenho»');
+  // (o rótulo do programa entre aspas curvas: «» marca o que a pessoa digitou, e o
+  // tradutor guardaria o «não tenho» de uma planilha como veio)
+  if (temCampo(bruto, 'naoTenho')) d.naoTenho = lerSimNao(bruto.naoTenho, '“não tenho”');
   if (temCampo(bruto, 'travado')) d.travado = lerSimNao(bruto.travado, 'travado');
   if (temCampo(bruto, 'desc')) d.desc = lerDesc(bruto.desc);
   if (temCampo(bruto, 'fonte') && fonteValida(bruto.fonte)) d.fonte = bruto.fonte;
@@ -755,10 +757,25 @@ function escreverCsv(linhas, opcoes) {
 
 function csvDoCatalogo(cat, idioma) {
   const linhas = [cabecalhoCsv(idioma)];
+  // 🌐 noutro idioma, o tipo e a raridade saem pelo nome nele, como o cabeçalho (o 📥
+  // aceita de volta o nome em qualquer idioma); o tipo cujo nome não volta para ele
+  // mesmo (dois tipos com o mesmo nome) sai pelo código. Em português (e sem idioma),
+  // os códigos da especificação
+  const traduzir = IDIOMAS.includes(idioma) && idioma !== 'pt';
+  const resolver = traduzir ? resolvedorDeTipo(cat.tipos) : null;
+  const nomeDoTipo = new Map();
+  if (traduzir) {
+    for (const t of cat.tipos) {
+      const nome = (t.nomes && (t.nomes[idioma] || t.nomes.en)) || '';
+      nomeDoTipo.set(t.id, nome && resolver(nome) === t.id ? nome : t.id);
+    }
+  }
+  const tipoNaPlanilha = (id) => (traduzir && nomeDoTipo.has(id) ? nomeDoTipo.get(id) : id);
+  const raridadeNaPlanilha = (r) => (!r ? '' : traduzir && Object.hasOwn(NOMES_RARIDADE, r) ? NOMES_RARIDADE[r][idioma] : r);
   for (const it of cat.itens) {
     // uma coluna só de apelidos: os automáticos e os seus (a volta separa de novo)
     const apelidos = unirListas(it.apelidos, it.seus, { max: Infinity });
-    linhas.push([it.tipo, it.id, ...IDIOMAS_CSV.map((k) => it.nomes[k] || ''), apelidos.join('|'), it.dono || '', it.raridade || ''].map(protegerCelula));
+    linhas.push([tipoNaPlanilha(it.tipo), it.id, ...IDIOMAS_CSV.map((k) => it.nomes[k] || ''), apelidos.join('|'), it.dono || '', raridadeNaPlanilha(it.raridade)].map(protegerCelula));
   }
   return escreverCsv(linhas);
 }

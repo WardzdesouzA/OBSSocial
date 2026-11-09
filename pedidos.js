@@ -60,6 +60,8 @@ const ORIGENS_EXTERNAS = new Set(['controle', 'externo']);
 const OPERACOES_DE_PARTIDA = new Set(['partida', 'vitoria', 'derrota', 'jogada']);
 // nome que não identifica ninguém: o conector põe «Anônimo» para quem não digitou nome
 const NOMES_ANONIMOS = new Set(['anonimo', 'anonima', 'anonymous', 'anonyme', 'anonym']);
+// o que os conectores põem no lugar do nome que não veio (connectors/youtube.js, kick.js, bilibili.js)
+const ANONIMO_DOS_CONECTORES = 'anônimo';
 
 // 🗣️ «Parece pedido»: palavras e expressões já na forma do leitor (sem acento,
 // gírias trocadas: «pfv» chega como «por favor», «builda» como «build»).
@@ -1103,7 +1105,10 @@ function criarPedidos(opcoes) {
     if (hora > t) hora = t; // relógio da plataforma adiantado
     // quem: telefone vira o apelido; número no meio do nome também sai
     const nomeBruto = limparLinha(message.author, 200);
-    let nome = cortar(nomeBruto, TETOS.nome).trim() || 'Anônimo';
+    let nome = cortar(nomeBruto, TETOS.nome).trim();
+    // sem nome, os conectores (YouTube, Kick, Bilibili) mandam «anônimo»: é rótulo
+    // do programa, não o nome de alguém — vira o «Anônimo» que as telas traduzem
+    if (!nome || nome === ANONIMO_DOS_CONECTORES) nome = 'Anônimo';
     let telefone = false;
     if (pareceTelefone(nome) || pareceTelefone(nomeBruto)) {
       // o mesmo texto que o servidor usa: o apelido bate com o do chat
