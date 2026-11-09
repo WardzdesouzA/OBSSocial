@@ -9128,9 +9128,17 @@ async function novoPedidoAMao() {
       campo('quem', 'Quem pediu', Object.assign(document.createElement('input'), { type: 'text', maxLength: 60, autocomplete: 'off' }));
       campo('texto', 'Pedido', Object.assign(document.createElement('input'), { type: 'text', maxLength: 600, autocomplete: 'off' }));
       campo('partidas', 'Partidas', Object.assign(document.createElement('input'), { type: 'number', min: '1', max: '99', step: '1', value: '1' }));
-      // o cursor começa em «Quem pediu» (depois do foco do próprio diálogo, no OK),
-      // a não ser que a pessoa já tenha clicado num campo
-      setTimeout(() => { try { if (!box.contains(document.activeElement)) campos.quem.focus(); } catch {} }, 60);
+      // o cursor começa em «Quem pediu» (depois do foco do próprio diálogo, no OK), a não
+      // ser que a pessoa já esteja na janela: num PC carregado esta espera roda atrasada, e
+      // quem tinha ido com o Tab até o «Cancelar» voltava ao nome (o Enter mandava o pedido).
+      // O OK não conta: é onde o próprio diálogo põe o foco
+      setTimeout(() => {
+        try {
+          const a = document.activeElement;
+          const naJanela = (box.closest('.obs-dialog') || box).contains(a);
+          if (!naJanela || a.classList.contains('obs-dlg-ok')) campos.quem.focus();
+        } catch {}
+      }, 60);
     },
   });
   if (!ok) return;

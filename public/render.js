@@ -1101,7 +1101,12 @@ function obsDialog(opcoes) {
     fundo.addEventListener('mousedown', (e) => { if (e.target === fundo) fechar(false); });
 
     document.body.appendChild(fundo);
-    setTimeout(() => (campo || btnOk).focus(), 30);
+    // ⌨️ O foco inicial (no campo da palavra ou no botão de confirmar) só entra se a
+    // pessoa ainda não estiver na janela. Num PC carregado (OBS transmitindo, jogo
+    // aberto) esta espera roda atrasada, depois do clique e da digitação dela: o foco
+    // pulava para o botão no meio da digitação e o espaço seguinte o apertava (o pedido
+    // à mão ia com o nome cortado). Sem ninguém tocar em nada, tudo fica igual.
+    setTimeout(() => { if (!caixa.contains(document.activeElement)) (campo || btnOk).focus(); }, 30);
   });
 }
 

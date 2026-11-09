@@ -7430,8 +7430,9 @@ document.getElementById('l-pedidos').addEventListener('input', (e) => {
 let pedidosEstado = null;   // a fila na projeção desta tela (aqui só o jogo em uso e o arquivo travado)
 let pedCatalogos = [];      // o resumo dos catálogos (nunca os itens)
 let pedDbd = null;          // a leitura do site oficial (só o computador local recebe)
-// O jogo aberto no 📚 Catálogo e a página que a tabela mostra: resposta que não
-// bate com isto é de outra procura e não mexe na tabela
+// O jogo aberto no 📚 Catálogo e o que a pessoa pediu por último (a busca, o filtro e
+// a página valem desde o clique): resposta que não bate com isto é de um pedido antigo
+// e não mexe na tabela
 const pedSel = { jogo: '', busca: '', tipo: '', pagina: 1, paginas: 1, total: 0, itens: [], tipos: [], carregado: false, atualizadoEm: null };
 const pedConhecidos = new Map(); // id → nomes dos itens já vistos (o dono que mora em outra página)
 let pedNovoJogo = '';       // o jogo recém-criado, que ainda não chegou na lista
@@ -8344,7 +8345,14 @@ document.getElementById('pedJogoNome').addEventListener('input', (e) => {
 document.getElementById('pedJogoModelo').addEventListener('change', (e) => { e.target.dataset.escolhido = '1'; });
 
 // ── 📚 A tabela do catálogo (50 por página, do servidor) ──
+// A tabela mostra sempre o que a pessoa pediu por último. A releitura adiada (depois de
+// uma mudança no catálogo) pede o que está em pedSel na hora em que roda, e num PC
+// carregado ela roda entre o clique e a resposta: por isso a página vale desde o clique
+// (como a busca, o filtro e o jogo), e a resposta de um pedido antigo — a releitura que
+// saiu antes do ▶, a página de antes da busca, do filtro ou do jogo reaberto — é
+// descartada (o servidor responde na ordem, só a quem pediu)
 function pedCatLer(pagina) {
+  if (pagina) pedSel.pagina = pagina; // (a página pedida — ◀ ▶, busca, filtro — vale desde já)
   if (!pedSel.jogo || !pedLigado() || !pedPapelLocal() || !hub.aberto()) return;
   hub.send({ type: 'pedidosCatalogoLer', jogo: pedSel.jogo, busca: pedSel.busca, tipo: pedSel.tipo, pagina: pagina || pedSel.pagina || 1 });
 }
@@ -8358,8 +8366,12 @@ function pedReceberPagina(ev) {
   // a procura do campo «Dono» (o diálogo aberto) vem pela mesma resposta
   if (pedDonoBusca && pedDonoBusca.dl.isConnected && ev.jogo === pedDonoBusca.jogo && (ev.busca || '') === pedDonoBusca.busca && !ev.tipo) { pedDonoBusca.aoChegar(ev); return; }
   if (ev.jogo !== pedSel.jogo || (ev.busca || '') !== pedSel.busca || (ev.tipo || '') !== pedSel.tipo) return;
-  pedSel.pagina = Math.max(1, Number(ev.pagina) || 1);
-  pedSel.paginas = Math.max(1, Number(ev.paginas) || 1);
+  // (e a página: a pedida, ou a última que existe quando a pedida sumiu)
+  const paginas = Math.max(1, Number(ev.paginas) || 1);
+  const pagina = Math.max(1, Number(ev.pagina) || 1);
+  if (pagina !== Math.min(pedSel.pagina, paginas)) return;
+  pedSel.pagina = pagina;
+  pedSel.paginas = paginas;
   pedSel.total = Math.max(0, Number(ev.total) || 0);
   pedSel.itens = ev.itens;
   pedSel.tipos = Array.isArray(ev.tipos) ? ev.tipos.filter((t) => t && typeof t.id === 'string') : [];
