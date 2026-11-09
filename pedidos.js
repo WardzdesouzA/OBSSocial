@@ -250,6 +250,19 @@ function limparLinha(v, max) {
   if (typeof s !== 'string') return '';
   return cortar(cortar(s, max * 4).replace(RE_CONTROLE, ' ').replace(RE_INVISIVEL, '').replace(/\s+/g, ' ').trim(), max).trim();
 }
+// 🔤 Os nomes do item em cada idioma, guardados no pedido: se o item sair do catálogo
+// (apagado, jogo recriado, catálogo que não abre), cada tela ainda mostra o nome no
+// idioma dela (senão em inglês) — e não o nome que o leitor usou. Só os 10 códigos.
+function nomesGuardados(v) {
+  if (!ehObjeto(v)) return null;
+  const out = {};
+  for (const k of IDIOMAS) {
+    if (!Object.hasOwn(v, k)) continue;
+    const n = limparLinha(v[k], 120);
+    if (n) out[k] = n;
+  }
+  return Object.keys(out).length ? out : null;
+}
 
 // 📱 telefone escrito nunca entra no pedido: 8+ dígitos com espaço, ponto, traço
 // ou parênteses no meio. Dígito de qualquer escrita (os largos do teclado
@@ -788,6 +801,8 @@ function criarPedidos(opcoes) {
       certeza: umDe(b.certeza, ['alta', 'media'], 'alta'), como: limparLinha(b.como, 20),
     };
     if (b.naoTenho === true) it.naoTenho = true;
+    const nomes = nomesGuardados(b.nomes);
+    if (nomes) it.nomes = nomes;
     return it;
   }
   function opcaoDoArquivo(b) {
@@ -951,7 +966,8 @@ function criarPedidos(opcoes) {
     const cat = catalogoDe(E.jogo);
     if (!cat) return null;
     if (leitorCache.cat !== cat) {
-      try { leitorCache = { cat, leitor: criarLeitor(cat, { idioma: 'pt' }) }; } catch (err) {
+      // (o nome que o leitor guarda é o de reserva: em inglês, o que toda tela aceita)
+      try { leitorCache = { cat, leitor: criarLeitor(cat, { idioma: 'en' }) }; } catch (err) {
         console.error('  ⚠️ 🙋 Pedidos: não consegui montar o leitor do catálogo:', (err && err.message) || err);
         return null;
       }
@@ -1202,6 +1218,9 @@ function criarPedidos(opcoes) {
     for (const it of leitura.itens.slice(0, TETOS.itens)) {
       const base = { id: it.id, tipo: it.tipo, nome: limparLinha(it.nome, 120) || it.id, trecho: limparLinha(it.trecho, 120), certeza: it.certeza === 'media' ? 'media' : 'alta', como: limparLinha(it.como, 20) };
       if (it.naoTenho) base.naoTenho = true;
+      const doCatalogo = acharItem(E.jogo, it.id);
+      const nomes = doCatalogo ? nomesGuardados(doCatalogo.nomes) : null;
+      if (nomes) base.nomes = nomes;
       if (base.certeza === 'media' && conf.entrarDireto === 'alta') {
         duvidas.push({ trecho: base.trecho, motivo: it.como === 'som' ? 'som parecido' : 'erro de digitação', opcoes: [{ id: it.id, tipo: it.tipo, nome: base.nome, certeza: 0.5 }] });
       } else itens.push(base);
@@ -1590,8 +1609,10 @@ function criarPedidos(opcoes) {
       if (vistos.has(id)) continue;
       vistos.add(id);
       const dado = ehObjeto(x) ? taparTelefones(limparLinha(x.trecho, 60)) : '';
-      const it = { id, tipo: item.tipo, nome: nomeParaMostrar(item, 'pt'), trecho: dado || trechoVisto(p, id) || '', certeza: 'alta', como: 'confirmado' };
+      const it = { id, tipo: item.tipo, nome: nomeParaMostrar(item, 'en'), trecho: dado || trechoVisto(p, id) || '', certeza: 'alta', como: 'confirmado' };
       if (item.naoTenho) it.naoTenho = true;
+      const nomes = nomesGuardados(item.nomes);
+      if (nomes) it.nomes = nomes;
       out.push({ it, ensinar: dado || trechoParaEnsinar(p, id) });
     }
     return { itens: out };
@@ -1896,13 +1917,22 @@ function criarPedidos(opcoes) {
   }
 
   // ── 🪟 projeções: o que cada papel e a tela recebem ──
+  // 🔤 O idioma dos nomes nunca passa por cima do idioma da tela (cada pessoa vê o
+  // dela): «ambos» é o inglês junto do idioma da tela (em português, inglês +
+  // português, como sempre); um idioma escolhido vale na tela desse idioma, e o
+  // inglês (o nome de reserva de todos) em qualquer tela. Sem idioma de tela (o
+  // núcleo chamado sem `idioma`), vale a escolha como está.
   function nomeDoItem(item, conf, idioma) {
+    const n = item && ehObjeto(item.nomes) ? item.nomes : {};
     if (conf.idioma === 'ambos') {
-      const en = item.nomes && item.nomes.en, pt = item.nomes && item.nomes.pt;
-      if (en && pt && en !== pt) return `${en} / ${pt}`;
-      return en || pt || nomeParaMostrar(item, 'en');
+      const tela = idioma || 'pt';
+      const en = n.en || '';
+      const outro = tela !== 'en' ? n[tela] || '' : '';
+      if (en && outro && en !== outro) return `${en} / ${outro}`;
+      return en || outro || nomeParaMostrar(item, tela);
     }
-    return nomeParaMostrar(item, conf.idioma === 'auto' ? idioma : conf.idioma);
+    if (conf.idioma === 'auto') return nomeParaMostrar(item, idioma);
+    return nomeParaMostrar(item, !idioma || conf.idioma === 'en' || conf.idioma === idioma ? conf.idioma : idioma);
   }
   function urlImagem(jogo, item) {
     if (!item || !ehObjeto(item.imagem) || item.imagem.ocultar === true || typeof item.imagem.arquivo !== 'string' || !/^[a-z0-9-]+\.(?:png|jpg|webp|gif)$/.test(item.imagem.arquivo)) return null;
@@ -1916,7 +1946,11 @@ function criarPedidos(opcoes) {
   function itemVisto(it, jogo, ctx, comImagem, completo, semTrecho) {
     const c = acharItem(jogo, it.id);
     const tipo = c ? c.tipo : it.tipo;
-    const out = { id: it.id, tipo, nome: c ? nomeDoItem(c, ctx.conf, ctx.idioma) : (it.nome || it.id) };
+    // fora do catálogo: os nomes guardados no pedido (e vão junto, para cada tela
+    // escolher o do idioma dela); sem eles, o nome de reserva (inglês)
+    const guardados = !c && ehObjeto(it.nomes) ? it.nomes : null;
+    const out = { id: it.id, tipo, nome: c ? nomeDoItem(c, ctx.conf, ctx.idioma) : guardados ? nomeDoItem({ id: it.id, nomes: guardados }, ctx.conf, ctx.idioma) : (it.nome || it.id) };
+    if (guardados) out.nomes = { ...guardados };
     if (completo) {
       if (it.trecho !== undefined) out.trecho = semTrecho ? '' : it.trecho;
       if (it.certeza !== undefined) out.certeza = it.certeza;

@@ -37,6 +37,8 @@ const ORIGENS_IMAGEM = Object.freeze(['site-oficial', 'importada', 'sua', 'wiki'
 const ORIGENS_AUTOMATICAS = new Set(['site-oficial', 'wiki', 'ia']);
 const MODELOS = Object.freeze(['dbd', 'generico']);
 const PAPEIS = Object.freeze(['personagem', 'poder', 'perk', 'addon', 'item', 'oferenda', 'mapa', 'outro']);
+// o papel também pelo código em inglês (o JSON escrito por quem usa outro idioma)
+const PAPEIS_EM_INGLES = new Map([['character', 'personagem'], ['power', 'poder'], ['offering', 'oferenda'], ['map', 'mapa'], ['other', 'outro']]);
 const TETOS = Object.freeze({
   jogos: 200, itens: 20000, tipos: 50, apelidos: 50,
   imagemBytes: 5 * 1024 * 1024, importadoBytes: 8 * 1024 * 1024,
@@ -52,15 +54,23 @@ const CONFERIR_MS = 1000;
 const nomes10 = (pt, en, es, fr, de, ru, tr, ja, ko, zh) => Object.freeze({ pt, en, es, fr, de, ru, tr, ja, ko, zh });
 const defTipo = (id, icone, papel, nomes) => Object.freeze({ id, nomes, icone, papel });
 const NOMES_ITEM = nomes10('Item', 'Item', 'Objeto', 'Objet', 'Gegenstand', 'Предмет', 'Eşya', 'アイテム', '아이템', '道具');
+// (os termos do jogo como cada comunidade fala — killer, perk, add-on —, os mesmos
+// que os textos da tela usam: o tipo e a dica ao lado não podem ter dois nomes)
 const TIPOS_DBD = Object.freeze([
-  defTipo('killer', '🔪', 'personagem', nomes10('Killer', 'Killer', 'Asesino', 'Tueur', 'Killer', 'Убийца', 'Katil', 'キラー', '살인마', '杀手')),
+  defTipo('killer', '🔪', 'personagem', nomes10('Killer', 'Killer', 'Killer', 'Tueur', 'Killer', 'Убийца', 'Katil', 'キラー', '살인마', '杀手')),
   defTipo('sobrevivente', '🏃', 'personagem', nomes10('Sobrevivente', 'Survivor', 'Superviviente', 'Survivant', 'Überlebender', 'Выживший', 'Hayatta Kalan', 'サバイバー', '생존자', '逃生者')),
   defTipo('poder', '⚡', 'poder', nomes10('Poder', 'Power', 'Poder', 'Pouvoir', 'Kraft', 'Способность', 'Güç', 'パワー', '능력', '能力')),
-  defTipo('perk', '🎴', 'perk', nomes10('Perk', 'Perk', 'Habilidad', 'Compétence', 'Fähigkeit', 'Навык', 'Yetenek', 'パーク', '퍽', '技能')),
-  defTipo('addon', '🧩', 'addon', nomes10('Add-on', 'Add-on', 'Accesorio', 'Accessoire', 'Add-on', 'Улучшение', 'Eklenti', 'アドオン', '애드온', '配件')),
+  defTipo('perk', '🎴', 'perk', nomes10('Perk', 'Perk', 'Perk', 'Perk', 'Perk', 'Перк', 'Perk', 'パーク', '퍽', '技能')),
+  defTipo('addon', '🧩', 'addon', nomes10('Add-on', 'Add-on', 'Add-on', 'Add-on', 'Add-on', 'Аддон', 'Eklenti', 'アドオン', '애드온', '配件')),
   defTipo('item', '🔦', 'item', NOMES_ITEM),
   defTipo('oferenda', '🕯️', 'oferenda', nomes10('Oferenda', 'Offering', 'Ofrenda', 'Offrande', 'Opfergabe', 'Подношение', 'Adak', 'オファリング', '공물', '祭品')),
   defTipo('mapa', '🗺️', 'mapa', nomes10('Mapa', 'Map', 'Mapa', 'Carte', 'Karte', 'Карта', 'Harita', 'マップ', '맵', '地图')),
+]);
+// os nomes oficiais que o jogo usa no menu de cada idioma também valem na planilha
+// (quem escreveu «Habilidad» ou «Asesino» na coluna tipo)
+const OUTROS_NOMES_DBD = new Map([
+  ['killer', ['Asesino']], ['perk', ['Habilidad', 'Compétence', 'Fähigkeit', 'Навык', 'Yetenek']],
+  ['addon', ['Accesorio', 'Accessoire', 'Улучшение']],
 ]);
 const TIPOS_GENERICO = Object.freeze([
   defTipo('personagem', '🙂', 'personagem', nomes10('Personagem', 'Character', 'Personaje', 'Personnage', 'Charakter', 'Персонаж', 'Karakter', 'キャラクター', '캐릭터', '角色')),
@@ -242,7 +252,17 @@ function lerIdItem(v, rotulo = 'id') {
   return v;
 }
 
-// aceita o nome da lista e os jeitos comuns de escrever (planilha feita à mão)
+// aceita o nome da lista e os jeitos comuns de escrever (planilha feita à mão), e o
+// nome da raridade em cada idioma do programa — o mesmo que a tela mostra no editor,
+// e o que a recusa oferece a quem usa outro idioma
+const NOMES_RARIDADE = Object.freeze({
+  comum: nomes10('Comum', 'Common', 'Común', 'Commun', 'Gewöhnlich', 'Обычный', 'Yaygın', 'コモン', '일반', '普通'),
+  incomum: nomes10('Incomum', 'Uncommon', 'Poco común', 'Peu commun', 'Ungewöhnlich', 'Необычный', 'Sıra dışı', 'アンコモン', '고급', '罕见'),
+  raro: nomes10('Raro', 'Rare', 'Raro', 'Rare', 'Selten', 'Редкий', 'Nadir', 'レア', '희귀', '稀有'),
+  muitoRaro: nomes10('Muito raro', 'Very Rare', 'Muy raro', 'Très rare', 'Sehr selten', 'Очень редкий', 'Çok nadir', 'ベリーレア', '매우 희귀', '非常稀有'),
+  visceral: nomes10('Visceral', 'Visceral', 'Visceral', 'Viscéral', 'Viszeral', 'Висцеральный', 'Viseral', 'ヴィセラル', '비세럴', '极稀有'),
+  evento: nomes10('Evento', 'Event', 'Evento', 'Événement', 'Event', 'Ивент', 'Etkinlik', 'イベント', '이벤트', '活动'),
+});
 const SINONIMOS_RARIDADE = new Map([
   ['comum', 'comum'], ['common', 'comum'],
   ['incomum', 'incomum'], ['uncommon', 'incomum'],
@@ -251,6 +271,9 @@ const SINONIMOS_RARIDADE = new Map([
   ['visceral', 'visceral'], ['ultrarare', 'visceral'], ['iridescente', 'visceral'], ['iridescent', 'visceral'],
   ['evento', 'evento'], ['event', 'evento'],
 ]);
+for (const [r, nomes] of Object.entries(NOMES_RARIDADE)) {
+  for (const nome of Object.values(nomes)) { const c = chaveDeArquivo(nome); if (c && !SINONIMOS_RARIDADE.has(c)) SINONIMOS_RARIDADE.set(c, r); }
+}
 function lerRaridade(v) {
   if (v === null || v === undefined || v === '') return null;
   if (typeof v !== 'string') throw new ErroEntrada('raridade: precisa ser texto');
@@ -278,7 +301,7 @@ const LADOS = Object.freeze(['killer', 'sobrevivente']);
 const SINONIMOS_LADO = new Map();
 for (const t of TIPOS_DBD) {
   if (!LADOS.includes(t.id)) continue;
-  for (const nome of [t.id, ...Object.values(t.nomes)]) SINONIMOS_LADO.set(chaveDeArquivo(nome), t.id);
+  for (const nome of [t.id, ...Object.values(t.nomes), ...(OUTROS_NOMES_DBD.get(t.id) || [])]) SINONIMOS_LADO.set(chaveDeArquivo(nome), t.id);
 }
 function lerLado(v) {
   if (v === null || v === undefined || v === '') return null;
@@ -336,8 +359,8 @@ function lerTipoEntrada(bruto) {
   const icone = temCampo(bruto, 'icone') ? lerIcone(bruto.icone) : null;
   let papel = null;
   if (temCampo(bruto, 'papel') && bruto.papel !== null && bruto.papel !== '') {
-    if (!PAPEIS.includes(bruto.papel)) throw new ErroEntrada(`papel desconhecido (vale ${PAPEIS.join(', ')})`, 'tipo-invalido');
-    papel = bruto.papel;
+    papel = PAPEIS.includes(bruto.papel) ? bruto.papel : PAPEIS_EM_INGLES.get(bruto.papel) || null;
+    if (!papel) throw new ErroEntrada(`papel desconhecido (vale ${PAPEIS.join(', ')})`, 'tipo-invalido');
   }
   return { id, nomes, icone, papel };
 }
@@ -525,9 +548,10 @@ function acharAlvo(d, itens, porChave, tiposIds) {
   let velho = null;
   // O id é «<tipo>:<nome>» e o arquivo descarta item cujo tipo não é o começo do id:
   // aceitar aqui faria o item «entrar» e sumir ao reabrir o programa.
+  // (a frase não cita o id interno do tipo — «sobrevivente», «personagem» —, que não é
+  // o que a pessoa escreveu nem está no idioma dela: o tipo está na própria linha)
   if (d.id && d.tipo && d.id.slice(0, d.id.indexOf(':')) !== d.tipo) {
-    const outro = itens.get(d.id);
-    throw new ErroEntrada(outro ? `${d.id} é do tipo «${outro.tipo}», não «${d.tipo}»` : `o id ${d.id} não começa pelo tipo «${d.tipo}»`, 'tipo-diferente');
+    throw new ErroEntrada(itens.has(d.id) ? `o item «${d.id}» já existe com outro tipo` : `o id «${d.id}» não começa pelo tipo desta linha`, 'tipo-diferente');
   }
   if (d.id) {
     id = d.id;
@@ -551,7 +575,7 @@ function acharAlvo(d, itens, porChave, tiposIds) {
   // item novo: o tipo é o começo do id (o mesmo que o arquivo confere ao abrir)
   const tipo = velho ? velho.tipo : id.slice(0, id.indexOf(':'));
   if (d.tipo && d.tipo !== tipo) {
-    throw new ErroEntrada(velho ? `${id} é do tipo «${velho.tipo}», não «${d.tipo}»` : `o id ${id} não começa pelo tipo «${d.tipo}»`, 'tipo-diferente');
+    throw new ErroEntrada(velho ? `o item «${id}» já existe com outro tipo` : `o id «${id}» não começa pelo tipo desta linha`, 'tipo-diferente');
   }
   if (!velho && !tiposIds.has(tipo)) throw new ErroEntrada(`tipo desconhecido «${tipo}» neste jogo`, 'tipo-inexistente');
   return { id, velho, tipo };
@@ -632,6 +656,19 @@ function cortarErros(erros) {
 // ── 📄 CSV (RFC 4180) ──────────────────────────────────────────────────────
 const COLUNAS_CSV = Object.freeze(['tipo', 'id', 'en', 'pt', 'es', 'fr', 'de', 'ru', 'tr', 'ja', 'ko', 'zh', 'apelidos', 'dono', 'raridade']);
 const IDIOMAS_CSV = COLUNAS_CSV.slice(2, 12);
+// 🌐 As colunas com nome de palavra em cada idioma: a entrada aceita o de qualquer um
+// (a planilha que outra pessoa exportou no idioma dela volta igual) e a saída escreve
+// as do idioma de quem exporta — em português, o cabeçalho da especificação
+const COLUNAS_IDIOMA = Object.freeze({
+  tipo: nomes10('tipo', 'type', 'tipo', 'type', 'typ', 'тип', 'tür', '種類', '유형', '类型'),
+  apelidos: nomes10('apelidos', 'aliases', 'apodos', 'surnoms', 'spitznamen', 'прозвища', 'takma adlar', '呼び名', '별칭', '别名'),
+  dono: nomes10('dono', 'owner', 'dueño', 'propriétaire', 'besitzer', 'владелец', 'sahip', '持ち主', '주인', '所属'),
+  raridade: nomes10('raridade', 'rarity', 'rareza', 'rareté', 'seltenheit', 'редкость', 'nadirlik', 'レアリティ', '등급', '稀有度'),
+});
+const COLUNA_POR_NOME = new Map();
+for (const c of COLUNAS_CSV) COLUNA_POR_NOME.set(c, c);
+for (const [c, nomes] of Object.entries(COLUNAS_IDIOMA)) for (const n of Object.values(nomes)) if (!COLUNA_POR_NOME.has(n)) COLUNA_POR_NOME.set(n, c);
+const cabecalhoCsv = (idioma) => COLUNAS_CSV.map((c) => (Object.hasOwn(COLUNAS_IDIOMA, c) && IDIOMAS.includes(idioma) ? COLUNAS_IDIOMA[c][idioma] : c));
 // Fórmula escondida numa célula (=, +, -, @, tab, CR) roda quando a planilha abre:
 // na saída ganha um «'» na frente, que a entrada tira de volta.
 const RE_FORMULA = /^'*[=+\-@\t\r]/;
@@ -716,8 +753,8 @@ function escreverCsv(linhas, opcoes) {
   return `\ufeff${linhas.map((l) => l.map(cel).join(sep)).join('\r\n')}\r\n`;
 }
 
-function csvDoCatalogo(cat) {
-  const linhas = [COLUNAS_CSV.slice()];
+function csvDoCatalogo(cat, idioma) {
+  const linhas = [cabecalhoCsv(idioma)];
   for (const it of cat.itens) {
     // uma coluna só de apelidos: os automáticos e os seus (a volta separa de novo)
     const apelidos = unirListas(it.apelidos, it.seus, { max: Infinity });
@@ -727,11 +764,13 @@ function csvDoCatalogo(cat) {
 }
 
 // tipo da planilha pelo id ou pelo nome em qualquer idioma («Add-on», «Survivor»…)
+// (no Dead by Daylight, também pelos nomes oficiais que o jogo usa no menu)
 function resolvedorDeTipo(tipos) {
   const mapa = new Map();
   for (const t of tipos) mapa.set(t.id, t.id);
   for (const t of tipos) {
-    for (const nome of [t.id, ...IDIOMAS.map((k) => t.nomes[k]).filter(Boolean)]) {
+    const doDbd = TIPOS_DBD.some((d) => d.id === t.id) ? OUTROS_NOMES_DBD.get(t.id) || [] : [];
+    for (const nome of [t.id, ...IDIOMAS.map((k) => t.nomes[k]).filter(Boolean), ...doDbd]) {
       const c = chaveDeArquivo(nome);
       if (c && !mapa.has(c)) mapa.set(c, t.id);
     }
@@ -746,11 +785,13 @@ function entradasDoCsv(texto, tipos) {
   if (!registros.length) return { erro: falha('csv-vazio', 'a planilha está vazia') };
   const col = new Map();
   registros[0].celulas.forEach((c, i) => {
-    const nome = limparCelula(c).replace(/^\ufeff/, '').toLowerCase();
-    if (COLUNAS_CSV.includes(nome) && !col.has(nome)) col.set(nome, i);
+    const nome = limparCelula(c).replace(/^\ufeff/, '').normalize('NFC').toLowerCase();
+    const coluna = COLUNA_POR_NOME.get(nome);
+    if (coluna && !col.has(coluna)) col.set(coluna, i);
   });
   if (!col.has('tipo') && !col.has('id')) {
-    return { erro: falha('csv-cabecalho', `a primeira linha precisa ser o cabeçalho: ${COLUNAS_CSV.join(',')}`) };
+    // (sem a lista das colunas: os nomes delas mudam com o idioma de quem lê)
+    return { erro: falha('csv-cabecalho', 'a primeira linha precisa ser o cabeçalho, com a coluna do tipo ou do id: exporte um catálogo para ver o modelo') };
   }
   const resolver = resolvedorDeTipo(tipos);
   const entradas = [];
@@ -1472,7 +1513,7 @@ function criarCatalogos(baseDir) {
       const pos = d.id ? posicao(cat, d.id) : -1;
       if (pos >= 0) {
         const velho = cat.itens[pos];
-        if (d.tipo && d.tipo !== velho.tipo) throw new ErroEntrada(`o tipo de um item não muda (é «${velho.tipo}»): apague e crie de novo`, 'tipo-diferente');
+        if (d.tipo && d.tipo !== velho.tipo) throw new ErroEntrada('o tipo de um item não muda: apague e crie de novo', 'tipo-diferente');
         const novo = juntarManual(velho, d, manual);
         if (!Object.keys(novo.nomes).length) throw new ErroEntrada('o item precisa de pelo menos um nome');
         conferirDono(cat, novo.dono, novo.id);
@@ -1486,7 +1527,7 @@ function criarCatalogos(baseDir) {
       if (cat.itens.length >= TETOS.itens) return falha('teto-itens', `o catálogo chegou ao teto de ${TETOS.itens} itens`);
       let id;
       if (d.id) {
-        if (d.id.slice(0, d.id.indexOf(':')) !== d.tipo) throw new ErroEntrada(`o id ${d.id} não começa pelo tipo «${d.tipo}»`, 'tipo-diferente');
+        if (d.id.slice(0, d.id.indexOf(':')) !== d.tipo) throw new ErroEntrada(`o id «${d.id}» não começa pelo tipo do item`, 'tipo-diferente');
         id = d.id;
       } else {
         const ids = new Set(cat.itens.map((it) => it.id));
@@ -1599,11 +1640,12 @@ function criarCatalogos(baseDir) {
   }
 
   // ── 📤 Exportar / 📥 Importar ──
-  function exportar(jogoId, formato) {
+  // `idioma`: as colunas da planilha com o nome no idioma de quem exporta (sem ele, em português)
+  function exportar(jogoId, formato, opcoes) {
     if (formato !== 'json' && formato !== 'csv') return falha('formato-invalido', 'formato: json ou csv');
     const r = obter(jogoId);
     if (r.erro) return r.erro;
-    return formato === 'json' ? serializar(r.cat) : csvDoCatalogo(r.cat);
+    return formato === 'json' ? serializar(r.cat) : csvDoCatalogo(r.cat, ehObjeto(opcoes) ? opcoes.idioma : null);
   }
 
   // tipos novos do JSON exportado de um jogo genérico (os que já existem ficam como estão)
@@ -1759,7 +1801,7 @@ function criarCatalogos(baseDir) {
       const indice = indiceDeNomesDeArquivo(cat.itens);
       const posPorId = new Map(cat.itens.map((it, i) => [it.id, i]));
       const ocupados = mapaDeArquivos(cat.itens);
-      const recebidos = new Set();
+      const recebidos = new Map(); // item → o arquivo que já é a imagem dele neste envio
       const casados = [];
       const semPar = [];
       const erros = [];
@@ -1773,7 +1815,8 @@ function criarCatalogos(baseDir) {
         if (ids.length > 1 && tipo) ids = ids.filter((id) => id.slice(0, id.indexOf(':')) === tipo);
         if (ids.length !== 1) { semPar.push(nome); continue; } // nenhum, ou mais de um (não chuta)
         const itemId = ids[0];
-        if (recebidos.has(itemId)) { erros.push({ arquivo: nome, motivo: `outro arquivo deste envio já é a imagem de ${itemId}` }); continue; }
+        // (a frase cita o outro arquivo, e não o id interno do item)
+        if (recebidos.has(itemId)) { erros.push({ arquivo: nome, motivo: `o arquivo «${recebidos.get(itemId)}» deste envio já é a imagem desse item` }); continue; }
         let img;
         const ext = /\.([^.\\/]{1,10})$/.exec(nome);
         try { img = conferirImagem(a.buffer, ext ? ext[1] : null); } catch (e) {
@@ -1782,7 +1825,7 @@ function criarCatalogos(baseDir) {
           continue;
         }
         trocarImagem(jogoId, cat, posPorId.get(itemId), img, 'importada', ctx, ocupados);
-        recebidos.add(itemId);
+        recebidos.set(itemId, nome.slice(0, 120));
         casados.push({ arquivo: nome, itemId });
       }
       return { ok: true, casados, semPar, erros };

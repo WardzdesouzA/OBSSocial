@@ -892,6 +892,11 @@ function criarDbd(opcoes) {
   const pausaMinima = injetado ? 0 : PAUSA_MINIMA_MS;
   const tempoMs = injetado && Number.isFinite(o.tempoMs) && o.tempoMs > 0 ? Math.min(o.tempoMs, TEMPO_MS) : TEMPO_MS;
   const versao = typeof o.versao === 'string' && /^[0-9A-Za-z.+_-]{1,40}$/.test(o.versao) ? o.versao : '0';
+  // `soComIngles`: item NOVO só entra com o nome em inglês (a página em inglês que não
+  // abriu numa rodada deixa o item para a próxima). O inglês é o nome de reserva de quem
+  // usa um idioma que o site não tem (es, ru, tr, ko, zh): sem ele, essas telas
+  // cairiam no português. O que já está no catálogo ganha os idiomas que vieram.
+  const soComIngles = o.soComIngles === true;
   // Sem acento de propósito: cabeçalho HTTP é ASCII (o «á» viajaria como byte solto)
   const agente = `OBS-Social/${versao} (+https://github.com/WardzdesouzA/OBSSocial; leitura do catalogo pedida pelo usuario)`;
 
@@ -1192,6 +1197,15 @@ function criarDbd(opcoes) {
           return falhou({ motivo: cat1 ? 'catalogo-ilegivel' : 'jogo-inexistente', detalhe: 'o catálogo sumiu ou não abre mais: o que foi lido não entrou' });
         }
         entradas = resolverIds(montarEntradas(leituras), cat1);
+        if (soComIngles) {
+          const jaTem = new Set(cat1.itens.map((it) => it.id));
+          const fora = new Set(); // (o dono vem antes: quem dependia de um que ficou, fica também)
+          entradas = entradas.filter((e) => {
+            if ((e.dono && fora.has(e.dono)) || (!e.nomes.en && !jaTem.has(e.id))) { fora.add(e.id); return false; }
+            return true;
+          });
+          if (fora.size) { ctx.res.semIngles = fora.size; ctx.aviso = ctx.aviso || 'sem-ingles'; }
+        }
         ctx.res.personagens = entradas.filter((e) => e.dono === null).length;
         const r = catalogos.mesclar(jogoId, entradas.map((e) => {
           const item = { id: e.id, tipo: e.tipo, nomes: e.nomes, chave: e.chave, fonte: 'site-oficial' };
@@ -1253,6 +1267,7 @@ function criarDbd(opcoes) {
     const ok = { ok: true };
     if (ctx.aviso === 'teto-paginas') { ok.aviso = ctx.aviso; ok.detalhe = `parei no teto de ${TETO_PAGINAS} páginas por rodada: o resto fica para a próxima`; }
     if (ctx.aviso === 'teto-imagens') { ok.aviso = ctx.aviso; ok.detalhe = `parei no teto de ${TETO_IMAGENS} imagens por rodada: o resto fica para a próxima`; }
+    if (ctx.aviso === 'sem-ingles') { ok.aviso = ctx.aviso; ok.detalhe = `${ctx.res.semIngles} item(ns) novo(s) sem o nome em inglês ficaram para a próxima leitura`; }
     return fim(ok);
   }
 

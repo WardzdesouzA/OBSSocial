@@ -175,6 +175,69 @@ function tcons(texto, ...args) {
   return t.replace(/\$(\d)/g, (tudo, i) => String(args[Number(i) - 1] ?? ''));
 }
 
+// 🌐 v0.192: o que o servidor entrega PRONTO a quem não tem o motor de idiomas do
+// navegador — o 🕹️ Stream Deck (respostas das ações, catálogo e estado) e a janela
+// do programa — sai no idioma pelos MESMOS dicionários das telas (public/i18n-<l>.js,
+// o português é a chave; o mesmo algoritmo do public/i18n.js), cada um lido só na
+// primeira vez que é pedido. O que a pessoa digitou («…») não passa pelo tradutor:
+// vai guardado e volta igual («Mapa» continua «Mapa» numa frase em inglês).
+const DICIONARIOS_SERVIDOR = new Map();
+function dicionarioDoServidor(l) {
+  if (DICIONARIOS_SERVIDOR.has(l)) return DICIONARIOS_SERVIDOR.get(l);
+  let d = null;
+  try {
+    const janela = {};
+    require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, 'public', `i18n-${l}.js`), 'utf8'), { window: janela }, { timeout: 5000 });
+    const x = janela.OBS_I18N_DICTS && janela.OBS_I18N_DICTS[l];
+    if (x && x.textos && typeof x.textos === 'object' && Array.isArray(x.padroes)) d = x;
+  } catch { d = null; } // sem o dicionário, o texto sai como está
+  DICIONARIOS_SERVIDOR.set(l, d);
+  return d;
+}
+function traduzirComDicionario(d, texto, prof) {
+  const chave = String(texto).replace(/\s+/g, ' ').trim();
+  if (!chave || !/[A-Za-zÀ-ÿ]/.test(chave)) return null;
+  if (Object.hasOwn(d.textos, chave) && typeof d.textos[chave] === 'string') return d.textos[chave];
+  if (prof >= 3) return null;
+  for (const par of d.padroes) {
+    const m = Array.isArray(par) && par[0] ? chave.match(par[0]) : null;
+    if (m) {
+      // (os grupos passam pelo tradutor de novo, como no navegador)
+      const grupos = m.slice(1).map((g) => (g === undefined ? '' : (traduzirComDicionario(d, g, prof + 1) ?? g)));
+      return String(par[1]).replace(/\$(\d)/g, (tudo, i) => grupos[Number(i) - 1] ?? '');
+    }
+  }
+  return null;
+}
+// entre «» vai o que a pessoa digitou — menos estes, que são do próprio programa
+const LITERAIS_DO_PROGRAMA = new Set(['|', 'não tenho', 'começar do zero']);
+function traduzirNoIdioma(texto, idioma) {
+  const s = typeof texto === 'string' ? texto : String(texto ?? '');
+  if (!idioma || idioma === 'pt' || !CONSOLE_IDIOMAS.includes(idioma) || !/[A-Za-zÀ-ÿ]/.test(s)) return s;
+  const d = dicionarioDoServidor(idioma);
+  if (!d) return s;
+  const guardados = [];
+  const marcado = s.replace(/«([^«»]*)»/g, (tudo, v) => (LITERAIS_DO_PROGRAMA.has(v) ? tudo : `«⟦${guardados.push(v) - 1}⟧»`));
+  const t = traduzirComDicionario(d, marcado, 0);
+  if (t === null) return s;
+  const bordas = /^(\s*)[\s\S]*?(\s*)$/.exec(s);
+  return bordas[1] + t.replace(/⟦(\d+)⟧/g, (tudo, i) => guardados[Number(i)] ?? tudo) + bordas[2];
+}
+// 🪟 A janela do programa: os avisos (console.error/warn) também no idioma do
+// programa, como a abertura — é para ela que as telas mandam olhar quando algo não
+// abre. Antes do state existir (a carga das configurações), saem como estão.
+for (const nivel of ['error', 'warn']) {
+  const original = console[nivel].bind(console);
+  console[nivel] = (...args) => {
+    if (typeof args[0] === 'string') {
+      let l = 'pt';
+      try { l = idiomaDoConsole(); } catch { l = 'pt'; }
+      if (l !== 'pt') { try { args[0] = traduzirNoIdioma(args[0], l); } catch { /* fica como está */ } }
+    }
+    original(...args);
+  };
+}
+
 const qrcodeFactory = require('qrcode-generator');
 const currency = require('./currency');
 // 🌤️ v0.167: o tempo agora, de uma ou mais fontes, para o overlay
@@ -1895,7 +1958,9 @@ function montarPedidos() {
       converter: pedidosConverterValor,
       versaoDaImagem: versaoImagemPedidos,
     });
-    pedidosDbd = criarDbd({ catalogos, versao: APP_VERSION, ...(PEDIDOS_DBD_TESTE ? { fetch: PEDIDOS_DBD_TESTE.fetch, tempoMs: PEDIDOS_DBD_TESTE.tempoMs } : {}) });
+    // (item novo só com o nome em inglês: é o de reserva de quem usa um idioma que o
+    // site oficial não tem — sem ele, a tela em espanhol cairia no português)
+    pedidosDbd = criarDbd({ catalogos, versao: APP_VERSION, soComIngles: true, ...(PEDIDOS_DBD_TESTE ? { fetch: PEDIDOS_DBD_TESTE.fetch, tempoMs: PEDIDOS_DBD_TESTE.tempoMs } : {}) });
   } catch (err) {
     console.error('  ⚠️ 🙋 Pedidos: não consegui abrir (o resto do programa segue):', (err && err.stack) || err);
     catalogos = null;
@@ -1958,10 +2023,10 @@ function pedidosParaPapel(papel) {
   }
   // os nomes do catálogo saem no idioma do programa (no «auto», o do computador)
   const proj = pedidosNucleo.paraPainel(papel, { idioma: idiomaDoConsole() });
-  // 🔤 «Idioma dos nomes: do programa» é o idioma de CADA tela (o painel e as
-  // configurações seguem o idioma pessoal do navegador): vão junto os nomes de
-  // cada item da fila em todos os idiomas, e a tela escolhe o dela
-  if (proj && proj.ligado === true && !proj.travado && state.settings.pedidos?.idioma === 'auto') {
+  // 🔤 Cada tela mostra os nomes no idioma DELA (o painel e as configurações seguem o
+  // idioma pessoal do navegador), qualquer que seja o «Idioma dos nomes»: vão junto
+  // os nomes de cada item da fila em todos os idiomas, e a tela escolhe pela opção
+  if (proj && proj.ligado === true && !proj.travado) {
     try { proj.nomes = nomesDosItensPedidos(proj); } catch { /* sem a lista, vale o nome no idioma do programa */ }
   }
   return proj;
@@ -2299,7 +2364,10 @@ function pedidosControleEstado() {
   if (typeof r.jogo === 'string' && r.jogo) {
     try { const c = catalogos.carregar(r.jogo); jogoNome = c && c.jogo && typeof c.jogo.nome === 'string' ? c.jogo.nome : null; } catch { jogoNome = null; }
   }
-  const quem = a && typeof a.quem === 'string' ? (pareceTelefoneSrv(a.quem) ? apelidoDeTelefone(a.quem) : a.quem) : null;
+  let quem = a && typeof a.quem === 'string' ? (pareceTelefoneSrv(a.quem) ? apelidoDeTelefone(a.quem) : a.quem) : null;
+  // «Anônimo», «Apoiador Pix» e o apelido «📱 Convidado XYZ» são do programa (não são
+  // o nome de ninguém): no idioma do programa, como o painel mostra cada um no dele
+  if (quem && (quem === 'Anônimo' || quem === PIX_SEM_NOME || /^📱 Convidado [0-9A-Z]{1,7}$/u.test(quem))) quem = traduzirNoIdioma(quem, idiomaDoConsole());
   return {
     ligado: true, travado: r.travado || null, pagos: r.pagos === true, gratis: r.gratis === true,
     jogo: typeof r.jogo === 'string' && r.jogo ? r.jogo : null, jogoNome,
@@ -2390,6 +2458,11 @@ function textoDbdPedidos(r) {
 // rota não serve imagem escondida)
 function itemCatalogoParaTela(jogo, it) {
   const out = { ...it };
+  // os nomes do dono (ele pode estar em outra página): a tela mostra o NOME no idioma
+  // dela, e não o id interno (que leva o código do tipo em português)
+  if (typeof it.dono === 'string' && it.dono) {
+    try { const d = catalogos.acharItem(jogo, it.dono); if (d && d.nomes && typeof d.nomes === 'object') out.donoNomes = { ...d.nomes }; } catch { /* sem o nome, a tela mostra o id */ }
+  }
   if (it.imagem) {
     const escondida = it.imagem.ocultar === true;
     out.imagem = { arquivo: it.imagem.arquivo, origem: it.imagem.origem, ocultar: escondida, url: escondida ? null : urlImagemPedidos(jogo, it.imagem.arquivo) };
@@ -2626,7 +2699,9 @@ function tratarRotaPedidos(req, res, urlPath, role) {
   const falhou = () => json(400, { ok: false, erro: 'envio', texto: textoCatalogoPedidos('envio') });
   if (rota === 'exportar' && req.method === 'GET') {
     if (!formato) return recusar(400, { ok: false, erro: 'formato-invalido', texto: textoCatalogoPedidos('formato-invalido') });
-    const r = catalogos.exportar(jogo, formato);
+    // (as colunas da planilha com o nome no idioma da página que exportou)
+    const idiomaPlanilha = String(query.get('idioma') || '');
+    const r = catalogos.exportar(jogo, formato, CONSOLE_IDIOMAS.includes(idiomaPlanilha) ? { idioma: idiomaPlanilha } : undefined);
     if (typeof r !== 'string') return recusar(r && r.erro === 'jogo-inexistente' ? 404 : 400, erroCatalogoPedidos('exportar', r));
     // (o id do jogo só tem a-z, 0-9 e «-»: entra no nome do arquivo sem escape)
     res.writeHead(200, {
@@ -16155,17 +16230,22 @@ function controleResolver(caminho, p) {
 
 // O catálogo completo, com o que existe AGORA (teclas da Mesa, cenas do OBS,
 // entradas do vMix, redes lembradas) — é o que a página das configurações
-// mostra e o que um programa (Companion etc.) pode ler para se montar
-function controleCatalogo() {
-  const acoes = CONTROLE_ACOES.map((a) => ({ id: a.id, grupo: a.grupo, nome: a.nome, desc: a.desc, params: a.params || [] }));
+// mostra e o que um programa (Companion etc.) pode ler para se montar.
+// 🌐 v0.192: os textos do programa (grupos, nomes, descrições) no `idioma` pedido —
+// o do programa para o aparelho; a página das configurações pede o português (a
+// chave) e traduz no idioma dela. O que veio de fora (nome da tecla, da cena) fica.
+function controleCatalogo(idioma) {
+  const tr = (x) => (typeof x === 'string' && x ? traduzirNoIdioma(x, idioma) : x);
+  const trParams = (lista) => (lista || []).map((p) => (p && typeof p.desc === 'string' ? { ...p, desc: tr(p.desc) } : p));
+  const acoes = CONTROLE_ACOES.map((a) => ({ id: a.id, grupo: a.grupo, nome: tr(a.nome), desc: tr(a.desc), params: trParams(a.params) }));
   for (const t of state.trilhas) {
     if (t.tipo === 'pastaSimples') continue;
-    acoes.push({ id: 'trilha/' + t.id, grupo: 'mesa', nome: controleNomeTrilha(t), desc: t.tipo === 'pasta' ? 'Toca a fila do Botão de multi ação (de novo = para)' : (t.tipo === 'imagem' || t.tipo === 'video') ? 'Mostra/esconde a mídia na tela' : 'Dispara esta tecla da Mesa', params: [], tecla: { id: t.id, nome: t.nome, tipo: t.tipo } });
+    acoes.push({ id: 'trilha/' + t.id, grupo: 'mesa', nome: controleNomeTrilha(t), desc: tr(t.tipo === 'pasta' ? 'Toca a fila do Botão de multi ação (de novo = para)' : (t.tipo === 'imagem' || t.tipo === 'video') ? 'Mostra/esconde a mídia na tela' : 'Dispara esta tecla da Mesa'), params: [], tecla: { id: t.id, nome: t.nome, tipo: t.tipo } });
   }
   for (const rede of Object.keys(CONNECTORS)) {
     const c = state.connections[rede] || {};
     for (const [verbo, desc] of [['ligar', 'Conecta (com o canal lembrado ou o informado)'], ['desligar', 'Desconecta'], ['reiniciar', 'Derruba e conecta de novo']]) {
-      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc, params: verbo === 'desligar' ? [] : [CP.canal], rede, canalLembrado: (rede === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null });
+      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc: tr(desc), params: verbo === 'desligar' ? [] : trParams([CP.canal]), rede, canalLembrado: (rede === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null });
     }
   }
   for (const [id, spec] of Object.entries(OBS_ACOES)) acoes.push({ id: 'obs/' + id, grupo: 'obs', nome: '🎬 ' + id, desc: '', params: controleParamsDoSpec(spec), obsAcao: id });
@@ -16175,9 +16255,10 @@ function controleCatalogo() {
   }
   for (const [id, spec] of Object.entries(VMIX_ACOES)) acoes.push({ id: 'vmix/' + id, grupo: 'vmix', nome: '🎛️ ' + id, desc: '', params: controleParamsDoSpec(spec), vmixAcao: id });
   for (const e of (vmixRt.entradas || [])) {
-    if (e && e.numero) acoes.push({ id: 'vmix/entrada/' + e.numero, grupo: 'vmix', nome: `🎛️ Entrada ${e.numero}: ${e.titulo || ''}`.trim(), desc: 'Manda esta entrada do vMix ao vivo (modo=preview só no preview)', params: [controleParamsDoSpec(VMIX_ACOES.entrada)[1]], vmixAcao: 'entrada' });
+    if (e && e.numero) acoes.push({ id: 'vmix/entrada/' + e.numero, grupo: 'vmix', nome: `🎛️ Entrada ${e.numero}: ${e.titulo || ''}`.trim(), desc: tr('Manda esta entrada do vMix ao vivo (modo=preview só no preview)'), params: [controleParamsDoSpec(VMIX_ACOES.entrada)[1]], vmixAcao: 'entrada' });
   }
-  return { ok: true, versao: APP_VERSION, base: '/api/controle/', grupos: CONTROLE_GRUPOS, acoes, livre: { caminho: 'op', desc: 'POST com JSON {"type": "<operação do painel>", ...} — qualquer operação, menos as que só o computador local faz' } };
+  const grupos = Object.fromEntries(Object.entries(CONTROLE_GRUPOS).map(([k, v]) => [k, tr(v)]));
+  return { ok: true, versao: APP_VERSION, base: '/api/controle/', grupos, acoes, livre: { caminho: 'op', desc: tr('POST com JSON {"type": "<operação do painel>", ...} — qualquer operação, menos as que só o computador local faz') } };
 }
 
 // O retrato do momento, para aparelhos que mostram estado (Companion etc.)
@@ -16264,9 +16345,29 @@ function controleLerCorpo(req, cb) {
 }
 
 function tratarControleHttp(req, res, urlPath) {
+  // 🌐 v0.192: a resposta no idioma do programa (o aparelho não tem o motor de idiomas
+  // do navegador); «idioma=…» na URL pede outro — a página das configurações pede o
+  // português (a chave) e traduz no idioma dela
+  let idiomaResp = null;
+  const idiomaDaResposta = () => idiomaResp || (idiomaResp = idiomaDoConsole());
+  const traduzirResposta = (obj) => {
+    const l = idiomaDaResposta();
+    if (l === 'pt' || !obj || typeof obj !== 'object') return obj;
+    const out = { ...obj };
+    if (typeof out.erro === 'string') out.erro = traduzirNoIdioma(out.erro, l);
+    if (Array.isArray(out.respostas)) {
+      out.respostas = out.respostas.map((r) => {
+        if (!r || typeof r !== 'object') return r;
+        const x = { ...r };
+        for (const k of ['texto', 'detalhe']) if (typeof x[k] === 'string') x[k] = traduzirNoIdioma(x[k], l);
+        return x;
+      });
+    }
+    return out;
+  };
   const json = (status, obj) => {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(JSON.stringify(obj));
+    res.end(JSON.stringify(traduzirResposta(obj)));
   };
   if (req.method !== 'GET' && req.method !== 'POST') { res.writeHead(405); res.end(); return; }
   // Sites de fora abertos no navegador não comandam nada; aparelhos e
@@ -16276,6 +16377,8 @@ function tratarControleHttp(req, res, urlPath) {
   let ip = String(req.socket.remoteAddress || '');
   if (ip.startsWith('::ffff:')) ip = ip.slice(7);
   const query = new URLSearchParams((req.url || '').split('?')[1] || '');
+  const idiomaPedido = String(query.get('idioma') || '');
+  if (CONSOLE_IDIOMAS.includes(idiomaPedido)) idiomaResp = idiomaPedido;
   controleLerCorpo(req, (corpo) => {
     // (qualquer erro aqui dentro vira uma resposta 500 — nunca derruba o programa)
     try { tratarControlePedido(corpo); } catch (err) {
@@ -16288,11 +16391,12 @@ function tratarControleHttp(req, res, urlPath) {
     const auth = String(req.headers.authorization || '');
     const token = String(p.token || req.headers['x-token'] || (auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '') || '');
     delete p.token;
+    if (Object.hasOwn(p, 'idioma') && CONSOLE_IDIOMAS.includes(String(p.idioma))) delete p.idioma; // (o idioma da resposta, não da ação)
     const confere = controleTokenConfere(token, ip);
     if (confere === 'bloqueado') return json(429, { ok: false, erro: 'Muitas tentativas com token errado. Espere alguns minutos.' });
     if (confere !== 'ok') return json(401, { ok: false, erro: 'Token inválido. Copie o token da página 🕹️ Controle Externo das configurações.' });
     const caminho = urlPath.slice('/api/controle'.length).replace(/^\/+|\/+$/g, '');
-    if (!caminho || caminho === 'catalogo') return json(200, controleCatalogo());
+    if (!caminho || caminho === 'catalogo') return json(200, controleCatalogo(idiomaDaResposta()));
     if (caminho === 'estado') return json(200, controleEstado());
     let acao, msg;
     if (caminho === 'op') {

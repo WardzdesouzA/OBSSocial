@@ -8336,6 +8336,7 @@ function pedEl(tag, classe, texto) {
 // português, os dois…) a lista não vem e o nome do servidor já é o certo.
 let pedidosNomes = new Map(); // 'jogo|id' → nomes por idioma
 let pedidosNomesAssin = '';
+let pedidosOpNomesPintada = null; // a escolha «Idioma dos nomes» da última pintura
 let pedidosNomesFonte = null; // a lista da última leitura (o mesmo quadro não é relido)
 const PEDIDOS_SEM_NOMES = [];
 function lerNomesPedidos(est) {
@@ -8353,12 +8354,32 @@ function lerNomesPedidos(est) {
   }
   return true;
 }
+// O nome no idioma DESTA tela, pela escolha «Idioma dos nomes» (a mesma regra do
+// servidor e das configurações: a escolha nunca passa por cima do idioma da tela —
+// «ambos» é o inglês junto do idioma daqui; um idioma escolhido vale na tela dele,
+// e o inglês em qualquer tela). O item que saiu do catálogo traz os nomes guardados
+// no pedido (it.nomes); sem nada, o nome que o servidor escreveu
+const PEDIDOS_IDIOMAS_NOMES = ['pt', 'en', 'es', 'fr', 'de', 'ru', 'tr', 'ja', 'ko', 'zh'];
 function nomeDoItemPedido(jogo, it) {
   const reserva = it && typeof it === 'object' ? String(it.nome || it.id || '') : '';
-  const n = typeof jogo === 'string' && it && typeof it.id === 'string' ? pedidosNomes.get(jogo + '|' + it.id) : null;
+  let n = typeof jogo === 'string' && it && typeof it.id === 'string' ? pedidosNomes.get(jogo + '|' + it.id) : null;
+  if (!n && it && it.nomes && typeof it.nomes === 'object' && !Array.isArray(it.nomes)) n = it.nomes;
   if (!n) return reserva;
   const pega = (k) => (Object.hasOwn(n, k) && typeof n[k] === 'string' ? n[k] : '');
-  return pega((window.OBS_I18N && OBS_I18N.atual) || 'pt') || pega('en') || pega('pt') || reserva;
+  const primeiro = () => { for (const k of PEDIDOS_IDIOMAS_NOMES) if (pega(k)) return pega(k); return ''; };
+  const tela = (window.OBS_I18N && OBS_I18N.atual) || 'pt';
+  const op = settings && settings.pedidos && typeof settings.pedidos.idioma === 'string' ? settings.pedidos.idioma : 'auto';
+  if (op === 'ambos') {
+    const en = pega('en');
+    const outro = tela !== 'en' ? pega(tela) : '';
+    if (en && outro && en !== outro) return en + ' / ' + outro;
+    return en || outro || primeiro() || reserva;
+  }
+  const alvo = op === 'en' || op === tela ? op : tela;
+  return pega(alvo) || pega('en') || primeiro() || reserva;
+}
+function ehRotuloDoPrograma(nome) {
+  return nome === 'Anônimo' || nome === 'Apoiador Pix' || (typeof nome === 'string' && /^📱 Convidado [0-9A-Z]{1,7}$/u.test(nome));
 }
 
 // ── o que vale agora ──
@@ -8481,7 +8502,10 @@ function renderPedidos() {
   const est = pedidosLigados() ? pedidosEstado : null;
   // os nomes por idioma mudaram (item renomeado, outra escolha de idioma): os
   // cartões se refazem (o pedido em si pode ter vindo igual)
-  if (lerNomesPedidos(est)) for (const card of document.querySelectorAll('.pedido-card')) card.__assin = '';
+  const opNomes = settings.pedidos && typeof settings.pedidos.idioma === 'string' ? settings.pedidos.idioma : 'auto';
+  const mudouOp = opNomes !== pedidosOpNomesPintada;
+  pedidosOpNomesPintada = opNomes;
+  if (lerNomesPedidos(est) || mudouOp) for (const card of document.querySelectorAll('.pedido-card')) card.__assin = '';
   const cont = est && est.contagem && typeof est.contagem === 'object' ? est.contagem : {};
   const espera = pedInteiro(cont.fila) + pedInteiro(cont.revisar);
   // o 🙋 da barra: o balão conta quem espera (fila + revisar) e o botão fica
@@ -8858,8 +8882,11 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
   const hora = horaDoPedido(p.hora);
   topo.append(pedEl('span', 'ped-num', `#${pedInteiro(p.n)}${hora ? ' · ' + hora : ''}`));
   topo.append(p.platform === 'manual' ? pedEl('span', '', '✍') : platformIcon(p.platform, 14));
-  // «Anônimo» (nome segurado para quem assiste) é texto do programa: traduz
-  if (p.author === 'Anônimo') topo.append(pedEl('span', 'ped-anonimo', 'Anônimo'));
+  // «Anônimo» (sem nome, ou segurado para quem assiste), «Apoiador Pix» (o Pix do
+  // banco sem o nome de quem pagou) e o apelido «📱 Convidado XYZ» de quem chegou com
+  // o telefone são textos do programa, não o nome de ninguém: traduzem (ficam fora
+  // da zona que não se traduz); o nome de verdade fica em .author, como veio
+  if (ehRotuloDoPrograma(p.author)) topo.append(pedEl('span', 'ped-anonimo', p.author));
   else topo.append(pedEl('span', 'author', p.author === undefined || p.author === null ? '' : p.author));
   if (p.resgate && typeof p.resgate === 'object' && p.resgate.titulo) {
     const r = pedEl('span', 'ped-resgate', '🎁 ' + String(p.resgate.titulo));
