@@ -7931,6 +7931,25 @@ function pedNomeNoDialogo(nome) {
   d.textContent = String(nome || '');
   return d;
 }
+// ⌨️ O foco que a janela põe sozinha ao abrir (no botão de confirmar, pela janela do
+// programa, e logo depois em `alvo`, aqui) nunca tira a pessoa do campo em que ela já
+// clicou: num PC carregado (OBS transmitindo, jogo aberto) essas esperas passam do clique
+// e da digitação, e o que ela digitava ia para o botão (perdido) ou para o primeiro campo
+// (o item mudava de nome). Sem ninguém tocar em nada, tudo fica igual.
+function pedFocoInicial(box, alvo, selecionar) {
+  let abrindo = true;
+  queueMicrotask(() => { // (a janela já montada: o botão de confirmar existe)
+    const caixa = box.closest('.obs-dialog');
+    const ok = caixa && caixa.querySelector('.obs-dlg-ok');
+    if (ok) ok.addEventListener('focus', (e) => { if (abrindo && e.relatedTarget && box.contains(e.relatedTarget)) e.relatedTarget.focus(); });
+  });
+  setTimeout(() => {
+    abrindo = false;
+    if (!alvo || box.contains(document.activeElement)) return;
+    alvo.focus();
+    if (selecionar) alvo.select();
+  }, 60);
+}
 // 🌐 O detalhe técnico (do catálogo, da planilha, da leitura do site) vem do
 // servidor em português: as frases fixas dos módulos, com o que a pessoa digitou
 // entre «». Nos outros idiomas ele sai pelo dicionário com o digitado GUARDADO à
@@ -8285,7 +8304,7 @@ async function pedRenomearJogo(c) {
       campo.value = String(c.nome || '');
       campo.setAttribute('aria-label', 'Nome do jogo');
       box.appendChild(campo);
-      setTimeout(() => { campo.focus(); campo.select(); }, 60);
+      pedFocoInicial(box, campo, true);
     },
   });
   if (!ok || !campo) return;
@@ -8673,7 +8692,7 @@ function pedMontarEditor(box, { item, r, campos, tipos, dbd }) {
   t2.textContent = '🚫 Não tenho ou não aceito este item (o pedido com ele entra marcado)';
   rotulo.append(campos.naoTenho, ' ', t2);
   box.appendChild(rotulo);
-  setTimeout(() => { const primeiro = campos.tipo || campos.nomes.pt; if (primeiro) primeiro.focus(); }, 60);
+  pedFocoInicial(box, campos.tipo || campos.nomes.pt);
 }
 function pedProcurarDono(texto, dl, ids) {
   const busca = String(texto || '').replace(/\s+/g, ' ').trim().slice(0, 100);
@@ -8804,7 +8823,7 @@ async function pedEditarTipo(t) {
       campos.papel.value = t && PED_PAPEIS.some(([v]) => v === t.papel) ? t.papel : 'outro';
       g3.append(Object.assign(document.createElement('label'), { className: 'ped-dlg-rot', textContent: 'Papel no pedido' }), campos.papel);
       box.append(g1, g2, g3);
-      setTimeout(() => campos.nomes.pt.focus(), 60);
+      pedFocoInicial(box, campos.nomes.pt);
     },
   });
   if (!ok || jogo !== pedSel.jogo) return;

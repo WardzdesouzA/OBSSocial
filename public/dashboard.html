@@ -3693,6 +3693,8 @@ function posicionarCtxMenu(event) {
   const zoomFactor = (Number(uiZoom) || 100) / 100;
   ctxMenu.classList.add('open');
   const menuRect = ctxMenu.getBoundingClientRect();
+  // onde cada lista estava ao abrir (o fechador da rolagem, abaixo, compara)
+  for (const list of Object.values(lists)) list.__rolagemAoAbrirMenu = `${list.scrollTop},${list.scrollLeft}`;
   let x = event.clientX / zoomFactor;
   let y = event.clientY / zoomFactor;
   const maxX = (window.innerWidth - menuRect.width - 8) / zoomFactor;
@@ -3707,7 +3709,15 @@ document.addEventListener('contextmenu', (e) => {
   if (!e.target.closest('.chat-item, .pedido-card')) closeCtxMenu();
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMenu(); });
-for (const list of Object.values(lists)) list.addEventListener('scroll', closeCtxMenu);
+// Rolar a lista fecha o menu. O navegador só entrega o «scroll» no quadro seguinte à
+// rolagem: o de uma rolagem feita ANTES do botão direito (a roda e o clique logo
+// depois, num PC carregado) chegava com o menu já aberto e o fechava na mesma hora.
+// Só fecha se a lista andou desde que o menu abriu.
+for (const list of Object.values(lists)) {
+  list.addEventListener('scroll', () => {
+    if (list.__rolagemAoAbrirMenu !== `${list.scrollTop},${list.scrollLeft}`) closeCtxMenu();
+  });
+}
 
 function removePlaceholder(list) {
   const placeholder = list.querySelector('.placeholder');
