@@ -8472,6 +8472,16 @@ const botaoParadoPedidos = (b) => b.disabled || b.getAttribute('aria-disabled') 
 // menu fecharam, e outro botão ficou embaixo do ponteiro. O teclado e o menu do botão
 // direito (detail 0) e o clique simples (detail 1) valem como sempre.
 const cliqueRepetidoPedidos = (e) => !!e && e.detail > 1;
+// 👀 ...e quem tocou cedo demais vê que o toque não contou: o botão que estava solto
+// embaixo do ponteiro (o da pessoa seguinte, que subiu para o lugar) fica apagado pela
+// espera curta, como o botão tocado. Sem isto ele ficava aceso e não respondia enquanto
+// a pessoa clicasse depressa. O toque seguinte, de propósito, vale quando ele acender.
+// (O ✏ Corrigir e o ＋ Montar só abrem uma janela: não têm trava e ficam como estão.)
+function mostrarToqueCedoPedidos(b) {
+  if (!b.dataset.trava) return;
+  segurarPedidos(b.dataset.trava);
+  aplicarTravasPedidos();
+}
 function esperarEcoPedidos(b, esperando) {
   if (esperando) b.setAttribute('aria-disabled', 'true');
   else b.removeAttribute('aria-disabled');
@@ -8625,7 +8635,11 @@ function montarBarraPedidos(barra) {
   prox.dataset.trava = 'proximo'; // dois toques no ⏩ chamariam duas pessoas
   prox.title = 'Chamar o próximo da fila';
   prox.append('⏩ ', pedEl('span', '', 'Próximo'));
-  prox.onclick = (e) => { if (!botaoParadoPedidos(prox) && !cliqueRepetidoPedidos(e)) enviarPedidos({ type: 'pedidoProximo' }, 'proximo'); };
+  prox.onclick = (e) => {
+    if (botaoParadoPedidos(prox)) return;
+    if (cliqueRepetidoPedidos(e)) mostrarToqueCedoPedidos(prox);
+    else enviarPedidos({ type: 'pedidoProximo' }, 'proximo');
+  };
   const novo = pedEl('button', 'secondary');
   novo.type = 'button';
   novo.dataset.acao = 'novo';
@@ -8899,7 +8913,11 @@ function botaoDoPedido(ctx, emoji, rotulo, dica, acao, trava, fazer) {
   esperarEcoPedidos(b, ctx.pode && !!trava && pedidosTravas.has(trava));
   // um toque = uma ação (nada de «segurar acelera»): o botão espera o eco, e o 2º
   // clique de um clique duplo nunca é outro toque (cliqueRepetidoPedidos)
-  b.onclick = (e) => { if (!botaoParadoPedidos(b) && !cliqueRepetidoPedidos(e)) fazer(); };
+  b.onclick = (e) => {
+    if (botaoParadoPedidos(b)) return;
+    if (cliqueRepetidoPedidos(e)) mostrarToqueCedoPedidos(b);
+    else fazer();
+  };
   return b;
 }
 // 🖱️ O botão direito no cartão abre o menu do programa (#ctxMenu) com as ações do
