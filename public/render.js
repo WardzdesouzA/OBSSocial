@@ -1012,10 +1012,11 @@ function obsDlgT(texto) {
 // 🪟 `sozinha: true` é para a janela que o PROGRAMA abre por conta própria (a resposta do
 // servidor chegou), e não o clique ou a tecla da pessoa — que, num PC carregado, já pode
 // estar digitando em outro lugar. Essa janela nunca confirma com uma tecla que vinha de
-// fora: o foco vai para a própria caixa (em nenhum botão) e o atalho do Enter só vale
-// depois de a pessoa pôr o mouse (ou o dedo) nela. O Esc fecha, e o teclado segue normal
-// para quem quer usar: Tab até o botão, Enter (ou espaço) no botão em foco. Nas janelas
-// que a própria pessoa abre, o foco e o Enter que confirma ficam como sempre foram.
+// fora (nem com um toque que começou antes de ela existir): o foco vai para a própria
+// caixa (em nenhum botão) e o atalho do Enter só vale depois de a pessoa pôr o mouse (ou
+// o dedo) nela. O Esc fecha, e o teclado segue normal para quem quer usar: Tab até o
+// botão, Enter (ou espaço) no botão em foco. Nas janelas que a própria pessoa abre, o
+// foco e o Enter que confirma ficam como sempre foram.
 function obsDialog(opcoes) {
   obsDialogGarantirCss();
   const o = opcoes || {};
@@ -1078,21 +1079,33 @@ function obsDialog(opcoes) {
     const sozinha = o.sozinha === true;
     // 🖱️ O clique que continua um clique duplo começado ANTES de a pessoa pôr o mouse (ou o
     // dedo) nesta janela — o 2º clique do clique duplo no botão que a abriu — não é uma
-    // resposta: não confirma, não cancela e não fecha (no celular, o botão de confirmar
-    // pode nascer bem embaixo do dedo). O clique seguinte, simples, vale como sempre.
+    // resposta: não confirma, não cancela, não fecha e não marca nada dentro dela (no
+    // celular, o botão de confirmar ou uma opção podem nascer bem embaixo do dedo). O
+    // clique seguinte, simples, vale como sempre.
+    // 👆 Na janela aberta «sozinha» também não é resposta o toque que COMEÇOU antes de ela
+    // existir: o dedo já estava na tela, a janela nasceu embaixo dele e, quando o dedo sai,
+    // o navegador entrega o clique a quem está ali. O toque de verdade começa na própria
+    // janela (pointerdown); o teclado (detail 0) e o clique feito por código ou por uma
+    // extensão (não vem do aparelho: isTrusted falso) não entram nisto.
     let mexeu = false;
-    const cliqueDeFora = (e) => !mexeu && !!e && e.detail > 1;
+    let apontou = !sozinha || typeof window.PointerEvent !== 'function';
+    const cliqueDeFora = (e) => !!e && e.detail > 0 && ((!apontou && e.isTrusted) || (!mexeu && e.detail > 1));
+    fundo.addEventListener('pointerdown', () => { apontou = true; }, true);
+    // (o que vem de fora para na porta, antes de chegar a qualquer botão, opção ou campo)
+    for (const tipo of ['mousedown', 'click']) {
+      fundo.addEventListener(tipo, (e) => { if (cliqueDeFora(e)) { e.preventDefault(); e.stopPropagation(); } }, true);
+    }
     let btnCancelar = null;
     if (!o.somenteOk) {
       btnCancelar = document.createElement('button');
       btnCancelar.textContent = obsDlgT(o.cancelar || 'Cancelar');
-      btnCancelar.onclick = (e) => { if (!cliqueDeFora(e)) fechar(false); };
+      btnCancelar.onclick = () => fechar(false);
       botoes.appendChild(btnCancelar);
     }
     const btnOk = document.createElement('button');
     btnOk.className = 'obs-dlg-ok';
     btnOk.textContent = obsDlgT(o.ok || (o.somenteOk ? 'Entendi' : 'Confirmar'));
-    btnOk.onclick = (e) => { if (!btnOk.disabled && !cliqueDeFora(e)) fechar(true); };
+    btnOk.onclick = () => { if (!btnOk.disabled) fechar(true); };
     botoes.appendChild(btnOk);
     caixa.appendChild(botoes);
 

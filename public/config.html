@@ -7946,7 +7946,12 @@ function pedFocoInicial(box, alvo, selecionar) {
   });
   setTimeout(() => {
     abrindo = false;
-    if (!alvo || box.contains(document.activeElement)) return;
+    if (!alvo) return;
+    // a pessoa já está na janela (a janela inteira, não só os campos): quem tinha ido com o
+    // Tab até o «Cancelar» voltava ao primeiro campo, e o Enter SALVAVA o que ela queria
+    // descartar. O botão de confirmar não conta: é onde o foco da própria janela o põe
+    const a = document.activeElement;
+    if ((box.closest('.obs-dialog') || box).contains(a) && !a.classList.contains('obs-dlg-ok')) return;
     alvo.focus();
     if (selecionar) alvo.select();
   }, 60);
@@ -8003,10 +8008,17 @@ function pedStatus(id, texto, tipo, detalhe, extras) {
   }
 }
 function pedStatusErro(id, ev) { pedStatus(id, (ev && ev.texto) || 'Não deu certo: confira e tente de novo.', 'erro', ev && ev.detalhe); }
+// 🪟 Os avisos que a página abre por causa de uma resposta do servidor (este e os outros do
+// pedReceberAviso), e não no clique ou na tecla da pessoa, abrem «sozinhos» (a opção
+// `sozinha` da janela do programa): num PC carregado a resposta demora, e a pessoa já pode
+// estar digitando em outro campo quando o aviso aparece — a tecla que vinha de fora fechava
+// o «O item não foi salvo», o editor reabria com o rascunho, recebia o resto da digitação e
+// o Enter salvava de novo, com o nome mudado. O clique no «Entendi», o Tab até ele seguido
+// de Enter e o Esc fecham como sempre
 function pedAvisoErro(ev, titulo) {
   const detalhe = ev && typeof ev.detalhe === 'string' && ev.detalhe.trim() ? ev.detalhe : '';
   return obsDialog({
-    titulo: titulo || 'Pedidos', icone: '⚠️', somenteOk: true, texto: (ev && ev.texto) || 'Não deu certo: confira e tente de novo.',
+    titulo: titulo || 'Pedidos', icone: '⚠️', somenteOk: true, sozinha: true, texto: (ev && ev.texto) || 'Não deu certo: confira e tente de novo.',
     montarExtra: detalhe ? (box) => { const d = pedNoDetalhe(detalhe, 'div'); d.classList.add('ped-dlg-id', 'ped-detalhe'); d.style.fontSize = '13px'; box.appendChild(d); } : undefined,
   });
 }
@@ -9065,7 +9077,8 @@ function pedReceberAviso(ev) {
     fillPedidosForm(true);
     if (!pedAvisouRecusa) {
       pedAvisouRecusa = true;
-      obsAviso(typeof ev.texto === 'string' && ev.texto ? ev.texto : 'Quem só assiste pela rede não muda as regras dos Pedidos.', 'Pedidos', '🙋');
+      // (aberto pela resposta do servidor, no meio da digitação da regra: «sozinho», como o pedAvisoErro)
+      obsDialog({ titulo: 'Pedidos', icone: '🙋', somenteOk: true, sozinha: true, texto: typeof ev.texto === 'string' && ev.texto ? ev.texto : 'Quem só assiste pela rede não muda as regras dos Pedidos.' });
     }
     return;
   }
@@ -9121,7 +9134,7 @@ function pedReceberAviso(ev) {
       pedPintarDbd();
       break;
     case 'pedidosRecomecar':
-      obsAviso('Fila recomeçada do zero. O nº do pedido continua de onde estava.', 'Pedidos', '♻️');
+      obsDialog({ titulo: 'Pedidos', icone: '♻️', somenteOk: true, sozinha: true, texto: 'Fila recomeçada do zero. O nº do pedido continua de onde estava.' }); // (também pela resposta do servidor)
       return;
     default:
       break;
