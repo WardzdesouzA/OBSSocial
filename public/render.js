@@ -1007,8 +1007,15 @@ function obsDlgT(texto) {
 }
 
 // opcoes: { titulo, texto, icone, lista[], nivel: 'info'|'perigo'|'critico',
-//           ok, cancelar, confirmarPalavra, somenteOk }
+//           ok, cancelar, confirmarPalavra, somenteOk, sozinha }
 // Devolve uma promessa: true (confirmou) ou false (cancelou).
+// 🪟 `sozinha: true` é para a janela que o PROGRAMA abre por conta própria (a resposta do
+// servidor chegou), e não o clique ou a tecla da pessoa — que, num PC carregado, já pode
+// estar digitando em outro lugar. Essa janela nunca confirma com uma tecla que vinha de
+// fora: o foco vai para a própria caixa (em nenhum botão) e o atalho do Enter só vale
+// depois de a pessoa pôr o mouse (ou o dedo) nela. O Esc fecha, e o teclado segue normal
+// para quem quer usar: Tab até o botão, Enter (ou espaço) no botão em foco. Nas janelas
+// que a própria pessoa abre, o foco e o Enter que confirma ficam como sempre foram.
 function obsDialog(opcoes) {
   obsDialogGarantirCss();
   const o = opcoes || {};
@@ -1068,17 +1075,24 @@ function obsDialog(opcoes) {
       fundo.remove();
       resolve(valor);
     };
+    const sozinha = o.sozinha === true;
+    // 🖱️ O clique que continua um clique duplo começado ANTES de a pessoa pôr o mouse (ou o
+    // dedo) nesta janela — o 2º clique do clique duplo no botão que a abriu — não é uma
+    // resposta: não confirma, não cancela e não fecha (no celular, o botão de confirmar
+    // pode nascer bem embaixo do dedo). O clique seguinte, simples, vale como sempre.
+    let mexeu = false;
+    const cliqueDeFora = (e) => !mexeu && !!e && e.detail > 1;
     let btnCancelar = null;
     if (!o.somenteOk) {
       btnCancelar = document.createElement('button');
       btnCancelar.textContent = obsDlgT(o.cancelar || 'Cancelar');
-      btnCancelar.onclick = () => fechar(false);
+      btnCancelar.onclick = (e) => { if (!cliqueDeFora(e)) fechar(false); };
       botoes.appendChild(btnCancelar);
     }
     const btnOk = document.createElement('button');
     btnOk.className = 'obs-dlg-ok';
     btnOk.textContent = obsDlgT(o.ok || (o.somenteOk ? 'Entendi' : 'Confirmar'));
-    btnOk.onclick = () => { if (!btnOk.disabled) fechar(true); };
+    btnOk.onclick = (e) => { if (!btnOk.disabled && !cliqueDeFora(e)) fechar(true); };
     botoes.appendChild(btnOk);
     caixa.appendChild(botoes);
 
@@ -1093,14 +1107,29 @@ function obsDialog(opcoes) {
 
     function aoTeclar(e) {
       if (e.key === 'Escape') { e.preventDefault(); fechar(false); }
-      else if (e.key === 'Enter' && !btnOk.disabled && document.activeElement !== btnCancelar) {
+      // ⌨️ A tecla SEGURADA (repetição) não é uma resposta: o Enter que abriu a janela e
+      // continuou apertado não confirma — nem aperta o botão em foco (a confirmação do
+      // ✖ Recusar ou do ✔ Devolvido abria e, meio segundo depois, se confirmava sozinha)
+      else if (e.key === 'Enter' && e.repeat) e.preventDefault();
+      else if (e.key === 'Enter' && (mexeu || !sozinha) && !btnOk.disabled && document.activeElement !== btnCancelar) {
         e.preventDefault(); fechar(true);
       }
     }
     document.addEventListener('keydown', aoTeclar, true);
-    fundo.addEventListener('mousedown', (e) => { if (e.target === fundo) fechar(false); });
+    fundo.addEventListener('mousedown', (e) => {
+      if (cliqueDeFora(e)) return;
+      if (e.target === fundo) fechar(false);
+      else mexeu = true;
+    });
 
     document.body.appendChild(fundo);
+    // 🪟 A janela aberta «sozinha» põe o foco na própria caixa, já — a tecla que vinha de
+    // fora não aciona nada (nem o botão do painel que ficou atrás), e o Tab entra na janela
+    if (sozinha) {
+      caixa.tabIndex = -1;
+      caixa.focus({ preventScroll: true });
+      return;
+    }
     // ⌨️ O foco inicial (no campo da palavra ou no botão de confirmar) só entra se a
     // pessoa ainda não estiver na janela. Num PC carregado (OBS transmitindo, jogo
     // aberto) esta espera roda atrasada, depois do clique e da digitação dela: o foco

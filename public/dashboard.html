@@ -8303,7 +8303,8 @@ const RE_PEDIDO_ID = /^p\d{1,12}$/;
 // «?v=» é a versão do arquivo: a imagem trocada (mesmo nome) chega com outro endereço
 const RE_PEDIDO_IMG = /^\/pedidos-img\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9-]{1,120}\.(?:png|jpg|webp|gif)(?:\?v=[a-z0-9]{1,24})?$/;
 const PEDIDOS_LIMITE = 100;    // cartões por seção de cada vez (o resto, em «Mostrar mais»)
-const PEDIDOS_TRAVA_MS = 1500; // o botão tocado espera o eco do servidor (ou isto)
+const PEDIDOS_TRAVA_MS = 1500; // o botão tocado espera o eco do servidor (ou isto)...
+const PEDIDOS_TOQUE_MS = 1000; // ...e, depois do eco, ainda isto: o toque duplo não é outro toque
 const PEDIDOS_SECOES = [
   { id: 'agora', titulo: '▶ Agora', vazio: 'Ninguém jogando agora.' },
   { id: 'fila', titulo: '📋 Fila', vazio: 'A fila está vazia.' },
@@ -8442,10 +8443,35 @@ function travarPedidos(chave, op) {
     if (t && t.ate <= Date.now()) { pedidosTravas.delete(chave); aplicarTravasPedidos(); }
   }, PEDIDOS_TRAVA_MS + 20);
 }
+// 👆 O toque duplo não é outro toque. O servidor deste computador responde em
+// milissegundos: só com a espera do eco, o 2º clique de um clique duplo (100 a 300 ms
+// depois) já achava o botão solto e o cartão com o «faltavam» novo — e baixava outra
+// partida de quem pagou. Por isso o eco não solta o botão na hora: ele ainda espera
+// PEDIDOS_TOQUE_MS, apagado (a trava fica no mapa, pela chave, e sobrevive à repintura
+// do cartão); depois disso o toque seguinte vale como sempre. A resposta de erro não
+// mexe nesta espera (op null), e ela só acaba pelo relógio dela.
+function segurarPedidos(chave) {
+  const t = { op: null, ate: Infinity, eco: false };
+  pedidosTravas.set(chave, t);
+  setTimeout(() => {
+    if (pedidosTravas.get(chave) === t) { pedidosTravas.delete(chave); aplicarTravasPedidos(); }
+  }, PEDIDOS_TOQUE_MS);
+}
+// ⌨️ A tecla segurada também não é outro toque: o Enter que fica repetindo com o foco num
+// botão dos pedidos não vira clique de novo (com o eco chegando entre as repetições, cada
+// uma baixava outra partida). O espaço só clica ao soltar, uma vez.
+document.addEventListener('keydown', (e) => {
+  if (e.repeat && e.key === 'Enter' && e.target instanceof Element && e.target.closest('button[data-trava]')) e.preventDefault();
+}, true);
 // Esperando o eco, o botão fica apagado (aria-disabled) mas NÃO desabilitado: o
 // navegador tira o foco de um botão desabilitado, e quem usa o teclado voltaria
 // ao começo da página a cada partida. Sem permissão, aí sim, desabilitado.
 const botaoParadoPedidos = (b) => b.disabled || b.getAttribute('aria-disabled') === 'true';
+// 🖱️ O 2º clique de um clique duplo (o navegador conta: detail 2, 3…) nunca é outro toque,
+// nem quando já não cai no mesmo botão — o cartão saiu e a lista subiu, ou a janela e o
+// menu fecharam, e outro botão ficou embaixo do ponteiro. O teclado e o menu do botão
+// direito (detail 0) e o clique simples (detail 1) valem como sempre.
+const cliqueRepetidoPedidos = (e) => !!e && e.detail > 1;
 function esperarEcoPedidos(b, esperando) {
   if (esperando) b.setAttribute('aria-disabled', 'true');
   else b.removeAttribute('aria-disabled');
@@ -8486,7 +8512,10 @@ function abrirDuvidaDoChamado() {
   const a = pedidosLigados() ? pedidosEstado.agora : null;
   if (pedidosDuvidaDoChamado === null || !a || a.n !== pedidosDuvidaDoChamado) return;
   pedidosDuvidaDoChamado = null;
-  if (pedLista(a.duvidas).length && podeMexerPedidos() && !document.querySelector('.obs-dialog')) dialogoItensPedido(a, 'corrigir');
+  // 🪟 esta janela o PROGRAMA abre (a resposta do servidor chegou), não o clique da pessoa
+  // — que, num PC carregado, já pode estar digitando em outro campo: ela abre «sozinha»
+  // (obsDialog) e nunca confirma com uma tecla que vinha de fora
+  if (pedLista(a.duvidas).length && podeMexerPedidos() && !document.querySelector('.obs-dialog')) dialogoItensPedido(a, 'corrigir', true);
 }
 function receberPedidos(novo, motivos) {
   const ligado = !!novo && novo.ligado === true;
@@ -8498,7 +8527,16 @@ function receberPedidos(novo, motivos) {
   }
   pedidosConhecidos = ligado ? new Set(todosOsPedidos(novo).map((p) => p.id)) : null;
   pedidosEstado = novo;
-  for (const [k, t] of pedidosTravas) if (t.eco) pedidosTravas.delete(k);
+  // o eco chegou: o botão tocado ainda espera um instante (segurarPedidos)...
+  for (const [k, t] of pedidosTravas) if (t.eco) segurarPedidos(k);
+  // ...e a partida ou o ⏩ que acabou de valer — desta tela, de outra tela ou do Stream
+  // Deck — segura os mesmos botões em TODAS as telas (o eco chega a todas): o toque de
+  // outra pessoa no mesmo instante também não é outro toque. Depois da partida, o ▶ Agora
+  // pode já ser outro pedido (a última partida chamou o próximo sozinha): o cartão dele
+  // nasce no mesmo lugar, com os mesmos botões
+  const mot = pedLista(motivos);
+  if (mot.includes('partida') && ligado && novo.agora) segurarPedidos(`partida:${String(novo.agora.id).slice(0, 40)}`);
+  if (mot.includes('proximo')) segurarPedidos('proximo');
   renderPedidos();
   abrirDuvidaDoChamado();
 }
@@ -8587,7 +8625,7 @@ function montarBarraPedidos(barra) {
   prox.dataset.trava = 'proximo'; // dois toques no ⏩ chamariam duas pessoas
   prox.title = 'Chamar o próximo da fila';
   prox.append('⏩ ', pedEl('span', '', 'Próximo'));
-  prox.onclick = () => { if (!botaoParadoPedidos(prox)) enviarPedidos({ type: 'pedidoProximo' }, 'proximo'); };
+  prox.onclick = (e) => { if (!botaoParadoPedidos(prox) && !cliqueRepetidoPedidos(e)) enviarPedidos({ type: 'pedidoProximo' }, 'proximo'); };
   const novo = pedEl('button', 'secondary');
   novo.type = 'button';
   novo.dataset.acao = 'novo';
@@ -8859,8 +8897,9 @@ function botaoDoPedido(ctx, emoji, rotulo, dica, acao, trava, fazer) {
   b.append(pedEl('span', '', rotulo));
   b.disabled = !ctx.pode;
   esperarEcoPedidos(b, ctx.pode && !!trava && pedidosTravas.has(trava));
-  // um toque = uma ação (nada de «segurar acelera»): o botão espera o eco
-  b.onclick = () => { if (!botaoParadoPedidos(b)) fazer(); };
+  // um toque = uma ação (nada de «segurar acelera»): o botão espera o eco, e o 2º
+  // clique de um clique duplo nunca é outro toque (cliqueRepetidoPedidos)
+  b.onclick = (e) => { if (!botaoParadoPedidos(b) && !cliqueRepetidoPedidos(e)) fazer(); };
   return b;
 }
 // 🖱️ O botão direito no cartão abre o menu do programa (#ctxMenu) com as ações do
@@ -9010,8 +9049,10 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
       () => enviarPedidos({ type: 'pedidoPular', id }, `pular:${id}`)));
   }
   if (p.estado === 'pulado' && secao === 'fila') {
-    acoes.append(botaoDoPedido(ctx, '↩ ', 'Retomar', 'Volta para a fila, no mesmo lugar', 'retomar', `retomar:${id}`,
-      () => enviarPedidos({ type: 'pedidoRetomar', id }, `retomar:${id}`)));
+    // (a mesma trava do ⏭: o ↩ nasce no lugar dele — o 2º clique de um clique duplo
+    // desfazia o primeiro, e o pedido pulado voltava para a fila na mesma hora)
+    acoes.append(botaoDoPedido(ctx, '↩ ', 'Retomar', 'Volta para a fila, no mesmo lugar', 'retomar', `pular:${id}`,
+      () => enviarPedidos({ type: 'pedidoRetomar', id }, `pular:${id}`)));
   }
   if (secao === 'agora' || secao === 'fila') {
     acoes.append(botaoDoPedido(ctx, '✏ ', 'Corrigir', '', 'corrigir', null, () => dialogoItensPedido(p, 'corrigir')));
@@ -9050,7 +9091,7 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
 
 // ── ✏ corrigir / ＋ montar: os itens do pedido e as opções das dúvidas ──
 // (a busca no catálogo inteiro é das Configurações, só no computador do streamer)
-async function dialogoItensPedido(p, modo) {
+async function dialogoItensPedido(p, modo, sozinha) {
   if (!podeMexerPedidos()) return;
   const id = String(p.id).slice(0, 40);
   const opcoes = [];
@@ -9071,6 +9112,7 @@ async function dialogoItensPedido(p, modo) {
     icone: '🙋',
     texto: opcoes.length ? 'Marque o que vale neste pedido.' : 'O leitor não reconheceu nenhum item: o pedido segue assim mesmo, sem itens.',
     ok: modo === 'confirmar' ? 'Enviar para a fila' : 'Confirmar',
+    sozinha: sozinha === true,
     montarExtra: (box) => {
       if (opcoes.length) {
         const lista = pedEl('div', 'ped-dialogo-itens');
