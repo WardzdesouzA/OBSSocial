@@ -497,7 +497,19 @@
   }
 
   /* ---------- Conteúdo principal ---------- */
-  main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: var(--faixas-altura, 0px); }
+  /* 🧱 v0.192.1: as faixas do programa (versão nova, componentes com versão nova, modo
+     espectador) entram POR BAIXO, presas ao pé da janela, e é a lista que encolhe a altura
+     delas (--faixas-altura): o cabeçalho, as ferramentas, as abas e os cartões não saem do
+     lugar quando uma faixa chega ou sai. Ficam por baixo de tudo o que a pessoa abre (cartões
+     das ferramentas, menus, gaveta, janelas) e dos recados do canto. Só o rodapé das colunas
+     (a paginação) mora no pé e anda com elas: ele e a faixa que acabou de entrar ou de sair
+     ficam apagados pela espera curta — o toque que já vinha a caminho não aperta nada */
+  #faixasDoPainel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; }
+  #faixasDoPainel > div { position: relative; text-align: center; padding: 8px 40px 8px 14px; font-weight: 600; font-size: 14px; }
+  #faixasDoPainel.em-espera { cursor: progress; }
+  #faixasDoPainel.em-espera > div { pointer-events: none; opacity: 0.6; }
+  body.faixas-em-espera .live-col-foot { pointer-events: none; opacity: 0.45; }
   .featured-bar {
     padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; gap: 12px; min-height: 62px;
@@ -668,6 +680,7 @@
   body.modoSeguranca .chat-item .avatar,
   /* 🙋 v0.192: no cartão de pedido, quem pediu, a frase e o trecho em dúvida */
   body.modoSeguranca .pedido-card .author,
+  body.modoSeguranca .ped-de-quem .author, /* 🧾 v0.192.1: e na janela que diz de quem é o pedido */
   body.modoSeguranca .pedido-card .msg-text,
   body.modoSeguranca .pedido-card .ped-trecho { filter: blur(var(--seg-borrao, 16px)); }
   #segurancaBtn.ativo { background: var(--accent); color: #fff; }
@@ -1055,11 +1068,12 @@
   .pedido-card.agora { border-color: var(--green); border-left-color: var(--green); background: color-mix(in srgb, var(--green) 10%, var(--panel2)); }
   .pedido-card.pulado { opacity: 0.6; }
   .pedido-card.destaque { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .pedido-card .ped-topo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; min-width: 0; }
-  .pedido-card .ped-num { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .pedido-card .author { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-  .pedido-card .sc-amount { font-weight: 700; color: var(--yellow); white-space: nowrap; }
-  .pedido-card .ped-resgate { color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+  /* (o topo do cartão é o mesmo na janela que diz de quem é o pedido: .ped-de-quem) */
+  .pedido-card .ped-topo, .ped-de-quem .ped-topo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; min-width: 0; }
+  .pedido-card .ped-num, .ped-de-quem .ped-num { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pedido-card .author, .ped-de-quem .author { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+  .pedido-card .sc-amount, .ped-de-quem .sc-amount { font-weight: 700; color: var(--yellow); white-space: nowrap; }
+  .pedido-card .ped-resgate, .ped-de-quem .ped-resgate { color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
   .pedido-card .msg-text {
     font-size: 13px; line-height: 1.35; color: var(--coment-texto, inherit); white-space: pre-wrap; overflow-wrap: anywhere;
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; cursor: pointer;
@@ -1091,7 +1105,12 @@
   .ped-dialogo-campo { margin-top: 10px; }
   .ped-dialogo-campo > label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
   .ped-dialogo-dica { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
-  .pedido-card .ped-anonimo { font-weight: 600; font-style: italic; }
+  .pedido-card .ped-anonimo, .ped-de-quem .ped-anonimo { font-weight: 600; font-style: italic; }
+  /* 🧾 v0.192.1: de quem é o pedido, na janela que age sobre ele (o topo do cartão) */
+  .ped-de-quem { min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+  .ped-de-quem:not(:last-child) { margin-bottom: 10px; }
+  .ped-de-quem-rotulo { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .ped-de-quem .ped-topo { font-size: 13px; }
 </style>
 </head>
 <body>
@@ -2255,15 +2274,80 @@ const BOTOES_POR_SELETOR = {
 let papelDaConexao = null;
 let ultimaAcaoDaPessoa = 0; // último clique/tecla: separa o «negado» de um clique do que a página manda sozinha
 for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { ultimaAcaoDaPessoa = Date.now(); }, true);
+// 🧱 v0.192.1: as faixas do programa — «versão nova», «componentes com versão nova» e «modo
+// espectador» — entravam no TOPO, sozinhas (a busca automática respondeu; a conexão voltou
+// com outro papel), e empurravam o painel inteiro a altura delas: o clique que a pessoa já
+// vinha dando caía no botão que tinha ido parar embaixo do ponteiro (o «✔ Jogada» virava o
+// «🔓 Liberar» do cartão, e o nome segurado ia para a tela). Segurar o clique por um
+// instante não resolvia quem deixa o ponteiro parado no botão e olha o jogo. Agora elas
+// entram POR BAIXO, presas ao pé da janela, e é a lista que encolhe a altura delas: o
+// cabeçalho, as ferramentas, as abas e os cartões não saem do lugar — nem quando a faixa
+// chega, nem quando ela sai. Só anda o que mora no pé — o rodapé das colunas (a paginação):
+// ele e a própria faixa ficam apagados pela espera curta (a mesma do botão que mudou de
+// lugar), e o toque que vinha a caminho não aperta o link, o ✖ nem a paginação. O lugar de
+// onde a faixa (e o rodapé) saiu também espera: o 2º clique do clique duplo no ✖ não cai
+// no que apareceu ali.
+const FAIXAS_ESPERA_MS = 1000; // a mesma espera curta do botão dos pedidos que mudou de lugar (PEDIDOS_TOQUE_MS)
+let faixasEspera = null; // a espera curta que está valendo (a de quem mexeu por último)
+function alturaDasFaixasDoPainel() {
+  const caixa = document.getElementById('faixasDoPainel');
+  let altura = 0;
+  if (caixa) for (const faixa of caixa.children) altura += faixa.offsetHeight;
+  document.body.style.setProperty('--faixas-altura', altura + 'px');
+}
+function segurarPeDoPainel(caixa) {
+  const vez = (faixasEspera = {});
+  caixa.classList.add('em-espera');
+  document.body.classList.add('faixas-em-espera');
+  setTimeout(() => {
+    if (faixasEspera !== vez) return; // (outra faixa entrou ou saiu no meio: vale a espera dela)
+    faixasEspera = null;
+    caixa.classList.remove('em-espera');
+    caixa.style.minHeight = '';
+    document.body.classList.remove('faixas-em-espera');
+  }, FAIXAS_ESPERA_MS);
+}
+function porFaixaNoPainel(faixa) {
+  let caixa = document.getElementById('faixasDoPainel');
+  if (!caixa) {
+    caixa = document.createElement('div');
+    caixa.id = 'faixasDoPainel';
+    document.body.appendChild(caixa);
+    // (a altura muda com a largura da janela — a frase quebra em duas linhas — e com o idioma)
+    if (typeof ResizeObserver === 'function') new ResizeObserver(alturaDasFaixasDoPainel).observe(caixa);
+  }
+  caixa.appendChild(faixa);
+  alturaDasFaixasDoPainel();
+  segurarPeDoPainel(caixa);
+}
+function tirarFaixaDoPainel(faixa) {
+  const caixa = document.getElementById('faixasDoPainel');
+  if (!faixa || !caixa || faixa.parentNode !== caixa) return;
+  // (a caixa guarda o lugar pela espera curta, vazia e transparente, do alto do rodapé das
+  // colunas até o pé da janela: a lista já cresceu por baixo dela, e o toque repetido no
+  // lugar do ✖ — ou o que mirava a paginação, que desceu — para nela. A medida é a da
+  // janela; a conta desfaz o 🔍 tamanho da interface)
+  const r = caixa.getBoundingClientRect();
+  let topo = r.top;
+  for (const rodape of document.querySelectorAll('.live-col-foot')) {
+    const rr = rodape.getBoundingClientRect();
+    if (rr.height > 0) topo = Math.min(topo, rr.top);
+  }
+  const escala = caixa.offsetHeight > 0 ? r.height / caixa.offsetHeight : 1;
+  caixa.style.minHeight = Math.ceil((r.bottom - topo) / (escala || 1)) + 'px';
+  faixa.remove();
+  alturaDasFaixasDoPainel();
+  segurarPeDoPainel(caixa);
+}
 function aplicarModoEspectador(papel, podeRede) {
   const espectador = papel === 'viewer';
-  if (!espectador) document.getElementById('viewerBanner')?.remove();
+  if (!espectador) tirarFaixaDoPainel(document.getElementById('viewerBanner'));
   else if (!document.getElementById('viewerBanner')) {
     const banner = document.createElement('div');
     banner.id = 'viewerBanner';
-    banner.style.cssText = 'position:sticky;top:0;z-index:9999;background:#b68a24;color:#141414;text-align:center;padding:8px 14px;font-weight:600;font-size:14px';
+    banner.style.cssText = 'background:#b68a24;color:#141414;padding:8px 14px';
     banner.textContent = '👀 Modo espectador — você pode assistir ao painel e usar o que o streamer liberou nas configurações. O resto só funciona para quem tem a senha (ou no computador do streamer).';
-    document.body.prepend(banner);
+    porFaixaNoPainel(banner);
   }
   const MOTIVO = 'Não liberado pelo streamer para quem entra pela rede';
   for (const [seletor, ids] of Object.entries(BOTOES_POR_SELETOR)) {
@@ -2791,12 +2875,13 @@ const hub = connectHub((event) => {
 });
 
 
-// Faixa verde no topo: a busca automática achou uma versão nova
+// Faixa verde: a busca automática achou uma versão nova
+// (🧱 v0.192.1: entra por baixo, sem empurrar o painel — porFaixaNoPainel)
 function showUpdateBanner(latest) {
   if (document.getElementById('updateBanner')) return;
   const barra = document.createElement('div');
   barra.id = 'updateBanner';
-  barra.style.cssText = 'position:sticky;top:0;z-index:9999;background:#2f7d4f;color:#fff;text-align:center;padding:8px 40px 8px 14px;font-weight:600;font-size:14px';
+  barra.style.cssText = 'background:#2f7d4f;color:#fff';
   const link = document.createElement('a');
   link.href = '/config#sec-sobre';
   link.target = '_blank';
@@ -2807,9 +2892,9 @@ function showUpdateBanner(latest) {
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';
   fechar.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
-  fechar.onclick = () => barra.remove();
+  fechar.onclick = () => tirarFaixaDoPainel(barra);
   barra.appendChild(fechar);
-  document.body.prepend(barra);
+  porFaixaNoPainel(barra);
 }
 
 // 🧩 v0.185: faixa dos componentes com versão nova (Node.js, yt-dlp, biblioteca
@@ -2818,7 +2903,7 @@ function showComponentesBanner(avisos) {
   if (document.getElementById('componentesBanner')) return;
   const barra = document.createElement('div');
   barra.id = 'componentesBanner';
-  barra.style.cssText = 'position:sticky;top:0;z-index:9998;background:#8a5a00;color:#fff;text-align:center;padding:8px 40px 8px 14px;font-weight:600;font-size:14px';
+  barra.style.cssText = 'background:#8a5a00;color:#fff';
   const rotulo = document.createElement('span');
   rotulo.textContent = '🧩 Componentes com versão nova:';
   barra.append(rotulo, ' ');
@@ -2840,9 +2925,9 @@ function showComponentesBanner(avisos) {
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';
   fechar.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
-  fechar.onclick = () => barra.remove();
+  fechar.onclick = () => tirarFaixaDoPainel(barra);
   barra.appendChild(fechar);
-  document.body.prepend(barra);
+  porFaixaNoPainel(barra);
 }
 
 const EYE_OPEN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -9029,16 +9114,12 @@ function abrirMenuDoPedido(e, card) {
   }
   posicionarCtxMenu(e);
 }
-function preencherCartaoPedido(card, p, secao, ctx, assin) {
-  card.__assin = assin;
-  if (!card.__menu) { card.__menu = true; card.addEventListener('contextmenu', (e) => abrirMenuDoPedido(e, card)); }
-  const id = String(p.id).slice(0, 40);
-  card.className = 'pedido-card' + (secao === 'agora' ? ' agora' : '') + (p.estado === 'pulado' ? ' pulado' : '');
-  card.dataset.pedido = id;
-  card.dataset.secao = secao;
-  card.style.setProperty('--platform-color', platformColor(p.platform));
-  const partes = [];
-  // nº e hora (sem letras: o tradutor não mexe), a rede, quem pediu, o resgate e o valor
+// o topo do cartão: nº e hora (sem letras: o tradutor não mexe), a rede, quem pediu, o
+// resgate e o valor — o que ESTA tela recebeu do servidor (quem só assiste pela rede já
+// recebe o primeiro nome do Pix do banco, o «Anônimo» do nome segurado e nenhum valor,
+// a não ser que o streamer deixe). É o mesmo desenho no cartão e na janela que diz de
+// quem é o pedido (linhaDeQuemDoPedido): a janela nunca mostra mais do que o cartão
+function topoDoPedido(p) {
   const topo = pedEl('div', 'ped-topo');
   const hora = horaDoPedido(p.hora);
   topo.append(pedEl('span', 'ped-num', `#${pedInteiro(p.n)}${hora ? ' · ' + hora : ''}`));
@@ -9061,7 +9142,29 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
     const v = p.valor;
     topo.append(pedEl('span', 'sc-amount', v.aproximado && v.original ? `≈ ${v.texto} (${v.original})` : v.texto));
   }
-  partes.push(topo);
+  return topo;
+}
+// 🧾 v0.192.1: a janela que age sobre o pedido de UMA pessoa (✖ Recusar, «Marcar para
+// devolver», «Era só apoio», ✔ Devolvido, ✏ Corrigir, ＋ Montar) diz de quem ele é: o
+// rótulo e o topo do cartão, com os mesmos nós — o nome em .author (o tradutor não mexe e
+// o 🛡️ borra), o rótulo do programa («Anônimo», «Apoiador Pix») que traduz, o valor só
+// onde a tela vê valores. Com dois pagamentos na lista, a pessoa confere antes de confirmar
+function linhaDeQuemDoPedido(p, rotulo) {
+  const linha = pedEl('div', 'ped-de-quem');
+  linha.append(pedEl('div', 'ped-de-quem-rotulo', rotulo), topoDoPedido(p));
+  return linha;
+}
+const confirmarNoPedido = (p, rotulo, texto, opcoes) => obsConfirmar(texto, { ...opcoes, montarExtra: (box) => box.append(linhaDeQuemDoPedido(p, rotulo)) });
+function preencherCartaoPedido(card, p, secao, ctx, assin) {
+  card.__assin = assin;
+  if (!card.__menu) { card.__menu = true; card.addEventListener('contextmenu', (e) => abrirMenuDoPedido(e, card)); }
+  const id = String(p.id).slice(0, 40);
+  card.className = 'pedido-card' + (secao === 'agora' ? ' agora' : '') + (p.estado === 'pulado' ? ' pulado' : '');
+  card.dataset.pedido = id;
+  card.dataset.secao = secao;
+  card.style.setProperty('--platform-color', platformColor(p.platform));
+  const partes = [];
+  partes.push(topoDoPedido(p));
   // a frase (curta: 3 linhas; o clique, o Enter ou o espaço mostram inteira — o Tab
   // chega nela, como num botão)
   if (p.texto) {
@@ -9170,12 +9273,12 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
     acoes.append(botaoDoPedido(ctx, '＋ ', 'Montar o pedido', 'Escolher os itens e mandar para a fila', 'montar', null, () => dialogoItensPedido(p, 'confirmar')));
     if (p.pago === true) {
       acoes.append(botaoDoPedido(ctx, '', 'Marcar para devolver', '', 'devolver', `recusar:${id}`, async () => {
-        if (await obsConfirmar('Marcar este pagamento para devolver? O pedido sai da lista e vai para «a devolver».', { icone: '💸', ok: 'Marcar para devolver' })) {
+        if (await confirmarNoPedido(p, 'Quem pagou', 'Marcar este pagamento para devolver? O pedido sai da lista e vai para «a devolver».', { icone: '💸', ok: 'Marcar para devolver' })) {
           enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
         }
       }));
       acoes.append(botaoDoPedido(ctx, '', 'Era só apoio', '', 'ignorar', `ignorar:${id}`, async () => {
-        if (await obsConfirmar('Era só apoio? O pagamento sai da lista sem ir para «a devolver».', { icone: '🙋', ok: 'Era só apoio' })) {
+        if (await confirmarNoPedido(p, 'Quem pagou', 'Era só apoio? O pagamento sai da lista sem ir para «a devolver».', { icone: '🙋', ok: 'Era só apoio' })) {
           enviarPedidos({ type: 'pedidoIgnorar', id }, `ignorar:${id}`);
         }
       }));
@@ -9184,12 +9287,12 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
   if (secao === 'agora' || secao === 'fila' || (secao === 'revisar' && p.pago !== true)) {
     acoes.append(botaoDoPedido(ctx, '✖ ', 'Recusar', '', 'recusar', `recusar:${id}`, async () => {
       const texto = p.pago === true ? 'Recusar este pedido? Ele é pago: vai para a lista «a devolver».' : 'Recusar este pedido?';
-      if (await obsConfirmar(texto, { icone: '🙋', nivel: 'perigo', ok: 'Recusar' })) enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
+      if (await confirmarNoPedido(p, 'Quem pediu', texto, { icone: '🙋', nivel: 'perigo', ok: 'Recusar' })) enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
     }));
   }
   if (secao === 'devolver') {
     acoes.append(botaoDoPedido(ctx, '✔ ', 'Devolvido', '', 'devolvido', `devolvido:${id}`, async () => {
-      if (await obsConfirmar('Já devolveu este pagamento? Ele sai da lista «a devolver».', { icone: '💸', ok: 'Devolvido' })) {
+      if (await confirmarNoPedido(p, 'Quem pagou', 'Já devolveu este pagamento? Ele sai da lista «a devolver».', { icone: '💸', ok: 'Devolvido' })) {
         enviarPedidos({ type: 'pedidoDevolvido', id }, `devolvido:${id}`);
       }
     }));
@@ -9223,6 +9326,7 @@ async function dialogoItensPedido(p, modo, sozinha) {
     ok: modo === 'confirmar' ? 'Enviar para a fila' : 'Confirmar',
     sozinha: sozinha === true,
     montarExtra: (box) => {
+      box.append(linhaDeQuemDoPedido(p, 'Quem pediu')); // 🧾 de quem é o pedido, como no cartão
       if (opcoes.length) {
         const lista = pedEl('div', 'ped-dialogo-itens');
         lista.dataset.noI18n = '1';
