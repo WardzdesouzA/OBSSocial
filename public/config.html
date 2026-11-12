@@ -7567,8 +7567,15 @@ function pedFundirLocal(alvo, parcial) {
 // a ficha que o servidor não gravou e, a cada janela de depois, punha a lista velha por cima do
 // eco — a palavra que outra tela acrescentou sumia (e saía do servidor no ajuste seguinte daqui), e
 // a que ela tirou voltava. Quando a janela acaba, vale o que o último eco trouxe.
+// Numa rajada (dois ajustes mais depressa que o eco), quem fecha é a janela do ÚLTIMO ajuste, e só
+// depois de chegar um eco para cada ajuste: o servidor devolve um eco a cada ajuste, em ordem, e o
+// eco do 1º, que chega depois do 2º, ainda não traz o 2º. Antes, a janela do 1º fechava com ele,
+// a ficha do 2º piscava para trás e, se outra entrava nesse instante, a do 2º saía do servidor.
+// Se o eco do último ainda não veio, o que espera fica até um eco fora da janela.
 const pedPendentes = new Map();
 const pedEcoNaJanela = new Map(); // (o caminho → o que o servidor trouxe nele, no último eco dentro da janela)
+let pedVez = 0; // (o número do último ajuste daqui: só a janela dele chama o pedFimDaJanela)
+let pedEnviosNaRajada = 0, pedEcosNaRajada = 0; // (ajustes daqui e ecos dentro da janela, desde o último acerto)
 function pedAnotarPendentes(parcial, raiz) {
   if (cfgPapel === 'viewer') return;
   for (const k of Object.keys(parcial)) {
@@ -7578,7 +7585,8 @@ function pedAnotarPendentes(parcial, raiz) {
   }
 }
 function pedSegurarPendentes(naJanela) {
-  if (!naJanela || !settings) { pedPendentes.clear(); pedEcoNaJanela.clear(); return; }
+  if (!naJanela || !settings) { pedPendentes.clear(); pedEcoNaJanela.clear(); pedEnviosNaRajada = 0; pedEcosNaRajada = 0; return; }
+  if (pedEnviosNaRajada > 0) pedEcosNaRajada++;
   for (const [k, v] of pedPendentes) {
     const eco = pedLer(settings, k);
     if (v === null ? eco === undefined || eco === null : JSON.stringify(eco) === JSON.stringify(v)) { pedPendentes.delete(k); pedEcoNaJanela.delete(k); } // (o eco já traz)
@@ -7589,6 +7597,8 @@ function pedSegurarPendentes(naJanela) {
   }
 }
 function pedFimDaJanela() {
+  if (pedEcosNaRajada < pedEnviosNaRajada) return; // (o eco do último ajuste ainda não veio)
+  pedEnviosNaRajada = 0; pedEcosNaRajada = 0;
   let mudou = false;
   for (const [k, eco] of pedEcoNaJanela) {
     if (!pedPendentes.has(k)) continue;
@@ -7603,8 +7613,9 @@ function pedMandar(parcial) {
   if (settings) { if (!settings.pedidos || typeof settings.pedidos !== 'object') settings.pedidos = {}; pedFundirLocal(settings.pedidos, parcial); }
   pedAnotarPendentes(parcial, 'pedidos.');
   applyingSettings = true;
+  const vez = ++pedVez; pedEnviosNaRajada++;
   hub.send({ type: 'settings', settings: { pedidos: parcial } });
-  setTimeout(() => { applyingSettings = false; pedFimDaJanela(); }, 300);
+  setTimeout(() => { applyingSettings = false; if (vez === pedVez) pedFimDaJanela(); }, 300);
 }
 // ◀ ▶ ↺: a foto volta inteira, menos o jogo (o jogo em uso muda pelo ✔ Usar); a
 // moeda que não estava na foto sai (null)
@@ -7721,8 +7732,9 @@ document.getElementById('ped-onde').addEventListener('change', (e) => {
   recordChange('pedidos');
   pedAnotarPendentes({ panel: { pedidosOnde: e.target.value } }, '');
   applyingSettings = true;
+  const vez = ++pedVez; pedEnviosNaRajada++;
   hub.send({ type: 'settings', settings: { panel: { pedidosOnde: e.target.value } } });
-  setTimeout(() => { applyingSettings = false; pedFimDaJanela(); }, 300);
+  setTimeout(() => { applyingSettings = false; if (vez === pedVez) pedFimDaJanela(); }, 300);
 });
 // 🖼️ tudo de uma vez: painel, tela e pedidos pagos
 // («Mostrar todas» também devolve as dos tipos desligados)
@@ -12127,6 +12139,7 @@ function sendSnapshot(key, snap) {
     else if (key === 'raffle') { marcarEnvioSorteio(snap); hub.send({ type: 'settings', settings: { raffle: JSON.parse(JSON.stringify(snap)) } }); } // 🎁 v0.116
     else if (key === 'pedidos') { // 🙋 v0.192 (o jogo em uso fica; o «Onde a fila aparece» vai ao panel)
       pedPendentes.clear(); // (a foto volta inteira: o que esperava o eco de um ajuste de antes não vale mais)
+      if (pedEnviosNaRajada > 0) pedEnviosNaRajada++; // (a foto também tem o seu eco: ele não é o do último ajuste da rajada)
       const onde = ['auto', 'coluna', 'aba', 'ambos'].includes(snap.__onde) ? snap.__onde : null;
       hub.send({ type: 'settings', settings: { pedidos: pedidosDaFoto(snap), ...(onde ? { panel: { pedidosOnde: onde } } : {}) } });
     }
