@@ -3912,6 +3912,7 @@ const hub = connectHub((event) => {
     case 'init':
       settingsBase = event.settings;
       settings = comPerfilEdicao(settingsBase);
+      try { pedSegurarPendentes(false); } catch {} // (a conexão recomeçou: o que esperava o eco não vale mais)
       defaultSettings = event.defaults || null;
       telaAntes = snapshotFrom(settings, 'tela'); // a foto inicial do Organizar
       updateHistoryButtons();
@@ -4038,6 +4039,9 @@ const hub = connectHub((event) => {
       try { registrarSorteioVindoDeFora(settingsBase && settingsBase.raffle, event.settings && event.settings.raffle); } catch {}
       settingsBase = event.settings;
       settings = comPerfilEdicao(settingsBase);
+      // 👆 v0.192.1: dentro da janela, o que esta página mandou das regras dos Pedidos e o eco
+      // ainda não trouxe volta à cópia local por cima dele (pedSegurarPendentes)
+      try { pedSegurarPendentes(applyingSettings); } catch {}
       perfilAutoPendente = null; // o eco chegou: settings volta a ser a verdade
       // O eco do servidor é a foto oficial de "como está agora" — é dela que
       // o próximo passo do histórico do Organizar parte
@@ -7546,9 +7550,38 @@ function pedFundirLocal(alvo, parcial) {
     else alvo[k] = Array.isArray(v) ? v.slice() : v;
   }
 }
+// 👆 v0.192.1: o que ESTA página mandou das regras e o eco ainda não trouxe (o caminho a partir de
+// settings — 'pedidos.palavrasBloqueadas', 'pedidos.precoPorMoeda.USD', 'panel.pedidosOnde' — →
+// o valor). Cada eco é o estado do servidor ATÉ ali, e o de um ajuste ANTERIOR daqui ainda não traz
+// o último: trocar a cópia local por ele piscava o campo de volta e, nas listas, a ficha seguinte
+// saía da lista velha — duas palavras bloqueadas seguidas, mais depressa que o eco, e a do meio se
+// perdia, na tela e no servidor. Por isso, no eco que chega dentro da janela do applyingSettings, o
+// que ainda espera volta à cópia local por cima dele (pedSegurarPendentes), e a página é repintada
+// com o resto: o que OUTRA tela mudou no mesmo instante aparece na hora (antes os campos não eram
+// repintados ali, e o seletor da espera ficava em «Sem espera», com o ⚠️, valendo 1 s, até um eco
+// qualquer de depois). Fora da janela o eco vale como veio. (Quem só assiste pela rede não grava
+// as regras — o servidor recusa —, e para ele o eco é sempre o que vale.)
+const pedPendentes = new Map();
+function pedAnotarPendentes(parcial, raiz) {
+  if (cfgPapel === 'viewer') return;
+  for (const k of Object.keys(parcial)) {
+    const v = parcial[k];
+    if (v && typeof v === 'object' && !Array.isArray(v)) pedAnotarPendentes(v, raiz + k + '.');
+    else pedPendentes.set(raiz + k, Array.isArray(v) ? v.slice() : v);
+  }
+}
+function pedSegurarPendentes(naJanela) {
+  if (!naJanela || !settings) { pedPendentes.clear(); return; }
+  for (const [k, v] of pedPendentes) {
+    const eco = pedLer(settings, k);
+    if (v === null ? eco === undefined || eco === null : JSON.stringify(eco) === JSON.stringify(v)) pedPendentes.delete(k); // (o eco já traz)
+    else pedFundirLocal(settings, pedParcial(k, v));
+  }
+}
 function pedMandar(parcial) {
   recordChange('pedidos');
   if (settings) { if (!settings.pedidos || typeof settings.pedidos !== 'object') settings.pedidos = {}; pedFundirLocal(settings.pedidos, parcial); }
+  pedAnotarPendentes(parcial, 'pedidos.');
   applyingSettings = true;
   hub.send({ type: 'settings', settings: { pedidos: parcial } });
   setTimeout(() => { applyingSettings = false; }, 300);
@@ -7598,14 +7631,13 @@ function pedPintarCampos(forcar) {
   const ondeAtual = (settings.panel || {}).pedidosOnde;
   if (onde && (forcar || document.activeElement !== onde)) onde.value = ['auto', 'coluna', 'aba', 'ambos'].includes(ondeAtual) ? ondeAtual : 'auto';
 }
-// O eco do próprio ajuste repinta só as listas (moedas, fichas, tipos): um campo
-// repintado com o eco de um ajuste ANTERIOR piscaria de volta. Depois do ◀ ▶ ↺
-// dos Pedidos — que pode sair ainda na janela do eco do ajuste anterior —, os ecos
-// dos instantes seguintes repintam também os campos sem o foco, com o que voltou
-let pedRepintarAte = 0;
+// O eco que chega dentro da janela do applyingSettings repinta as listas (moedas,
+// fichas, tipos) e os campos sem o foco, com o que ainda espera o eco do ajuste
+// daqui já de volta na cópia local (pedSegurarPendentes). (Também depois do ◀ ▶ ↺
+// dos Pedidos, que pode sair ainda na janela do eco do ajuste anterior.)
 function pedAposEco(jaPintou) {
   if (!settings) return;
-  if (!jaPintou && Date.now() < pedRepintarAte) pedPintarCampos(false);
+  if (!jaPintou) pedPintarCampos(false);
   pedPintarMoedas();
   pedFichasRecompensas.pintar();
   pedFichasPalavras.pintar();
@@ -7667,6 +7699,7 @@ document.getElementById('ped-preco').addEventListener('change', (e) => {
 document.getElementById('ped-onde').addEventListener('change', (e) => {
   // o histórico é o desta página (◀ ▶ ↺ dos Pedidos), não o do 🎨 Temas
   recordChange('pedidos');
+  pedAnotarPendentes({ panel: { pedidosOnde: e.target.value } }, '');
   applyingSettings = true;
   hub.send({ type: 'settings', settings: { panel: { pedidosOnde: e.target.value } } });
   setTimeout(() => { applyingSettings = false; }, 300);
@@ -7821,6 +7854,12 @@ function pedTocarTirar(e, b, tirar) {
   if (pedTirarParado(b)) return;
   if (e.detail > 1 && !(pedTirarCliqueDeAntes && pedTirarCliqueDeAntes.parado && pedTirarCliqueDeAntes.chave === b.dataset.pedTirar)) {
     pedSegurarTirar(b.dataset.pedTirar);
+    // 👆 v0.192.1: este clique, que não contou, ficou neste botão apagado — o seguinte, dado quando
+    // ele acender, vale (como o que caiu nele apagado). Sem isso, com o clique duplo do sistema mais
+    // lento que a espera, cada clique dado quando ele acendia era recusado e o apagava de novo, em
+    // laço. (Em «Sem espera» ele não apaga, e o clique repetido continua não tirando nada.)
+    const agora = pedTirarCliqueDeAgora;
+    if (agora && agora.chave === b.dataset.pedTirar && pedTirarParado(b)) agora.parado = true;
     return;
   }
   tirar();
@@ -12067,7 +12106,7 @@ function sendSnapshot(key, snap) {
     else if (key === 'panel') hub.send({ type: 'settings', settings: { panel: { ...snap, ocultos: Object.fromEntries(OBS_PAINEL_ORDEM.OCULTAVEIS.map((k) => [k, !!(snap.ocultos && snap.ocultos[k] === true)])) } } });
     else if (key === 'raffle') { marcarEnvioSorteio(snap); hub.send({ type: 'settings', settings: { raffle: JSON.parse(JSON.stringify(snap)) } }); } // 🎁 v0.116
     else if (key === 'pedidos') { // 🙋 v0.192 (o jogo em uso fica; o «Onde a fila aparece» vai ao panel)
-      pedRepintarAte = Date.now() + 2000; // os ecos que chegam agora repintam os campos
+      pedPendentes.clear(); // (a foto volta inteira: o que esperava o eco de um ajuste de antes não vale mais)
       const onde = ['auto', 'coluna', 'aba', 'ambos'].includes(snap.__onde) ? snap.__onde : null;
       hub.send({ type: 'settings', settings: { pedidos: pedidosDaFoto(snap), ...(onde ? { panel: { pedidosOnde: onde } } : {}) } });
     }

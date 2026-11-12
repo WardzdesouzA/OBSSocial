@@ -2885,7 +2885,9 @@ const hub = connectHub((event) => {
 
 
 // Faixa verde: a busca automática achou uma versão nova
-// (🧱 v0.192.1: entra por baixo, sem empurrar o painel — porFaixaNoPainel)
+// (🧱 v0.192.1: entra por baixo, sem empurrar o painel — porFaixaNoPainel. O ✖ ocupa a altura
+// da faixa, de cima a baixo: com top:6px a caixa dele, da altura da faixa, passava 6 px do pé
+// da janela e perdia a parte de baixo da área de clique)
 function showUpdateBanner(latest) {
   if (document.getElementById('updateBanner')) return;
   const barra = document.createElement('div');
@@ -2900,7 +2902,7 @@ function showUpdateBanner(latest) {
   const fechar = document.createElement('button');
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';
-  fechar.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
+  fechar.style.cssText = 'position:absolute;right:8px;top:0;bottom:0;padding-top:0;padding-bottom:0;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
   fechar.onclick = () => tirarFaixaDoPainel(barra);
   barra.appendChild(fechar);
   porFaixaNoPainel(barra);
@@ -2933,7 +2935,7 @@ function showComponentesBanner(avisos) {
   const fechar = document.createElement('button');
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';
-  fechar.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
+  fechar.style.cssText = 'position:absolute;right:8px;top:0;bottom:0;padding-top:0;padding-bottom:0;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
   fechar.onclick = () => tirarFaixaDoPainel(barra);
   barra.appendChild(fechar);
   porFaixaNoPainel(barra);
@@ -8588,7 +8590,14 @@ const botaoParadoPedidos = (b) => b.disabled || b.getAttribute('aria-disabled') 
 // mesmo botão, ainda apagado. Quem tocou cedo demais, viu o botão acender e tocou de novo
 // tinha o toque recusado (menos de meio segundo depois do anterior, o navegador o conta
 // como repetido) e o botão apagava por mais um segundo — num ritmo constante de cliques,
-// só o primeiro valia. Quando o botão acende, o toque vale.
+// só o primeiro valia. Quando o botão acende, o toque vale. (👆 v0.192.1: também quando o
+// clique anterior foi o repetido que não contou e APAGOU este botão — mostrarToqueCedoPedidos;
+// sem isso, com o clique duplo do sistema mais lento que a espera, cada clique dado quando ele
+// acendia era recusado e o apagava de novo, em laço.)
+// ⏱️ Em «Sem espera» (0) não há essa exceção: o botão tocado acende assim que o eco chega, e o
+// 3º clique de um clique TRIPLO, com o eco chegando entre o 2º e o 3º (tela pela rede, PC
+// carregado), achava o botão aceso logo depois de um clique que caiu nele apagado — e baixava
+// outra partida. Ali o clique repetido nunca é outro toque.
 let pedidosCliqueDeAntes = null; // o que o clique anterior achou: o botão (trava|ação) e se ele estava apagado
 let pedidosCliqueDeAgora = null;
 document.addEventListener('click', (e) => {
@@ -8597,7 +8606,7 @@ document.addEventListener('click', (e) => {
   pedidosCliqueDeAgora = b ? { botao: `${b.dataset.trava}|${b.dataset.acao}`, parado: botaoParadoPedidos(b) } : null;
 }, true);
 const cliqueRepetidoPedidos = (e, b) => !!e && e.detail > 1
-  && !(!!b && !!pedidosCliqueDeAntes && pedidosCliqueDeAntes.parado && pedidosCliqueDeAntes.botao === `${b.dataset.trava}|${b.dataset.acao}`);
+  && !(esperaToquePedidos() > 0 && !!b && !!pedidosCliqueDeAntes && pedidosCliqueDeAntes.parado && pedidosCliqueDeAntes.botao === `${b.dataset.trava}|${b.dataset.acao}`);
 // 👀 ...e quem tocou cedo demais vê que o toque não contou: o botão que estava solto
 // embaixo do ponteiro (o da pessoa seguinte, que subiu para o lugar) fica apagado pela
 // espera curta, como o botão tocado. Sem isto ele ficava aceso e não respondia enquanto
@@ -8607,6 +8616,9 @@ function mostrarToqueCedoPedidos(b) {
   if (!b.dataset.trava) return;
   segurarPedidos(b.dataset.trava);
   aplicarTravasPedidos();
+  // (este clique, que não contou, ficou neste botão apagado: o seguinte, dado quando ele acender, vale)
+  const agora = pedidosCliqueDeAgora;
+  if (agora && agora.botao === `${b.dataset.trava}|${b.dataset.acao}` && botaoParadoPedidos(b)) agora.parado = true;
 }
 function esperarEcoPedidos(b, esperando) {
   if (esperando) b.setAttribute('aria-disabled', 'true');
