@@ -8429,8 +8429,11 @@ document.getElementById('pedCatLista').addEventListener('keydown', (e) => {
 });
 window.addEventListener('mouseup', (e) => { if (e.button === 0) pedSoltarTabela(); }, true);
 window.addEventListener('keyup', (e) => { if (e.key === ' ') pedSoltarTabela(); }, true);
-// (o arrasto de uma miniatura e a janela que perde o foco não entregam o soltar)
+// (o arrasto de uma miniatura e a janela que perde o foco não entregam o soltar; o menu que
+// abre com o botão esquerdo apertado — o Ctrl+clique do Mac, o toque longo num aparelho de
+// toque — também não: sem isto a tabela ficava sem ser refeita até o próximo clique)
 window.addEventListener('dragend', pedSoltarTabela, true);
+window.addEventListener('contextmenu', pedSoltarTabela, true);
 window.addEventListener('blur', pedSoltarTabela);
 function pedRenderTabela() {
   const lista = document.getElementById('pedCatLista');
