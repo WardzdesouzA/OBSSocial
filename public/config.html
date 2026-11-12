@@ -7443,6 +7443,8 @@ let pedImagemAlvo = '';     // o item que recebe a imagem escolhida em 🖼️ T
 let pedLerTimer = null;
 let pedBuscaTimer = null;
 let pedIdiomaPintado = null; // o idioma dos nomes da última pintura da tabela
+let pedTabelaApertada = 0;   // o mouse (ou o espaço) está apertado em cima da tabela (a vez; pedRenderTabela)
+let pedTabelaAdiada = false; // ...e chegou uma repintura nesse meio-tempo
 
 const PED_IDIOMAS = [['pt', 'Português'], ['en', 'English'], ['es', 'Español'], ['fr', 'Français'], ['de', 'Deutsch'],
   ['ru', 'Русский'], ['tr', 'Türkçe'], ['ja', '日本語'], ['ko', '한국어'], ['zh', '中文']];
@@ -7739,7 +7741,9 @@ function pedPintarMoedas() {
     tirar.className = 'ped-mini perigo';
     tirar.textContent = '🗑️';
     tirar.title = 'Tirar esta moeda';
-    tirar.addEventListener('click', () => { pedMandar({ precoPorMoeda: { [c]: null } }); linha.remove(); pedPintarMoedas(); });
+    // 🖱️ (a lista sobe quando a linha sai: o 2º clique de um clique duplo — o navegador conta,
+    // detail 2 — caía no 🗑️ da moeda de baixo e tirava DUAS; o clique repetido não tira nada)
+    tirar.addEventListener('click', (e) => { if (e.detail > 1) return; pedMandar({ precoPorMoeda: { [c]: null } }); linha.remove(); pedPintarMoedas(); });
     linha.append(cod, inp, tirar);
     box.appendChild(linha);
   }
@@ -7810,7 +7814,9 @@ function pedFichas(container, op) {
       x.className = 'palavra-tirar';
       x.textContent = '✖';
       x.title = 'Tirar da lista';
-      x.addEventListener('click', () => { pedMandar(pedParcial(op.caminho, ler().filter((q) => !igual(q, p)))); pintar(); });
+      // 🖱️ (as fichas andam quando uma sai: o 2º clique de um clique duplo — detail 2 — caía no
+      // ✖ da ficha seguinte e tirava DUAS, sem confirmação; o clique repetido não tira nada)
+      x.addEventListener('click', (e) => { if (e.detail > 1) return; pedMandar(pedParcial(op.caminho, ler().filter((q) => !igual(q, p)))); pintar(); });
       chip.append(txt, x);
       lista.appendChild(chip);
     }
@@ -7939,19 +7945,26 @@ function pedNomeNoDialogo(nome) {
 // (o item mudava de nome). Sem ninguém tocar em nada, tudo fica igual.
 function pedFocoInicial(box, alvo, selecionar) {
   let abrindo = true;
+  let pelaPessoa = false; // o botão de confirmar recebeu o foco de dentro da janela (o Tab dela)
   queueMicrotask(() => { // (a janela já montada: o botão de confirmar existe)
     const caixa = box.closest('.obs-dialog');
     const ok = caixa && caixa.querySelector('.obs-dlg-ok');
-    if (ok) ok.addEventListener('focus', (e) => { if (abrindo && e.relatedTarget && box.contains(e.relatedTarget)) e.relatedTarget.focus(); });
+    if (ok) ok.addEventListener('focus', (e) => {
+      pelaPessoa = !!e.relatedTarget && caixa.contains(e.relatedTarget);
+      if (abrindo && e.relatedTarget && box.contains(e.relatedTarget)) e.relatedTarget.focus();
+    });
   });
   setTimeout(() => {
     abrindo = false;
     if (!alvo) return;
     // a pessoa já está na janela (a janela inteira, não só os campos): quem tinha ido com o
     // Tab até o «Cancelar» voltava ao primeiro campo, e o Enter SALVAVA o que ela queria
-    // descartar. O botão de confirmar não conta: é onde o foco da própria janela o põe
+    // descartar. O botão de confirmar só não conta quando foi a própria janela que pôs o
+    // foco nele: quem chegou a ele com o Tab (vindo do «Cancelar») também voltava ao
+    // primeiro campo, com o nome inteiro selecionado — e o espaço, que apertaria o botão,
+    // apagava o nome digitado
     const a = document.activeElement;
-    if ((box.closest('.obs-dialog') || box).contains(a) && !a.classList.contains('obs-dlg-ok')) return;
+    if ((box.closest('.obs-dialog') || box).contains(a) && (!a.classList.contains('obs-dlg-ok') || pelaPessoa)) return;
     alvo.focus();
     if (selecionar) alvo.select();
   }, 60);
@@ -8392,9 +8405,37 @@ function pedReceberPagina(ev) {
   pedSel.atualizadoEm = c ? c.atualizadoEm : null;
   pedRenderTabela();
 }
+// 🖱️ A tabela é refeita inteira a cada resposta (cada mudança do catálogo, desta tela, de
+// outra ou de um lote de imagens importadas). Refeita ENTRE o apertar e o soltar do mouse num
+// botão dela — ou do espaço, com o foco no botão —, o clique se perdia: o navegador não
+// entrega o clique quando o botão apertado saiu da página (o ✏️ Editar não abria, o 🖼️ Trocar
+// imagem não mostrava a escolha do arquivo). Com o mouse ou o espaço apertado na tabela, a
+// repintura espera a pessoa soltar: o clique sai na mesma volta do soltar, e a tabela é
+// refeita logo depois dele, com o que chegou nesse meio-tempo.
+function pedApertarTabela() { pedTabelaApertada = (Math.abs(pedTabelaApertada) % 1000000) + 1; }
+function pedSoltarTabela() {
+  const vez = pedTabelaApertada;
+  if (vez <= 0) return;
+  pedTabelaApertada = -vez; // (solto: só falta o clique, que vem nesta mesma volta)
+  setTimeout(() => {
+    if (pedTabelaApertada !== -vez) return; // (apertou de novo antes: espera o soltar seguinte)
+    pedTabelaApertada = 0;
+    if (pedTabelaAdiada) { pedTabelaAdiada = false; pedRenderTabela(); }
+  }, 0);
+}
+document.getElementById('pedCatLista').addEventListener('mousedown', (e) => { if (e.button === 0) pedApertarTabela(); });
+document.getElementById('pedCatLista').addEventListener('keydown', (e) => {
+  if (e.key === ' ' && !e.repeat && e.target instanceof Element && e.target.closest('button')) pedApertarTabela();
+});
+window.addEventListener('mouseup', (e) => { if (e.button === 0) pedSoltarTabela(); }, true);
+window.addEventListener('keyup', (e) => { if (e.key === ' ') pedSoltarTabela(); }, true);
+// (o arrasto de uma miniatura e a janela que perde o foco não entregam o soltar)
+window.addEventListener('dragend', pedSoltarTabela, true);
+window.addEventListener('blur', pedSoltarTabela);
 function pedRenderTabela() {
   const lista = document.getElementById('pedCatLista');
   if (!lista) return;
+  if (pedTabelaApertada !== 0) { pedTabelaAdiada = true; return; }
   pedIdiomaPintado = pedIdiomaNomes();
   pedPintarFiltroTipos();
   pedPintarTipos();
@@ -8612,7 +8653,7 @@ function pedRascunhoDe(item, tipos) {
     naoTenho: !!(item && item.naoTenho === true),
   };
 }
-function pedMontarEditor(box, { item, r, campos, tipos, dbd }) {
+function pedMontarEditor(box, { item, r, campos, tipos, dbd, sozinha }) {
   box.classList.add('ped-dlg');
   const grupo = (rotulo, elementos, dica) => {
     const g = document.createElement('div');
@@ -8716,7 +8757,8 @@ function pedMontarEditor(box, { item, r, campos, tipos, dbd }) {
   t2.textContent = '🚫 Não tenho ou não aceito este item (o pedido com ele entra marcado)';
   rotulo.append(campos.naoTenho, ' ', t2);
   box.appendChild(rotulo);
-  pedFocoInicial(box, campos.tipo || campos.nomes.pt);
+  // (o editor que o PROGRAMA reabre — pedEditarItem com `sozinha` — não põe o cursor em campo nenhum)
+  if (!sozinha) pedFocoInicial(box, campos.tipo || campos.nomes.pt);
 }
 function pedProcurarDono(texto, dl, ids) {
   const busca = String(texto || '').replace(/\s+/g, ' ').trim().slice(0, 100);
@@ -8768,7 +8810,8 @@ function pedConferirItem(d) {
   if (d.dono && !RE_PED_ID_ITEM.test(d.dono)) return 'O dono é outro item do catálogo: digite parte do nome e escolha na lista que aparece.';
   return '';
 }
-async function pedEditarItem(item, rascunho) {
+// `sozinha`: o editor que o programa reabre depois do aviso «O item não foi salvo» (pedReceberAviso)
+async function pedEditarItem(item, rascunho, sozinha) {
   const c = pedCatalogoDe(pedSel.jogo);
   if (!c) return;
   const tipos = pedSel.tipos;
@@ -8778,8 +8821,8 @@ async function pedEditarItem(item, rascunho) {
   const campos = {};
   const jogo = pedSel.jogo;
   const ok = await obsDialog({
-    icone: item ? '✏️' : '➕', titulo: item ? 'Editar item' : 'Adicionar item', ok: 'Salvar',
-    montarExtra: (box) => pedMontarEditor(box, { item, r, campos, tipos, dbd: c.modelo === 'dbd' }),
+    icone: item ? '✏️' : '➕', titulo: item ? 'Editar item' : 'Adicionar item', ok: 'Salvar', sozinha: sozinha === true,
+    montarExtra: (box) => pedMontarEditor(box, { item, r, campos, tipos, dbd: c.modelo === 'dbd', sozinha: sozinha === true }),
   });
   pedDonoBusca = null;
   if (!ok || !campos.nomes || jogo !== pedSel.jogo) return;
@@ -9089,7 +9132,16 @@ function pedReceberAviso(ev) {
       const u = pedUltimaEdicao;
       pedUltimaEdicao = null;
       pedStatusErro(alvo, ev);
-      pedAvisoErro(ev, 'O item não foi salvo').then(() => { if (u.jogo === pedSel.jogo) pedEditarItem(u.item, u.rascunho); });
+      // 🪟 O editor volta com o rascunho quando o aviso fecha — e o aviso também fecha sem a
+      // pessoa querer (o Esc de quem limpava a busca, o Tab e o espaço de quem ia para o campo
+      // seguinte, o clique que voltava para a busca): o editor que o PROGRAMA reabre abre
+      // «sozinho», como o aviso — sem o cursor num campo (o resto da digitação entrava no nome,
+      // ou no campo que nascesse embaixo do ponteiro) e sem salvar com o Enter que vinha de
+      // fora. Quem quer corrigir clica no campo; o Enter salva depois disso, como sempre.
+      // (Na volta seguinte: o clique no fundo fecha o aviso ao APERTAR o mouse, e o navegador,
+      // ainda nessa volta, põe o foco no que estiver embaixo do ponteiro — o campo do editor,
+      // se ele já tivesse reaberto ali)
+      pedAvisoErro(ev, 'O item não foi salvo').then(() => setTimeout(() => { if (u.jogo === pedSel.jogo) pedEditarItem(u.item, u.rascunho, true); }, 0));
       return;
     }
     if (op === 'pedidosRecomecar') { pedAvisoErro(ev, 'Começar do zero'); return; }

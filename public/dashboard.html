@@ -1007,6 +1007,8 @@
   }
   .ctx-item:hover { background: var(--accent); color: #fff; }
   .ctx-item.danger:hover { background: #b62324; }
+  /* 🙋 a ação do pedido que está em espera (o botão do cartão apagado) fica no menu, no lugar de sempre, apagada */
+  .ctx-item[aria-disabled="true"], .ctx-item[aria-disabled="true"]:hover { opacity: 0.45; cursor: progress; background: none; color: inherit; }
   .emote { height: 1.4em; vertical-align: middle; }
   .emote.figurinha { height: 2.6em; max-height: 72px; width: auto; display: inline-block; } /* 🎟️ v0.118 Super Sticker */
   .emote.gif { height: 5em; max-height: 120px; width: auto; max-width: 100%; display: inline-block; border-radius: 6px; } /* 🎞️ v0.176.2 GIF do chat da Twitch */
@@ -8471,7 +8473,20 @@ const botaoParadoPedidos = (b) => b.disabled || b.getAttribute('aria-disabled') 
 // nem quando já não cai no mesmo botão — o cartão saiu e a lista subiu, ou a janela e o
 // menu fecharam, e outro botão ficou embaixo do ponteiro. O teclado e o menu do botão
 // direito (detail 0) e o clique simples (detail 1) valem como sempre.
-const cliqueRepetidoPedidos = (e) => !!e && e.detail > 1;
+// 💡 Só não é «outro toque» o clique repetido cujo clique ANTERIOR não fez nada: caiu neste
+// mesmo botão, ainda apagado. Quem tocou cedo demais, viu o botão acender e tocou de novo
+// tinha o toque recusado (menos de meio segundo depois do anterior, o navegador o conta
+// como repetido) e o botão apagava por mais um segundo — num ritmo constante de cliques,
+// só o primeiro valia. Quando o botão acende, o toque vale.
+let pedidosCliqueDeAntes = null; // o que o clique anterior achou: o botão (trava|ação) e se ele estava apagado
+let pedidosCliqueDeAgora = null;
+document.addEventListener('click', (e) => {
+  const b = e.target instanceof Element ? e.target.closest('button[data-trava]') : null;
+  pedidosCliqueDeAntes = pedidosCliqueDeAgora;
+  pedidosCliqueDeAgora = b ? { botao: `${b.dataset.trava}|${b.dataset.acao}`, parado: botaoParadoPedidos(b) } : null;
+}, true);
+const cliqueRepetidoPedidos = (e, b) => !!e && e.detail > 1
+  && !(!!b && !!pedidosCliqueDeAntes && pedidosCliqueDeAntes.parado && pedidosCliqueDeAntes.botao === `${b.dataset.trava}|${b.dataset.acao}`);
 // 👀 ...e quem tocou cedo demais vê que o toque não contou: o botão que estava solto
 // embaixo do ponteiro (o da pessoa seguinte, que subiu para o lugar) fica apagado pela
 // espera curta, como o botão tocado. Sem isto ele ficava aceso e não respondia enquanto
@@ -8491,6 +8506,12 @@ function aplicarTravasPedidos() {
   for (const b of document.querySelectorAll('button[data-trava]')) {
     b.disabled = !pode;
     esperarEcoPedidos(b, pode && pedidosTravas.has(b.dataset.trava));
+  }
+  // (o menu do botão direito do cartão, se estiver aberto: a opção acende e apaga com o botão dela)
+  for (const opcao of ctxMenu.children) {
+    if (typeof opcao.__botaoDoPedido !== 'function') continue;
+    const b = opcao.__botaoDoPedido();
+    esperarEcoPedidos(opcao, !b || botaoParadoPedidos(b));
   }
 }
 // a resposta é só de quem tocou: o erro vira recado; o acerto solta o botão quando
@@ -8527,6 +8548,42 @@ function abrirDuvidaDoChamado() {
   // (obsDialog) e nunca confirma com uma tecla que vinha de fora
   if (pedLista(a.duvidas).length && podeMexerPedidos() && !document.querySelector('.obs-dialog')) dialogoItensPedido(a, 'corrigir', true);
 }
+// 🖱️ A lista que anda debaixo do ponteiro. O quadro que NÃO é o eco de um toque desta tela —
+// um pedido novo do público, o toque de outra tela ou do Stream Deck — muda os cartões de
+// lugar sem a pessoa esperar: o pedido novo na 📋 Fila desce o ⚠ Revisar e o 💸 A devolver a
+// altura de um cartão; o cartão que outra tela tirou sobe os de baixo. O clique que ela já
+// tinha decidido caía, no mesmo ponto, no botão de OUTRO cartão (o «Marcar para devolver»
+// ou o ✔ Devolvido de outro pagamento, o ⏭ de outra pessoa). Por isso o botão que mudou de
+// lugar (ou acabou de aparecer) com um quadro desses fica apagado pela espera curta, como
+// o botão tocado: o toque seguinte, de propósito, vale quando ele acender. O eco do toque
+// desta tela não entra nisto (a pessoa sabe que a lista vai andar: quem pula duas pessoas
+// seguidas não espera), nem o quadro que não mexe em nada.
+function lugaresDosBotoesPedidos() {
+  const lugares = new Map(); // a vista ou a barra → Map(trava|ação → onde o botão está na tela)
+  for (const b of document.querySelectorAll('button[data-trava]')) {
+    const r = b.getBoundingClientRect();
+    if (!r.width && !r.height) continue; // (fora da tela: a aba fechada, o ✔ Feitos recolhido)
+    const dono = b.closest('.pedidos-vista, .pedidos-barra') || document.body;
+    if (!lugares.has(dono)) lugares.set(dono, new Map());
+    lugares.get(dono).set(`${b.dataset.trava}|${b.dataset.acao}`, `${Math.round(r.left)},${Math.round(r.top)}`);
+  }
+  return lugares;
+}
+function segurarOsQueAndaramPedidos(antes) {
+  let segurou = false;
+  for (const [dono, agora] of lugaresDosBotoesPedidos()) {
+    const era = antes.get(dono);
+    for (const [botao, lugar] of agora) {
+      if (era && era.get(botao) === lugar) continue;
+      const chave = botao.slice(0, botao.lastIndexOf('|'));
+      const t = pedidosTravas.get(chave);
+      if (t && t.op !== null) continue; // (o toque desta tela à espera do eco: a trava dele fica)
+      segurarPedidos(chave);
+      segurou = true;
+    }
+  }
+  if (segurou) aplicarTravasPedidos();
+}
 function receberPedidos(novo, motivos) {
   const ligado = !!novo && novo.ligado === true;
   // «Pedido novo na fila»: só o que ENTROU agora (nem o que já estava, nem o que
@@ -8535,6 +8592,12 @@ function receberPedidos(novo, motivos) {
     const naFila = [...(novo.agora ? [novo.agora] : []), ...pedLista(novo.fila)];
     if (naFila.some((p) => p && !pedidosConhecidos.has(p.id))) mostrarRecadoObs(true, 'Pedido novo na fila', '🙋 ');
   }
+  const mot = pedLista(motivos);
+  // (antes de trocar o estado: quem estava no ▶ Agora e, no quadro que não é o eco de um
+  // toque desta tela, onde estava cada botão)
+  const agoraAntes = pedidosLigados() && pedidosEstado.agora ? String(pedidosEstado.agora.id).slice(0, 40) : '';
+  const ecoDaqui = [...pedidosTravas.values()].some((t) => t.eco);
+  const lugares = mot.length && !ecoDaqui ? lugaresDosBotoesPedidos() : null;
   pedidosConhecidos = ligado ? new Set(todosOsPedidos(novo).map((p) => p.id)) : null;
   pedidosEstado = novo;
   // o eco chegou: o botão tocado ainda espera um instante (segurarPedidos)...
@@ -8543,11 +8606,18 @@ function receberPedidos(novo, motivos) {
   // Deck — segura os mesmos botões em TODAS as telas (o eco chega a todas): o toque de
   // outra pessoa no mesmo instante também não é outro toque. Depois da partida, o ▶ Agora
   // pode já ser outro pedido (a última partida chamou o próximo sozinha): o cartão dele
-  // nasce no mesmo lugar, com os mesmos botões
-  const mot = pedLista(motivos);
-  if (mot.includes('partida') && ligado && novo.agora) segurarPedidos(`partida:${String(novo.agora.id).slice(0, 40)}`);
-  if (mot.includes('proximo')) segurarPedidos('proximo');
+  // nasce no mesmo lugar, com os mesmos botões.
+  // Os dois cruzados também: depois do ⏩, o 🏆 💀 ✔ de quem foi chamado nasce onde estava
+  // o de quem jogava (o toque que ia para o resultado do jogo que acabou baixava uma partida
+  // de quem nem jogou); e a partida que chamou alguém sozinha segura o ⏩ (o ⏩ de outra
+  // tela, pelo mesmo jogo que acabou, chamava MAIS uma pessoa e devolvia a recém-chamada)
+  const agoraId = ligado && novo.agora ? String(novo.agora.id).slice(0, 40) : '';
+  const partida = mot.includes('partida');
+  const proximo = mot.includes('proximo');
+  if ((partida || proximo) && agoraId) segurarPedidos(`partida:${agoraId}`);
+  if (proximo || (partida && !!agoraId && agoraId !== agoraAntes)) segurarPedidos('proximo');
   renderPedidos();
+  if (lugares) segurarOsQueAndaramPedidos(lugares);
   abrirDuvidaDoChamado();
 }
 
@@ -8637,7 +8707,7 @@ function montarBarraPedidos(barra) {
   prox.append('⏩ ', pedEl('span', '', 'Próximo'));
   prox.onclick = (e) => {
     if (botaoParadoPedidos(prox)) return;
-    if (cliqueRepetidoPedidos(e)) mostrarToqueCedoPedidos(prox);
+    if (cliqueRepetidoPedidos(e, prox)) mostrarToqueCedoPedidos(prox);
     else enviarPedidos({ type: 'pedidoProximo' }, 'proximo');
   };
   const novo = pedEl('button', 'secondary');
@@ -8915,7 +8985,7 @@ function botaoDoPedido(ctx, emoji, rotulo, dica, acao, trava, fazer) {
   // clique de um clique duplo nunca é outro toque (cliqueRepetidoPedidos)
   b.onclick = (e) => {
     if (botaoParadoPedidos(b)) return;
-    if (cliqueRepetidoPedidos(e)) mostrarToqueCedoPedidos(b);
+    if (cliqueRepetidoPedidos(e, b)) mostrarToqueCedoPedidos(b);
     else fazer();
   };
   return b;
@@ -8923,17 +8993,33 @@ function botaoDoPedido(ctx, emoji, rotulo, dica, acao, trava, fazer) {
 // 🖱️ O botão direito no cartão abre o menu do programa (#ctxMenu) com as ações do
 // cartão: cada opção toca o botão de verdade (as mesmas confirmações e travas).
 // Sem ação possível (quem só assiste, ✔ Feitos), fica o menu do navegador.
+// 📌 Cada opção fica sempre no mesmo lugar: a ação em espera (o botão apagado) continua no
+// menu, apagada como o botão, e acende junto com ele. Quando o menu a deixava de fora, a
+// opção seguinte subia para o lugar dela: quem marcava a partida pelo menu duas vezes
+// seguidas (botão direito → 1ª opção) achava o «⏭ Pular» onde fica a «🏆 Vitória», e a
+// pessoa que estava jogando era pulada.
 function abrirMenuDoPedido(e, card) {
-  const botoes = [...card.querySelectorAll('button[data-acao][data-rotulo]')].filter((b) => !botaoParadoPedidos(b) && b.isConnected);
+  const botoesDoCartao = () => [...card.querySelectorAll('button[data-acao][data-rotulo]')].filter((b) => b.isConnected);
+  const botoes = botoesDoCartao().filter((b) => !b.disabled);
   if (!botoes.length) { closeCtxMenu(); return; } // (o menu de outro cartão não fica aberto)
   e.preventDefault();
   ctxMenu.innerHTML = '';
   for (const b of botoes) {
+    const acao = b.dataset.acao;
     const opcao = document.createElement('div');
-    opcao.className = 'ctx-item' + (b.dataset.acao === 'recusar' ? ' danger' : '');
+    opcao.className = 'ctx-item' + (acao === 'recusar' ? ' danger' : '');
     // o rótulo num nó próprio (o motor de idiomas traduz pela chave, sem o emoji)
     opcao.append(`${b.dataset.emoji || '🙋'}  `, Object.assign(document.createElement('span'), { textContent: b.dataset.rotulo }));
-    opcao.onclick = (ev) => { ev.stopPropagation(); closeCtxMenu(); if (b.isConnected && !botaoParadoPedidos(b)) b.click(); };
+    // (o botão de AGORA: o cartão pode ter sido repintado com o menu aberto — o eco do toque)
+    opcao.__botaoDoPedido = () => botoesDoCartao().find((x) => x.dataset.acao === acao) || null;
+    esperarEcoPedidos(opcao, botaoParadoPedidos(b));
+    opcao.onclick = (ev) => {
+      ev.stopPropagation();
+      const atual = opcao.__botaoDoPedido();
+      if (!atual || botaoParadoPedidos(atual)) return; // (em espera: o toque não vale, e o menu continua aberto)
+      closeCtxMenu();
+      atual.click();
+    };
     ctxMenu.appendChild(opcao);
   }
   posicionarCtxMenu(e);

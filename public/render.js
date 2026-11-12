@@ -1015,8 +1015,9 @@ function obsDlgT(texto) {
 // fora (nem com um toque que começou antes de ela existir): o foco vai para a própria
 // caixa (em nenhum botão) e o atalho do Enter só vale depois de a pessoa pôr o mouse (ou
 // o dedo) nela. O Esc fecha, e o teclado segue normal para quem quer usar: Tab até o
-// botão, Enter (ou espaço) no botão em foco. Nas janelas que a própria pessoa abre, o
-// foco e o Enter que confirma ficam como sempre foram.
+// botão (o Tab dá a volta dentro da janela, sem sair para a página de trás), Enter (ou
+// espaço) no botão em foco. Nas janelas que a própria pessoa abre, o foco e o Enter que
+// confirma ficam como sempre foram.
 function obsDialog(opcoes) {
   obsDialogGarantirCss();
   const o = opcoes || {};
@@ -1119,6 +1120,12 @@ function obsDialog(opcoes) {
     }
 
     function aoTeclar(e) {
+      // 🪟 Só a janela de CIMA responde ao teclado. Com duas abertas (o aviso que a resposta
+      // do servidor abriu por cima de um editor; o editor reaberto por cima de outro), o
+      // Enter confirmava as duas — a de baixo era salva com o que estava pela metade — e o
+      // Esc fechava as duas
+      const abertas = document.querySelectorAll('.obs-dialog-fundo');
+      if (abertas[abertas.length - 1] !== fundo) return;
       if (e.key === 'Escape') { e.preventDefault(); fechar(false); }
       // ⌨️ A tecla SEGURADA (repetição) não é uma resposta: o Enter que abriu a janela e
       // continuou apertado não confirma — nem aperta o botão em foco (a confirmação do
@@ -1126,6 +1133,25 @@ function obsDialog(opcoes) {
       else if (e.key === 'Enter' && e.repeat) e.preventDefault();
       else if (e.key === 'Enter' && (mexeu || !sozinha) && !btnOk.disabled && document.activeElement !== btnCancelar) {
         e.preventDefault(); fechar(true);
+      } else if (sozinha && e.key === 'Tab') {
+        // 🔁 O Tab não sai da janela aberta «sozinha». O foco dela começa na caixa (em nenhum
+        // botão): o Shift+Tab dali ia para o último botão da página que ficou atrás do fundo
+        // escuro, e o Enter seguinte o apertava (no painel, o ✖ Recusar de outra pessoa). O
+        // Tab dá a volta dentro da janela: da caixa para trás, o último botão dela
+        const dentro = [...caixa.querySelectorAll('button, input, select, textarea, a[href], [tabindex]')]
+          .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);
+        const a = document.activeElement;
+        const primeiro = dentro[0];
+        const ultimo = dentro[dentro.length - 1];
+        if (!dentro.length) e.preventDefault();
+        else if (a === caixa || !caixa.contains(a) || a === (e.shiftKey ? primeiro : ultimo)) {
+          e.preventDefault();
+          (e.shiftKey ? ultimo : primeiro).focus();
+        }
+      } else if (sozinha && e.key === ' ' && document.activeElement === caixa) {
+        // (o espaço que a pessoa vinha digitando, com o foco na caixa — que não é campo —,
+        // rolava a página que ficou atrás até o fim)
+        e.preventDefault();
       }
     }
     document.addEventListener('keydown', aoTeclar, true);
