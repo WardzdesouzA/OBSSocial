@@ -510,9 +510,12 @@
   #faixasDoPainel.em-espera { cursor: progress; }
   #faixasDoPainel.em-espera > div { pointer-events: none; opacity: 0.6; }
   body.faixas-em-espera .live-col-foot { pointer-events: none; opacity: 0.45; }
+  /* 🧱 v0.192.1: a altura mínima já conta o ✖ (38 px + 24 de margem + 1 da borda): o ✖
+     aparecer ou sumir — outra tela, o Stream Deck ou o «tempo de tela» acabando — não
+     move mais o painel 1 px */
   .featured-bar {
     padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 12px; min-height: 62px;
+    display: flex; align-items: center; gap: 12px; min-height: 63px;
   }
   .featured-bar .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
   .featured-bar .empty { color: var(--muted); font-size: 13px; }
@@ -1038,7 +1041,10 @@
   .pedidos-barra .check { margin: 0; white-space: nowrap; }
   .pedidos-barra select.ped-jogo { width: auto; max-width: 180px; min-width: 0; padding: 4px 6px; font-size: 12px; }
   .pedidos-barra button { padding: 5px 10px; font-size: 12px; }
-  .pedidos-barra .ped-contagem { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  /* 🧱 v0.192.1: a contagem tem largura fixa (algarismos da mesma largura e lugar para 3):
+     o pedido que chega e leva «📋 9» a «📋 10» não quebra mais a barra em outra linha nem
+     empurra os cartões de baixo (o clique a caminho do «✔ Jogada» caía no «🔓 Liberar») */
+  .pedidos-barra .ped-contagem { font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: calc(1.75em + 3ch); }
   .live-col .pedidos-barra { padding: 6px 8px; border-bottom: 1px solid var(--border); flex: none; }
   /* a largura de fábrica vem daqui, não do style: largura no style é «esticada pela
      pessoa» (.geo-esticada) e soltaria o teto de 92% da tela no celular */
@@ -2287,7 +2293,7 @@ for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () =>
 // lugar), e o toque que vinha a caminho não aperta o link, o ✖ nem a paginação. O lugar de
 // onde a faixa (e o rodapé) saiu também espera: o 2º clique do clique duplo no ✖ não cai
 // no que apareceu ali.
-const FAIXAS_ESPERA_MS = 1000; // a mesma espera curta do botão dos pedidos que mudou de lugar (PEDIDOS_TOQUE_MS)
+const FAIXAS_ESPERA_MS = 1000; // a espera curta padrão do botão dos pedidos que mudou de lugar (PEDIDOS_TOQUE_MS); esta é do painel inteiro e não segue a «Espera entre toques» dos Pedidos
 let faixasEspera = null; // a espera curta que está valendo (a de quem mexeu por último)
 function alturaDasFaixasDoPainel() {
   const caixa = document.getElementById('faixasDoPainel');
@@ -8391,7 +8397,15 @@ const RE_PEDIDO_ID = /^p\d{1,12}$/;
 const RE_PEDIDO_IMG = /^\/pedidos-img\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9-]{1,120}\.(?:png|jpg|webp|gif)(?:\?v=[a-z0-9]{1,24})?$/;
 const PEDIDOS_LIMITE = 100;    // cartões por seção de cada vez (o resto, em «Mostrar mais»)
 const PEDIDOS_TRAVA_MS = 1500; // o botão tocado espera o eco do servidor (ou isto)...
-const PEDIDOS_TOQUE_MS = 1000; // ...e, depois do eco, ainda isto: o toque duplo não é outro toque
+const PEDIDOS_TOQUE_MS = 1000; // ...e, depois do eco, ainda isto (o padrão): o toque duplo não é outro toque
+// 👆 v0.192.1: essa espera é a «Espera entre toques» do streamer (settings.pedidos.esperaToqueMs,
+// em 🙋 Pedidos → 📋 Fila e partidas), lida a cada toque: a troca vale na hora, em todas as telas.
+// Só os valores da lista; o resto (ou nada gravado) é o padrão
+const PEDIDOS_ESPERAS_MS = [0, 500, 1000, 1500, 2000];
+function esperaToquePedidos() {
+  const v = settings && settings.pedidos ? settings.pedidos.esperaToqueMs : undefined;
+  return PEDIDOS_ESPERAS_MS.includes(v) ? v : PEDIDOS_TOQUE_MS;
+}
 const PEDIDOS_SECOES = [
   { id: 'agora', titulo: '▶ Agora', vazio: 'Ninguém jogando agora.' },
   { id: 'fila', titulo: '📋 Fila', vazio: 'A fila está vazia.' },
@@ -8534,15 +8548,24 @@ function travarPedidos(chave, op) {
 // milissegundos: só com a espera do eco, o 2º clique de um clique duplo (100 a 300 ms
 // depois) já achava o botão solto e o cartão com o «faltavam» novo — e baixava outra
 // partida de quem pagou. Por isso o eco não solta o botão na hora: ele ainda espera
-// PEDIDOS_TOQUE_MS, apagado (a trava fica no mapa, pela chave, e sobrevive à repintura
-// do cartão); depois disso o toque seguinte vale como sempre. A resposta de erro não
-// mexe nesta espera (op null), e ela só acaba pelo relógio dela.
+// a «Espera entre toques» (esperaToquePedidos), apagado (a trava fica no mapa, pela chave, e
+// sobrevive à repintura do cartão); depois disso o toque seguinte vale como sempre. A
+// resposta de erro não mexe nesta espera (op null), e ela só acaba pelo relógio dela.
+// ⏱️ «Sem espera» (0): nada fica apagado depois do eco — a espera do eco que chegou, e a
+// curta de antes, acabam aqui; o toque desta tela que ainda espera o eco dele continua
+// esperando. Ficam o clique duplo (cliqueRepetidoPedidos) e a tecla segurada (abaixo).
 function segurarPedidos(chave) {
+  const ms = esperaToquePedidos();
+  if (ms <= 0) {
+    const antes = pedidosTravas.get(chave);
+    if (antes && (antes.op === null || antes.eco)) pedidosTravas.delete(chave);
+    return;
+  }
   const t = { op: null, ate: Infinity, eco: false };
   pedidosTravas.set(chave, t);
   setTimeout(() => {
     if (pedidosTravas.get(chave) === t) { pedidosTravas.delete(chave); aplicarTravasPedidos(); }
-  }, PEDIDOS_TOQUE_MS);
+  }, ms);
 }
 // ⌨️ A tecla segurada também não é outro toque: o Enter que fica repetindo com o foco num
 // botão dos pedidos não vira clique de novo (com o eco chegando entre as repetições, cada

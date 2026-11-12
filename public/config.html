@@ -2977,6 +2977,14 @@
       <div class="hint" style="margin-top:6px">Se o OBS Social ficar fechado mais tempo que isso, os pagos e os grátis abertos se fecham na hora em que ele parou. Pagamento feito durante uma parada curta continua valendo.</div>
       <div class="hint">⚠️ O que chega com o OBS Social fechado depende da fonte: a LivePix entrega depois, o Pix do banco só o das últimas 24 horas, o Super Chat só com o 🕘 Recuperar mensagens perdidas ligado, e a PixGG não reenvia.</div>
       <label class="check" style="margin-bottom:0"><input type="checkbox" class="sw" id="ped-chamarProximoAoTerminar"> <span>⏩ Chamar o próximo sozinho quando um pedido termina</span></label>
+      <!-- 👆 v0.192.1: quanto o botão do painel espera depois de um toque (settings.pedidos.esperaToqueMs).
+           O aviso do «Sem espera» só aparece com ele escolhido (pedDerivados) -->
+      <div class="field" style="margin:12px 0 0">
+        <label for="ped-esperaToqueMs">Espera entre toques</label>
+        <select id="ped-esperaToqueMs"><option value="0">Sem espera</option><option value="500">0,5 s</option><option value="1000" selected>1 s (padrão)</option><option value="1500">1,5 s</option><option value="2000">2 s</option></select>
+        <div class="hint" style="margin:6px 0 0">Depois de um toque num botão dos pedidos (🏆, 💀, ✔, ⏩, ⏭…), o botão fica apagado por esse tempo antes de aceitar outro, e o botão que mudou de lugar porque a lista andou sozinha espera o mesmo tempo: um toque a mais não baixa duas partidas, não chama duas pessoas e não cai no pedido de outra pessoa. Vale para todas as telas que mexem nos pedidos.</div>
+        <div class="hint" id="ped-esperaDica" style="display:none;margin:6px 0 0">⚠️ Sem espera, o clique duplo do mouse e a tecla segurada continuam valendo um toque só, mas no celular e no tablet o toque duplo pode valer dois, conforme o navegador. E um toque a mais pode baixar duas partidas, chamar duas pessoas ou agir no pedido de outra pessoa: o toque logo depois de uma partida ou de um ⏩ feito em outra tela ou no Stream Deck vale na hora, e o botão que mudou de lugar porque a lista andou sozinha aceita o clique que já estava a caminho.</div>
+      </div>
     </div>
     <div class="card" id="pedNomesCard">
       <h3>🙈 Nomes e privacidade</h3>
@@ -7488,6 +7496,7 @@ const PED_CAMPOS = [
   ['ped-pular', 'pular', 'sel'],
   ['ped-seguidas', 'seguidas', 'simnao'],
   ['ped-chamarProximoAoTerminar', 'chamarProximoAoTerminar', 'chk'],
+  ['ped-esperaToqueMs', 'esperaToqueMs', 'num'], // 👆 v0.192.1 (um seletor de números: vai como número)
   ['ped-fecharAbertosDepoisDeHoras', 'fecharAbertosDepoisDeHoras', 'int', 0, 168],
   ['ped-moderacao', 'moderacao', 'sel'],
   ['ped-nomePix', 'nomePix', 'sel'],
@@ -7565,6 +7574,11 @@ function pedPintarCampos(forcar) {
     const v = pedLer(p, caminho);
     if (tipo === 'chk') el.checked = v === true;
     else if (tipo === 'simnao') el.value = v === false ? 'nao' : 'sim';
+    else if (tipo === 'num') {
+      // (fora da lista, ou nada gravado: a escolha marcada como padrão na página, nunca a 1ª)
+      el.value = String(v);
+      if (el.selectedIndex < 0) { const padrao = [...el.options].find((o) => o.defaultSelected); if (padrao) el.value = padrao.value; }
+    }
     else if (v !== undefined && v !== null) el.value = String(v);
     // (um idioma fixo de antes, fora da lista, vale como «o idioma de cada tela»)
     if (el.tagName === 'SELECT' && el.selectedIndex < 0 && el.options.length) el.value = el.options[0].value;
@@ -7593,6 +7607,9 @@ function pedAposEco(jaPintou) {
 function pedDerivados() {
   const sobra = document.getElementById('ped-sobra');
   document.getElementById('ped-sobraDica').style.display = sobra && sobra.value === 'credito' ? '' : 'none';
+  // 👆 o aviso do «Sem espera» (o que deixa de ser protegido) só com ele escolhido
+  const espera = document.getElementById('ped-esperaToqueMs');
+  document.getElementById('ped-esperaDica').style.display = espera && espera.value === '0' ? '' : 'none';
   // as recompensas só valem com o caminho do resgate ligado
   const resgate = document.getElementById('ped-gratis-resgate');
   const campo = document.getElementById('ped-recompensas').closest('.field');
@@ -7613,6 +7630,7 @@ for (const [id, caminho, tipo, min, max] of PED_CAMPOS) {
     let v;
     if (tipo === 'chk') v = el.checked;
     else if (tipo === 'simnao') v = el.value !== 'nao';
+    else if (tipo === 'num') v = Number(el.value);
     else if (tipo === 'int') {
       const n = Math.round(Number(el.value));
       if (el.value === '' || !Number.isFinite(n)) { const atual = pedLer((settings && settings.pedidos) || {}, caminho); el.value = atual === undefined ? '' : String(atual); return; }
