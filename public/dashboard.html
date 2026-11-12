@@ -2379,10 +2379,13 @@ function aplicarModoEspectador(papel, podeRede) {
   }
 }
 // 👀 v0.179: o aviso do modo espectador, sem empilhar (um a cada 3 s)
-function avisarEspectador() {
+// 🪟 v0.192.1: `sozinha` quando quem abre é a RESPOSTA do servidor (o «negado»), e não o clique da
+// pessoa: ela já pode estar digitando em outro campo, e o aviso abre «sozinho» (render.js, obsDialog)
+// — o Enter ou o espaço que vinham de fora não o fecham antes de ela ler
+function avisarEspectador(sozinha) {
   if (Date.now() - (window.__negadoEm || 0) < 3000) return;
   window.__negadoEm = Date.now();
-  obsAviso('O streamer não liberou essa função para quem entra pela rede. Ela só funciona com a senha ou no computador do streamer (Configurações → 🔗 URLs para o OBS).', 'Modo espectador', '👀');
+  obsAviso('O streamer não liberou essa função para quem entra pela rede. Ela só funciona com a senha ou no computador do streamer (Configurações → 🔗 URLs para o OBS).', 'Modo espectador', '👀', { sozinha: sozinha === true });
 }
 // Clique/toque num botão apagado: não abre popover nem manda operação — explica o motivo
 document.addEventListener('click', (e) => {
@@ -2702,7 +2705,7 @@ const hub = connectHub((event) => {
       // só quando veio de um clique/tecla da pessoa (o que a página manda sozinha,
       // como o fim de uma mídia, não vira janela) e sem empilhar avisos
       if (Date.now() - ultimaAcaoDaPessoa > 2500) break;
-      avisarEspectador();
+      avisarEspectador(true);
       break;
     }
     case 'settings':
@@ -7988,12 +7991,12 @@ async function clipCopiarEntrada(item, btn) {
     try {
       const r = await fetch('/clip-texto?id=' + encodeURIComponent(item.id));
       if (!r.ok) {
-        obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋');
+        obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋', { sozinha: true });
         return;
       }
       texto = await r.text();
     } catch {
-      obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋');
+      obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋', { sozinha: true });
       return;
     }
   }
@@ -8122,7 +8125,7 @@ document.getElementById('clipEnviarBtn').onclick = () => {
   clipEcoTimer = setTimeout(() => {
     if (clipEsperandoEco === null) return;
     clipEsperandoEco = null;
-    obsAviso('O texto não entrou no histórico — o streamer pode ter fechado a área de transferência para a rede.', 'Área de transferência', '📋');
+    obsAviso('O texto não entrou no histórico — o streamer pode ter fechado a área de transferência para a rede.', 'Área de transferência', '📋', { sozinha: true });
   }, 4000);
 };
 clipTextEl.addEventListener('keydown', (e) => {
@@ -8144,10 +8147,10 @@ document.getElementById('clipArquivoInput').onchange = async () => {
   try {
     const r = await fetch('/clip-arquivo?name=' + encodeURIComponent(arq.name), { method: 'POST', body: arq });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) obsAviso(j.error || 'Não consegui mandar o arquivo.', 'Área de transferência', '📋');
+    if (!r.ok || !j.ok) obsAviso(j.error || 'Não consegui mandar o arquivo.', 'Área de transferência', '📋', { sozinha: true });
     else { clipPagina = 0; renderClipboard(); }
   } catch {
-    obsAviso('Não consegui mandar o arquivo.', 'Área de transferência', '📋');
+    obsAviso('Não consegui mandar o arquivo.', 'Área de transferência', '📋', { sozinha: true });
   }
   clipEnviandoArquivos = Math.max(0, clipEnviandoArquivos - 1);
   if (!clipEnviandoArquivos) aviso.style.display = 'none';

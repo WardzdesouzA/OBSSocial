@@ -1014,6 +1014,11 @@
   .palavra-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, transparent); border: 1px solid var(--accent); font-size: 12px; }
   .palavra-tirar { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 11px; padding: 0 2px; opacity: 0.75; }
   .palavra-tirar:hover { opacity: 1; }
+  /* 👆 o 🗑️ e o ✖ que ficaram debaixo do ponteiro depois de um item sair: apagados pela espera entre
+     toques (como o botão em espera do painel), mas com o foco do teclado (pedTocarTirar) */
+  .palavra-tirar[aria-disabled="true"], .palavra-tirar[aria-disabled="true"]:hover,
+  button.ped-mini[aria-disabled="true"], button.ped-mini.perigo[aria-disabled="true"]:hover { opacity: 0.45; cursor: progress; filter: none; }
+  button.ped-mini.perigo[aria-disabled="true"]:hover { background: var(--panel2); border-color: var(--border); color: var(--text); }
   .palavras-nova { display: flex; gap: 6px; align-items: center; }
   .palavras-nova input { flex: 1; min-width: 0; }
   .palavras-nova .icon-btn { width: 34px; flex: none; }
@@ -4065,18 +4070,22 @@ const hub = connectHub((event) => {
     case 'backup':
       fillBackup(event.backup);
       break;
+    // 🪟 v0.192.1: o aviso que a RESPOSTA do servidor abre (este e os outros com `sozinha`, aqui e
+    // nos envios por fetch) chega quando a pessoa já pode estar digitando em outro campo: ele abre
+    // «sozinho» (render.js, obsDialog) — o foco na própria caixa, e o Enter ou o espaço que vinham
+    // de fora não o fecham antes de ela ler. O clique no «Entendi», o Tab até ele e o Esc fecham.
     case 'backupFeito':
-      if (event.ok && event.marca) obsAviso('Backup feito e guardado na pasta escolhida.', 'Backup', '💾');
-      else if (event.ok && event.semMudanca) obsAviso('Nada mudou desde o último backup — nada foi gravado de novo.', 'Backup', '💾');
-      else if (event.ok && event.vazio) obsAviso('Este item ainda está vazio — não há o que copiar.', 'Backup', '💾');
-      else if (!event.ok) obsAviso('O backup falhou: ' + (event.erro || 'erro desconhecido'), 'Backup', '⚠️');
+      if (event.ok && event.marca) obsAviso('Backup feito e guardado na pasta escolhida.', 'Backup', '💾', { sozinha: true });
+      else if (event.ok && event.semMudanca) obsAviso('Nada mudou desde o último backup — nada foi gravado de novo.', 'Backup', '💾', { sozinha: true });
+      else if (event.ok && event.vazio) obsAviso('Este item ainda está vazio — não há o que copiar.', 'Backup', '💾', { sozinha: true });
+      else if (!event.ok) obsAviso('O backup falhou: ' + (event.erro || 'erro desconhecido'), 'Backup', '⚠️', { sozinha: true });
       break;
     case 'backupRestaurado':
       if (event.ok) {
         obsAviso(event.precisaReiniciar
           ? 'Backup restaurado! Os logs valem por inteiro depois de reiniciar o programa (botão ♻️ em 🔌 Conexões → Reiniciar conexões).'
-          : 'Backup restaurado!', 'Restauração', '↩️');
-      } else obsAviso('A restauração falhou: ' + (event.erro || 'erro desconhecido'), 'Restauração', '⚠️');
+          : 'Backup restaurado!', 'Restauração', '↩️', { sozinha: true });
+      } else obsAviso('A restauração falhou: ' + (event.erro || 'erro desconhecido'), 'Restauração', '⚠️', { sozinha: true });
       break;
     case 'trilhas':
       cfgTrilhas = Array.isArray(event.trilhas) ? event.trilhas : [];
@@ -4103,7 +4112,7 @@ const hub = connectHub((event) => {
     case 'trilhasImportadas':
       obsAviso(event.ok
         ? `🎛️ ${event.adicionadas} trilha(s) importada(s) do Stream Deck!` + (event.pendentes ? ` ${event.pendentes} ainda sem arquivo de som — aponte a pasta dos áudios e clique em 🔎.` : ' Todas prontas!')
-        : 'Não deu: ' + (event.erro || 'arquivo não reconhecido'), 'Importar do Stream Deck', '🎛️');
+        : 'Não deu: ' + (event.erro || 'arquivo não reconhecido'), 'Importar do Stream Deck', '🎛️', { sozinha: true });
       break;
     case 'trilhasCasadas':
       // (frases inteiras traduzíveis, com os números por fora)
@@ -4112,7 +4121,7 @@ const hub = connectHub((event) => {
           + (event.religadas ? ` ${OBS_I18N.t('Religados:')} ${event.religadas}.` : '')
           + (event.faltando && event.faltando.length ? ` ${OBS_I18N.t('Ainda faltam:')} ${event.faltando.slice(0, 5).join(', ')}${event.faltando.length > 5 ? '…' : ''}` : '')
           + (!event.casadas && !event.religadas && !(event.faltando || []).length ? ' ' + OBS_I18N.t('Nenhuma tecla precisava de som.') : '')
-        : 'Não deu: ' + (event.erro || 'pasta não encontrada'), 'Procurar os sons', '🔎');
+        : 'Não deu: ' + (event.erro || 'pasta não encontrada'), 'Procurar os sons', '🔎', { sozinha: true });
       break;
     // 🌤️ v0.167: Clima
     case 'clima':
@@ -4238,7 +4247,7 @@ const hub = connectHub((event) => {
     case 'limpezaFeita': {
       atualizarDados(event.dados);
       // 🙋 v0.192: a limpeza dos pedidos pode voltar com o motivo (arquivo preso…)
-      if (event.ok === false) { obsAviso(event.erro || 'A limpeza não terminou.', 'Limpeza', '⚠️'); break; }
+      if (event.ok === false) { obsAviso(event.erro || 'A limpeza não terminou.', 'Limpeza', '⚠️', { sozinha: true }); break; }
       const nomes = {
         logs: 'Logs de comentários apagados.',
         midias: 'Mídias enviadas apagadas.',
@@ -4249,7 +4258,7 @@ const hub = connectHub((event) => {
         pedidos: 'Fila dos pedidos apagada. Os catálogos e as imagens ficaram.',
         tudo: 'Tudo apagado: o OBS Social voltou ao padrão de fábrica e vai REINICIAR sozinho em instantes (pelo mesmo caminho da atualização). Esta página recarrega quando ele voltar.',
       };
-      obsAviso(nomes[event.escopo] || 'Limpeza concluída.', 'Limpeza concluída', '🧹');
+      obsAviso(nomes[event.escopo] || 'Limpeza concluída.', 'Limpeza concluída', '🧹', { sozinha: true });
       break;
     }
     case 'status':
@@ -4264,7 +4273,7 @@ const hub = connectHub((event) => {
       if (event.op === 'connect') SEGREDO_PENDENTE.clear(); // 🔒 v0.179: o segredo digitado pela rede foi descartado — nada a confirmar
       if (/^componente/.test(String(event.op || '')) && compBtn) { compBtn.disabled = false; compStatus.textContent = ''; } // 🧩 v0.185: a recusa não deixa o botão preso
       if (/^pedido/.test(String(event.op || ''))) pedRecusadoPelaRede(); // 🙋 v0.192: o catálogo é só do computador local
-      obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒');
+      obsAviso(event.mensagem || 'Essa operação só pode ser feita no computador onde o OBS Social roda.', 'Só no computador do OBS Social', '🔒', { sozinha: true });
       fillSecurity(secState.last); // 🔒 v0.179: a tela volta ao estado real (o servidor recusou)
       break;
     // 🟢 v0.169.3: o servidor pediu uma consulta ao Kick por este navegador
@@ -4323,7 +4332,7 @@ const hub = connectHub((event) => {
       fillSecurity(event.security);
       break;
     case 'securityError':
-      obsAviso(event.error, 'Segurança', '🔒');
+      obsAviso(event.error, 'Segurança', '🔒', { sozinha: true });
       fillSecurity(secState.last);
       break;
     case 'clients':
@@ -6785,10 +6794,10 @@ document.getElementById('ydCookiesFile').addEventListener('change', async (e) =>
   try {
     const res = await fetch('/ytdlp-cookies', { method: 'POST', body: file });
     const r = await res.json().catch(() => ({ ok: false, erro: OBS_I18N.t('O programa respondeu de um jeito que não entendi.') + ' (' + res.status + ')' }));
-    if (r.ok) obsAviso(OBS_I18N.t('🍪 Cookies guardados:') + ' ' + r.sites + ' ' + OBS_I18N.t('site(s)') + '. ' + OBS_I18N.t('Carregue o link de novo na Mídia direta.'), OBS_I18N.t('Extrator'), '🍪');
-    else obsAviso(OBS_I18N.t('Não deu:') + ' ' + (r.erro || ''), OBS_I18N.t('Extrator'), '🍪');
+    if (r.ok) obsAviso(OBS_I18N.t('🍪 Cookies guardados:') + ' ' + r.sites + ' ' + OBS_I18N.t('site(s)') + '. ' + OBS_I18N.t('Carregue o link de novo na Mídia direta.'), OBS_I18N.t('Extrator'), '🍪', { sozinha: true });
+    else obsAviso(OBS_I18N.t('Não deu:') + ' ' + (r.erro || ''), OBS_I18N.t('Extrator'), '🍪', { sozinha: true });
   } catch {
-    obsAviso(OBS_I18N.t('Não deu:') + ' ' + OBS_I18N.t('falha ao enviar o arquivo — tente de novo.'), OBS_I18N.t('Extrator'), '🍪');
+    obsAviso(OBS_I18N.t('Não deu:') + ' ' + OBS_I18N.t('falha ao enviar o arquivo — tente de novo.'), OBS_I18N.t('Extrator'), '🍪', { sozinha: true });
   }
 });
 document.getElementById('ydCookiesApagar').addEventListener('click', async () => {
@@ -7681,6 +7690,8 @@ function pedPintarTiposImagem() {
   const box = document.getElementById('ped-imagensTipos');
   const jogoBox = document.getElementById('ped-imagensTiposJogo');
   if (!box || !jogoBox) return;
+  if (pedListaAdiada(pedPintarTiposImagem)) return; // (o mouse apertado num tipo: espera o soltar)
+  pedListasAdiadas.delete(pedPintarTiposImagem);
   const sem = pedTiposSemImagem();
   // a linha com o foco não é refeita: só o estado de cada tipo acompanha
   if (box.contains(document.activeElement) && box.dataset.jogo === pedSel.jogo) {
@@ -7721,10 +7732,112 @@ function pedPintarTiposImagem() {
   }
 }
 
+// 🖱️ As listas das regras — 💱 as moedas, 🏷️ as fichas (recompensas aceitas, palavras
+// bloqueadas), 🎁 as recompensas do canal e 🖼️ as imagens por tipo — são refeitas a cada eco das
+// configurações (pedAposEco: o eco do ajuste desta tela, o ajuste de outra tela). Refeitas ENTRE
+// o apertar e o soltar do mouse num botão delas — ou do espaço, com o foco no botão —, o clique
+// se perdia (o navegador não entrega o clique quando o botão apertado saiu da página): o 🗑️ e o
+// ✖ não tiravam nada. A mesma solução da tabela do 📚 Catálogo (pedApertarTabela): com o mouse
+// ou o espaço apertado numa delas, a repintura espera a pessoa soltar; o clique sai na mesma
+// volta do soltar, e as listas são refeitas logo depois dele, com o que chegou nesse meio-tempo.
+let pedListasApertadas = 0;          // a vez (como pedTabelaApertada); 0 = nada apertado
+const pedListasAdiadas = new Set();  // as repinturas que esperam o soltar
+function pedApertarListas() { pedListasApertadas = (Math.abs(pedListasApertadas) % 1000000) + 1; }
+function pedSoltarListas() {
+  const vez = pedListasApertadas;
+  if (vez <= 0) return;
+  pedListasApertadas = -vez; // (solto: só falta o clique, que vem nesta mesma volta)
+  setTimeout(() => {
+    if (pedListasApertadas !== -vez) return; // (apertou de novo antes: espera o soltar seguinte)
+    pedListasApertadas = 0;
+    const adiadas = [...pedListasAdiadas];
+    pedListasAdiadas.clear();
+    for (const pintar of adiadas) { try { pintar(); } catch (e) { console.error(e); } }
+  }, 0);
+}
+// true: a repintura ficou para quando a pessoa soltar
+function pedListaAdiada(pintar) {
+  if (pedListasApertadas === 0) return false;
+  pedListasAdiadas.add(pintar);
+  return true;
+}
+for (const id of ['ped-moedas', 'ped-recompensas', 'ped-recompensasCanal', 'ped-palavrasBloqueadas', 'ped-imagensTipos']) {
+  const el = document.getElementById(id);
+  if (!el) continue;
+  el.addEventListener('mousedown', (e) => { if (e.button === 0) pedApertarListas(); });
+  el.addEventListener('keydown', (e) => {
+    if (e.key === ' ' && !e.repeat && e.target instanceof Element && e.target.closest('button')) pedApertarListas();
+  });
+}
+window.addEventListener('mouseup', (e) => { if (e.button === 0) pedSoltarListas(); }, true);
+window.addEventListener('keyup', (e) => { if (e.key === ' ') pedSoltarListas(); }, true);
+// (o arrasto, o menu aberto com o botão esquerdo apertado e a janela sem foco não entregam o soltar)
+window.addEventListener('dragend', pedSoltarListas, true);
+window.addEventListener('contextmenu', pedSoltarListas, true);
+window.addEventListener('blur', pedSoltarListas);
+
+// 👆 O 🗑️ e o ✖ que tiram um item dessas listas seguem a regra dos botões do painel
+// (dashboard.html: esperarEcoPedidos, botaoParadoPedidos, cliqueRepetidoPedidos). A lista sobe
+// quando o item sai: o 2º clique de um clique duplo caía no botão do item de baixo e tirava DOIS —
+// por isso o clique repetido (detail 2, 3…) não tira nada. Só que nada mostrava isso: quem tira
+// vários seguidos, clicando a menos de meio segundo, via só o primeiro sair e os outros cliques
+// sumiam calados. Agora, depois de um clique que tirou um item, o botão que ficou debaixo do
+// ponteiro fica APAGADO pela «Espera entre toques» (🙋 Pedidos → 📋 Fila e partidas), e o toque
+// vale quando ele acende — mesmo que o navegador ainda o conte como repetido: o que não vale é o
+// clique repetido cujo clique ANTERIOR não caiu neste mesmo botão apagado (esse também o apaga,
+// como no painel). Em «Sem espera» nada fica apagado e o clique repetido não tira nada.
+const PED_ESPERAS_MS = [0, 500, 1000, 1500, 2000]; // (os mesmos do painel; o resto é o padrão)
+function pedEsperaToque() {
+  const v = settings && settings.pedidos ? settings.pedidos.esperaToqueMs : undefined;
+  return PED_ESPERAS_MS.includes(v) ? v : 1000;
+}
+const pedTirarParados = new Map(); // a chave do botão (lista|item) → a vez da espera dele
+const pedTirarParado = (b) => b.getAttribute('aria-disabled') === 'true';
+function pedAplicarTirarParados() {
+  for (const b of document.querySelectorAll('button[data-ped-tirar]')) {
+    if (pedTirarParados.has(b.dataset.pedTirar)) b.setAttribute('aria-disabled', 'true');
+    else b.removeAttribute('aria-disabled');
+  }
+}
+function pedSegurarTirar(chave) {
+  const ms = pedEsperaToque();
+  if (ms <= 0) return;
+  const vez = {};
+  pedTirarParados.set(chave, vez);
+  pedAplicarTirarParados();
+  setTimeout(() => {
+    if (pedTirarParados.get(chave) === vez) { pedTirarParados.delete(chave); pedAplicarTirarParados(); }
+  }, ms);
+}
+let pedTirarCliqueDeAntes = null; // o que o clique anterior achou: o botão (a chave) e se ele estava apagado
+let pedTirarCliqueDeAgora = null;
+document.addEventListener('click', (e) => {
+  const b = e.target instanceof Element ? e.target.closest('button[data-ped-tirar]') : null;
+  pedTirarCliqueDeAntes = pedTirarCliqueDeAgora;
+  pedTirarCliqueDeAgora = b ? { chave: b.dataset.pedTirar, parado: pedTirarParado(b) } : null;
+}, true);
+// o clique no 🗑️ ou no ✖ (`tirar` tira o item e refaz a lista na hora)
+function pedTocarTirar(e, b, tirar) {
+  if (pedTirarParado(b)) return;
+  if (e.detail > 1 && !(pedTirarCliqueDeAntes && pedTirarCliqueDeAntes.parado && pedTirarCliqueDeAntes.chave === b.dataset.pedTirar)) {
+    pedSegurarTirar(b.dataset.pedTirar);
+    return;
+  }
+  tirar();
+  // (o teclado não tem ponteiro: detail 0)
+  if (e.detail < 1) return;
+  const sob = document.elementFromPoint(e.clientX, e.clientY);
+  const outro = sob && sob.closest ? sob.closest('button[data-ped-tirar]') : null;
+  if (outro) pedSegurarTirar(outro.dataset.pedTirar);
+}
+
 // 💱 Preço por moeda: a moeda é a chave (3 letras; o real é o preço de cima)
-function pedPintarMoedas() {
+// `forcar`: o clique que tirou uma moeda refaz a lista na hora (o soltar já veio)
+function pedPintarMoedas(forcar) {
   const box = document.getElementById('ped-moedas');
   if (!box || box.contains(document.activeElement)) return; // não refaz a linha que a pessoa está mexendo
+  if (!forcar && pedListaAdiada(pedPintarMoedas)) return;
+  pedListasAdiadas.delete(pedPintarMoedas);
   const m = (settings && settings.pedidos && settings.pedidos.precoPorMoeda && typeof settings.pedidos.precoPorMoeda === 'object') ? settings.pedidos.precoPorMoeda : {};
   const codigos = Object.keys(m).filter((k) => /^[A-Z]{3}$/.test(k) && Number.isFinite(m[k])).sort();
   box.textContent = '';
@@ -7760,8 +7873,11 @@ function pedPintarMoedas() {
     tirar.textContent = '🗑️';
     tirar.title = 'Tirar esta moeda';
     // 🖱️ (a lista sobe quando a linha sai: o 2º clique de um clique duplo — o navegador conta,
-    // detail 2 — caía no 🗑️ da moeda de baixo e tirava DUAS; o clique repetido não tira nada)
-    tirar.addEventListener('click', (e) => { if (e.detail > 1) return; pedMandar({ precoPorMoeda: { [c]: null } }); linha.remove(); pedPintarMoedas(); });
+    // detail 2 — caía no 🗑️ da moeda de baixo e tirava DUAS; o clique repetido não tira nada, e o
+    // 🗑️ que fica debaixo do ponteiro espera apagado: pedTocarTirar)
+    tirar.dataset.pedTirar = 'moeda|' + c;
+    if (pedTirarParados.has(tirar.dataset.pedTirar)) tirar.setAttribute('aria-disabled', 'true');
+    tirar.addEventListener('click', (e) => pedTocarTirar(e, tirar, () => { pedMandar({ precoPorMoeda: { [c]: null } }); linha.remove(); pedPintarMoedas(true); }));
     linha.append(cod, inp, tirar);
     box.appendChild(linha);
   }
@@ -7816,7 +7932,10 @@ function pedFichas(container, op) {
   container.append(lista, linha);
   const ler = () => { const v = pedLer((settings && settings.pedidos) || {}, op.caminho); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []; };
   const igual = (a, b) => a.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase() === b.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-  function pintar() {
+  // `forcar`: o clique que tirou uma ficha refaz a lista na hora (o soltar já veio: pedListaAdiada)
+  function pintar(forcar) {
+    if (forcar !== true && pedListaAdiada(pintar)) return;
+    pedListasAdiadas.delete(pintar);
     const atual = ler();
     lista.textContent = '';
     for (const p of atual) {
@@ -7833,8 +7952,11 @@ function pedFichas(container, op) {
       x.textContent = '✖';
       x.title = 'Tirar da lista';
       // 🖱️ (as fichas andam quando uma sai: o 2º clique de um clique duplo — detail 2 — caía no
-      // ✖ da ficha seguinte e tirava DUAS, sem confirmação; o clique repetido não tira nada)
-      x.addEventListener('click', (e) => { if (e.detail > 1) return; pedMandar(pedParcial(op.caminho, ler().filter((q) => !igual(q, p)))); pintar(); });
+      // ✖ da ficha seguinte e tirava DUAS, sem confirmação; o clique repetido não tira nada, e o
+      // ✖ que fica debaixo do ponteiro espera apagado: pedTocarTirar)
+      x.dataset.pedTirar = op.caminho + '|' + p.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+      if (pedTirarParados.has(x.dataset.pedTirar)) x.setAttribute('aria-disabled', 'true');
+      x.addEventListener('click', (e) => pedTocarTirar(e, x, () => { pedMandar(pedParcial(op.caminho, ler().filter((q) => !igual(q, p)))); pintar(true); }));
       chip.append(txt, x);
       lista.appendChild(chip);
     }
@@ -7887,6 +8009,8 @@ function pedReceberRecompensas(ev) {
 function pedPintarRecompensasDoCanal() {
   const box = document.getElementById('ped-recompensasCanal');
   if (!box) return;
+  if (pedListaAdiada(pedPintarRecompensasDoCanal)) return; // (o mouse apertado numa recompensa: espera o soltar)
+  pedListasAdiadas.delete(pedPintarRecompensasDoCanal);
   const foco = document.activeElement && box.contains(document.activeElement) ? document.activeElement.dataset.recompensa || '' : null;
   box.textContent = '';
   const atualizar = pedBotao('🔄', pedPedirRecompensas, 'Ler de novo as recompensas do canal');
@@ -10429,7 +10553,7 @@ function montarEditorTecla(card, slot, idSel) {
         renderTrilhasDeck();
         renderTrilhaEditorCard(); // remonta o editor já com o tipo novo
         const aviso = await avisoDeFormato(data.url, file.name);
-        if (aviso) obsAviso(aviso, 'Enviar arquivo', '⬆️');
+        if (aviso) obsAviso(aviso, 'Enviar arquivo', '⬆️', { sozinha: true });
       } catch (err) {
         recado(`❌ Erro ao enviar: ${err.message}`);
       }
@@ -11418,9 +11542,9 @@ document.getElementById('sdBackupArquivo').onchange = async () => {
     const r = await res.json();
     obsAviso(r.ok
       ? `🎛️ ${r.adicionadas} trilha(s) importada(s) do Stream Deck!` + (r.pendentes ? ` ${r.pendentes} ainda sem arquivo de som — aponte a pasta dos áudios e clique em 🔎.` : ' Todas prontas!')
-      : 'Não deu: ' + (r.erro || 'arquivo não reconhecido'), 'Importar do Stream Deck', '🎛️');
+      : 'Não deu: ' + (r.erro || 'arquivo não reconhecido'), 'Importar do Stream Deck', '🎛️', { sozinha: true });
   } catch {
-    obsAviso('Não deu: falha ao enviar o arquivo — tente de novo.', 'Importar do Stream Deck', '🎛️');
+    obsAviso('Não deu: falha ao enviar o arquivo — tente de novo.', 'Importar do Stream Deck', '🎛️', { sozinha: true });
   }
   if (st) { st.style.display = 'none'; }
 };
@@ -11461,11 +11585,11 @@ document.getElementById('mesaRestArquivo').onchange = async () => {
   try {
     const res = await fetch('/mesa-restaurar', { method: 'POST', body: file });
     const r = await res.json().catch(() => ({ ok: false, erro: OBS_I18N.t('O programa respondeu de um jeito que não entendi.') + ' (' + res.status + ')' }));
-    if (!r.ok) obsAviso('Não deu: ' + (r.erro || 'arquivo não reconhecido'), 'Backup da Mesa', '💾');
-    else if (r.origem === 'streamdeck') obsAviso(`🎛️ ${r.adicionadas} trilha(s) importada(s) do Stream Deck!` + (r.pendentes ? ` ${r.pendentes} ainda sem arquivo de som — aponte a pasta dos áudios e clique em 🔎.` : ' Todas prontas!'), 'Backup da Mesa', '💾');
-    else obsAviso(mesaTextoRestaurada(r), 'Backup da Mesa', '💾');
+    if (!r.ok) obsAviso('Não deu: ' + (r.erro || 'arquivo não reconhecido'), 'Backup da Mesa', '💾', { sozinha: true });
+    else if (r.origem === 'streamdeck') obsAviso(`🎛️ ${r.adicionadas} trilha(s) importada(s) do Stream Deck!` + (r.pendentes ? ` ${r.pendentes} ainda sem arquivo de som — aponte a pasta dos áudios e clique em 🔎.` : ' Todas prontas!'), 'Backup da Mesa', '💾', { sozinha: true });
+    else obsAviso(mesaTextoRestaurada(r), 'Backup da Mesa', '💾', { sozinha: true });
   } catch {
-    obsAviso('Não deu: falha ao enviar o arquivo — tente de novo.', 'Backup da Mesa', '💾');
+    obsAviso('Não deu: falha ao enviar o arquivo — tente de novo.', 'Backup da Mesa', '💾', { sozinha: true });
   }
   mesaRestaurando = false;
   if (st) st.style.display = 'none';
