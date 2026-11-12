@@ -8507,11 +8507,13 @@ function aplicarTravasPedidos() {
     b.disabled = !pode;
     esperarEcoPedidos(b, pode && pedidosTravas.has(b.dataset.trava));
   }
-  // (o menu do botão direito do cartão, se estiver aberto: a opção acende e apaga com o botão dela)
+  // (o menu do botão direito do cartão, se estiver aberto: a opção acende e apaga com o botão
+  // dela. Sem o botão — o cartão saiu com o menu aberto — ou sem permissão não há espera
+  // nenhuma para mostrar: a opção ficava apagada para sempre, com o cursor de espera)
   for (const opcao of ctxMenu.children) {
     if (typeof opcao.__botaoDoPedido !== 'function') continue;
     const b = opcao.__botaoDoPedido();
-    esperarEcoPedidos(opcao, !b || botaoParadoPedidos(b));
+    esperarEcoPedidos(opcao, !!b && !b.disabled && botaoParadoPedidos(b));
   }
 }
 // a resposta é só de quem tocou: o erro vira recado; o acerto solta o botão quando
@@ -9016,9 +9018,12 @@ function abrirMenuDoPedido(e, card) {
     opcao.onclick = (ev) => {
       ev.stopPropagation();
       const atual = opcao.__botaoDoPedido();
-      if (!atual || botaoParadoPedidos(atual)) return; // (em espera: o toque não vale, e o menu continua aberto)
+      // (em espera — o botão apagado, que vai acender: o toque não vale, e o menu continua aberto)
+      if (atual && !atual.disabled && botaoParadoPedidos(atual)) return;
+      // (sem o botão — outra tela tirou a pessoa e o cartão saiu com o menu aberto — ou sem
+      // permissão, não há o que esperar: o menu só fecha, sem mandar nada, como sempre fechou)
       closeCtxMenu();
-      atual.click();
+      if (atual) atual.click();
     };
     ctxMenu.appendChild(opcao);
   }
