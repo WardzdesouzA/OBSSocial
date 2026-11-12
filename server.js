@@ -175,10 +175,96 @@ function tcons(texto, ...args) {
   return t.replace(/\$(\d)/g, (tudo, i) => String(args[Number(i) - 1] ?? ''));
 }
 
+// 🌐 v0.192: o que o servidor entrega PRONTO a quem não tem o motor de idiomas do
+// navegador — o 🕹️ Stream Deck (respostas das ações, catálogo e estado) e a janela
+// do programa — sai no idioma pelos MESMOS dicionários das telas (public/i18n-<l>.js,
+// o português é a chave; o mesmo algoritmo do public/i18n.js), cada um lido só na
+// primeira vez que é pedido. O que a pessoa digitou («…») não passa pelo tradutor:
+// vai guardado e volta igual («Mapa» continua «Mapa» numa frase em inglês).
+const DICIONARIOS_SERVIDOR = new Map();
+function dicionarioDoServidor(l) {
+  if (DICIONARIOS_SERVIDOR.has(l)) return DICIONARIOS_SERVIDOR.get(l);
+  let d = null;
+  try {
+    const janela = {};
+    require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, 'public', `i18n-${l}.js`), 'utf8'), { window: janela }, { timeout: 5000 });
+    const x = janela.OBS_I18N_DICTS && janela.OBS_I18N_DICTS[l];
+    if (x && x.textos && typeof x.textos === 'object' && Array.isArray(x.padroes)) d = x;
+  } catch { d = null; } // sem o dicionário, o texto sai como está
+  DICIONARIOS_SERVIDOR.set(l, d);
+  return d;
+}
+// (os rótulos soltos do dicionário só valem para o texto inteiro, como no navegador:
+// dentro de uma frase, o pedaço capturado é o que alguém escreveu)
+const ROTULOS_DO_SERVIDOR = new WeakMap();
+function ehRotuloDoDicionario(d, chave) {
+  let s = ROTULOS_DO_SERVIDOR.get(d);
+  if (!s) { s = new Set(Array.isArray(d.rotulos) ? d.rotulos : []); ROTULOS_DO_SERVIDOR.set(d, s); }
+  return s.has(chave);
+}
+// `guardados`: o que estava entre «» (a marca ⟦n⟧ no lugar). A frase que, com o «…»
+// de volta, é chave inteira do dicionário é do programa («Esse pedido não está na
+// lista «a devolver».», sozinha ou dentro de outra): vale a chave
+function traduzirComDicionario(d, texto, prof, guardados) {
+  const chave = String(texto).replace(/\s+/g, ' ').trim();
+  if (!chave || !/[A-Za-zÀ-ÿ]/.test(chave)) return null;
+  const inteira = guardados && guardados.length ? chave.replace(/⟦(\d+)⟧/g, (tudo, i) => guardados[Number(i)] ?? tudo) : chave;
+  for (const k of inteira === chave ? [chave] : [inteira, chave]) {
+    if (Object.hasOwn(d.textos, k) && typeof d.textos[k] === 'string' && !(prof && ehRotuloDoDicionario(d, k))) return d.textos[k];
+  }
+  if (prof >= 3) return null;
+  for (const par of d.padroes) {
+    const m = Array.isArray(par) && par[0] ? chave.match(par[0]) : null;
+    if (m) {
+      // (os grupos passam pelo tradutor de novo, como no navegador)
+      const grupos = m.slice(1).map((g) => (g === undefined ? '' : (traduzirComDicionario(d, g, prof + 1, guardados) ?? g)));
+      return String(par[1]).replace(/\$(\d)/g, (tudo, i) => grupos[Number(i) - 1] ?? '');
+    }
+  }
+  return null;
+}
+// entre «» vai o que a pessoa digitou — menos estes, que são do próprio programa e
+// aparecem no meio de um padrão («|» separa os apelidos, «começar do zero»)
+const LITERAIS_DO_PROGRAMA = new Set(['|', 'começar do zero']);
+function traduzirNoIdioma(texto, idioma) {
+  const s = typeof texto === 'string' ? texto : String(texto ?? '');
+  if (!idioma || idioma === 'pt' || !CONSOLE_IDIOMAS.includes(idioma) || !/[A-Za-zÀ-ÿ]/.test(s)) return s;
+  const d = dicionarioDoServidor(idioma);
+  if (!d) return s;
+  const guardados = [];
+  const marcado = s.replace(/«([^«»]*)»/g, (tudo, v) => (LITERAIS_DO_PROGRAMA.has(v) ? tudo : `«⟦${guardados.push(v) - 1}⟧»`));
+  const t = traduzirComDicionario(d, marcado, 0, guardados);
+  if (t === null) return s;
+  const bordas = /^(\s*)[\s\S]*?(\s*)$/.exec(s);
+  return bordas[1] + t.replace(/⟦(\d+)⟧/g, (tudo, i) => guardados[Number(i)] ?? tudo) + bordas[2];
+}
+// 🪟 A janela do programa: os avisos (console.error/warn) também no idioma do
+// programa, como a abertura — é para ela que as telas mandam olhar quando algo não
+// abre. Antes do state existir (a carga das configurações), saem como estão.
+for (const nivel of ['error', 'warn']) {
+  const original = console[nivel].bind(console);
+  console[nivel] = (...args) => {
+    if (typeof args[0] === 'string') {
+      let l = 'pt';
+      try { l = idiomaDoConsole(); } catch { l = 'pt'; }
+      if (l !== 'pt') { try { args[0] = traduzirNoIdioma(args[0], l); } catch { /* fica como está */ } }
+    }
+    original(...args);
+  };
+}
+
 const qrcodeFactory = require('qrcode-generator');
 const currency = require('./currency');
 // 🌤️ v0.167: o tempo agora, de uma ou mais fontes, para o overlay
 const { Clima: ClimaServico, sanitizeClima, sanitizeCidade: sanitizeCidadeClima, procurarCidade: procurarCidadeClima, buscarJsonPadrao: buscarJsonClima, FONTES: CLIMA_FONTES, CAPITAIS_BR: CLIMA_CAPITAIS, indiceRodizio: climaIndiceRodizio } = require('./clima');
+// 🙋 v0.192: Pedidos (Labs) — a fila da live, os catálogos de cada jogo e a
+// leitura do site oficial do Dead by Daylight (só no clique). Requeridos aqui em
+// cima, junto do clima: o DEFAULT_SETTINGS e o mergeSettings usam o padrão e o
+// sanitizador deles enquanto o «const state = {» nasce (zona morta, TDZ)
+const { criarPedidos, sanitizarConfiguracao: sanitizarPedidosConf, CONFIG_PADRAO: PEDIDOS_CONFIG_PADRAO, nomeCivil: nomeCivilPedidos } = require('./pedidos');
+const { criarCatalogos } = require('./pedidos-catalogo');
+const { criarDbd } = require('./pedidos-dbd');
+const { gravarAtomico: gravarAtomicoPedidos } = require('./pedidos-arquivos');
 // 🧲 v0.154: a lista de ferramentas/abas/colunas do painel é a MESMA que as
 // páginas usam — o sanitizador só aceita o que existe, e o que existe mora
 // num lugar só (nunca mais um botão novo sumindo da ordem salva)
@@ -414,7 +500,14 @@ const DEFAULT_SETTINGS = {
     // 🎬 v0.134: extrator opcional da 🎞️ Mídia direta (yt-dlp) — baixado sob
     // demanda em 🔌 Conexões, para os sites que não publicam o arquivo
     ytdlp: false,
+    // 🙋 v0.192: Pedidos — a fila de pedidos da live (pagos e grátis), de
+    // qualquer jogo. Desligar só para de aceitar e esconde: nada é apagado
+    pedidos: false,
   },
+  // 🙋 v0.192: as regras e o visual dos Pedidos (JSON puro e nada sensível: vai
+  // no init de todas as telas). A fila e o estado ao vivo moram em
+  // data/pedidos/pedidos.json; os catálogos, em data/pedidos/catalogos/
+  pedidos: JSON.parse(JSON.stringify(PEDIDOS_CONFIG_PADRAO)),
   // 👥 v0.141: de onde as mensagens do WhatsApp/Telegram podem vir. Grupo,
   // canal e comunidade são a mesma família: quem só quer a conversa direta
   // desliga aqui e o resto nem entra no painel. De fábrica tudo entra, como
@@ -569,6 +662,7 @@ const DEFAULT_SETTINGS = {
     itens: {
       configuracoes: 'manual', logs: 'manual', midias: 'manual', marcas: 'manual',
       participantes: 'manual', conexoes: 'manual', ferramentas: 'manual',
+      pedidos: 'manual', // 🙋 v0.192: a fila e os catálogos (as imagens ficam fora)
     },
   },
   // Painel de controle
@@ -599,6 +693,9 @@ const DEFAULT_SETTINGS = {
     // aparecer (é por elas que se alcança o 🔄 de uma rede que travou).
     columnsShowEmpty: false,
     columnsOrder: [],   // ordem das colunas arrastadas ([] = padrão)
+    // 🙋 v0.192: onde os Pedidos aparecem no painel: 'auto' (coluna no modo
+    // 🧱 Colunas, aba no modo lista) | 'coluna' | 'aba' | 'ambos'
+    pedidosOnde: 'auto',
     toolOrder: [],      // ordem dos ícones de ferramentas ([] = padrão)
     tabOrder: [],       // ordem das abas
     toolbarPos: 'top',  // ferramentas acima ('top') ou abaixo ('bottom') das abas
@@ -924,6 +1021,12 @@ function sanitizeLivepix(src) {
   return { intervalo: Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : DEFAULT_SETTINGS.livepix.intervalo };
 }
 
+// 🙋 v0.192: onde os Pedidos aparecem no painel — só os valores conhecidos (na
+// carga e em cada ajuste). Declaração içada: o mergeSettings roda antes do state
+function pedidosOndeLimpo(v) {
+  return ['auto', 'coluna', 'aba', 'ambos'].includes(v) ? v : 'auto';
+}
+
 function mergeSettings(base) {
   const src = base || {};
   delete src.camadas; // 🧩 v0.173 → v0.174: as camadas de widget foram descontinuadas
@@ -973,8 +1076,15 @@ function mergeSettings(base) {
       animationOut: ANIM_CHAT_ANTIGA[(src.chat || {}).animationOut] || (src.chat || {}).animationOut || DEFAULT_SETTINGS.chat.animationOut,
       platforms: { ...DEFAULT_SETTINGS.chat.platforms, ...((src.chat || {}).platforms || {}) },
     },
-    panel: { ...DEFAULT_SETTINGS.panel, ...(src.panel || {}), ocultos: PAINEL_ORDEM.ocultosLimpos((src.panel || {}).ocultos) }, // 👁️ v0.188: já saneado na carga
+    panel: {
+      ...DEFAULT_SETTINGS.panel, ...(src.panel || {}),
+      ocultos: PAINEL_ORDEM.ocultosLimpos((src.panel || {}).ocultos), // 👁️ v0.188: já saneado na carga
+      pedidosOnde: pedidosOndeLimpo((src.panel || {}).pedidosOnde), // 🙋 v0.192
+    },
     livepix: sanitizeLivepix(src.livepix), // 💜 v0.174
+    // 🙋 v0.192: cada campo com tipo, faixa e lista fechada (o que não se
+    // conhece fica de fora; o padrão completa o que faltar)
+    pedidos: sanitizarPedidosConf(src.pedidos),
     tema: { ...DEFAULT_SETTINGS.tema, ...(src.tema || {}) },
     relogio: semSonsLegados({ ...DEFAULT_SETTINGS.relogio, ...(src.relogio || {}) }), // 🔊 v0.155: o som migrou
     clima: sanitizeClima(src.clima, DEFAULT_SETTINGS.clima), // 🌤️ v0.167
@@ -1773,6 +1883,1077 @@ if (migrarArteDosPerfis || gravarMarcaAnimacao) {
   gravarMarcaAnimacao = false;
 }
 
+// ===========================================================================
+// 🙋 v0.192: Pedidos (Labs) — a fila de pedidos da live, de qualquer jogo
+// ===========================================================================
+// Três módulos fazem o trabalho — pedidos.js (a fila, as regras, o que cada
+// papel vê), pedidos-catalogo.js (o catálogo de cada jogo, com as imagens) e
+// pedidos-dbd.js (a leitura do site oficial do Dead by Daylight, só no clique) —
+// e o servidor liga as pontas: operações, rotas, o que cada papel recebe,
+// backup e limpeza. Tudo nasce desligado no 🧪 Labs, sempre conferido com
+// pedidosLigado(); desligar só para de aceitar e esconde (nada é apagado).
+// Esta seção vem DEPOIS do state (o núcleo lê state.settings.pedidos ao nascer);
+// o envio às telas espera o wss nascer (setImmediate + guarda).
+const PEDIDOS_DIR = path.join(DATA_DIR, 'pedidos');
+const PEDIDOS_FILE = path.join(PEDIDOS_DIR, 'pedidos.json');
+const PEDIDOS_ESPERA_FILE = path.join(PEDIDOS_DIR, 'pedidos.espera.json');
+const PEDIDOS_CATALOGOS_DIR = path.join(PEDIDOS_DIR, 'catalogos');
+const PEDIDOS_IMAGENS_DIR = path.join(PEDIDOS_DIR, 'imagens');
+// o arquivo de um catálogo é <jogo>.json: as cópias .ilegivel-… e os temporários
+// ficam de fora, e nome de aparelho do Windows (con, nul, com1…) nunca vira arquivo
+const RE_PEDIDOS_CATALOGO_ARQ = /^[a-z0-9]+(?:-[a-z0-9]+)*\.json$/;
+const RE_PEDIDOS_RESERVADO_WIN = /^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])\.json$/;
+const PEDIDOS_TIPOS_IMAGEM = { '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
+// Frases que vão às telas (o português exato é a chave da tradução)
+const PEDIDOS_DESLIGADO = 'Os pedidos estão desligados no 🧪 Labs.';
+const PEDIDOS_SEM_NUCLEO = 'Os pedidos não abriram por um erro: veja a janela do OBS Social.';
+
+function pedidosLigado() { return state.settings.labs?.pedidos === true; }
+
+// 💱 O Super Chat em reais pela MESMA cotação que o painel mostra (currency.js);
+// sem cotação, o núcleo manda o pagamento para ⚠ Revisar (nunca chuta valor)
+function pedidosConverterValor(texto) {
+  const t = String(texto || '').slice(0, 80);
+  const p = currency.parseAmount(t);
+  if (!p) return null;
+  if (p.currency === 'BRL') return { moeda: 'BRL', valor: p.value, brl: p.value, aproximado: false };
+  const emReais = currency.toBRL(t);
+  const q = emReais ? currency.parseAmount(emReais) : null;
+  return { moeda: p.currency, valor: p.value, brl: q ? q.value : null, aproximado: !!q };
+}
+
+// 🧪 Teste sem rede: com OBS_SOCIAL_PEDIDOS_DBD_URL apontando um servidor falso
+// NESTA máquina, a leitura troca a origem do site oficial por esse endereço (as
+// páginas e as imagens). Endereço fora do 127.0.0.1/localhost é ignorado: o
+// gancho nunca vira desvio para outro lugar. Sem a variável, o site oficial e o
+// fetch normal do Node.
+const PEDIDOS_DBD_TESTE = (() => {
+  const bruto = String(process.env.OBS_SOCIAL_PEDIDOS_DBD_URL || '').trim();
+  if (!bruto) return null;
+  let u = null;
+  try { u = new URL(bruto); } catch { u = null; }
+  if (!u || u.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname)) {
+    console.error('  ⚠️ 🙋 OBS_SOCIAL_PEDIDOS_DBD_URL ignorado: só vale um endereço http:// desta máquina (teste).');
+    return null;
+  }
+  const origem = u.origin;
+  const hosts = new Set(['deadbydaylight.com', 'assets.deadbydaylight.com']);
+  return {
+    fetch: (url, init) => {
+      let x = null;
+      try { x = new URL(String(url)); } catch { x = null; }
+      if (!x || x.protocol !== 'https:' || x.port || !hosts.has(x.hostname)) return Promise.reject(new Error('fora do site oficial'));
+      return fetch(origem + x.pathname + x.search, init);
+    },
+    tempoMs: 10000,
+    pausaMs: 30,
+  };
+})();
+
+let catalogos = null;     // os catálogos (data/pedidos/catalogos/ + imagens/)
+let pedidosNucleo = null; // a fila (data/pedidos/pedidos.json)
+let pedidosDbd = null;    // a leitura do site oficial do DBD (uma rodada por vez)
+let pedidosEnvioAgendado = null; // os motivos juntados até o próximo envio às telas
+let pedidosDbdUltimo = null;     // o fim da última leitura do site (para a página que abrir depois)
+
+// Monta (ou remonta, depois de restaurar ou limpar) as três peças. Um erro aqui
+// não derruba o programa: só os Pedidos ficam fora, com o recado na tela.
+function montarPedidos() {
+  try {
+    catalogos = criarCatalogos(PEDIDOS_DIR);
+    pedidosNucleo = criarPedidos({
+      baseDir: PEDIDOS_DIR,
+      catalogos,
+      configuracao: () => state.settings.pedidos, // getter: o state.settings é trocado inteiro a cada ajuste
+      agora: () => Date.now(),
+      aoMudar: agendarBroadcastPedidos,
+      // as regras do chat: o apelido «📱 Convidado XYZ» é o mesmo do painel
+      apelidoDeTelefone,
+      pareceTelefone: pareceTelefoneSrv,
+      converter: pedidosConverterValor,
+      versaoDaImagem: versaoImagemPedidos,
+    });
+    // (item novo só com o nome em inglês: é o de reserva de quem usa um idioma que o
+    // site oficial não tem — sem ele, a tela em espanhol cairia no português)
+    pedidosDbd = criarDbd({ catalogos, versao: APP_VERSION, soComIngles: true, ...(PEDIDOS_DBD_TESTE ? { fetch: PEDIDOS_DBD_TESTE.fetch, tempoMs: PEDIDOS_DBD_TESTE.tempoMs } : {}) });
+  } catch (err) {
+    console.error('  ⚠️ 🙋 Pedidos: não consegui abrir (o resto do programa segue):', (err && err.stack) || err);
+    catalogos = null;
+    pedidosNucleo = null;
+    pedidosDbd = null;
+  }
+}
+function pedidosProntos() { return !!(catalogos && pedidosNucleo && pedidosDbd); }
+// 🖼️ A versão de cada imagem (data e tamanho do arquivo) vai na URL: a imagem
+// trocada nasce com o MESMO nome, e sem a versão o navegador mostraria a velha.
+// Cada mudança do catálogo gera outro objeto na memória, então a anotação por
+// catálogo (WeakMap) cai sozinha quando ele muda.
+const pedidosVersoesPorCatalogo = new WeakMap(); // catálogo → Map(arquivo → versão)
+function versaoImagemPedidos(jogo, arquivo) {
+  if (!catalogos) return null;
+  try {
+    const cat = catalogos.carregar(jogo);
+    if (!cat || cat.ok === false || !Array.isArray(cat.itens)) return null;
+    let m = pedidosVersoesPorCatalogo.get(cat);
+    if (!m) { m = new Map(); pedidosVersoesPorCatalogo.set(cat, m); }
+    if (m.has(arquivo)) return m.get(arquivo);
+    let v = null;
+    const caminho = catalogos.caminhoImagem(jogo, arquivo);
+    if (caminho) {
+      try { const st = fs.statSync(caminho); v = Math.round(st.mtimeMs).toString(36) + st.size.toString(36); } catch { v = null; }
+    }
+    m.set(arquivo, v);
+    return v;
+  } catch { return null; }
+}
+const urlImagemPedidos = (jogo, arquivo) => {
+  const v = versaoImagemPedidos(jogo, arquivo);
+  return `/pedidos-img/${jogo}/${arquivo}${v ? `?v=${v}` : ''}`;
+};
+
+// O núcleo avisa cada mudança (aoMudar); várias na mesma volta do laço (uma
+// rajada de pedidos do chat) viram UM envio, e ele só sai depois que o wss existe
+function agendarBroadcastPedidos(motivo) {
+  if (pedidosEnvioAgendado) { if (typeof motivo === 'string') pedidosEnvioAgendado.add(motivo); return; }
+  pedidosEnvioAgendado = new Set(typeof motivo === 'string' ? [motivo] : []);
+  setImmediate(() => {
+    const motivos = [...pedidosEnvioAgendado].slice(0, 20);
+    pedidosEnvioAgendado = null;
+    try { broadcastPedidos(motivos); } catch (err) { console.error('  ⚠️ 🙋 Pedidos: o envio às telas falhou:', (err && err.message) || err); }
+  });
+}
+
+montarPedidos();
+
+// ── 📡 O que cada papel recebe ──
+// local = o computador do streamer; full = senha, liberdade total ou o token do
+// controle externo; quem só assiste pela rede = viewer
+function papelPedidos(ws) {
+  return ws && ws.role === 'local' ? 'local' : ws && ws.role === 'full' ? 'full' : 'viewer';
+}
+function pedidosParaPapel(papel) {
+  if (!pedidosLigado()) return { ligado: false };
+  if (!pedidosProntos()) {
+    return { ligado: true, travado: 'erro', jogo: null, abertos: null, valores: false, agora: null, fila: [], revisar: [], feitos: [], contagem: { fila: 0, pulados: 0, revisar: 0, feitos: 0 } };
+  }
+  // os nomes do catálogo saem no idioma do programa (no «auto», o do computador)
+  const proj = pedidosNucleo.paraPainel(papel, { idioma: idiomaDoConsole() });
+  // 🔤 Cada tela mostra os nomes no idioma DELA (o painel e as configurações seguem o
+  // idioma pessoal do navegador), qualquer que seja o «Idioma dos nomes»: vão junto
+  // os nomes de cada item da fila em todos os idiomas, e a tela escolhe pela opção
+  if (proj && proj.ligado === true && !proj.travado) {
+    try { proj.nomes = nomesDosItensPedidos(proj); } catch { /* sem a lista, vale o nome no idioma do programa */ }
+  }
+  return proj;
+}
+// Uma entrada por item (jogo + id), numa LISTA — nunca objeto indexado por id —
+// e com teto: os itens do ▶ Agora, da fila, do ⚠ Revisar, dos «a devolver» e dos
+// feitos, com as opções das dúvidas
+const PEDIDOS_TETO_NOMES = 5000;
+function nomesDosItensPedidos(proj) {
+  const vistos = new Set();
+  const out = [];
+  const juntar = (jogo, it) => {
+    if (out.length >= PEDIDOS_TETO_NOMES || !it || typeof it.id !== 'string') return;
+    const chave = jogo + '|' + it.id; // (jogo e id do catálogo nunca têm «|»)
+    if (vistos.has(chave)) return;
+    vistos.add(chave);
+    const c = catalogos.acharItem(jogo, it.id);
+    if (c && c.nomes && typeof c.nomes === 'object' && !Array.isArray(c.nomes)) out.push({ jogo, id: it.id, nomes: { ...c.nomes } });
+  };
+  const lista = (v) => (Array.isArray(v) ? v : []);
+  for (const p of [proj.agora, ...lista(proj.fila), ...lista(proj.revisar), ...lista(proj.aDevolver), ...lista(proj.feitos)]) {
+    if (!p || typeof p !== 'object' || typeof p.jogo !== 'string' || !p.jogo) continue;
+    for (const it of lista(p.itens)) juntar(p.jogo, it);
+    for (const d of lista(p.duvidas)) for (const o of lista(d && d.opcoes)) juntar(p.jogo, o);
+  }
+  return out;
+}
+// 📡 Quem recebe a fila: com 500 pedidos, cada quadro passa de meio megabyte, e o
+// chat e a tela do OBS, o mini Mesa e as configurações não mostram a fila. A
+// página diz o que quer (pedidosAssinar): «fila» (o painel), «resumo» (as
+// configurações: o jogo em uso e o arquivo travado) ou nada. A página que não
+// disse nada recebe só o resumo no init. Quem não é página (sem Origin: um
+// programa ou automação no próprio computador) recebe a fila como sempre.
+function pedidosQuer(ws) {
+  if (ws.pedidosQuer === 'fila' || ws.pedidosQuer === 'resumo') return ws.pedidosQuer;
+  return ws.ehPagina ? null : 'fila';
+}
+function pedidosResumoDe(proj) {
+  if (!proj || proj.ligado !== true) return { ligado: false };
+  const out = { ligado: true, resumo: true, travado: proj.travado || null, jogo: proj.jogo || null };
+  if (typeof proj.copia === 'string') out.copia = proj.copia;
+  if (Number.isFinite(proj.esperando)) out.esperando = proj.esperando;
+  return out;
+}
+function pedidosParaCliente(ws) {
+  const proj = pedidosParaPapel(papelPedidos(ws));
+  // no init: a página que ainda não pediu a fila leva só o resumo
+  return ws.ehPagina && ws.pedidosQuer !== 'fila' ? pedidosResumoDe(proj) : proj;
+}
+function quadroPedidos(papel, quer, proj, motivos) {
+  const quadro = { type: 'pedidos', pedidos: quer === 'resumo' ? pedidosResumoDe(proj) : proj };
+  if (quer === 'fila' && Array.isArray(motivos) && motivos.length) quadro.motivos = motivos;
+  return JSON.stringify(papel === 'viewer' ? semTelefonesParaViewer(quadro) : quadro);
+}
+// a resposta ao pedidosAssinar: o retrato de agora, só para esta tela
+function enviarPedidosAo(ws) {
+  const quer = pedidosQuer(ws);
+  if (!quer || ws.readyState !== 1) return;
+  const papel = papelPedidos(ws);
+  const texto = quadroPedidos(papel, quer, pedidosParaPapel(papel), null);
+  if (quer === 'resumo') ws.pedidosResumoEnviado = texto;
+  try { ws.send(texto); } catch { /* caiu */ }
+}
+// Cada cliente recebe a projeção do PAPEL dele (molde broadcastMidiaDireta); para
+// quem só assiste, o filtro de telefone ainda passa por cima (a segunda camada).
+// O resumo só sai quando mudou (a fila muda muito na live; o jogo e a trava, não).
+function broadcastPedidos(motivos) {
+  let clientes;
+  try { clientes = wss.clients; } catch { return; } // o wss ainda não nasceu: não há quem avisar
+  const projecoes = new Map();
+  const prontos = new Map();
+  for (const c of clientes) {
+    if (c.readyState !== 1) continue;
+    const quer = pedidosQuer(c);
+    if (!quer) continue;
+    const papel = papelPedidos(c);
+    const chave = papel + '|' + quer;
+    let texto = prontos.get(chave);
+    if (texto === undefined) {
+      if (!projecoes.has(papel)) projecoes.set(papel, pedidosParaPapel(papel));
+      texto = quadroPedidos(papel, quer, projecoes.get(papel), motivos);
+      prontos.set(chave, texto);
+    }
+    if (quer === 'resumo') {
+      if (c.pedidosResumoEnviado === texto) continue;
+      c.pedidosResumoEnviado = texto;
+    }
+    try { c.send(texto); } catch { /* caiu */ }
+  }
+}
+// O resumo dos catálogos (nunca os itens). A cópia de um catálogo que não abre vai
+// só como nome de arquivo, e só para o computador do streamer.
+function catalogosParaCliente(ws) {
+  if (!pedidosLigado() || !pedidosProntos()) return [];
+  const local = !!ws && ws.role === 'local';
+  return catalogos.listar().map((c) => {
+    const out = { id: c.id, nome: c.nome, modelo: c.modelo, itens: c.itens, imagens: c.imagens, atualizadoEm: c.atualizadoEm };
+    if (c.erro) {
+      out.erro = c.erro;
+      if (local && c.copia) out.copia = path.basename(String(c.copia));
+    }
+    return out;
+  });
+}
+function broadcastCatalogosPedidos() {
+  let clientes;
+  try { clientes = wss.clients; } catch { return; }
+  let local = null;
+  let outros = null;
+  for (const c of clientes) {
+    if (c.readyState !== 1) continue;
+    if (c.role === 'local') {
+      if (local === null) local = JSON.stringify({ type: 'pedidosCatalogos', catalogos: catalogosParaCliente(c) });
+      try { c.send(local); } catch { /* caiu */ }
+    } else {
+      if (outros === null) outros = JSON.stringify({ type: 'pedidosCatalogos', catalogos: catalogosParaCliente(c) });
+      try { c.send(outros); } catch { /* caiu */ }
+    }
+  }
+}
+// O andamento da leitura do site oficial é só do computador do streamer
+function enviarAosLocaisPedidos(obj) {
+  let clientes;
+  try { clientes = wss.clients; } catch { return; }
+  const texto = JSON.stringify(obj);
+  for (const c of clientes) if (c.readyState === 1 && c.role === 'local') { try { c.send(texto); } catch { /* caiu */ } }
+}
+function pedidosDbdEstado() {
+  if (!pedidosProntos()) return null;
+  const e = { ...pedidosDbd.estado(), fim: pedidosDbdUltimo };
+  if (e.fase === 'fim') e.mensagem = ''; // (a palavra do módulo: o resultado vem no «fim»)
+  return e;
+}
+
+// 🧪 Ligou/desligou no Labs, voltou o backup das configurações ou o programa
+// abriu: as telas recebem a fila (ou { ligado:false }). Desligado, a leitura do
+// site oficial que estiver rodando para; nada mais é apagado nem mexido.
+function sincronizarPedidosComLabs() {
+  if (!pedidosLigado() && pedidosDbd) { try { pedidosDbd.cancelar(); } catch { /* segue */ } }
+  broadcastPedidos(['labs']);
+  broadcastCatalogosPedidos();
+}
+// Antes de o processo sair (sinais, ♻️, atualização, «apagar tudo»): a gravação
+// adiada da fila vai para o disco
+function pedidosFecharParaSair() {
+  try { if (pedidosDbd) pedidosDbd.cancelar(); } catch { /* segue */ }
+  try { if (pedidosNucleo) pedidosNucleo.fechar(); } catch (err) { console.error('  ⚠️ 🙋 Pedidos: não consegui gravar a fila ao fechar:', (err && err.message) || err); }
+}
+
+// 🎁 As recompensas de pontos do canal da Twitch: o conector guarda o catálogo
+// público delas (id → título). Vai uma LISTA (nunca objeto indexado pelo id), com
+// teto, só com o id, o título e o custo. A página oferece cada uma para escolher:
+// o id guardado continua valendo quando o streamer renomeia a recompensa.
+function recompensasDoCanalPedidos() {
+  const tw = state.connectors && state.connectors.twitch;
+  const mapa = tw && tw.recompensas instanceof Map ? tw.recompensas : null;
+  const lista = [];
+  if (mapa) {
+    for (const [id, r] of mapa) {
+      if (lista.length >= 100) break;
+      if (typeof id !== 'string' || !id || id.length > 100) continue;
+      const titulo = r && typeof r.titulo === 'string' ? r.titulo.slice(0, 100) : '';
+      lista.push({ id, titulo, custo: r && Number.isFinite(r.custo) ? r.custo : null });
+    }
+  }
+  return { canal: tw && typeof tw.channel === 'string' ? tw.channel.slice(0, 100) : null, lista };
+}
+
+// ── 🎛️ Operações (painel pelo WebSocket e 🕹️ controle externo) ──
+// O nome da operação → a do núcleo e os parâmetros convertidos (pela URL do
+// controle externo tudo chega como texto): ids cortados, listas com teto, e nada
+// de objeto indexado por chave vinda de fora (o núcleo usa Map e listas fechadas).
+const temValorPed = (v) => v !== undefined && v !== null && v !== '';
+const textoPed = (v, max) => (typeof v === 'string' ? v.slice(0, max) : typeof v === 'number' && Number.isFinite(v) ? String(v) : '');
+const idPed = (v) => textoPed(v, 40);
+const idOuNumeroPed = (m) => (temValorPed(m.id) ? { id: idPed(m.id) } : { n: idPed(m.n) });
+// número, sim/não ou texto passam (cortados); objeto ou lista vira um valor que o
+// núcleo recusa — nunca um «alternar» sem querer
+function valorPed(v, max) {
+  if (!temValorPed(v)) return undefined;
+  if (typeof v === 'boolean' || (typeof v === 'number' && Number.isFinite(v))) return v;
+  if (typeof v === 'string') return v.slice(0, max);
+  return 'invalido';
+}
+// O «trecho» de cada item vira apelido «seu» no catálogo, que é só deste
+// computador: ele só passa vindo do painel deste computador. Pela rede (quem só
+// assiste com o seletor 🙋, a liberdade total) e pelo controle externo vai só o
+// id — o núcleo ensina então o trecho da frase do próprio pedido (a dúvida que o
+// leitor teve), nunca um texto qualquer que chegou junto com o toque.
+function itensPed(v, comTrecho) {
+  if (!Array.isArray(v)) return v === undefined ? undefined : null;
+  return v.slice(0, 31).map((x) => {
+    if (typeof x === 'string') return x.slice(0, 100);
+    if (!x || typeof x !== 'object' || Array.isArray(x)) return null;
+    const o = { id: typeof x.id === 'string' ? x.id.slice(0, 100) : '' };
+    if (comTrecho && typeof x.trecho === 'string') o.trecho = x.trecho.slice(0, 200);
+    return o;
+  });
+}
+const doComputadorLocal = (ws) => !!ws && ws.role === 'local' && !ws.controleExterno;
+const PEDIDOS_OPS = new Map([
+  ['pedidosAbrir', ['abrir', (m) => ({ tipo: textoPed(m.tipo, 10), ligar: valorPed(m.ligar, 10) })]],
+  ['pedidosJogo', ['escolherJogo', (m) => ({ jogo: textoPed(m.jogo, 60) })]],
+  ['pedidoProximo', ['proximo', () => ({})]],
+  ['pedidoPartida', ['partida', (m) => ({ resultado: textoPed(m.resultado, 20), n: idPed(m.n), faltavam: idPed(m.faltavam) })]],
+  ['pedidoPular', ['pular', idOuNumeroPed]],
+  ['pedidoRetomar', ['retomar', idOuNumeroPed]],
+  ['pedidoRecusar', ['recusar', idOuNumeroPed]],
+  ['pedidoDevolvido', ['devolvido', idOuNumeroPed]],
+  ['pedidoIgnorar', ['ignorar', idOuNumeroPed]],
+  ['pedidoLiberarNome', ['liberarNome', idOuNumeroPed]],
+  ['pedidoConfirmar', ['confirmar', (m, ws) => ({ ...idOuNumeroPed(m), itens: itensPed(m.itens, doComputadorLocal(ws)), partidas: valorPed(m.partidas, 12) })]],
+  ['pedidoCorrigir', ['corrigir', (m, ws) => ({ ...idOuNumeroPed(m), itens: itensPed(m.itens, doComputadorLocal(ws)), partidas: valorPed(m.partidas, 12) })]],
+  ['pedidoNovo', ['novo', (m) => ({ texto: textoPed(m.texto, 2400), quem: textoPed(m.quem, 200), partidas: valorPed(m.partidas, 12) })]],
+  ['pedidoDeMensagem', ['virar', null]], // a mensagem é a que o servidor guardou (abaixo)
+  ['pedidosFimDaLive', ['fimDaLive', () => ({})]],
+  ['pedidosLimparTestes', ['limparTestes', () => ({})]],
+  ['pedidosRecomecar', ['recomecar', () => ({})]],
+]);
+
+// A mensagem que o SERVIDOR guardou (o painel manda só o id e a rede): nada do
+// que o cliente mandar vira pedido por conta própria
+function mensagemGuardadaPedidos(platform, id) {
+  if (!platform || !id) return null;
+  // quem só assiste recebe o 💠 Pix com o id resumido (sem o nº do pagamento)
+  const porResumo = RE_ID_PIX_RESUMO.test(id);
+  const bate = (m) => !!m && typeof m === 'object' && m.platform === platform
+    && (m.id === id || (porResumo && typeof m.id === 'string' && m.id.startsWith('pix-') && idPixParaRede(m.id) === id));
+  const listas = [Object.hasOwn(state.recentByPlatform, platform) ? state.recentByPlatform[platform] : null, state.recent, feedQueue, feedReleasing, state.saved];
+  for (const l of listas) {
+    if (!Array.isArray(l)) continue;
+    for (let i = l.length - 1; i >= 0; i--) if (bate(l[i])) return l[i];
+  }
+  return bate(state.featured) ? state.featured : null;
+}
+
+// A resposta vai SÍNCRONA e só a quem pediu (o controle externo devolve as
+// respostas síncronas no JSON)
+function avisoPedidos(ws, corpo) {
+  try { ws.send(JSON.stringify({ type: 'pedidoAviso', ...corpo })); } catch { /* caiu */ }
+}
+// O erro do núcleo vai com a frase dele (fixa, chave de tradução); o acerto só com
+// números e marcas — o pedido em si chega pelo quadro 'pedidos', com a projeção
+// do papel de quem pediu
+const PEDIDOS_CAMPOS_RESPOSTA = ['mudou', 'abertos', 'terminou', 'aDevolver', 'jogo', 'ficaram', 'sairam', 'removidos', 'marcados', 'seq', 'entraram'];
+function respostaDoNucleoPedidos(op, r) {
+  if (!r || typeof r !== 'object') return { ok: false, op, erro: 'erro-interno', texto: 'Erro inesperado nos pedidos.' };
+  if (r.ok === false) {
+    const out = { ok: false, op, erro: String(r.erro || 'erro').slice(0, 40), texto: typeof r.motivo === 'string' && r.motivo ? r.motivo : 'Erro inesperado nos pedidos.' };
+    if (r.desatualizado) { out.desatualizado = true; out.faltam = r.faltam; }
+    if (r.repetido) out.repetido = true;
+    if (Number.isInteger(r.n)) out.n = r.n;
+    return out;
+  }
+  const out = { ok: true, op };
+  for (const k of PEDIDOS_CAMPOS_RESPOSTA) if (r[k] !== undefined) out[k] = r[k];
+  if (r.pedido && Number.isInteger(r.pedido.n)) out.n = r.pedido.n;
+  else if (Number.isInteger(r.n)) out.n = r.n;
+  if (op === 'pedidoPartida') out.proximo = r.proximo && Number.isInteger(r.proximo.n) ? r.proximo.n : null;
+  if (Array.isArray(r.ensinados)) out.ensinados = r.ensinados.length;
+  if (typeof r.copia === 'string') out.copia = r.copia; // «começar do zero» (só do computador local)
+  return out;
+}
+
+function tratarOpPedidos(ws, msg) {
+  const op = String(msg.type);
+  if (!pedidosLigado()) return avisoPedidos(ws, { ok: false, op, erro: 'desligado', texto: PEDIDOS_DESLIGADO });
+  if (!pedidosProntos()) return avisoPedidos(ws, { ok: false, op, erro: 'indisponivel', texto: PEDIDOS_SEM_NUCLEO });
+  if (op.startsWith('pedidosCatalogo') || op.startsWith('pedidosDbd')) return tratarOpCatalogoPedidos(ws, msg, op);
+  const def = PEDIDOS_OPS.get(op);
+  if (!def) return;
+  let args;
+  if (op === 'pedidoDeMensagem') {
+    const m = mensagemGuardadaPedidos(textoPed(msg.platform, 20), textoPed(msg.id, 300));
+    if (!m) return avisoPedidos(ws, { ok: false, op, erro: 'mensagem-invalida', texto: 'Não achei essa mensagem.' });
+    args = { message: m };
+  } else args = def[1](msg, ws);
+  // 🕹️ o Stream Deck repete toques: vindo do controle externo, o núcleo ignora o
+  // mesmo toque em menos de 3 s (a partida com o «n» e o «faltavam» se confere sozinha)
+  const r = pedidosNucleo.operar(def[0], args, { origem: ws.controleExterno ? 'controle' : 'painel' });
+  avisoPedidos(ws, respostaDoNucleoPedidos(op, r));
+  // a confirmação que ensinou apelido mexeu no catálogo: o resumo acompanha
+  if (r && r.ok && Array.isArray(r.ensinados) && r.ensinados.length) broadcastCatalogosPedidos();
+}
+
+// ── 🕹️ Controle externo (Stream Deck, Companion…) ──
+// As ações prontas «pedidos/…» viram as mesmas operações do painel. Desligado no
+// Labs (ou o núcleo fora), a ação volta como erro com o texto — nunca um «ok»
+// mudo. O parâmetro chega como texto (URL) ou do JSON: só texto e número valem.
+const PEDIDOS_SEM_REF = 'Informe o nº do pedido (n) ou o id.';
+const PEDIDOS_SEM_JOGO = 'Informe o jogo (o id ou o nome).';
+const textoControlePed = (v, max) => ((typeof v === 'string' && v.trim()) || (typeof v === 'number' && Number.isFinite(v)) ? String(v).trim().slice(0, max) : '');
+function controlePedidos(montar) {
+  return (p) => {
+    if (!pedidosLigado()) return { erro: PEDIDOS_DESLIGADO };
+    if (!pedidosProntos()) return { erro: PEDIDOS_SEM_NUCLEO };
+    return montar(p && typeof p === 'object' ? p : {});
+  };
+}
+// o pedido pelo id (p12) ou pelo nº (12); `daVez` = sem nenhum dos dois, o que
+// está sendo jogado agora (o ⏭ do Stream Deck pula o pedido da vez)
+function refControlePedidos(p, daVez) {
+  const id = textoControlePed(p.id, 40);
+  if (id) return { id };
+  const n = textoControlePed(p.n, 40);
+  if (n) return { n };
+  if (!daVez) return { erro: PEDIDOS_SEM_REF };
+  const a = (pedidosNucleo.resumo() || {}).agora;
+  return a && Number.isInteger(a.n) ? { n: String(a.n) } : { erro: 'Nenhum pedido sendo jogado agora.' };
+}
+// o jogo pelo id do catálogo ou pelo nome (sem diferença de maiúsculas e acentos)
+function jogoControlePedidos(v) {
+  const t = textoControlePed(v, 120);
+  if (!t) return '';
+  const lista = catalogos.listar();
+  if (lista.some((c) => c.id === t)) return t;
+  const chave = (s) => String(s || '').normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const alvo = chave(t);
+  const achado = alvo ? lista.find((c) => c.id === alvo || chave(c.nome) === alvo) : null;
+  return achado ? achado.id : t.slice(0, 60);
+}
+// O retrato da fila para aparelhos que mostram estado: os interruptores, o jogo,
+// o pedido da vez (nº, personagem, quem pediu e as partidas) e quantos esperam —
+// sem valor, sem mensagem e sem telefone (o nome já nasce sem ele; o filtro do
+// chat confere de novo)
+function pedidosControleEstado() {
+  if (!pedidosLigado()) return { ligado: false };
+  const comErro = { ligado: true, travado: 'erro', pagos: false, gratis: false, jogo: null, jogoNome: null, agora: null, fila: 0, revisar: 0 };
+  if (!pedidosProntos()) return comErro;
+  // o personagem no idioma do programa, como o painel recebe (e não o inglês)
+  const r = pedidosNucleo.resumo({ idioma: idiomaDoConsole() }) || {};
+  if (r.ok === false) return comErro; // (o núcleo devolveu erro em vez do retrato)
+  const a = r.agora && typeof r.agora === 'object' ? r.agora : null;
+  let jogoNome = null;
+  if (typeof r.jogo === 'string' && r.jogo) {
+    try { const c = catalogos.carregar(r.jogo); jogoNome = c && c.jogo && typeof c.jogo.nome === 'string' ? c.jogo.nome : null; } catch { jogoNome = null; }
+  }
+  let quem = a && typeof a.quem === 'string' ? (pareceTelefoneSrv(a.quem) ? apelidoDeTelefone(a.quem) : a.quem) : null;
+  // «Anônimo», «Apoiador Pix» e o apelido «📱 Convidado XYZ» são do programa (não são
+  // o nome de ninguém): no idioma do programa, como o painel mostra cada um no dele
+  if (quem && (quem === 'Anônimo' || quem === PIX_SEM_NOME || /^📱 Convidado [0-9A-Z]{1,7}$/u.test(quem))) quem = traduzirNoIdioma(quem, idiomaDoConsole());
+  return {
+    ligado: true, travado: r.travado || null, pagos: r.pagos === true, gratis: r.gratis === true,
+    jogo: typeof r.jogo === 'string' && r.jogo ? r.jogo : null, jogoNome,
+    agora: a ? { n: a.n, personagem: typeof a.personagem === 'string' ? a.personagem : null, quem, faltam: a.faltam, total: a.total } : null,
+    fila: Number(r.fila) || 0, revisar: Number(r.revisar) || 0,
+  };
+}
+
+// ── 📚 Catálogo e leitura do site oficial (só do computador local) ──
+// Os erros do catálogo (códigos) em frases fixas; o detalhe técnico do módulo
+// (pode citar o que foi digitado) vai junto, sem tradução — essas operações e
+// rotas são só do computador do streamer
+const PEDIDOS_TEXTOS_CATALOGO = new Map([
+  ['jogo-inexistente', 'Esse jogo não existe nos catálogos.'],
+  ['catalogo-ilegivel', 'O catálogo desse jogo não abre: confira na página dos Pedidos.'],
+  ['catalogo-ok', 'Esse catálogo abre normalmente: para começar do zero, apague o jogo e crie de novo.'],
+  ['arquivo-preso', 'O arquivo do catálogo está preso por outro programa: espere ele soltar (nada foi apagado).'],
+  ['gravacao', 'Não consegui gravar o catálogo (disco cheio ou sem permissão).'],
+  ['teto-jogos', 'Já há 200 jogos: apague um para criar outro.'],
+  ['teto-itens', 'O catálogo chegou ao teto de 20 mil itens.'],
+  ['teto-tipos', 'Este jogo chegou ao teto de 50 tipos.'],
+  ['teto-apelidos', 'Esse item chegou ao teto de 50 apelidos seus.'],
+  ['nome-invalido', 'Confira o nome do jogo.'],
+  ['modelo-invalido', 'Escolha o modelo do jogo: Dead by Daylight ou genérico.'],
+  ['tipos-fixos', 'Os tipos do modelo Dead by Daylight são fixos.'],
+  ['tipo-existe', 'Esse tipo já existe neste jogo.'],
+  ['tipo-inexistente', 'Esse tipo não existe neste jogo.'],
+  ['tipo-em-uso', 'Há itens usando esse tipo: mude ou apague esses itens antes.'],
+  ['tipo-invalido', 'Confira o tipo: nome, ícone e papel.'],
+  ['tipo-diferente', 'O tipo de um item não muda: apague e crie de novo.'],
+  ['dono-inexistente', 'O dono escolhido não existe no catálogo.'],
+  ['item-inexistente', 'Esse item não existe no catálogo.'],
+  ['item-invalido', 'Confira os dados do item.'],
+  ['apelido-invalido', 'Confira o apelido.'],
+  ['sem-imagem', 'Esse item não tem imagem.'],
+  ['imagem-invalida', 'Mande uma imagem.'],
+  ['imagem-grande', 'A imagem passa de 5 MB.'],
+  ['assinatura-invalida', 'Esse arquivo não é uma imagem PNG, JPG, WebP ou GIF de verdade.'],
+  ['origem-invalida', 'Origem da imagem desconhecida.'],
+  ['acao-invalida', 'Escolha: esconder, mostrar ou apagar.'],
+  ['formato-invalido', 'Escolha o formato: CSV ou JSON.'],
+  ['arquivo-invalido', 'Mande o arquivo da planilha.'],
+  ['arquivo-grande', 'O arquivo passa de 8 MB.'],
+  ['csv-vazio', 'A planilha está vazia.'],
+  ['csv-cabecalho', 'A primeira linha da planilha precisa ser o cabeçalho: exporte um catálogo para ver o modelo.'],
+  ['json-invalido', 'O arquivo não é um JSON válido.'],
+  ['json-formato', 'O JSON precisa ser uma lista de itens ou um catálogo exportado.'],
+  ['lista-invalida', 'Mande a lista de arquivos.'],
+  ['envio', 'O envio falhou: tente de novo.'],
+  ['erro-interno', 'Erro inesperado no catálogo.'],
+]);
+// nas operações de imagem, «tipo-invalido» é o tipo do ARQUIVO (svg, bmp…)
+const PEDIDOS_TEXTOS_IMAGEM = new Map([['tipo-invalido', 'Só imagens PNG, JPG, WebP ou GIF.']]);
+function textoCatalogoPedidos(erro, imagem) {
+  const e = String(erro || '');
+  if (imagem && PEDIDOS_TEXTOS_IMAGEM.has(e)) return PEDIDOS_TEXTOS_IMAGEM.get(e);
+  return PEDIDOS_TEXTOS_CATALOGO.get(e) || 'Não deu certo: confira e tente de novo.';
+}
+function erroCatalogoPedidos(op, r, imagem) {
+  const erro = r && typeof r.erro === 'string' ? r.erro.slice(0, 40) : 'erro-interno';
+  const out = { ok: false, op, erro, texto: textoCatalogoPedidos(erro, imagem) };
+  if (r && typeof r.motivo === 'string' && r.motivo) out.detalhe = r.motivo.slice(0, 300);
+  return out;
+}
+const PEDIDOS_TEXTOS_DBD = new Map([
+  ['ocupado', 'Já há uma leitura do site oficial em andamento.'],
+  ['cancelado', 'Leitura do site oficial cancelada.'],
+  ['bloqueado', 'O site oficial recusou o acesso: a leitura parou e não insiste.'],
+  ['muitas-requisicoes', 'O site oficial pediu para esperar: tente de novo mais tarde.'],
+  ['site-indisponivel', 'O site oficial está com problema agora: tente de novo mais tarde.'],
+  ['robots', 'As regras do site oficial (robots.txt) não deixam ler essas páginas agora.'],
+  ['sem-sitemap', 'Não achei a lista de páginas do site oficial.'],
+  ['sitemap-quebrado', 'Não achei a lista de páginas do site oficial.'],
+  ['sem-personagens', 'Não achei páginas de personagens no site oficial.'],
+  ['tempo-esgotado', 'O site oficial não respondeu a tempo.'],
+  ['rede', 'Sem conexão com o site oficial: confira a internet.'],
+  ['jogo-inexistente', 'Esse jogo não existe nos catálogos.'],
+  ['catalogo-ilegivel', 'O catálogo desse jogo não abre: confira na página dos Pedidos.'],
+  ['modelo-errado', 'A leitura do site oficial é só para o modelo Dead by Daylight.'],
+  ['catalogo', 'O catálogo não aceitou o que foi lido do site.'],
+  ['erro-interno', 'Erro inesperado na leitura do site oficial.'],
+]);
+function textoDbdPedidos(r) {
+  if (r && r.ok === true) return r.aviso ? 'Catálogo atualizado em parte: o resto fica para a próxima leitura.' : 'Catálogo atualizado pelo site oficial.';
+  return PEDIDOS_TEXTOS_DBD.get(String((r && r.motivo) || '')) || 'A leitura do site oficial não deu certo.';
+}
+// O item da tabela do catálogo, com a URL da miniatura (escondida = sem URL: a
+// rota não serve imagem escondida)
+function itemCatalogoParaTela(jogo, it) {
+  const out = { ...it };
+  // os nomes do dono (ele pode estar em outra página): a tela mostra o NOME no idioma
+  // dela, e não o id interno (que leva o código do tipo em português)
+  if (typeof it.dono === 'string' && it.dono) {
+    try { const d = catalogos.acharItem(jogo, it.dono); if (d && d.nomes && typeof d.nomes === 'object') out.donoNomes = { ...d.nomes }; } catch { /* sem o nome, a tela mostra o id */ }
+  }
+  if (it.imagem) {
+    const escondida = it.imagem.ocultar === true;
+    out.imagem = { arquivo: it.imagem.arquivo, origem: it.imagem.origem, ocultar: escondida, url: escondida ? null : urlImagemPedidos(jogo, it.imagem.arquivo) };
+  }
+  return out;
+}
+
+function tratarOpCatalogoPedidos(ws, msg, op) {
+  const jogo = textoPed(msg.jogo, 60);
+  const mudou = () => { broadcastCatalogosPedidos(); agendarBroadcastPedidos('catalogo'); };
+  const responder = (r, extra, imagem) => {
+    if (!r || r.ok === false) return avisoPedidos(ws, erroCatalogoPedidos(op, r, imagem));
+    avisoPedidos(ws, { ok: true, op, ...(extra || {}) });
+    mudou();
+  };
+  const jogoVisto = (cat) => (cat && cat.jogo ? { jogo: { id: cat.jogo.id, nome: cat.jogo.nome, modelo: cat.jogo.modelo } } : {});
+  switch (op) {
+    case 'pedidosCatalogoLer': {
+      const p = catalogos.pagina(jogo, { busca: textoPed(msg.busca, 100), tipo: textoPed(msg.tipo, 30), pagina: Number(textoPed(msg.pagina, 8)) || 1, porPagina: 50 });
+      if (!p || p.ok === false) return avisoPedidos(ws, erroCatalogoPedidos(op, p));
+      try {
+        ws.send(JSON.stringify({
+          type: 'pedidosCatalogoPagina', jogo: p.jogo, itens: p.itens.map((it) => itemCatalogoParaTela(p.jogo, it)),
+          total: p.total, pagina: p.pagina, paginas: p.paginas, tipos: p.tipos, busca: textoPed(msg.busca, 100), tipo: textoPed(msg.tipo, 30),
+        }));
+      } catch { /* caiu */ }
+      return;
+    }
+    case 'pedidosCatalogoCriar': {
+      const r = catalogos.criarJogo(textoPed(msg.nome, 300), textoPed(msg.modelo, 20) || undefined);
+      return responder(r, jogoVisto(r));
+    }
+    case 'pedidosCatalogoRecriar': {
+      const r = catalogos.recriarJogo(jogo, { nome: textoPed(msg.nome, 300) || undefined, modelo: textoPed(msg.modelo, 20) || undefined });
+      return responder(r, jogoVisto(r));
+    }
+    case 'pedidosCatalogoRenomear': {
+      const r = catalogos.renomearJogo(jogo, textoPed(msg.nome, 300));
+      return responder(r, r && r.ok ? { jogo: { id: jogo, nome: r.nome } } : null);
+    }
+    case 'pedidosCatalogoApagar':
+      return responder(catalogos.apagarJogo(jogo), { jogo: { id: jogo } });
+    case 'pedidosCatalogoItem': {
+      const item = msg.item && typeof msg.item === 'object' && !Array.isArray(msg.item) ? msg.item : null;
+      if (!item) return avisoPedidos(ws, erroCatalogoPedidos(op, { erro: 'item-invalido' }));
+      const r = catalogos.salvarItem(jogo, item, { manual: true }); // editado à mão = travado
+      return responder(r, r && r.ok && r.item ? { item: { id: r.item.id }, novo: r.novo === true } : null);
+    }
+    case 'pedidosCatalogoItemApagar': {
+      const r = catalogos.apagarItem(jogo, textoPed(msg.id, 100));
+      return responder(r, r && r.ok ? { soltos: r.soltos || 0 } : null);
+    }
+    case 'pedidosCatalogoTipo': {
+      const r = catalogos.salvarTipo(jogo, msg.tipo);
+      return responder(r, r && r.ok ? { tipo: r.tipo, novo: r.novo === true } : null);
+    }
+    case 'pedidosCatalogoTipoApagar':
+      return responder(catalogos.apagarTipo(jogo, textoPed(msg.tipo, 30)), {});
+    case 'pedidosCatalogoImagem': {
+      const id = textoPed(msg.id, 100);
+      const acao = textoPed(msg.acao, 10);
+      let r;
+      if (acao === 'ocultar' || acao === 'mostrar') r = catalogos.ocultarImagem(jogo, id, acao === 'ocultar');
+      else if (acao === 'apagar') r = catalogos.apagarImagem(jogo, id);
+      else return avisoPedidos(ws, erroCatalogoPedidos(op, { erro: 'acao-invalida' }));
+      return responder(r, r && r.ok ? { id, acao } : null, true);
+    }
+    case 'pedidosCatalogoImagens': {
+      if (textoPed(msg.acao, 10) !== 'apagar') return avisoPedidos(ws, erroCatalogoPedidos(op, { erro: 'acao-invalida' }));
+      const r = catalogos.apagarImagens(jogo, { origem: textoPed(msg.origem, 20) || undefined });
+      return responder(r, r && r.ok ? { apagadas: r.apagadas || 0 } : null, true);
+    }
+    case 'pedidosDbdAtualizar':
+      return pedidosDbdComecar(ws, msg, op, jogo);
+    case 'pedidosDbdCancelar':
+      return avisoPedidos(ws, { ok: true, op, cancelou: pedidosDbd.cancelar() === true });
+  }
+}
+
+// 🔄 A leitura do site oficial: só no clique, uma rodada por vez; o andamento e o
+// fim vão só para o computador do streamer
+const sinalPed = (v) => (v === true || v === 1 || v === '1' || v === 'true' || v === 'sim' ? true
+  : v === false || v === 0 || v === '0' || v === 'false' || v === 'nao' || v === 'não' ? false : null);
+function pedidosDbdComecar(ws, msg, op, jogo) {
+  const falha = (motivo) => avisoPedidos(ws, { ok: false, op, erro: motivo, texto: PEDIDOS_TEXTOS_DBD.get(motivo) });
+  const cat = catalogos.carregar(jogo);
+  if (!cat) return falha('jogo-inexistente');
+  if (cat.ok === false) return falha('catalogo-ilegivel');
+  if (!cat.jogo || cat.jogo.modelo !== 'dbd') return falha('modelo-errado');
+  if (pedidosDbd.estado().rodando) return falha('ocupado');
+  // «baixar imagens»: o que a tela mandou; sem nada, a opção 🖼️ das configurações
+  const pedido = sinalPed(msg.imagens);
+  const imagens = pedido !== null ? pedido : state.settings.pedidos?.imagens?.baixarDoSiteOficial !== false;
+  avisoPedidos(ws, { ok: true, op, jogo, imagens });
+  const rodada = pedidosDbd.atualizar(jogo, {
+    imagens,
+    ...(PEDIDOS_DBD_TESTE ? { pausaMs: PEDIDOS_DBD_TESTE.pausaMs } : {}),
+    aoProgresso: (p) => enviarAosLocaisPedidos({
+      // (no fim, a «mensagem» do módulo é uma palavra dele — «pronto» ou o motivo —:
+      // o resultado chega no pedidosDbdFim, com a frase traduzível)
+      type: 'pedidosDbdProgresso', jogo, fase: String(p.fase || ''), feitas: Number(p.feitas) || 0, total: Number(p.total) || 0, mensagem: p.fase === 'fim' ? '' : String(p.mensagem || '').slice(0, 200),
+    }),
+  });
+  Promise.resolve(rodada).then(
+    (r) => pedidosDbdTerminou(jogo, r),
+    (err) => pedidosDbdTerminou(jogo, { ok: false, motivo: 'erro-interno', detalhe: String((err && err.message) || err) }),
+  );
+}
+function pedidosDbdTerminou(jogo, r) {
+  const x = r && typeof r === 'object' ? r : { ok: false, motivo: 'erro-interno' };
+  const num = (v) => (Number.isFinite(v) ? v : 0);
+  pedidosDbdUltimo = {
+    jogo, ok: x.ok === true, motivo: x.ok === true ? null : String(x.motivo || 'erro-interno').slice(0, 40), texto: textoDbdPedidos(x),
+    detalhe: typeof x.detalhe === 'string' ? x.detalhe.slice(0, 300) : null,
+    novos: num(x.novos), atualizados: num(x.atualizados), iguais: num(x.iguais), imagens: num(x.imagens), paginas: num(x.paginas),
+    aviso: typeof x.aviso === 'string' ? x.aviso : null, esperarSegundos: Number.isFinite(x.esperarSegundos) ? x.esperarSegundos : null,
+    semMudanca: x.semMudanca === true, em: Date.now(),
+  };
+  enviarAosLocaisPedidos({ type: 'pedidosDbdFim', ...pedidosDbdUltimo });
+  broadcastCatalogosPedidos();
+  agendarBroadcastPedidos('catalogo');
+}
+
+// ── 🌐 Rotas HTTP ──
+// /pedidos-img/<jogo>/<arquivo>: para qualquer papel que já passou do portão (como
+// as mídias de /uploads/). O caminho sai do catálogo (caminhoImagem), nunca montado
+// com o que veio na URL; só o arquivo que um item aponta e que não está escondido;
+// o resto é 404, sem dizer onde fica nada.
+const pedidosEscondidasPorCatalogo = new WeakMap(); // catálogo → Map(arquivo → escondida?)
+function imagemPedidosEscondida(jogo, arquivo) {
+  const cat = catalogos.carregar(jogo);
+  if (!cat || cat.ok === false || !Array.isArray(cat.itens)) return true;
+  let m = pedidosEscondidasPorCatalogo.get(cat);
+  if (!m) {
+    m = new Map();
+    for (const it of cat.itens) if (it && it.imagem && typeof it.imagem.arquivo === 'string') m.set(it.imagem.arquivo, it.imagem.ocultar === true);
+    pedidosEscondidasPorCatalogo.set(cat, m);
+  }
+  return m.get(arquivo) !== false;
+}
+function servirImagemPedidos(req, res, urlPath) {
+  const naoAchei = () => {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
+    res.end('Não encontrado');
+  };
+  if ((req.method !== 'GET' && req.method !== 'HEAD') || !fetchSiteAllowed(req)) return naoAchei();
+  const partes = urlPath.split('/');
+  if (partes.length !== 4 || !pedidosLigado() || !pedidosProntos()) return naoAchei();
+  const jogo = partes[2];
+  const arquivo = partes[3];
+  const caminho = catalogos.caminhoImagem(jogo, arquivo);
+  if (!caminho || imagemPedidosEscondida(jogo, arquivo)) return naoAchei();
+  const tipo = PEDIDOS_TIPOS_IMAGEM[path.extname(arquivo).toLowerCase()];
+  if (!tipo) return naoAchei();
+  // com a versão do arquivo na URL (?v=…), a imagem trocada tem outro endereço:
+  // a versão pode ficar no cache; sem ela, o navegador confere de novo a cada vez
+  const versionada = /(?:^|&)v=[a-z0-9]{1,24}(?:&|$)/.test(String(req.url || '').split('?')[1] || '');
+  fs.stat(caminho, (err, st) => {
+    if (err || !st.isFile()) return naoAchei();
+    res.writeHead(200, {
+      'Content-Type': tipo,
+      'Content-Length': st.size,
+      'Cache-Control': versionada ? 'private, max-age=86400' : 'no-cache',
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'",
+    });
+    if (req.method === 'HEAD') { res.end(); return; }
+    entregarArquivo(res, fs.createReadStream(caminho));
+  });
+}
+// Responde JÁ e descarta o que ainda chega do envio: o cliente termina de mandar e
+// lê a resposta. (Com «Connection: close» o Node fecha a conexão logo depois da
+// resposta, no meio do envio, e o navegador só vê um «erro de rede» sem recado.)
+// O envio sem fim é cortado por um teto de bytes e de tempo.
+function responderEDescartarPedidos(req, res, codigo, corpo, tetoDescarte) {
+  if (!res.headersSent) {
+    res.writeHead(codigo, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(corpo));
+  }
+  let descartado = 0;
+  const cortar = () => { try { req.destroy(); } catch { /* já foi */ } };
+  const prazo = setTimeout(cortar, 30000);
+  if (prazo.unref) prazo.unref();
+  req.removeAllListeners('data');
+  req.on('data', (p) => { descartado += p.length; if (descartado > tetoDescarte) cortar(); });
+  req.on('end', () => clearTimeout(prazo));
+  req.on('close', () => clearTimeout(prazo));
+  req.on('error', () => clearTimeout(prazo));
+  req.resume();
+}
+// O corpo de um envio com teto (molde do /ytdlp-cookies): acima dele, o 413 vai
+// ANTES de ler o resto (com o Content-Length grande, na hora)
+function lerCorpoPedidos(req, res, teto, grande, falhou, cb) {
+  let total = 0;
+  const partes = [];
+  const descarte = teto * 8;
+  const declarado = Number(req.headers['content-length']);
+  if (Number.isFinite(declarado) && declarado > teto) { responderEDescartarPedidos(req, res, 413, grande, descarte); return; }
+  const aoFim = () => cb(Buffer.concat(partes));
+  req.on('data', (p) => {
+    total += p.length;
+    if (total > teto) {
+      partes.length = 0;
+      req.removeListener('end', aoFim);
+      responderEDescartarPedidos(req, res, 413, grande, descarte);
+      return;
+    }
+    partes.push(p);
+  });
+  req.on('end', aoFim);
+  req.on('error', () => { if (!res.headersSent) falhou(); });
+}
+// /pedidos-catalogo/{importar,exportar,imagem,imagens}: só o computador do
+// streamer e só o próprio painel; catálogo grande e imagem não cabem no WebSocket
+function tratarRotaPedidos(req, res, urlPath, role) {
+  if (urlPath.startsWith('/pedidos-img/')) { servirImagemPedidos(req, res, urlPath); return; }
+  const json = (codigo, corpo) => {
+    if (res.headersSent) return;
+    res.writeHead(codigo, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(corpo));
+  };
+  const recusar = (codigo, corpo) => responderEDescartarPedidos(req, res, codigo, corpo, 8 * 1024 * 1024);
+  if (role !== 'local') return recusar(403, { ok: false, erro: 'somenteLocal', texto: 'Só no computador onde o OBS Social roda.' });
+  if (!originAllowed(req.headers.origin, req.headers.host) || !fetchSiteAllowed(req)) return recusar(403, { ok: false, erro: 'origem', texto: 'Origem não permitida.' });
+  if (!pedidosLigado()) return recusar(403, { ok: false, erro: 'desligado', texto: PEDIDOS_DESLIGADO });
+  if (!pedidosProntos()) return recusar(503, { ok: false, erro: 'indisponivel', texto: PEDIDOS_SEM_NUCLEO });
+  const query = new URLSearchParams((req.url || '').split('?')[1] || '');
+  const jogo = String(query.get('jogo') || '').slice(0, 60);
+  const formatoBruto = String(query.get('formato') || '');
+  const formato = formatoBruto === 'csv' || formatoBruto === 'json' ? formatoBruto : null;
+  const rota = urlPath.slice('/pedidos-catalogo/'.length);
+  const mudou = () => { broadcastCatalogosPedidos(); agendarBroadcastPedidos('catalogo'); };
+  const grande = (codigo) => ({ ok: false, erro: codigo, texto: textoCatalogoPedidos(codigo) });
+  const falhou = () => json(400, { ok: false, erro: 'envio', texto: textoCatalogoPedidos('envio') });
+  if (rota === 'exportar' && req.method === 'GET') {
+    if (!formato) return recusar(400, { ok: false, erro: 'formato-invalido', texto: textoCatalogoPedidos('formato-invalido') });
+    // (as colunas da planilha com o nome no idioma da página que exportou)
+    const idiomaPlanilha = String(query.get('idioma') || '');
+    const r = catalogos.exportar(jogo, formato, CONSOLE_IDIOMAS.includes(idiomaPlanilha) ? { idioma: idiomaPlanilha } : undefined);
+    if (typeof r !== 'string') return recusar(r && r.erro === 'jogo-inexistente' ? 404 : 400, erroCatalogoPedidos('exportar', r));
+    // (o id do jogo só tem a-z, 0-9 e «-»: entra no nome do arquivo sem escape)
+    res.writeHead(200, {
+      'Content-Type': formato === 'csv' ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8',
+      'Content-Disposition': `attachment; filename="obs-social-pedidos-${jogo}.${formato}"`,
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    res.end(r);
+    return;
+  }
+  if (req.method !== 'POST' || !['importar', 'imagem', 'imagens'].includes(rota)) return recusar(404, { ok: false, erro: 'rota', texto: 'Não encontrado' });
+  if (rota === 'importar') {
+    if (!formato) return recusar(400, { ok: false, erro: 'formato-invalido', texto: textoCatalogoPedidos('formato-invalido') });
+    lerCorpoPedidos(req, res, 8 * 1024 * 1024, grande('arquivo-grande'), falhou, (buf) => {
+      const r = catalogos.importar(jogo, buf.toString('utf8'), formato);
+      if (!r || r.ok === false) return json(400, erroCatalogoPedidos('importar', r));
+      json(200, { ok: true, novos: r.novos || 0, atualizados: r.atualizados || 0, iguais: r.iguais || 0, erros: Array.isArray(r.erros) ? r.erros : [] });
+      if (r.novos || r.atualizados) mudou();
+    });
+    return;
+  }
+  if (rota === 'imagem') {
+    // a imagem de UM item (origem «sua»): o tipo vem da assinatura dos bytes
+    const item = String(query.get('item') || '').slice(0, 100);
+    const ext = String(query.get('ext') || '').slice(0, 10);
+    lerCorpoPedidos(req, res, 5 * 1024 * 1024, grande('imagem-grande'), falhou, (buf) => {
+      const r = catalogos.guardarImagem(jogo, item, buf, ext || null, 'sua');
+      if (!r || r.ok === false) return json(400, erroCatalogoPedidos('imagem', r, true));
+      json(200, { ok: true, arquivo: r.arquivo, url: urlImagemPedidos(jogo, r.arquivo) });
+      mudou();
+    });
+    return;
+  }
+  // a pasta de imagens, em lotes: { arquivos: [{ nome, base64 }] } (origem «importada»)
+  lerCorpoPedidos(req, res, 8 * 1024 * 1024, grande('arquivo-grande'), falhou, (buf) => {
+    let corpo = null;
+    try { corpo = JSON.parse(buf.toString('utf8')); } catch { corpo = null; }
+    const lista = corpo && typeof corpo === 'object' && Array.isArray(corpo.arquivos) ? corpo.arquivos : null;
+    if (!lista) return json(400, { ok: false, erro: 'lista-invalida', texto: textoCatalogoPedidos('lista-invalida') });
+    const arquivos = lista.slice(0, 2001).map((a) => {
+      const nome = a && typeof a === 'object' && typeof a.nome === 'string' ? a.nome.slice(0, 300) : '';
+      return { nome, buffer: a && typeof a === 'object' && typeof a.base64 === 'string' ? Buffer.from(a.base64, 'base64') : null };
+    });
+    const r = catalogos.importarPastaDeImagens(jogo, arquivos);
+    if (!r || r.ok === false) return json(400, erroCatalogoPedidos('imagens', r, true));
+    json(200, { ok: true, casados: r.casados || [], semPar: r.semPar || [], erros: r.erros || [] });
+    if (r.casados && r.casados.length) mudou();
+  });
+}
+
+// ── 💾 Backup, restauração, limpeza e o resumo dos dados ──
+// O backup leva a fila (pedidos.json), os pagamentos que esperam o arquivo abrir
+// (pedidos.espera.json, se houver) e os catálogos; as imagens ficam fora (são
+// baixadas ou importadas de novo).
+function catalogosPedidosNoDisco() {
+  try {
+    return fs.readdirSync(PEDIDOS_CATALOGOS_DIR).filter((f) => f.length <= 65 && RE_PEDIDOS_CATALOGO_ARQ.test(f) && !RE_PEDIDOS_RESERVADO_WIN.test(f)).sort();
+  } catch { return []; }
+}
+function assinaturaBackupPedidos() {
+  const partes = [];
+  const um = (p, nome) => {
+    try { const st = fs.statSync(p); partes.push(`${nome}:${st.size}:${Math.round(st.mtimeMs)}`); } catch { partes.push(`${nome}:x`); }
+  };
+  um(PEDIDOS_FILE, 'pedidos.json');
+  um(PEDIDOS_ESPERA_FILE, 'pedidos.espera.json');
+  for (const f of catalogosPedidosNoDisco()) um(path.join(PEDIDOS_CATALOGOS_DIR, f), 'catalogos/' + f);
+  return partes.join('|');
+}
+function copiarBackupPedidos(destino) {
+  let algum = false;
+  for (const p of [PEDIDOS_FILE, PEDIDOS_ESPERA_FILE]) {
+    try { fs.copyFileSync(p, path.join(destino, path.basename(p))); algum = true; } catch { /* ainda não existe */ }
+  }
+  const nomes = catalogosPedidosNoDisco();
+  if (nomes.length) {
+    const pasta = path.join(destino, 'catalogos');
+    // um nível só, sem «recursive» (o mesmo cuidado de criarPastaDoBackup, v0.179)
+    try { fs.mkdirSync(pasta); } catch (err) { if (!err || err.code !== 'EEXIST') throw err; }
+    for (const f of nomes) {
+      try { fs.copyFileSync(path.join(PEDIDOS_CATALOGOS_DIR, f), path.join(pasta, f)); algum = true; } catch { /* sumiu agora */ }
+    }
+  }
+  return algum;
+}
+// Os pagamentos em espera do backup SOMAM aos de agora (pagamento nunca se perde;
+// o núcleo descarta o repetido pelo nº do pagamento). Arquivo de agora que não
+// abre não é regravado.
+function juntarEsperaPedidos(doBackup) {
+  const ler = (p) => { try { const d = JSON.parse(fs.readFileSync(p, 'utf8')); return d && Array.isArray(d.mensagens) ? d.mensagens : []; } catch { return null; } };
+  const doB = ler(doBackup);
+  if (!doB || !doB.length) return;
+  let atual = [];
+  if (fs.existsSync(PEDIDOS_ESPERA_FILE)) {
+    atual = ler(PEDIDOS_ESPERA_FILE);
+    if (atual === null) return;
+  }
+  gravarAtomicoPedidos(PEDIDOS_ESPERA_FILE, JSON.stringify({ versao: 1, mensagens: atual.concat(doB).slice(-5000) }), { privado: true });
+}
+// O maior nº de pedido escrito no arquivo da fila e nas cópias dele, mesmo
+// estragados: com a fila travada como ilegível, o núcleo nasce com o nº zerado,
+// mas os pedidos que existiram continuam escritos no disco (como o «começar do
+// zero» do núcleo faz)
+function seqNoDiscoPedidos() {
+  let maior = 0;
+  let copias = [];
+  try { copias = fs.readdirSync(PEDIDOS_DIR).filter((f) => /^pedidos\.ilegivel-.+\.json$/.test(f)).sort().slice(-50); } catch { copias = []; }
+  for (const f of [PEDIDOS_FILE, ...copias.map((c) => path.join(PEDIDOS_DIR, c))]) {
+    try {
+      if (fs.statSync(f).size > 64 * 1024 * 1024) continue;
+      const txt = fs.readFileSync(f, 'utf8');
+      for (const m of txt.matchAll(/"(?:seq|n)"\s*:\s*(\d{1,12})|"id"\s*:\s*"p(\d{1,12})"/g)) {
+        const v = Number(m[1] || m[2]);
+        if (v > maior) maior = v;
+      }
+    } catch { /* sem o arquivo: segue */ }
+  }
+  return maior;
+}
+// Restaurar: a leitura do site para, a fila grava o que estava adiado e para, os
+// arquivos do backup voltam (gravação atômica), e as três peças são montadas de
+// novo a partir do disco; as telas recebem tudo na hora. O nº do pedido não
+// volta com o backup (é a âncora das planilhas): fica o maior dos dois
+// (com a fila travada, o maior que está escrito no disco).
+function restaurarBackupPedidos(origem) {
+  let seqAgora = 0;
+  let semFila = !pedidosNucleo;
+  try {
+    if (pedidosNucleo) {
+      const d = pedidosNucleo.diagnostico();
+      seqAgora = Number(d.seq) || 0;
+      semFila = !!d.travado;
+    }
+  } catch { semFila = true; }
+  if (semFila) seqAgora = Math.max(seqAgora, seqNoDiscoPedidos());
+  try { if (pedidosDbd) pedidosDbd.cancelar(); } catch { /* segue */ }
+  try { if (pedidosNucleo) pedidosNucleo.fechar(); } catch { /* segue */ }
+  let erro = null;
+  try {
+    const fila = path.join(origem, 'pedidos.json');
+    if (fs.existsSync(fila)) {
+      let texto = fs.readFileSync(fila, 'utf8');
+      try {
+        const d = JSON.parse(texto);
+        if (d && typeof d === 'object' && !Array.isArray(d) && seqAgora > (Number.isInteger(d.seq) ? d.seq : 0)) { d.seq = seqAgora; texto = JSON.stringify(d); }
+      } catch { /* arquivo do backup que não abre: o núcleo guarda a cópia e trava, como sempre */ }
+      gravarAtomicoPedidos(PEDIDOS_FILE, texto, { privado: true });
+    }
+    juntarEsperaPedidos(path.join(origem, 'pedidos.espera.json'));
+    const pasta = path.join(origem, 'catalogos');
+    let nomes = [];
+    try { nomes = fs.readdirSync(pasta); } catch { nomes = []; }
+    for (const f of nomes) {
+      if (f.length > 65 || !RE_PEDIDOS_CATALOGO_ARQ.test(f) || RE_PEDIDOS_RESERVADO_WIN.test(f)) continue;
+      const de = path.join(pasta, f);
+      try { if (!fs.statSync(de).isFile()) continue; } catch { continue; }
+      gravarAtomicoPedidos(path.join(PEDIDOS_CATALOGOS_DIR, f), fs.readFileSync(de, 'utf8'));
+    }
+  } catch (err) { erro = err; }
+  montarPedidos();
+  broadcastPedidos(['restaurado']);
+  broadcastCatalogosPedidos();
+  if (erro) throw erro;
+}
+// 🧹 Limpar os pedidos: a fila, as listas, o registro, os créditos e os pagamentos
+// em espera saem; o nº do pedido (seq) continua de onde estava — é a âncora das
+// planilhas e nunca volta —, e o jogo da vez e os 💰/🎁 abertos ficam como estavam.
+// «Apagar tudo» leva também os catálogos e as imagens (e fecha os pagos e grátis).
+function limparPedidos(tudo) {
+  if (!pedidosProntos()) return { ok: false, texto: PEDIDOS_SEM_NUCLEO };
+  try { pedidosDbd.cancelar(); } catch { /* segue */ }
+  let diag = pedidosNucleo.diagnostico();
+  if (diag.travado) {
+    // arquivo que não abre: o «começar do zero» guarda a cópia e resgata o nº antes
+    const r = pedidosNucleo.recomecar();
+    if (!r || r.ok === false) return { ok: false, texto: (r && r.motivo) || 'Erro inesperado nos pedidos.' };
+    diag = pedidosNucleo.diagnostico();
+  }
+  const seq = Number.isInteger(diag.seq) ? diag.seq : 0;
+  const jogo = tudo ? null : (pedidosNucleo.resumo() || {}).jogo || null;
+  pedidosNucleo.fechar();
+  let erro = null;
+  try {
+    // os interruptores 💰 Pagos e 🎁 Grátis (com os intervalos em que os pagos
+    // ficaram abertos) são da live, não da fila: limpar só os pedidos os deixa como
+    // estavam — no meio da live, o pago seguinte não vai para ⚠ Revisar à toa
+    let abertos = null;
+    if (!tudo) {
+      try {
+        const d = JSON.parse(fs.readFileSync(PEDIDOS_FILE, 'utf8'));
+        if (d && typeof d === 'object' && d.abertos && typeof d.abertos === 'object' && !Array.isArray(d.abertos)) abertos = d.abertos;
+      } catch { abertos = null; }
+    }
+    gravarAtomicoPedidos(PEDIDOS_FILE, JSON.stringify({ versao: 1, seq, jogo, ...(abertos ? { abertos, vivoEm: Date.now() } : {}), pedidos: [] }), { privado: true });
+    fs.rmSync(PEDIDOS_ESPERA_FILE, { force: true });
+    if (tudo) {
+      fs.rmSync(PEDIDOS_CATALOGOS_DIR, { recursive: true, force: true });
+      fs.rmSync(PEDIDOS_IMAGENS_DIR, { recursive: true, force: true });
+      for (const f of fs.readdirSync(PEDIDOS_DIR)) {
+        if (/^pedidos(?:\.espera)?\.ilegivel-.+\.json$/.test(f)) fs.rmSync(path.join(PEDIDOS_DIR, f), { force: true });
+      }
+    }
+  } catch (err) { erro = err; }
+  montarPedidos();
+  broadcastPedidos(['limpo']);
+  broadcastCatalogosPedidos();
+  if (erro) {
+    console.error('  ⚠️ 🙋 Pedidos: a limpeza não terminou:', (erro && (erro.code || erro.message)) || erro);
+    return { ok: false, texto: 'Não consegui apagar tudo dos pedidos (arquivo preso ou sem permissão).' };
+  }
+  return { ok: true };
+}
+// Para a página de limpeza: quantos pedidos ativos, o nº atual, os catálogos e
+// o tamanho no disco (as imagens à parte: elas não entram no backup)
+function resumoDadosPedidos() {
+  const tam = (p) => { try { return fs.statSync(p).size; } catch { return 0; } };
+  const cats = catalogosPedidosNoDisco();
+  let bytes = tam(PEDIDOS_FILE) + tam(PEDIDOS_ESPERA_FILE);
+  for (const f of cats) bytes += tam(path.join(PEDIDOS_CATALOGOS_DIR, f));
+  let imagens = 0;
+  let imagensBytes = 0;
+  let jogos = [];
+  try { jogos = fs.readdirSync(PEDIDOS_IMAGENS_DIR); } catch { jogos = []; }
+  for (const j of jogos.slice(0, 500)) {
+    let arquivos = [];
+    try { arquivos = fs.readdirSync(path.join(PEDIDOS_IMAGENS_DIR, j)); } catch { continue; }
+    for (const a of arquivos.slice(0, 50000)) {
+      try { const st = fs.statSync(path.join(PEDIDOS_IMAGENS_DIR, j, a)); if (st.isFile()) { imagens++; imagensBytes += st.size; } } catch { /* sumiu */ }
+    }
+  }
+  let ativos = 0;
+  let seq = 0;
+  try { if (pedidosNucleo) { const d = pedidosNucleo.diagnostico(); ativos = d.ativos; seq = d.seq; } } catch { /* segue */ }
+  return { ativos, seq, catalogos: cats.length, bytes, imagens, imagensBytes };
+}
+
 // 🧹 v0.95: as artes de fábrica saíram do programa a pedido do streamer — ele
 // já tem os arquivos dele. Some com o que ficou apontando para /artes/ nos
 // moldes salvos e no visual ao vivo,
@@ -2414,6 +3595,7 @@ for (const sinal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
     // ou atualizar o programa sumia no reinício
     persistClipboardAgora();
     persistSavedAgora(); // 🔒 v0.179: a fila guardada também passou a ser gravada com atraso
+    pedidosFecharParaSair(); // 🙋 v0.192: os pedidos do chat gravam com atraso (300 ms)
     process.exit(0);
   });
 }
@@ -2693,19 +3875,66 @@ function livepixResumo(ws) {
 // 💠 Apoio Pix (direto do banco, Labs) vira um comentário da aba 💠 Pix.
 // (A URL genérica /doacao foi descontinuada na v0.174: os apoios de verdade
 // chegam pela LivePix e pelo Pix do banco.)
-function emitDonation({ name, amountText, message, platform = 'pix', rotulo = 'Pix' }) {
-  onChatMessage({
+// 🙋 v0.192: o apoio leva o nº do pagamento (endToEndId), a hora em que ele caiu
+// no banco e o valor exato em centavos — os Pedidos não perdem nem repetem um
+// Pix que chegou atrasado (o id «pix-<nº>» é o mesmo a cada entrega, e a
+// repetição para no servidor). `teste` = o «🧪 Pix de exemplo»: id «test-pix-…»
+// e o selo «teste», como os comentários de mentira (o 🧹 tira; não volta do log).
+// `semNome` = o banco não mandou o nome de quem pagou: o «Apoiador Pix» não é
+// ninguém, e os Pedidos tratam cada pagamento desses como uma pessoa (dois
+// pagadores sem nome nunca dividem o crédito)
+function emitDonation({ name, amountText, message, platform = 'pix', rotulo = 'Pix', endToEndId, horario, centavos, teste = false, semNome = false }) {
+  const e2e = typeof endToEndId === 'string' ? endToEndId.trim().slice(0, 120) : '';
+  const agora = Date.now();
+  let id;
+  if (teste) id = `test-pix-${agora}-${Math.random().toString(36).slice(2)}`;
+  // (o nº que não é só letras, números e .:_- vira um resumo: o id viaja às telas)
+  else if (e2e) id = 'pix-' + (/^[A-Za-z0-9._:-]{1,80}$/.test(e2e) ? e2e : 'h' + crypto.createHash('sha256').update(e2e).digest('hex').slice(0, 32));
+  else id = `don-${agora}-${Math.random().toString(36).slice(2)}`;
+  // A hora do banco vai no bloco pix, para os Pedidos (o pago vale pela hora do
+  // pagamento). O timestamp continua o da CHEGADA, como sempre foi: o Pix chega
+  // pela consulta, que demora (o intervalo, o banco que leva um tempo para
+  // listar, o programa reiniciado), e com a hora do banco ele iria para o passado
+  // da linha do tempo — podado do chat fixo cheio e na 2ª página do 🔴 Ao vivo.
+  // Ela só vale com o relógio (só a data viraria meia-noite) e numa faixa sã
+  // (data zerada ou lixo fica de fora).
+  const quando = typeof horario === 'string' && /\d:\d\d/.test(horario) ? Date.parse(horario) : NaN;
+  const horaDoBanco = Number.isFinite(quando) && quando > agora - 30 * 86400000 && quando < agora + 86400000 ? quando : null;
+  const valorExato = Number.isInteger(centavos) && centavos >= 0 ? centavos : null;
+  const badges = [amountText ? `${rotulo} ${amountText}` : rotulo];
+  if (teste) badges.push('teste');
+  const pix = {
+    endToEndId: e2e || null,
+    centavos: valorExato,
+    ...(horaDoBanco !== null ? { horario: horaDoBanco } : {}),
+    ...(semNome ? { semNome: true } : {}),
+  };
+  const msg = {
     platform,
     channel: platform,
-    id: `don-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id,
     author: String(name || 'Anônimo').slice(0, 60),
+    // 🧪 o Pix de exemplo usa o rótulo dos pagadores sem nome, mas tem identidade
+    // própria: a ficha dele no 🎁 sorteio nunca é a de um pagador de verdade
+    ...(teste ? { authorId: PIX_TESTE_AUTOR_ID } : {}),
     authorColor: null,
     avatar: null,
-    badges: [amountText ? `${rotulo} ${amountText}` : rotulo],
+    badges,
     superchat: { amount: amountText || '', color: '#32bcad', headerColor: '#32bcad', textColor: '#000000' },
     runs: [{ type: 'text', text: String(message || '').slice(0, 500) }],
-    timestamp: Date.now(),
-  });
+    timestamp: agora,
+    ...(e2e || valorExato !== null || horaDoBanco !== null ? { pix } : {}),
+  };
+  // 🧪 o 🧹 também tira a ficha que o Pix de exemplo deu no sorteio
+  if (teste) participantesDeTeste.add(chaveParticipante(msg));
+  onChatMessage(msg);
+}
+// O valor do Pix (reais, como o banco devolve: 20, «20.00», «20,5») em centavos —
+// a mesma leitura do formatDonationValue; o que não for número fica sem centavos
+function centavosDoPix(raw) {
+  if (raw === null || raw === undefined || raw === '') return null;
+  const n = typeof raw === 'number' ? raw : Number(String(raw).trim().replace(',', '.'));
+  return Number.isFinite(n) && n >= 0 && n < 1e9 ? Math.round(n * 100) : null;
 }
 
 function formatDonationValue(raw) {
@@ -2922,10 +4151,20 @@ function loadPixVistos() {
     return new Set(raw.ids.slice(-1000).map(String));
   } catch { return new Set(); }
 }
+// 🙋 v0.192: junto da lista, a hora da última consulta boa (do mesmo provedor):
+// é dela que a 1ª consulta depois de abrir o programa recupera a parada
+function loadPixConsultadoEm() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(PIX_VISTOS_FILE, 'utf8'));
+    const atual = pixAssinaturaVistos();
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.banco !== atual.banco || raw.ambiente !== atual.ambiente || raw.consulta !== atual.consulta) return null;
+    return Number.isFinite(raw.consultadoEm) ? raw.consultadoEm : null;
+  } catch { return null; }
+}
 function savePixVistos() {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(PIX_VISTOS_FILE, JSON.stringify({ ...pixAssinaturaVistos(), ids: [...pixRt.vistos].slice(-1000) }));
+    fs.writeFileSync(PIX_VISTOS_FILE, JSON.stringify({ ...pixAssinaturaVistos(), ids: [...pixRt.vistos].slice(-1000), consultadoEm: pixRt.consultadoEm }));
   } catch { /* o proximo tick tenta de novo */ }
 }
 
@@ -2939,6 +4178,10 @@ const pixRt = {
   token: null,
   tokenExpira: 0,
   agent: null,
+  consultadoEm: loadPixConsultadoEm(), // 🙋 v0.192: a última consulta boa (hora)
+  recuperarDesde: null, // 🙋 v0.192: a 1ª consulta depois de abrir olha desde a parada
+  recuperarFalhas: 0,
+  jaArrancou: false,
 };
 function pixResumo(ws) {
   // 🔒 v0.127.1: os dados de cadastro (clientId, caminhos dos certificados,
@@ -3083,10 +4326,17 @@ async function pixToken() {
 // A consulta devolve a lista no formato do Banco Central:
 //   [{ endToEndId, valor, horario, infoPagador, pagador: { nome } }]
 // Os gateways (API própria) são traduzidos para esse mesmo formato em pixGateway().
-async function pixConsultar() {
+// 🙋 v0.192: a janela é de 40 min; logo depois de abrir o programa (com os
+// Pedidos ligados), a 1ª consulta olha desde a parada (`desde`), até 24 h — o Pix
+// feito durante uma parada curta, com os pagos abertos, continua valendo
+const PIX_JANELA_MS = 40 * 60 * 1000;
+const PIX_RECUPERAR_TETO_MS = 24 * 3600 * 1000;
+async function pixConsultar(desde) {
   const perfil = pixPerfil();
   const fim = new Date();
-  const inicio = new Date(fim.getTime() - 40 * 60 * 1000); // janela de 40 min
+  let ini = fim.getTime() - PIX_JANELA_MS;
+  if (Number.isFinite(desde)) ini = Math.max(Math.min(ini, desde), fim.getTime() - PIX_RECUPERAR_TETO_MS);
+  const inicio = new Date(ini);
   const consulta = PIX_CONSULTAS[perfil.consulta || 'bacen'];
   if (!consulta) throw new Error('este provedor ainda não tem consulta implementada');
   return consulta(perfil, inicio, fim);
@@ -3184,8 +4434,12 @@ const PIX_CONSULTAS = {
 
 };
 async function pixTick() {
+  const desde = pixRt.recuperarDesde;
+  const fimMs = Date.now();
   try {
-    const lista = await pixConsultar();
+    const lista = await pixConsultar(desde);
+    if (desde !== null && pixRt.recuperarDesde === desde) pixRt.recuperarDesde = null; // a parada já foi lida
+    pixRt.consultadoEm = fimMs;
     let novos = 0;
     for (const item of lista) {
       const id = String(item?.endToEndId || '').slice(0, 64);
@@ -3203,16 +4457,24 @@ async function pixTick() {
       }
       try { gravarPrivado(PIX_ULTIMO_FILE, JSON.stringify({ banco: pixConfig.banco, em: new Date().toISOString(), item: item?._bruto || item }, null, 2)); } catch { /* diagnóstico; sem ele nada muda */ }
       emitDonation({
-        name: nome || 'Apoiador Pix',
+        name: nome || PIX_SEM_NOME,
         amountText: formatDonationValue(item?.valor),
         message: mensagem,
         rotulo: 'Pix',
+        // 🙋 v0.192: o nº do pagamento, a hora em que caiu e o valor exato
+        endToEndId: id,
+        horario: typeof item?.horario === 'string' ? item.horario : '',
+        centavos: centavosDoPix(item?.valor),
+        semNome: !nome,
       });
     }
     pixRt.primeira = false;
     if (novos || pixRt.vistos.size) savePixVistos();
     pixStatus('ok', '');
   } catch (err) {
+    // o banco recusou a janela grande (ou a rede ainda não voltou): três
+    // tentativas e a consulta segue com a janela de sempre
+    if (desde !== null && pixRt.recuperarDesde === desde && ++pixRt.recuperarFalhas >= 3) pixRt.recuperarDesde = null;
     pixStatus('erro', String(err && err.message || err).slice(0, 200));
   }
 }
@@ -3433,6 +4695,19 @@ function arrancarPix() {
   // mesmo com o programa tendo ficado fechado; sem histórico, a 1ª consulta
   // só marca o que encontrar (senão o painel inundava com Pix antigos)
   pixRt.primeira = pixRt.vistos.size === 0;
+  // 🙋 v0.192: logo depois de abrir o programa, com histórico e os Pedidos ligados,
+  // a 1ª consulta olha desde a parada: a última consulta guardada ou a última
+  // atividade gravada da fila (a mais antiga), com uma folga de 5 min
+  pixRt.recuperarDesde = null;
+  pixRt.recuperarFalhas = 0;
+  const primeiroArranque = !pixRt.jaArrancou;
+  pixRt.jaArrancou = true;
+  if (primeiroArranque && !pixRt.primeira && pedidosLigado()) {
+    const marcas = [pixRt.consultadoEm];
+    try { if (pedidosNucleo) marcas.push(pedidosNucleo.diagnostico().vivoAoAbrir); } catch { /* sem a fila, vale a consulta guardada */ }
+    const desde = Math.min(...marcas.filter((x) => Number.isFinite(x)));
+    if (Number.isFinite(desde)) pixRt.recuperarDesde = desde - 5 * 60 * 1000;
+  }
   if (state.settings.labs?.pix !== true) { pixStatus('desligado', ''); return; }
   const perfil = pixPerfil();
   const { urlToken, urlPix } = pixUrls();
@@ -4124,6 +5399,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // 🙋 v0.192: as imagens dos catálogos dos Pedidos (qualquer papel, como as
+  // mídias) e as planilhas/imagens enviadas (só o computador do streamer)
+  if (urlPath.startsWith('/pedidos-img/') || urlPath.startsWith('/pedidos-catalogo/')) {
+    tratarRotaPedidos(req, res, urlPath, role);
+    return;
+  }
+
   if (urlPath.startsWith('/uploads/')) {
     const filePath = path.join(UPLOADS_DIR, path.normalize(urlPath.slice('/uploads/'.length)));
     if (filePath !== UPLOADS_DIR && !filePath.startsWith(UPLOADS_DIR + path.sep)) {
@@ -4225,6 +5507,9 @@ const NET_PERM_DEFAULTS = {
   media: false,      // 🖼️ enviar/apagar mídias
   logs: false,       // 🗄️ mexer nos logs
   obs: false,        // 🎬 comandar o OBS (cenas, transição, mudo, live/gravação)
+  // 🙋 v0.192: mexer na fila dos Pedidos (abrir/fechar, próximo, partidas,
+  // revisar). Sem ele, quem só assiste vê a fila em leitura
+  pedidos: false,
 };
 
 function sanitizePerms(raw) {
@@ -4520,6 +5805,19 @@ const OP_CATEGORY = {
   obsMonitor: 'obs', vmixMonitor: 'obs',
   // 🎚️ v0.181: medidores de áudio do OBS (mini Mesa) e cancelar a contagem de encerrar
   obsMedidores: 'obs', obsContagemCancelar: 'obs',
+  // 🙋 v0.192: os Pedidos têm seletor próprio (desligado de fábrica). As do
+  // catálogo, a leitura do site e o «começar do zero» também estão em
+  // LOCAL_ONLY_OPS: pela rede, nem com o seletor
+  pedidosAbrir: 'pedidos', pedidosJogo: 'pedidos', pedidoProximo: 'pedidos', pedidoPartida: 'pedidos',
+  pedidoPular: 'pedidos', pedidoRetomar: 'pedidos', pedidoRecusar: 'pedidos', pedidoDevolvido: 'pedidos',
+  pedidoIgnorar: 'pedidos', pedidoConfirmar: 'pedidos', pedidoCorrigir: 'pedidos', pedidoNovo: 'pedidos',
+  pedidoDeMensagem: 'pedidos', pedidoLiberarNome: 'pedidos', pedidosFimDaLive: 'pedidos', pedidosLimparTestes: 'pedidos',
+  pedidosRecomecar: 'pedidos',
+  pedidosCatalogoLer: 'pedidos', pedidosCatalogoCriar: 'pedidos', pedidosCatalogoRenomear: 'pedidos',
+  pedidosCatalogoApagar: 'pedidos', pedidosCatalogoRecriar: 'pedidos', pedidosCatalogoItem: 'pedidos',
+  pedidosCatalogoItemApagar: 'pedidos', pedidosCatalogoTipo: 'pedidos', pedidosCatalogoTipoApagar: 'pedidos',
+  pedidosCatalogoImagem: 'pedidos', pedidosCatalogoImagens: 'pedidos', pedidosDbdAtualizar: 'pedidos', pedidosDbdCancelar: 'pedidos',
+  pedidosRecompensas: 'pedidos',
 };
 
 // 📺 v0.179: avisos de RETORNO da tela — a tela do OBS conta que o vídeo da
@@ -4593,7 +5891,13 @@ const LOCAL_ONLY_OPS = new Set(['securityPassword', 'securityMode', 'securityPer
   // 🕹️ v0.126: gerar um token novo do controle externo é coisa do dono
   'controleConfig',
   // 🌤️ v0.167: as chaves das fontes de clima são da máquina do streamer
-  'climaConfig']);
+  'climaConfig',
+  // 🙋 v0.192: os catálogos dos Pedidos gravam no disco (e a leitura do site
+  // oficial usa a internet da máquina); o «começar do zero» apaga a fila que não
+  // abre — tudo só no computador do streamer
+  'pedidosRecomecar', 'pedidosCatalogoLer', 'pedidosCatalogoCriar', 'pedidosCatalogoRenomear', 'pedidosCatalogoApagar',
+  'pedidosCatalogoRecriar', 'pedidosCatalogoItem', 'pedidosCatalogoItemApagar', 'pedidosCatalogoTipo', 'pedidosCatalogoTipoApagar',
+  'pedidosCatalogoImagem', 'pedidosCatalogoImagens', 'pedidosDbdAtualizar', 'pedidosDbdCancelar']);
 
 function securitySummary() {
   return {
@@ -4883,7 +6187,70 @@ function mensagemComTelefone(m) {
   return !!m && typeof m === 'object' && !Array.isArray(m)
     && (m.platform === 'whatsapp' || pareceTelefoneSrv(m.author) || pareceTelefoneSrv(semSufixoJid(m.authorLogin)) || pareceTelefoneSrv(semSufixoJid(m.authorId)));
 }
-function mensagemParaViewer(m) {
+// 💠 v0.192: o comentário do Pix do banco pela rede. O nº do pagamento
+// (endToEndId: o banco de quem pagou e a hora) não vai para quem só assiste — o
+// id «pix-<nº>» vira um resumo dele (o mesmo a cada entrega; o servidor acha o
+// comentário de volta pelo resumo) e o bloco pix sai. Com os 🙋 Pedidos ligados, o
+// nome civil segue a opção «Nome de quem paga pelo Pix do banco» (o primeiro nome,
+// por padrão) para quem só assiste, para quem entra com liberdade total e para o
+// controle externo; o painel deste computador vê o nome como o banco mandou.
+const PIX_SEM_NOME = 'Apoiador Pix'; // o rótulo de quando o banco não manda o nome (não é ninguém)
+// O «🧪 Pix de exemplo» usa esse mesmo rótulo; o id de autor dele (nenhum Pix de
+// verdade tem um) separa a ficha dele no 🎁 sorteio da dos pagadores sem nome
+const PIX_TESTE_AUTOR_ID = 'teste-pix';
+const RE_ID_PIX_RESUMO = /^pix-h[0-9a-f]{24}$/;
+function ehComentarioPix(m) { return !!m && typeof m === 'object' && !Array.isArray(m) && (m.platform === 'pix' || m.platform === 'doacao'); }
+function idPixParaRede(id) { return 'pix-h' + crypto.createHash('sha256').update(String(id)).digest('hex').slice(0, 24); }
+function idPixParaViewer(id) { return typeof id === 'string' && id.startsWith('pix-') && !RE_ID_PIX_RESUMO.test(id) ? idPixParaRede(id) : id; }
+function nomePixParaRede() {
+  if (!pedidosLigado()) return 'completo';
+  const v = state.settings.pedidos && state.settings.pedidos.nomePix;
+  return v === 'completo' || v === 'anonimo' ? v : 'primeiro';
+}
+function pixParaRede(m, viewer) {
+  if (!ehComentarioPix(m)) return m;
+  let out = m;
+  const modo = nomePixParaRede();
+  const semNome = m.author === PIX_SEM_NOME || (!!m.pix && typeof m.pix === 'object' && m.pix.semNome === true);
+  if (modo !== 'completo' && !semNome && typeof m.author === 'string' && m.author.trim()) {
+    const nome = nomeCivilPedidos(m.author, modo);
+    if (nome !== m.author) out = { ...m, author: nome };
+  }
+  if (viewer) {
+    if ('pix' in out) { if (out === m) out = { ...m }; delete out.pix; }
+    if (idPixParaViewer(out.id) !== out.id) {
+      if (out === m) out = { ...m };
+      out.id = idPixParaViewer(out.id);
+    }
+  }
+  return out;
+}
+// Liberdade total pela rede: só o nome civil do Pix muda (o telefone continua
+// sendo só de quem só assiste). Devolve o MESMO objeto quando nada mudou.
+function pixCivilParaRede(v, prof = 0) {
+  if (!v || typeof v !== 'object' || prof > 6) return v;
+  if (Array.isArray(v)) {
+    let out = null;
+    for (let i = 0; i < v.length; i++) {
+      const n = pixCivilParaRede(v[i], prof + 1);
+      if (n !== v[i]) { if (!out) out = v.slice(); out[i] = n; }
+    }
+    return out || v;
+  }
+  if (typeof v.platform === 'string' && 'author' in v) return pixParaRede(v, false);
+  let out = null;
+  for (const k of Object.keys(v)) {
+    const n = pixCivilParaRede(v[k], prof + 1);
+    if (n !== v[k]) { if (!out) out = { ...v }; out[k] = n; }
+  }
+  return out || v;
+}
+function temFullConectado() {
+  for (const c of wss.clients) if (c.role === 'full' && c.readyState === 1) return true;
+  return false;
+}
+function mensagemParaViewer(original) {
+  const m = pixParaRede(original, true);
   if (!mensagemComTelefone(m)) return m;
   const { authorId, authorLogin, waChatId, ...resto } = m;
   if (pareceTelefoneSrv(resto.author)) resto.author = apelidoDeTelefone(resto.author);
@@ -4911,6 +6278,13 @@ function semTelefonesParaViewer(v, prof = 0) {
     return out || v;
   }
   if (typeof v.platform === 'string' && ('author' in v || 'runs' in v || 'authorId' in v)) return mensagemParaViewer(v);
+  // 💠 v0.192: o id do 💠 Pix também anda fora da mensagem — o «lido» de quando foi
+  // para a tela, a lista dos lidos e a das apagadas: o mesmo resumo, sem o nº do pagamento
+  if (v.type === 'read' && idPixParaViewer(v.id) !== v.id) v = { ...v, id: idPixParaViewer(v.id) };
+  if (v.type === 'apagadas' && Array.isArray(v.ids) && v.ids.some((x) => idPixParaViewer(x) !== x)) v = { ...v, ids: v.ids.map(idPixParaViewer) };
+  if (v.readIds && typeof v.readIds === 'object' && !Array.isArray(v.readIds) && Object.keys(v.readIds).some((k) => idPixParaViewer(k) !== k)) {
+    v = { ...v, readIds: Object.fromEntries(Object.entries(v.readIds).map(([k, x]) => [idPixParaViewer(k), x])) };
+  }
   // a correção de avatar chega com o «login» da pessoa — no WhatsApp é o número
   if (v.type === 'avatarFix' && (v.platform === 'whatsapp' || pareceTelefoneSrv(semSufixoJid(v.login)))) return { ...v, login: '' };
   if (v.type === 'apagadas' && v.platform === 'whatsapp' && v.troca && (canalWaSemTelefone(v.troca.de) !== v.troca.de || canalWaSemTelefone(v.troca.para) !== v.troca.para)) v = { ...v, troca: { ...v.troca, de: canalWaSemTelefone(v.troca.de), para: canalWaSemTelefone(v.troca.para) } };
@@ -4931,9 +6305,13 @@ function temViewerConectado() {
   for (const c of wss.clients) if (c.role === 'viewer' && c.readyState === 1) return true;
   return false;
 }
-// Resposta direta a UMA conexão, com o mesmo filtro
+// Resposta direta a UMA conexão, com o mesmo filtro (💠 v0.192: e o nome civil do
+// Pix do banco para a liberdade total pela rede)
 function enviarAo(ws, payload) {
-  ws.send(JSON.stringify(ws.role === 'viewer' ? semTelefonesParaViewer(payload) : payload));
+  let p = payload;
+  if (ws.role === 'viewer') p = semTelefonesParaViewer(payload);
+  else if (ws.role === 'full' && nomePixParaRede() !== 'completo') p = pixCivilParaRede(payload);
+  ws.send(JSON.stringify(p));
 }
 
 function broadcast(payload) {
@@ -4945,8 +6323,14 @@ function broadcast(payload) {
     const limpo = semTelefonesParaViewer(payload);
     if (limpo !== payload) paraViewer = JSON.stringify(limpo);
   }
+  // 💠 v0.192: o nome civil do Pix do banco para quem entra com liberdade total
+  let paraFull = message;
+  if (nomePixParaRede() !== 'completo' && temFullConectado()) {
+    const x = pixCivilParaRede(payload);
+    if (x !== payload) paraFull = JSON.stringify(x);
+  }
   for (const client of wss.clients) {
-    if (client.readyState === 1) client.send(client.role === 'viewer' ? paraViewer : message);
+    if (client.readyState === 1) client.send(client.role === 'viewer' ? paraViewer : client.role === 'full' ? paraFull : message);
   }
 }
 
@@ -5363,6 +6747,9 @@ function hasStagedLaunchers() {
 // Reabre o programa sozinho (após atualização ou pelo botão ♻️) e ENCERRA o
 // processo — sem deixar janela antiga acumulada.
 function relaunchApp() {
+  // 🙋 v0.192: este caminho sai com process.exit direto, sem o laço dos sinais —
+  // a gravação adiada da fila dos pedidos vai para o disco antes
+  pedidosFecharParaSair();
   const { spawn } = require('child_process');
   const doBat = process.env.OBS_SOCIAL_BAT === '1';
   if (doBat && !hasStagedLaunchers()) {
@@ -5920,6 +7307,8 @@ function resumoDados() {
     ferramentas: { qrs: (state.qrs || []).length, winstreaks: (state.winstreaks || []).length, avisos: (state.avisos || []).length, bytes: arquivo('qrcodes.json') + arquivo('winstreak.json') + arquivo('avisos.json') },
     // 🎭 Os perfis de overlay são configurações com nome: contam juntos
     configuracoes: { bytes: arquivo('settings.json') + arquivo('perfis-overlay.json') },
+    // 🙋 v0.192: a fila e os catálogos (as imagens à parte: não entram no backup)
+    pedidos: resumoDadosPedidos(),
   };
 }
 
@@ -6022,6 +7411,13 @@ function limparDados(escopo) {
     broadcastAvisos();
     feito.push('ferramentas');
   }
+  // 🙋 v0.192: os Pedidos — a fila, as listas e os pagamentos em espera (o nº do
+  // pedido nunca volta); «tudo» leva também os catálogos e as imagens
+  let pedidosErro = null;
+  if (tudo || escopo === 'pedidos') {
+    const r = limparPedidos(tudo);
+    if (r.ok) feito.push('pedidos'); else pedidosErro = r.texto;
+  }
   if (tudo) {
     // Volta às configurações de fábrica (mantém a senha da rede: quem apaga
     // não fica trancado fora, e removê-la é decisão separada em Segurança)
@@ -6046,7 +7442,10 @@ function limparDados(escopo) {
   broadcast({ type: 'logs', logs: logsInfo(), dados: resumoDados() });
   broadcast({ type: 'dados', dados: resumoDados() });
   console.log(`  🧹 Limpeza (${escopo}): ${feito.join(', ') || 'nada'}.`);
-  return { ok: true, feito, dados: resumoDados() };
+  // 🙋 v0.192: a limpeza só dos pedidos que não deu certo volta com o motivo; no
+  // «tudo» o resto já foi apagado e o programa reinicia mesmo assim (o motivo vai junto)
+  if (pedidosErro && escopo === 'pedidos') return { ok: false, erro: pedidosErro, feito, dados: resumoDados() };
+  return { ok: true, feito, dados: resumoDados(), ...(pedidosErro ? { pedidosErro } : {}) };
 }
 
 // ---------------------------------------------------------------------------
@@ -6079,6 +7478,15 @@ const BACKUP_ITENS = {
     files: () => [SETTINGS_FILE, PERFIS_FILE],
     assinatura: () => JSON.stringify(state.settings) + JSON.stringify(state.perfisOverlay),
   },
+  // 🙋 v0.192: a fila (com os pagamentos em espera) e os catálogos, estes numa
+  // subpasta «catalogos/» do backup; as imagens ficam fora. A gravação adiada vai
+  // para o disco antes da cópia, e a restauração remonta tudo a partir do disco.
+  pedidos: {
+    antes: () => { try { if (pedidosNucleo) pedidosNucleo.gravar(); } catch { /* segue */ } },
+    assinatura: () => assinaturaBackupPedidos(),
+    copiar: (destino) => copiarBackupPedidos(destino),
+    restaurar: (origem) => restaurarBackupPedidos(origem),
+  },
 };
 const BACKUP_FREQ_RE = /^(manual|temporeal|([1-9]|[1-5][0-9]|60)s|([1-9]|[1-5][0-9]|60)min|6h|12h|24h)$/;
 // 🔒 v0.127.1: teto para os textos das configurações (20 mil caracteres;
@@ -6092,7 +7500,7 @@ const BACKUP_FREQ_RE = /^(manual|temporeal|([1-9]|[1-5][0-9]|60)s|([1-9]|[1-5][0
 // conhecidas em ajustarSorteio; os dois eram os últimos pontos em que uma
 // mensagem plantava chaves novas que acumulavam a cada envio
 const SECOES_LIVRES = new Set(['pecas', 'layoutV', 'perfilAuto', 'janelas']);
-const FILHOS_LIVRES = { panel: ['colDrip', 'columnsOrder', 'ordem'], chat: ['platforms', 'pecas'], backup: ['itens'], deck: ['cores'], widgets: ['pecas'], selos: ['ocultos'], clima: ['cidades', 'fontes', 'chaves'] };
+const FILHOS_LIVRES = { panel: ['colDrip', 'columnsOrder', 'ordem'], chat: ['platforms', 'pecas'], backup: ['itens'], deck: ['cores'], widgets: ['pecas'], selos: ['ocultos'], clima: ['cidades', 'fontes', 'chaves'], pedidos: ['precoPorMoeda'] }; // 🙋 v0.192: a moeda é a chave (o sanitizador dos pedidos limpa)
 // 🔒 v0.179: rede de segurança — uma configuração que ficaria maior que isto
 // não entra (o envio é recusado e o cliente recebe a configuração vigente)
 const SETTINGS_MAX_BYTES = 2 * 1024 * 1024;
@@ -6245,6 +7653,8 @@ function fazerBackup(item, forcado = false) {
         algum = true;
       }
     }
+    // 🙋 v0.192: item com cópia própria (arquivos + subpasta, como os Pedidos)
+    if (def.copiar && def.copiar(destino)) algum = true;
     if (!algum) { try { fs.rmSync(destino, { recursive: true, force: true }); } catch {} est.assinatura = assinatura; return { ok: true, vazio: true }; }
     est.assinatura = assinatura;
     est.ultimo = Date.now();
@@ -6314,6 +7724,9 @@ function restaurarBackup(item, marcaBruta) {
         try { fs.cpSync(de, para, { recursive: true }); } catch {}
       }
     }
+    // 🙋 v0.192: item com restauração própria (os Pedidos param, voltam do disco
+    // e avisam as telas)
+    if (def.restaurar) def.restaurar(origem);
     // O que dá para reviver sem reiniciar, revive agora
     if (item === 'marcas') {
       state.readIds = loadRead();
@@ -6369,6 +7782,9 @@ function restaurarBackup(item, marcaBruta) {
       // 🌤️ o Clima segue a lista de cidades restaurada (não a de antes)
       state.clima.indice = 0; state.clima.desde = Date.now();
       sincronizarClima(); broadcastClima();
+      // 🙋 v0.192: o restauro troca o Labs sem passar pelos ganchos do 'settings':
+      // os Pedidos acompanham aqui (ligados, desligados, regras e visual de volta)
+      sincronizarPedidosComLabs();
       // 🎭 Perfis de overlay: o arquivo já voltou para o lugar; relê e avisa.
       // Backup de uma época SEM perfis (o arquivo não existe lá): a restauração
       // volta para "nenhum perfil" — senão o usuário ficava com um híbrido de
@@ -6805,6 +8221,15 @@ function ehMensagemDeTeste(m) {
 // moderação: por isso ela não obedece ao «espelhar o que a moderação apagou»,
 // que é sobre as redes, não sobre a nossa própria bagunça de teste.
 function removerMensagens({ platform, ids, autor, tudo, teste }) {
+  // 🙋 v0.192: os Pedidos ouvem a moderação ANTES da regra do chat (o «espelhar
+  // o que a moderação apagou» é sobre o painel, não sobre a fila): mensagem
+  // apagada ou autor banido ganha a marca no pedido (pago nunca é recusado
+  // sozinho) e a limpeza geral («tudo») não tira pedido nenhum. Os 🧪 saem
+  // pelo testLimpar, que chama o limparTestes() dos pedidos.
+  if (!teste && pedidosLigado() && pedidosProntos()) {
+    try { pedidosNucleo.remocao({ platform, ids, autor, tudo }); }
+    catch (err) { console.error('  ⚠️ 🙋 Pedidos: o aviso da moderação não chegou aos pedidos:', (err && err.message) || err); }
+  }
   if (!teste && state.settings.chat?.apagarRemovidas === false) return;
   const alvos = new Set((ids || []).map(String));
   const quem = autor ? String(autor).toLowerCase() : null;
@@ -7139,6 +8564,15 @@ function onChatMessage(message) {
   feedQueue.splice(posQ, 0, message);
   if (feedQueue.length > FEED_QUEUE_MAX) feedQueue.splice(0, feedQueue.length - FEED_QUEUE_MAX);
   feedPendingBroadcast();
+  // 🙋 v0.192: os Pedidos (Labs) olham a mensagem por último, depois do log e do
+  // painel — com try/catch próprio: o id já está marcado como visto, e um erro
+  // aqui não pode levar o comentário junto. O núcleo copia o que precisa e
+  // nunca mexe no message (o mesmo objeto das colunas, da fila e do log); a
+  // variável é lida na hora (restaurar e limpar remontam o núcleo)
+  if (pedidosLigado() && pedidosProntos()) {
+    try { pedidosNucleo.observar(message); }
+    catch (err) { console.error('  ⚠️ 🙋 Pedidos: a mensagem não virou pedido por um erro:', (err && err.message) || err); }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -11757,6 +13191,9 @@ setTimeout(sincronizarObsComLabs, 1500);
 // recebe não carregam caminhos do computador do streamer (pasta do backup,
 // comando do transcritor). Ele não consegue gravá-los de volta (o servidor
 // só aceita esses campos de quem está no computador), então nada se perde.
+// 🙋 v0.192: nem a lista das palavras bloqueadas dos Pedidos — os nomes que
+// viram «Anônimo» para quem assiste (a troca é feita aqui no servidor, e quem só
+// assiste não muda os Pedidos), como a moderação, que também não vai para ele.
 function settingsParaCliente(ws) {
   if (!ws || ws.role !== 'viewer') return state.settings;
   const s = state.settings;
@@ -11764,6 +13201,7 @@ function settingsParaCliente(ws) {
     ...s,
     backup: { ...(s.backup || {}), pasta: '' },
     transcricao: { ...(s.transcricao || {}), comando: '' },
+    ...(s.pedidos ? { pedidos: { ...s.pedidos, palavrasBloqueadas: [] } } : {}),
   };
 }
 // 🔒 v0.177: toda mudança de configuração sai com o MESMO filtro do init —
@@ -11799,6 +13237,9 @@ wss.on('connection', (ws, req) => {
   ws.clientIp = ip;
   ws.addressClass = classifyAddress(req.socket.remoteAddress);
   ws.deviceInfo = deviceLabel(req.headers['user-agent']);
+  // 🙋 v0.192: página do navegador (tem Origin) diz o que quer dos Pedidos; quem
+  // não é página (programa, automação) recebe a fila como sempre
+  ws.ehPagina = typeof req.headers.origin === 'string' && req.headers.origin !== '';
   // Nome da máquina via DNS reverso (quando a rede informa) — sem travar nada
   // (só com um IP de verdade: dns.reverse('') estoura na hora)
   if (net.isIP(ip)) {
@@ -11903,6 +13344,12 @@ wss.on('connection', (ws, req) => {
     ytdlpEstado: extratorYtDlp.estado(), // 🧪 v0.134: o extrator da mídia direta
     waLib: waLibEstado(),
     componentes: ws.role === 'local' ? componentesAtualSeguro() : undefined, // 🧩 v0.185: só o computador do streamer
+    // 🙋 v0.192: a fila na projeção do papel desta conexão ({ ligado:false } com o
+    // Labs desligado), o resumo dos catálogos (nunca os itens) e, só para o
+    // computador do streamer, o estado da leitura do site oficial
+    pedidos: pedidosParaCliente(ws),
+    pedidosCatalogos: catalogosParaCliente(ws),
+    pedidosDbd: ws.role === 'local' && pedidosLigado() ? pedidosDbdEstado() : undefined,
     readIds: Object.fromEntries([...state.readIds].slice(-MAX_READ_IDS)),
     version: APP_VERSION,
     lanUrl: lanAddress() ? `http://${lanAddress()}:${PORT}` : null,
@@ -12008,6 +13455,17 @@ kickApiConfigurar({ navegador: { disponivel: () => kickNavegadoresLocais().lengt
 function tratarMensagem(ws, raw) {
   let msg;
   try { msg = JSON.parse(raw.toString()); } catch { return; }
+  if (!msg || typeof msg !== 'object') return;
+
+  // 🙋 v0.192: a página diz o que quer dos Pedidos («fila», «resumo» ou nada). É
+  // um sinal da página, não uma ação: vale de qualquer papel (o que chega é a
+  // projeção do papel dela) e responde com o retrato de agora
+  if (msg.type === 'pedidosAssinar') {
+    ws.pedidosQuer = msg.quer === 'fila' || msg.quer === 'resumo' ? msg.quer : null;
+    ws.pedidosResumoEnviado = null;
+    enviarPedidosAo(ws);
+    return;
+  }
 
   // ---------- 🔐 Portão de operações ----------
   // Operações de segurança: SÓ do computador local — nem com senha.
@@ -12273,6 +13731,10 @@ function tratarMensagem(ws, raw) {
             responder({ current: APP_VERSION, latest: cache.latest, hasUpdate: false });
             return;
           }
+          // 🙋 v0.192: a fila dos pedidos grava o que estava adiado antes de os
+          // arquivos do programa serem trocados (sem parar nada: se a troca
+          // falhar, o programa segue no ar como estava)
+          try { if (pedidosNucleo) pedidosNucleo.gravar(); } catch { /* segue */ }
           const files = applyUpdate(cache.buffer);
           console.log(`  ⬇️ Atualização v${cache.latest} instalada (${files} arquivos). Reiniciando o OBS Social...`);
           responder({ applied: true, restarting: true, current: APP_VERSION, latest: cache.latest, files });
@@ -12460,6 +13922,7 @@ function tratarMensagem(ws, raw) {
     }
     case 'settings': {
       const incoming = (msg.settings && typeof msg.settings === 'object' && !Array.isArray(msg.settings)) ? msg.settings : {};
+      let pedidosRegrasNegadas = false; // 🙋 v0.192: quem só assiste mexeu nas regras dos Pedidos
       // 🔒 v0.127.1: só entram chaves que as configurações conhecem (senão
       // cada mensagem podia plantar uma chave nova e o settings.json crescia
       // sem fim), textos com teto de tamanho, e a pasta do backup só muda
@@ -12481,6 +13944,10 @@ function tratarMensagem(ws, raw) {
       // streamer (local) ou de quem entrou com a senha (full)
       if (ws.role === 'viewer') {
         delete incoming.labs;
+        // 🙋 v0.192: preço, máximo, grátis e privacidade dos Pedidos não são «visual»
+        // (a página fica sabendo, e o campo volta ao valor de verdade)
+        if (incoming.pedidos !== undefined) pedidosRegrasNegadas = true;
+        delete incoming.pedidos;
         if (!security.permissions.logs) { delete incoming.logRetentionDays; delete incoming.backup; }
       }
       // 📱 v0.163: a cópia do tema que o mini Mesa veste é a do STREAMER — só
@@ -12537,6 +14004,24 @@ function tratarMensagem(ws, raw) {
           ocultos: { ...state.settings.panel.ocultos, ...((incoming.panel || {}).ocultos || {}) },
         },
         labs: { ...state.settings.labs, ...(incoming.labs || {}) },
+        // 🙋 v0.192: cada sub-objeto dos Pedidos se funde chave a chave (mexer num
+        // seletor não ressuscita os outros no padrão) e o todo passa pelo
+        // sanitizador; no preço por moeda, a moeda com null sai
+        pedidos: (() => {
+          const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+          const atual = obj(state.settings.pedidos);
+          const ip = obj(incoming.pedidos);
+          const ag = obj(atual.gratis);
+          const ig = obj(ip.gratis);
+          return sanitizarPedidosConf({
+            ...atual,
+            ...ip,
+            fontesPagas: { ...obj(atual.fontesPagas), ...obj(ip.fontesPagas) },
+            imagens: { ...obj(atual.imagens), ...obj(ip.imagens) },
+            precoPorMoeda: { ...obj(atual.precoPorMoeda), ...obj(ip.precoPorMoeda) },
+            gratis: { ...ag, ...ig, caminhos: { ...obj(ag.caminhos), ...obj(ig.caminhos) } },
+          });
+        })(),
         taxas: sanitizeTaxas({ ...state.settings.taxas, ...(incoming.taxas || {}) }), // 💰 v0.170
         acessibilidade: { ...state.settings.acessibilidade, ...(incoming.acessibilidade || {}) },
         trilhasTexto: { ...state.settings.trilhasTexto, ...(incoming.trilhasTexto || {}) },
@@ -12920,7 +14405,10 @@ function tratarMensagem(ws, raw) {
         p.columnsShowEmpty = p.columnsShowEmpty === true;
         // «__all» é a coluna «Todas», do painel — não é uma rede, por isso
         // entra aqui e não na lista compartilhada
-        p.columnsOrder = PAINEL_ORDEM.soConhecidas(p.columnsOrder, ['__all', ...PAINEL_ORDEM.COLUNAS]);
+        // 🙋 v0.192: as colunas que não são rede («Todas» e a dos Pedidos) vêm da
+        // mesma lista do painel (COLUNAS_SINTETICAS, em painel-ordem.js)
+        p.columnsOrder = PAINEL_ORDEM.soConhecidas(p.columnsOrder, [...PAINEL_ORDEM.COLUNAS_SINTETICAS, ...PAINEL_ORDEM.COLUNAS]);
+        p.pedidosOnde = pedidosOndeLimpo(p.pedidosOnde); // 🙋 v0.192: onde os Pedidos aparecem
         {
           // 🫧 Animação de chegada: só estilos conhecidos, duração 0.1–2s
           const ANIM_ESTILOS = ['deslizar', 'surgir', 'pop', 'zoom', 'quicar', 'nenhuma'];
@@ -13002,6 +14490,8 @@ function tratarMensagem(ws, raw) {
       }
       saveSettings();
       broadcastSettings();
+      // (depois do eco: a página repinta as regras com o valor que vale)
+      if (pedidosRegrasNegadas) avisoPedidos(ws, { ok: false, op: 'settings', erro: 'somenteStreamer', texto: 'Quem só assiste pela rede não muda as regras dos Pedidos.' });
       // Mudou algo do backup (pasta/frequências)? O resumo (pasta em uso,
       // lista de backups) acompanha na hora
       if (incoming.backup) broadcastBackup();
@@ -13010,6 +14500,10 @@ function tratarMensagem(ws, raw) {
       if (incoming.labs) broadcastControle(); // 🕹️ v0.126: a página do controle acompanha o seletor
       // 💠 E o do Pix (re)arranca ou para a consulta ao banco na hora
       if (incoming.labs && 'pix' in incoming.labs) arrancarPix();
+      // 🙋 v0.192: ligou/desligou os Pedidos → as telas recebem a fila (ou
+      // { ligado:false }); mudou a regra, o visual ou o idioma → a fila sai de novo
+      if (incoming.labs && 'pedidos' in incoming.labs && (settingsAntes.labs || {}).pedidos !== state.settings.labs.pedidos) sincronizarPedidosComLabs();
+      else if (incoming.pedidos || 'idioma' in incoming) agendarBroadcastPedidos('config');
       // 🌤️ v0.167: cidades/fontes/intervalo mudaram → a busca acompanha
       // 🗺️ v0.169: trocar a lista do rodízio (cidades / Brasil / estado) também recomeça a contagem
       if (incoming.clima) { if (incoming.clima.cidades || incoming.clima.lista) { state.clima.indice = 0; state.clima.desde = Date.now(); } sincronizarClima(); broadcastClima(); }
@@ -13415,7 +14909,7 @@ function tratarMensagem(ws, raw) {
         else pixConfig._appKeyCifrada = null;
       }
       Object.assign(pixConfig, novo);
-      if (trocou) { pixRt.vistos.clear(); savePixVistos(); }
+      if (trocou) { pixRt.vistos.clear(); pixRt.consultadoEm = null; savePixVistos(); }
       savePixConfig();
       arrancarPix();
       break;
@@ -13516,11 +15010,16 @@ function tratarMensagem(ws, raw) {
     }
     case 'pixTeste':
       if (state.settings.labs?.pix === true) {
+        // 🙋 v0.192: o Pix de exemplo é TESTE (id «test-pix-…» e selo «teste»):
+        // o 🧹 tira e desconta do Arrecadado, não volta do log e só vira 🧪
+        // pedido com a opção «teste vira pedido»
         emitDonation({
-          name: 'Apoiador Pix',
+          name: PIX_SEM_NOME,
           amountText: 'R$ 20,00',
           message: 'Pix de teste — é assim que a mensagem do pagador aparece! 💠',
           rotulo: 'Pix',
+          centavos: 2000,
+          teste: true,
         });
       }
       break;
@@ -13800,6 +15299,11 @@ function tratarMensagem(ws, raw) {
       // colunas, da fila, dos salvos e do destaque — e devolve o 🎁 sorteio ao
       // que ele era, sem as fichas de mentira. Nada de real é tocado.
       removerMensagens({ teste: true });
+      // 🙋 v0.192: os 🧪 pedidos de teste saem junto (os de verdade ficam)
+      if (pedidosLigado() && pedidosProntos()) {
+        try { pedidosNucleo.limparTestes(); }
+        catch (err) { console.error('  ⚠️ 🙋 Pedidos: não consegui tirar os pedidos de teste:', (err && err.message) || err); }
+      }
       let fichas = 0;
       // as desta sessão + as das amostras (cobre o que sobrou de antes, quando
       // o programa ainda não anotava quem era de mentira)
@@ -13812,6 +15316,9 @@ function tratarMensagem(ws, raw) {
           author: amostra.author,
         }));
       }
+      // e a do 🧪 Pix de exemplo, pelo id de autor que só ele tem (o pagador de
+      // verdade que chegou sem nome continua no sorteio)
+      chaves.add(chaveParticipante({ platform: 'pix', authorId: PIX_TESTE_AUTOR_ID, author: PIX_SEM_NOME }));
       for (const chave of chaves) {
         if (state.participants.delete(chave)) fichas++;
       }
@@ -14353,6 +15860,27 @@ function tratarMensagem(ws, raw) {
       broadcastAvisos();
       broadcast({ type: 'relogio', relogio: relogioPublico() });
       break;
+    // ---------- 🙋 v0.192: Pedidos (Labs) ----------
+    // Todas passam por tratarOpPedidos: desligado no Labs = pedidoAviso ok:false
+    // na hora; a resposta é síncrona e só para quem pediu; a fila muda pelo núcleo
+    // e as telas recebem o quadro 'pedidos' de cada papel. As do catálogo, a
+    // leitura do site e o «começar do zero» também estão em LOCAL_ONLY_OPS.
+    case 'pedidosAbrir': case 'pedidosJogo': case 'pedidoProximo': case 'pedidoPartida':
+    case 'pedidoPular': case 'pedidoRetomar': case 'pedidoRecusar': case 'pedidoDevolvido':
+    case 'pedidoIgnorar': case 'pedidoConfirmar': case 'pedidoCorrigir': case 'pedidoNovo':
+    case 'pedidoDeMensagem': case 'pedidoLiberarNome': case 'pedidosFimDaLive': case 'pedidosLimparTestes':
+    case 'pedidosRecomecar':
+    case 'pedidosCatalogoLer': case 'pedidosCatalogoCriar': case 'pedidosCatalogoRenomear': case 'pedidosCatalogoApagar':
+    case 'pedidosCatalogoRecriar': case 'pedidosCatalogoItem': case 'pedidosCatalogoItemApagar': case 'pedidosCatalogoTipo':
+    case 'pedidosCatalogoTipoApagar': case 'pedidosCatalogoImagem': case 'pedidosCatalogoImagens':
+    case 'pedidosDbdAtualizar': case 'pedidosDbdCancelar':
+      tratarOpPedidos(ws, msg);
+      break;
+    // 🎁 as recompensas de pontos do canal (Twitch), para a página dos Pedidos
+    // oferecer na lista das aceitas: só leitura
+    case 'pedidosRecompensas':
+      try { ws.send(JSON.stringify({ type: 'pedidosRecompensas', ...recompensasDoCanalPedidos() })); } catch { /* caiu */ }
+      break;
     default:
       // 🕹️ v0.179: só o controle externo precisa saber que a operação não existe
       // (o painel não manda nome inventado; pela rede o portão acima já respondeu)
@@ -14515,7 +16043,7 @@ function controleNomeTrilha(t) {
 const CONTROLE_GRUPOS = {
   tela: '🖥️ Tela e destaque', sorteio: '🎁 Sorteio', widgets: '📊 Widgets', avisos: '📢 Avisos',
   relogio: '🕐 Relógio, cronômetro e timer', clima: '🌤️ Clima', conexoes: '🔌 Conexões', mesa: '🎵 Mesa de trilhas',
-  obs: '🎬 OBS Studio', vmix: '🎛️ vMix', outros: '🧰 Outros',
+  obs: '🎬 OBS Studio', vmix: '🎛️ vMix', pedidos: '🙋 Pedidos', outros: '🧰 Outros',
 };
 const CP = {
   rede: { nome: 'rede', desc: 'youtube, twitch, kick, bilibili, telegram, whatsapp, livepix, pix ou pixgg (vazio = qualquer rede)', ex: '' },
@@ -14524,6 +16052,16 @@ const CP = {
   passo: { nome: 'passo', desc: 'quanto somar (padrão 1)', ex: '1' },
   duracao: { nome: 'duracao', desc: 'tempo: 90, 90s, 5m, 1h ou 1:30 (vazio = mantém a duração)', ex: '5m' },
   canal: { nome: 'canal', desc: 'canal/usuário (vazio = o lembrado da última conexão)', ex: '' },
+};
+// 🙋 v0.192: os parâmetros das ações dos Pedidos
+const CP_PEDIDOS = {
+  ligar: { nome: 'ligar', desc: '1 = abre, 0 = fecha (vazio = alterna)', ex: '' },
+  n: { nome: 'n', desc: 'nº do pedido da vez (opcional: confere antes de contar)', ex: '' },
+  faltavam: { nome: 'faltavam', desc: 'quantas partidas faltavam (opcional: o toque que chegar repetido não conta outra)', ex: '' },
+  nPular: { nome: 'n', desc: 'nº do pedido (vazio = o da vez)', ex: '' },
+  nRetomar: { nome: 'n', desc: 'nº do pedido', ex: '' },
+  id: { nome: 'id', desc: 'ou o id do pedido (p12)', ex: '' },
+  jogo: { nome: 'jogo', desc: 'id ou nome do jogo (como na página 🙋 Pedidos)', ex: 'dead-by-daylight' },
 };
 const CONTROLE_ACOES = [
   // 🖥️ Tela e destaque
@@ -14609,6 +16147,27 @@ const CONTROLE_ACOES = [
   // 🎬 OBS / 🎛️ vMix
   { id: 'obs/atualizar', grupo: 'obs', nome: 'OBS: atualizar as listas', desc: 'Pede ao OBS as cenas, fontes e estados de novo', msg: () => ({ type: 'obsAtualizar' }) },
   { id: 'vmix/atualizar', grupo: 'vmix', nome: 'vMix: atualizar as listas', desc: 'Pede ao vMix as entradas e estados de novo', msg: () => ({ type: 'vmixAtualizar' }) },
+  // 🙋 v0.192: Pedidos (Labs). Desligados no Labs, a ação volta como erro (400)
+  // com o texto; o mesmo toque repetido em menos de 3 s é ignorado (o núcleo
+  // confere — com o «n» E o «faltavam», a partida confere sozinha)
+  { id: 'pedidos/pagos', grupo: 'pedidos', nome: 'Pedidos pagos: abrir/fechar', desc: 'Abre ou fecha os pedidos pagos', params: [CP_PEDIDOS.ligar],
+    msg: controlePedidos((p) => ({ type: 'pedidosAbrir', tipo: 'pagos', ligar: textoControlePed(p.ligar, 10) || undefined })) },
+  { id: 'pedidos/gratis', grupo: 'pedidos', nome: 'Pedidos grátis: abrir/fechar', desc: 'Abre ou fecha os pedidos grátis', params: [CP_PEDIDOS.ligar],
+    msg: controlePedidos((p) => ({ type: 'pedidosAbrir', tipo: 'gratis', ligar: textoControlePed(p.ligar, 10) || undefined })) },
+  { id: 'pedidos/proximo', grupo: 'pedidos', nome: 'Pedidos: chamar o próximo', desc: 'Chama o próximo da fila (quem estava jogando e ainda tem partidas volta para o mesmo lugar)',
+    msg: controlePedidos(() => ({ type: 'pedidoProximo' })) },
+  { id: 'pedidos/vitoria', grupo: 'pedidos', nome: 'Pedidos: vitória', desc: 'Conta uma partida do pedido da vez como vitória', params: [CP_PEDIDOS.n, CP_PEDIDOS.faltavam],
+    msg: controlePedidos((p) => ({ type: 'pedidoPartida', resultado: 'vitoria', n: textoControlePed(p.n, 40), faltavam: textoControlePed(p.faltavam, 40) })) },
+  { id: 'pedidos/derrota', grupo: 'pedidos', nome: 'Pedidos: derrota', desc: 'Conta uma partida do pedido da vez como derrota', params: [CP_PEDIDOS.n, CP_PEDIDOS.faltavam],
+    msg: controlePedidos((p) => ({ type: 'pedidoPartida', resultado: 'derrota', n: textoControlePed(p.n, 40), faltavam: textoControlePed(p.faltavam, 40) })) },
+  { id: 'pedidos/partida', grupo: 'pedidos', nome: 'Pedidos: partida jogada', desc: 'Conta uma partida do pedido da vez, sem marcar vitória nem derrota', params: [CP_PEDIDOS.n, CP_PEDIDOS.faltavam],
+    msg: controlePedidos((p) => ({ type: 'pedidoPartida', resultado: 'jogada', n: textoControlePed(p.n, 40), faltavam: textoControlePed(p.faltavam, 40) })) },
+  { id: 'pedidos/pular', grupo: 'pedidos', nome: 'Pedidos: pular', desc: 'Pula um pedido pelo nº ou pelo id (vazio = o da vez)', params: [CP_PEDIDOS.nPular, CP_PEDIDOS.id],
+    msg: controlePedidos((p) => { const ref = refControlePedidos(p, true); return ref.erro ? ref : { type: 'pedidoPular', ...ref }; }) },
+  { id: 'pedidos/retomar', grupo: 'pedidos', nome: 'Pedidos: retomar', desc: 'Devolve à fila um pedido pulado, pelo nº ou pelo id', params: [CP_PEDIDOS.nRetomar, CP_PEDIDOS.id],
+    msg: controlePedidos((p) => { const ref = refControlePedidos(p, false); return ref.erro ? ref : { type: 'pedidoRetomar', ...ref }; }) },
+  { id: 'pedidos/jogo', grupo: 'pedidos', nome: 'Pedidos: trocar o jogo', desc: 'Escolhe o jogo da vez, pelo id ou pelo nome do catálogo', params: [CP_PEDIDOS.jogo],
+    msg: controlePedidos((p) => { const jogo = jogoControlePedidos(p.jogo); return jogo ? { type: 'pedidosJogo', jogo } : { erro: PEDIDOS_SEM_JOGO }; }) },
   // 🧰 Outros
   { id: 'teste/comentario', grupo: 'outros', nome: 'Comentário de teste', desc: 'Manda um comentário de mentira, como o 🧪 do painel', msg: () => ({ type: 'test' }) },
   { id: 'teste/limpar', grupo: 'outros', nome: 'Apagar os comentários de teste', desc: 'Tira do painel e da tela todos os comentários de mentira, e as fichas que eles criaram no sorteio', msg: () => ({ type: 'testLimpar' }) },
@@ -14681,22 +16240,28 @@ function controleResolver(caminho, p) {
     }
     return { erro: 'Use ligar, desligar ou reiniciar.', status: 404 };
   }
-  return { erro: 'Ação desconhecida: ' + caminho.slice(0, 80) + ' — veja a lista em /api/controle/catalogo', status: 404 };
+  // (o caminho é o que a pessoa escreveu no aparelho: entre «», o tradutor não mexe nele)
+  return { erro: 'Ação desconhecida: «' + caminho.slice(0, 80).replace(/[«»]/g, '') + '» — veja a lista em /api/controle/catalogo', status: 404 };
 }
 
 // O catálogo completo, com o que existe AGORA (teclas da Mesa, cenas do OBS,
 // entradas do vMix, redes lembradas) — é o que a página das configurações
-// mostra e o que um programa (Companion etc.) pode ler para se montar
-function controleCatalogo() {
-  const acoes = CONTROLE_ACOES.map((a) => ({ id: a.id, grupo: a.grupo, nome: a.nome, desc: a.desc, params: a.params || [] }));
+// mostra e o que um programa (Companion etc.) pode ler para se montar.
+// 🌐 v0.192: os textos do programa (grupos, nomes, descrições) no `idioma` pedido —
+// o do programa para o aparelho; a página das configurações pede o português (a
+// chave) e traduz no idioma dela. O que veio de fora (nome da tecla, da cena) fica.
+function controleCatalogo(idioma) {
+  const tr = (x) => (typeof x === 'string' && x ? traduzirNoIdioma(x, idioma) : x);
+  const trParams = (lista) => (lista || []).map((p) => (p && typeof p.desc === 'string' ? { ...p, desc: tr(p.desc) } : p));
+  const acoes = CONTROLE_ACOES.map((a) => ({ id: a.id, grupo: a.grupo, nome: tr(a.nome), desc: tr(a.desc), params: trParams(a.params) }));
   for (const t of state.trilhas) {
     if (t.tipo === 'pastaSimples') continue;
-    acoes.push({ id: 'trilha/' + t.id, grupo: 'mesa', nome: controleNomeTrilha(t), desc: t.tipo === 'pasta' ? 'Toca a fila do Botão de multi ação (de novo = para)' : (t.tipo === 'imagem' || t.tipo === 'video') ? 'Mostra/esconde a mídia na tela' : 'Dispara esta tecla da Mesa', params: [], tecla: { id: t.id, nome: t.nome, tipo: t.tipo } });
+    acoes.push({ id: 'trilha/' + t.id, grupo: 'mesa', nome: controleNomeTrilha(t), desc: tr(t.tipo === 'pasta' ? 'Toca a fila do Botão de multi ação (de novo = para)' : (t.tipo === 'imagem' || t.tipo === 'video') ? 'Mostra/esconde a mídia na tela' : 'Dispara esta tecla da Mesa'), params: [], tecla: { id: t.id, nome: t.nome, tipo: t.tipo } });
   }
   for (const rede of Object.keys(CONNECTORS)) {
     const c = state.connections[rede] || {};
     for (const [verbo, desc] of [['ligar', 'Conecta (com o canal lembrado ou o informado)'], ['desligar', 'Desconecta'], ['reiniciar', 'Derruba e conecta de novo']]) {
-      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc, params: verbo === 'desligar' ? [] : [CP.canal], rede, canalLembrado: (rede === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null });
+      acoes.push({ id: `conexao/${rede}/${verbo}`, grupo: 'conexoes', nome: `🔌 ${rede}: ${verbo}`, desc: tr(desc), params: verbo === 'desligar' ? [] : trParams([CP.canal]), rede, canalLembrado: (rede === 'whatsapp' ? canalWaSemTelefone(c.channel) : c.channel) || null });
     }
   }
   for (const [id, spec] of Object.entries(OBS_ACOES)) acoes.push({ id: 'obs/' + id, grupo: 'obs', nome: '🎬 ' + id, desc: '', params: controleParamsDoSpec(spec), obsAcao: id });
@@ -14706,14 +16271,16 @@ function controleCatalogo() {
   }
   for (const [id, spec] of Object.entries(VMIX_ACOES)) acoes.push({ id: 'vmix/' + id, grupo: 'vmix', nome: '🎛️ ' + id, desc: '', params: controleParamsDoSpec(spec), vmixAcao: id });
   for (const e of (vmixRt.entradas || [])) {
-    if (e && e.numero) acoes.push({ id: 'vmix/entrada/' + e.numero, grupo: 'vmix', nome: `🎛️ Entrada ${e.numero}: ${e.titulo || ''}`.trim(), desc: 'Manda esta entrada do vMix ao vivo (modo=preview só no preview)', params: [controleParamsDoSpec(VMIX_ACOES.entrada)[1]], vmixAcao: 'entrada' });
+    if (e && e.numero) acoes.push({ id: 'vmix/entrada/' + e.numero, grupo: 'vmix', nome: `🎛️ Entrada ${e.numero}: ${e.titulo || ''}`.trim(), desc: tr('Manda esta entrada do vMix ao vivo (modo=preview só no preview)'), params: [controleParamsDoSpec(VMIX_ACOES.entrada)[1]], vmixAcao: 'entrada' });
   }
-  return { ok: true, versao: APP_VERSION, base: '/api/controle/', grupos: CONTROLE_GRUPOS, acoes, livre: { caminho: 'op', desc: 'POST com JSON {"type": "<operação do painel>", ...} — qualquer operação, menos as que só o computador local faz' } };
+  const grupos = Object.fromEntries(Object.entries(CONTROLE_GRUPOS).map(([k, v]) => [k, tr(v)]));
+  return { ok: true, versao: APP_VERSION, base: '/api/controle/', grupos, acoes, livre: { caminho: 'op', desc: tr('POST com JSON {"type": "<operação do painel>", ...} — qualquer operação, menos as que só o computador local faz') } };
 }
 
 // O retrato do momento, para aparelhos que mostram estado (Companion etc.)
 function controleEstado() {
-  const f = state.featured;
+  // (💠 v0.192: o destaque do Pix do banco sem o nº do pagamento e com o nome pela opção)
+  const f = state.featured ? pixParaRede(state.featured, true) : null;
   // 📱 v0.189: o retrato vai para aparelhos que mostram o nome numa tecla ou
   // numa tela (Companion, Stream Deck...) — o autor que É um número sai com o
   // mesmo apelido da tela pública e de quem só assiste (📱 Convidado XYZ); o
@@ -14748,6 +16315,8 @@ function controleEstado() {
     obs: obs ? { conectado: obs.conectado, transmitindo: obs.transmitindo, gravando: obs.gravando, cenaPrograma: obs.cenaPrograma, cenaPreview: obs.cenaPreview, estudio: obs.estudio } : { ligado: false },
     vmix: vmix ? { conectado: vmix.conectado, transmitindo: vmix.transmitindo, gravando: vmix.gravando, programa: vmix.programa, preview: vmix.preview } : { ligado: false },
     controle: { total: controleRt.total, ultimo: controleRt.ultimo },
+    // 🙋 v0.192: a fila dos Pedidos (Labs) — sem valor, sem mensagem e sem telefone
+    pedidos: pedidosControleEstado(),
   };
 }
 
@@ -14792,9 +16361,29 @@ function controleLerCorpo(req, cb) {
 }
 
 function tratarControleHttp(req, res, urlPath) {
+  // 🌐 v0.192: a resposta no idioma do programa (o aparelho não tem o motor de idiomas
+  // do navegador); «idioma=…» na URL pede outro — a página das configurações pede o
+  // português (a chave) e traduz no idioma dela
+  let idiomaResp = null;
+  const idiomaDaResposta = () => idiomaResp || (idiomaResp = idiomaDoConsole());
+  const traduzirResposta = (obj) => {
+    const l = idiomaDaResposta();
+    if (l === 'pt' || !obj || typeof obj !== 'object') return obj;
+    const out = { ...obj };
+    if (typeof out.erro === 'string') out.erro = traduzirNoIdioma(out.erro, l);
+    if (Array.isArray(out.respostas)) {
+      out.respostas = out.respostas.map((r) => {
+        if (!r || typeof r !== 'object') return r;
+        const x = { ...r };
+        for (const k of ['texto', 'detalhe']) if (typeof x[k] === 'string') x[k] = traduzirNoIdioma(x[k], l);
+        return x;
+      });
+    }
+    return out;
+  };
   const json = (status, obj) => {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(JSON.stringify(obj));
+    res.end(JSON.stringify(traduzirResposta(obj)));
   };
   if (req.method !== 'GET' && req.method !== 'POST') { res.writeHead(405); res.end(); return; }
   // Sites de fora abertos no navegador não comandam nada; aparelhos e
@@ -14804,6 +16393,8 @@ function tratarControleHttp(req, res, urlPath) {
   let ip = String(req.socket.remoteAddress || '');
   if (ip.startsWith('::ffff:')) ip = ip.slice(7);
   const query = new URLSearchParams((req.url || '').split('?')[1] || '');
+  const idiomaPedido = String(query.get('idioma') || '');
+  if (CONSOLE_IDIOMAS.includes(idiomaPedido)) idiomaResp = idiomaPedido;
   controleLerCorpo(req, (corpo) => {
     // (qualquer erro aqui dentro vira uma resposta 500 — nunca derruba o programa)
     try { tratarControlePedido(corpo); } catch (err) {
@@ -14816,11 +16407,12 @@ function tratarControleHttp(req, res, urlPath) {
     const auth = String(req.headers.authorization || '');
     const token = String(p.token || req.headers['x-token'] || (auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '') || '');
     delete p.token;
+    if (Object.hasOwn(p, 'idioma') && CONSOLE_IDIOMAS.includes(String(p.idioma))) delete p.idioma; // (o idioma da resposta, não da ação)
     const confere = controleTokenConfere(token, ip);
     if (confere === 'bloqueado') return json(429, { ok: false, erro: 'Muitas tentativas com token errado. Espere alguns minutos.' });
     if (confere !== 'ok') return json(401, { ok: false, erro: 'Token inválido. Copie o token da página 🕹️ Controle Externo das configurações.' });
     const caminho = urlPath.slice('/api/controle'.length).replace(/^\/+|\/+$/g, '');
-    if (!caminho || caminho === 'catalogo') return json(200, controleCatalogo());
+    if (!caminho || caminho === 'catalogo') return json(200, controleCatalogo(idiomaDaResposta()));
     if (caminho === 'estado') return json(200, controleEstado());
     let acao, msg;
     if (caminho === 'op') {
@@ -14841,9 +16433,23 @@ function tratarControleHttp(req, res, urlPath) {
     try { respostas = controleExecutar(msg, ip); } catch (err) {
       // 🕹️ v0.179: nome de operação que o painel não conhece → 404 como as ações
       // prontas (sem contar como ação, sem recado no painel)
-      if (err && err.opDesconhecida) return json(404, { ok: false, erro: 'Operação desconhecida: ' + String(msg.type).slice(0, 60) + ' — use o nome exato da operação do painel (maiúsculas e minúsculas contam), ou uma ação pronta da lista em /api/controle/catalogo.' });
+      if (err && err.opDesconhecida) return json(404, { ok: false, erro: 'Operação desconhecida: «' + String(msg.type).slice(0, 60).replace(/[«»]/g, '') + '» — use o nome exato da operação do painel (maiúsculas e minúsculas contam), ou uma ação pronta da lista em /api/controle/catalogo.' });
       console.error('  ⚠️ Erro numa ação do controle externo:', err && err.message);
       return json(500, { ok: false, erro: 'Deu erro executando a ação: ' + (err && err.message) });
+    }
+    // 🙋 v0.192: as ações prontas dos Pedidos dizem se o toque valeu — recusado
+    // (toque repetido em menos de 3 s, fila vazia, pedido que mudou…) volta como
+    // erro com a frase do núcleo, nunca um «ok» mudo, e não conta como ação nem
+    // vira recado no painel (a operação livre segue devolvendo as respostas como vieram)
+    if (acao.grupo === 'pedidos') {
+      const aviso = respostas.find((x) => x && x.type === 'pedidoAviso') || null;
+      if (!aviso || aviso.ok !== true) {
+        return json(400, {
+          ok: false, erro: (aviso && typeof aviso.texto === 'string' && aviso.texto) || 'Erro inesperado nos pedidos.',
+          codigo: aviso ? String(aviso.erro || '') : 'sem-resposta', ...(aviso && aviso.repetido ? { repetido: true } : {}),
+          acao: acao.id, op: msg.type, respostas,
+        });
+      }
     }
     controleRt.total += 1;
     controleRt.ultimo = { acao: acao.id, nome: acao.nome, em: Date.now(), ip };
@@ -14912,6 +16518,9 @@ server.headersTimeout = 60000;
 server.listen(PORT, () => {
   // 💠 Pix ligado no Labs? A consulta ao banco arranca junto com o programa
   arrancarPix();
+  // 🙋 v0.192: os Pedidos seguem o Labs desde a abertura (nada roda sozinho:
+  // a leitura do site oficial é só no clique)
+  sincronizarPedidosComLabs();
   // 🧹 Arquivos do histórico da área de transferência sem dono somem
   limparOrfaosDoClipboard();
   const rotulos = [tcons('Painel de controle:'), tcons('Overlay (destaque):'), tcons('Chat ao vivo (fixo):')];

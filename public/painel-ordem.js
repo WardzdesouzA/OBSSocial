@@ -23,15 +23,22 @@
   // painel: qr → #qrToolBtn, midiaDireta → #midiaDiretaToolBtn…
   // (o 🌤️ Clima não está aqui: desde a v0.167.1 ele mora no centro da barra,
   // ao lado do 🕐 relógio, com mostrador próprio — não é um ícone da fila)
-  const FERRAMENTAS = ['qr', 'raffle', 'likemeter', 'aud', 'ws', 'aviso', 'midiaDireta', 'trilhas', 'obs', 'vmix', 'clip'];
+  // 🙋 v0.192: os Pedidos (Labs) — #pedidosToolBtn, escondido com o Labs desligado
+  const FERRAMENTAS = ['qr', 'raffle', 'likemeter', 'aud', 'ws', 'pedidos', 'aviso', 'midiaDireta', 'trilhas', 'obs', 'vmix', 'clip'];
 
   // Abas (data-tab de cada botão .tab do painel)
   // 💜💠 v0.174: a aba Apoios virou duas — LivePix e Pix, cada uma a sua
-  const ABAS = ['live', 'saved', 'superchat', 'member', 'whatsapp', 'telegram', 'livepix', 'pix', 'pixgg'];
+  // 🙋 v0.192: a aba dos Pedidos (Labs) entra no fim
+  const ABAS = ['live', 'saved', 'superchat', 'member', 'whatsapp', 'telegram', 'livepix', 'pix', 'pixgg', 'pedidos'];
 
   // Colunas do modo «por rede» (a coluna sintética «__all» é do painel e é
   // aceita à parte, porque não é uma rede)
   const COLUNAS = ['youtube', 'twitch', 'kick', 'bilibili', 'telegram', 'whatsapp', 'livepix', 'pix', 'pixgg'];
+
+  // 🙋 v0.192: as colunas do painel que não são rede — «Todas» (__all) e a dos
+  // Pedidos (__pedidos). O servidor aceita na ordem salva estas mais as COLUNAS;
+  // o 🔄 e o ritmo por rede continuam só nas redes.
+  const COLUNAS_SINTETICAS = ['__all', '__pedidos'];
 
   // Mantém só chaves conhecidas, sem repetição, na ordem em que vieram
   function soConhecidas(lista, padrao) {
@@ -77,6 +84,8 @@
     ...ABAS.filter((a) => a !== 'live').map((a) => 'aba-' + a), 'busca',
     // dentro das abas e das colunas
     'livepixBarra', 'pixggBarra', 'transcricao', 'contadores',
+    // 🙋 v0.192: a barra da aba/coluna dos Pedidos e o «➕ Virar pedido» do menu do comentário
+    'pedidosBarra', 'virarPedido',
   ];
 
   // Só chaves conhecidas e só o valor true (false/ausente = visível): é o que o
@@ -88,5 +97,5 @@
     return limpo;
   }
 
-  return { FERRAMENTAS, ABAS, COLUNAS, OCULTAVEIS, soConhecidas, mesclar, ordenarFerramentas, ordenarAbas, ocultosLimpos };
+  return { FERRAMENTAS, ABAS, COLUNAS, COLUNAS_SINTETICAS, OCULTAVEIS, soConhecidas, mesclar, ordenarFerramentas, ordenarAbas, ocultosLimpos };
 });

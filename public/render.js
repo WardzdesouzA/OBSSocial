@@ -1007,8 +1007,17 @@ function obsDlgT(texto) {
 }
 
 // opcoes: { titulo, texto, icone, lista[], nivel: 'info'|'perigo'|'critico',
-//           ok, cancelar, confirmarPalavra, somenteOk }
+//           ok, cancelar, confirmarPalavra, somenteOk, sozinha }
 // Devolve uma promessa: true (confirmou) ou false (cancelou).
+// 🪟 `sozinha: true` é para a janela que o PROGRAMA abre por conta própria (a resposta do
+// servidor chegou), e não o clique ou a tecla da pessoa — que, num PC carregado, já pode
+// estar digitando em outro lugar. Essa janela nunca confirma com uma tecla que vinha de
+// fora (nem com um toque que começou antes de ela existir): o foco vai para a própria
+// caixa (em nenhum botão) e o atalho do Enter só vale depois de a pessoa pôr o mouse (ou
+// o dedo) nela. O Esc fecha, e o teclado segue normal para quem quer usar: Tab até o
+// botão (o Tab dá a volta dentro da janela, sem sair para a página de trás), Enter (ou
+// espaço) no botão em foco. Nas janelas que a própria pessoa abre, o foco e o Enter que
+// confirma ficam como sempre foram.
 function obsDialog(opcoes) {
   obsDialogGarantirCss();
   const o = opcoes || {};
@@ -1068,6 +1077,25 @@ function obsDialog(opcoes) {
       fundo.remove();
       resolve(valor);
     };
+    const sozinha = o.sozinha === true;
+    // 🖱️ O clique que continua um clique duplo começado ANTES de a pessoa pôr o mouse (ou o
+    // dedo) nesta janela — o 2º clique do clique duplo no botão que a abriu — não é uma
+    // resposta: não confirma, não cancela, não fecha e não marca nada dentro dela (no
+    // celular, o botão de confirmar ou uma opção podem nascer bem embaixo do dedo). O
+    // clique seguinte, simples, vale como sempre.
+    // 👆 Na janela aberta «sozinha» também não é resposta o toque que COMEÇOU antes de ela
+    // existir: o dedo já estava na tela, a janela nasceu embaixo dele e, quando o dedo sai,
+    // o navegador entrega o clique a quem está ali. O toque de verdade começa na própria
+    // janela (pointerdown); o teclado (detail 0) e o clique feito por código ou por uma
+    // extensão (não vem do aparelho: isTrusted falso) não entram nisto.
+    let mexeu = false;
+    let apontou = !sozinha || typeof window.PointerEvent !== 'function';
+    const cliqueDeFora = (e) => !!e && e.detail > 0 && ((!apontou && e.isTrusted) || (!mexeu && e.detail > 1));
+    fundo.addEventListener('pointerdown', () => { apontou = true; }, true);
+    // (o que vem de fora para na porta, antes de chegar a qualquer botão, opção ou campo)
+    for (const tipo of ['mousedown', 'click']) {
+      fundo.addEventListener(tipo, (e) => { if (cliqueDeFora(e)) { e.preventDefault(); e.stopPropagation(); } }, true);
+    }
     let btnCancelar = null;
     if (!o.somenteOk) {
       btnCancelar = document.createElement('button');
@@ -1092,16 +1120,61 @@ function obsDialog(opcoes) {
     }
 
     function aoTeclar(e) {
+      // 🪟 Só a janela de CIMA responde ao teclado. Com duas abertas (o aviso que a resposta
+      // do servidor abriu por cima de um editor; o editor reaberto por cima de outro), o
+      // Enter confirmava as duas — a de baixo era salva com o que estava pela metade — e o
+      // Esc fechava as duas
+      const abertas = document.querySelectorAll('.obs-dialog-fundo');
+      if (abertas[abertas.length - 1] !== fundo) return;
       if (e.key === 'Escape') { e.preventDefault(); fechar(false); }
-      else if (e.key === 'Enter' && !btnOk.disabled && document.activeElement !== btnCancelar) {
+      // ⌨️ A tecla SEGURADA (repetição) não é uma resposta: o Enter que abriu a janela e
+      // continuou apertado não confirma — nem aperta o botão em foco (a confirmação do
+      // ✖ Recusar ou do ✔ Devolvido abria e, meio segundo depois, se confirmava sozinha)
+      else if (e.key === 'Enter' && e.repeat) e.preventDefault();
+      else if (e.key === 'Enter' && (mexeu || !sozinha) && !btnOk.disabled && document.activeElement !== btnCancelar) {
         e.preventDefault(); fechar(true);
+      } else if (sozinha && e.key === 'Tab') {
+        // 🔁 O Tab não sai da janela aberta «sozinha». O foco dela começa na caixa (em nenhum
+        // botão): o Shift+Tab dali ia para o último botão da página que ficou atrás do fundo
+        // escuro, e o Enter seguinte o apertava (no painel, o ✖ Recusar de outra pessoa). O
+        // Tab dá a volta dentro da janela: da caixa para trás, o último botão dela
+        const dentro = [...caixa.querySelectorAll('button, input, select, textarea, a[href], [tabindex]')]
+          .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);
+        const a = document.activeElement;
+        const primeiro = dentro[0];
+        const ultimo = dentro[dentro.length - 1];
+        if (!dentro.length) e.preventDefault();
+        else if (a === caixa || !caixa.contains(a) || a === (e.shiftKey ? primeiro : ultimo)) {
+          e.preventDefault();
+          (e.shiftKey ? ultimo : primeiro).focus();
+        }
+      } else if (sozinha && e.key === ' ' && document.activeElement === caixa) {
+        // (o espaço que a pessoa vinha digitando, com o foco na caixa — que não é campo —,
+        // rolava a página que ficou atrás até o fim)
+        e.preventDefault();
       }
     }
     document.addEventListener('keydown', aoTeclar, true);
-    fundo.addEventListener('mousedown', (e) => { if (e.target === fundo) fechar(false); });
+    fundo.addEventListener('mousedown', (e) => {
+      if (cliqueDeFora(e)) return;
+      if (e.target === fundo) fechar(false);
+      else mexeu = true;
+    });
 
     document.body.appendChild(fundo);
-    setTimeout(() => (campo || btnOk).focus(), 30);
+    // 🪟 A janela aberta «sozinha» põe o foco na própria caixa, já — a tecla que vinha de
+    // fora não aciona nada (nem o botão do painel que ficou atrás), e o Tab entra na janela
+    if (sozinha) {
+      caixa.tabIndex = -1;
+      caixa.focus({ preventScroll: true });
+      return;
+    }
+    // ⌨️ O foco inicial (no campo da palavra ou no botão de confirmar) só entra se a
+    // pessoa ainda não estiver na janela. Num PC carregado (OBS transmitindo, jogo
+    // aberto) esta espera roda atrasada, depois do clique e da digitação dela: o foco
+    // pulava para o botão no meio da digitação e o espaço seguinte o apertava (o pedido
+    // à mão ia com o nome cortado). Sem ninguém tocar em nada, tudo fica igual.
+    setTimeout(() => { if (!caixa.contains(document.activeElement)) (campo || btnOk).focus(); }, 30);
   });
 }
 
@@ -2723,6 +2796,9 @@ function montarBotaoTrilha(t, opts = {}) {
   if (t.textoPos !== 'oculto' && (t.nome || t.origem)) {
     const nm = document.createElement('span');
     nm.className = 'trilha-rotulo pos-' + (t.textoPos || 'baixo');
+    // 🙋 v0.192: o nome que a pessoa deu à tecla (ou o do arquivo) fica como veio,
+    // em qualquer idioma — «Vitória» e «Fim da live» também são textos do programa
+    nm.dataset.noI18n = '1';
     nm.textContent = t.nome || t.origem;
     b.appendChild(nm);
   }
@@ -2751,6 +2827,8 @@ const medidorPct = (db) => Math.max(0, Math.min(100, (Number(db) - MEDIDOR_CHAO_
 function montarMedidorObs(fonte) {
   const el = document.createElement('div');
   el.className = 'trilha-tecla trilha-medidor' + (fonte.mudo ? ' mudo' : '');
+  // (o nome da fonte é o que a pessoa escreveu no OBS; o resto são números e 🔇)
+  el.dataset.noI18n = '1';
   el.dataset.fonte = fonte.nome;
   el.title = fonte.nome + (fonte.mudo ? ' · 🔇' : '') + (Number.isFinite(Number(fonte.db)) ? ' · ' + fonte.db + ' dB' : '');
   const nome = document.createElement('span');

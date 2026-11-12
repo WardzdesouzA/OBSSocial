@@ -205,6 +205,9 @@ class PixGGConnector {
       timestamp: Date.parse(d.Date) || Date.now(),
       pixgg: {
         transactionId: tx || null, moeda, original, video,
+        // 🙋 v0.192: o total em reais também como número (centavos) — os Pedidos
+        // contam as partidas por ele, sem reler o texto «R$ 7,50»
+        centavos: Math.round(reais * 100),
         audioDuracao: Number(d.AudioDuration) || null,
         sobDemanda: Number(d.PlayOnDemand) === 1, forcado: d.ForceToPlay === true, mostrarAlerta: d.showAlert !== false,
       },

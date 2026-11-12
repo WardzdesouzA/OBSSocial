@@ -417,14 +417,16 @@ class TwitchConnector {
     // 🎁 v0.178: resgate de pontos do canal. A recompensa própria do canal
     // chega com custom-reward-id; a «Destacar minha mensagem» (recompensa
     // padrão da Twitch) chega com msg-id=highlighted-message.
+    // 🙋 v0.192: o resgate leva o id da recompensa (o título muda quando o
+    // streamer renomeia; o id, não) — os Pedidos aceitam a recompensa por ele
     let resgate = null;
     const recompensaId = tags['custom-reward-id'];
     if (recompensaId) {
       const r = this.recompensas.get(recompensaId) || null;
       if (!r) this.recarregarRecompensas();
-      resgate = { titulo: r ? r.titulo : 'Resgate', custo: r ? r.custo : null, cor: r ? r.cor : null, entrada: true };
+      resgate = { id: String(recompensaId).slice(0, 100), titulo: r ? r.titulo : 'Resgate', custo: r ? r.custo : null, cor: r ? r.cor : null, entrada: true };
     } else if (tags['msg-id'] === 'highlighted-message') {
-      resgate = { titulo: 'Destacar mensagem', custo: null, cor: '#755ebc', entrada: true };
+      resgate = { id: 'highlighted-message', titulo: 'Destacar mensagem', custo: null, cor: '#755ebc', entrada: true };
     }
     if (resgate) badges.push('resgate ' + resgate.titulo);
     // ATENÇÃO: aqui existia "do histórico, só o que for mais novo que a última
