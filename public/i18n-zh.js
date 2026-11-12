@@ -100,6 +100,7 @@ window.OBS_I18N_DICTS.zh = {
     "Também dá para tirar por tipo: em 🖼️ Imagens, desligue um tipo e só as imagens dele saem (por exemplo, os retratos ficam e os ícones de perk saem).": "也可以按类型去掉：在 🖼️ 图片 中关闭某个类型，就只去掉它的图片（例如头像保留，技能图标去掉）。",
     "🎁 No grátis, você também escolhe: só a conversa direta no Telegram e no WhatsApp, mod, VIP e o dono do canal junto com os inscritos, e as recompensas do seu canal da Twitch numa lista.": "🎁 免费点播还可以选择：Telegram 和 WhatsApp 只接受私聊；除订阅者外，管理员、VIP 和频道主也能点播；从列表中选择你 Twitch 频道的奖励。",
     "🛡️ O pedido de quem teve a mensagem apagada pela moderação (ou foi banido) fica na fila marcado, vai para ⚠ Revisar ou é recusado, como você escolher; o pago nunca é recusado sozinho.": "🛡️ 消息被管理删除（或被封禁）的人的点播，按你的选择：带标记留在队列中、进入 ⚠ 待审核，或被拒绝；付费的永远不会被自动拒绝。",
+    "👆 Depois de um toque no 🏆, 💀, ✔, ⏩ ou ⏭, o botão fica apagado por um instante antes de aceitar outro, e o botão que mudou de lugar porque a lista andou sozinha também espera: um toque a mais não vale duas vezes nem cai no pedido de outra pessoa. Você escolhe esse tempo em «Espera entre toques», no 📋 Fila e partidas: de «Sem espera» a «2 s»; o padrão é 1 s.": "👆 点按 🏆、💀、✔、⏩ 或 ⏭ 之后，该按钮会变淡片刻，之后才接受下一次点按；因列表自己移动而换了位置的按钮也会等待：多点一下不会算两次，也不会落到别人的点播上。这个时间在 📋 队列与局数 的「点按间隔」里选择：从「不等待」到「2 秒」，默认 1 秒。",
     "apelidos": "别名",
     "seus apelidos": "你的别名",
     "nomes antigos": "旧名称",

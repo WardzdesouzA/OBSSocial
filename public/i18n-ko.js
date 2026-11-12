@@ -100,6 +100,7 @@ window.OBS_I18N_DICTS.ko = {
     "Também dá para tirar por tipo: em 🖼️ Imagens, desligue um tipo e só as imagens dele saem (por exemplo, os retratos ficam e os ícones de perk saem).": "유형별로 뺄 수도 있어요. 🖼️ 이미지에서 유형을 끄면 그 이미지만 빠져요(예: 초상화는 남고 퍽 아이콘은 빠져요).",
     "🎁 No grátis, você também escolhe: só a conversa direta no Telegram e no WhatsApp, mod, VIP e o dono do canal junto com os inscritos, e as recompensas do seu canal da Twitch numa lista.": "🎁 무료 신청에서는 이것도 고를 수 있어요. Telegram과 WhatsApp은 1:1 대화만, 구독자와 함께 모더레이터·VIP·채널 주인도, 그리고 Twitch 채널 보상을 목록에서.",
     "🛡️ O pedido de quem teve a mensagem apagada pela moderação (ou foi banido) fica na fila marcado, vai para ⚠ Revisar ou é recusado, como você escolher; o pago nunca é recusado sozinho.": "🛡️ 모더레이션이 메시지를 지운(또는 밴된) 사람의 신청은 고른 대로 표시된 채 대기열에 남거나, ⚠ 검토로 가거나, 거절돼요. 유료 신청은 절대 저절로 거절되지 않아요.",
+    "👆 Depois de um toque no 🏆, 💀, ✔, ⏩ ou ⏭, o botão fica apagado por um instante antes de aceitar outro, e o botão que mudou de lugar porque a lista andou sozinha também espera: um toque a mais não vale duas vezes nem cai no pedido de outra pessoa. Você escolhe esse tempo em «Espera entre toques», no 📋 Fila e partidas: de «Sem espera» a «2 s»; o padrão é 1 s.": "👆 🏆, 💀, ✔, ⏩, ⏭를 누르면 그 버튼은 다음 누름을 받기 전에 잠깐 흐릿해지고, 목록이 저절로 움직여서 자리가 바뀐 버튼도 기다려요. 그래서 한 번 더 누른 것이 두 번으로 치거나 다른 사람의 신청에 떨어지지 않아요. 이 시간은 📋 대기열과 판의 «누름 사이 대기 시간»에서 골라요. «대기 없음»부터 «2초»까지 있고, 기본은 1초예요.",
     "apelidos": "별칭",
     "seus apelidos": "내 별칭",
     "nomes antigos": "옛 이름",
