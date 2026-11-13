@@ -94,6 +94,9 @@ const CONFIG_PADRAO = congelar({
     soConversaDireta: false, cargosTambem: true,
   },
   entrarDireto: 'alta', itemEmDuvida: 'fila', pular: 'fica', seguidas: true, chamarProximoAoTerminar: false,
+  // 👆 v0.192.1: a «Espera entre toques» do painel (ms): depois do toque, o botão fica apagado
+  // por isto, e o que mudou de lugar com a lista também (só os valores de ESPERAS_TOQUE_MS)
+  esperaToqueMs: 1000,
   testeViraPedido: false, robosPodem: false, sinalizadaRevisar: true,
   // o pedido cuja mensagem a moderação apagou (ou de quem foi banido): fica na fila
   // marcado, vai para ⚠ Revisar ou é recusado (o pago nunca: vai para ⚠ Revisar)
@@ -116,6 +119,10 @@ const temValor = (v) => v !== undefined && v !== null && v !== '';
 
 function simNao(v, padrao) { return typeof v === 'boolean' ? v : padrao; }
 function umDe(v, lista, padrao) { return typeof v === 'string' && lista.includes(v) ? v : padrao; }
+// 👆 as escolhas da «Espera entre toques» (sem espera, 0,5 s, 1 s, 1,5 s, 2 s): um número
+// da lista fechada; o resto (texto, 700, NaN) fica com o padrão, como as outras listas
+const ESPERAS_TOQUE_MS = Object.freeze([0, 500, 1000, 1500, 2000]);
+function umNumeroDe(v, lista, padrao) { return typeof v === 'number' && lista.includes(v) ? v : padrao; }
 // número (ou texto de número, como chega pela URL do controle) dentro da faixa
 function inteiro(v, min, max, padrao) {
   let n = NaN;
@@ -211,6 +218,7 @@ function sanitizarConfiguracao(bruto, padrao) {
     pular: umDe(proprio(b, 'pular'), ['fica', 'sai'], p.pular),
     seguidas: simNao(proprio(b, 'seguidas'), p.seguidas),
     chamarProximoAoTerminar: simNao(proprio(b, 'chamarProximoAoTerminar'), p.chamarProximoAoTerminar),
+    esperaToqueMs: umNumeroDe(proprio(b, 'esperaToqueMs'), ESPERAS_TOQUE_MS, p.esperaToqueMs),
     testeViraPedido: simNao(proprio(b, 'testeViraPedido'), p.testeViraPedido),
     robosPodem: simNao(proprio(b, 'robosPodem'), p.robosPodem),
     sinalizadaRevisar: simNao(proprio(b, 'sinalizadaRevisar'), p.sinalizadaRevisar),

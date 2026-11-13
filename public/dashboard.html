@@ -497,10 +497,25 @@
   }
 
   /* ---------- Conteúdo principal ---------- */
-  main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: var(--faixas-altura, 0px); }
+  /* 🧱 v0.192.1: as faixas do programa (versão nova, componentes com versão nova, modo
+     espectador) entram POR BAIXO, presas ao pé da janela, e é a lista que encolhe a altura
+     delas (--faixas-altura): o cabeçalho, as ferramentas, as abas e os cartões não saem do
+     lugar quando uma faixa chega ou sai. Ficam por baixo de tudo o que a pessoa abre (cartões
+     das ferramentas, menus, gaveta, janelas) e dos recados do canto. Só o rodapé das colunas
+     (a paginação) mora no pé e anda com elas: ele e a faixa que acabou de entrar ou de sair
+     ficam apagados pela espera curta — o toque que já vinha a caminho não aperta nada */
+  #faixasDoPainel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; }
+  #faixasDoPainel > div { position: relative; text-align: center; padding: 8px 40px 8px 14px; font-weight: 600; font-size: 14px; }
+  #faixasDoPainel.em-espera { cursor: progress; }
+  #faixasDoPainel.em-espera > div { pointer-events: none; opacity: 0.6; }
+  body.faixas-em-espera .live-col-foot { pointer-events: none; opacity: 0.45; }
+  /* 🧱 v0.192.1: a altura mínima já conta o ✖ (38 px + 24 de margem + 1 da borda): o ✖
+     aparecer ou sumir — outra tela, o Stream Deck ou o «tempo de tela» acabando — não
+     move mais o painel 1 px */
   .featured-bar {
     padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 12px; min-height: 62px;
+    display: flex; align-items: center; gap: 12px; min-height: 63px;
   }
   .featured-bar .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
   .featured-bar .empty { color: var(--muted); font-size: 13px; }
@@ -668,6 +683,7 @@
   body.modoSeguranca .chat-item .avatar,
   /* 🙋 v0.192: no cartão de pedido, quem pediu, a frase e o trecho em dúvida */
   body.modoSeguranca .pedido-card .author,
+  body.modoSeguranca .ped-de-quem .author, /* 🧾 v0.192.1: e na janela que diz de quem é o pedido */
   body.modoSeguranca .pedido-card .msg-text,
   body.modoSeguranca .pedido-card .ped-trecho { filter: blur(var(--seg-borrao, 16px)); }
   #segurancaBtn.ativo { background: var(--accent); color: #fff; }
@@ -1025,7 +1041,10 @@
   .pedidos-barra .check { margin: 0; white-space: nowrap; }
   .pedidos-barra select.ped-jogo { width: auto; max-width: 180px; min-width: 0; padding: 4px 6px; font-size: 12px; }
   .pedidos-barra button { padding: 5px 10px; font-size: 12px; }
-  .pedidos-barra .ped-contagem { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  /* 🧱 v0.192.1: a contagem tem largura fixa (algarismos da mesma largura e lugar para 3):
+     o pedido que chega e leva «📋 9» a «📋 10» não quebra mais a barra em outra linha nem
+     empurra os cartões de baixo (o clique a caminho do «✔ Jogada» caía no «🔓 Liberar») */
+  .pedidos-barra .ped-contagem { font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: calc(1.75em + 3ch); }
   .live-col .pedidos-barra { padding: 6px 8px; border-bottom: 1px solid var(--border); flex: none; }
   /* a largura de fábrica vem daqui, não do style: largura no style é «esticada pela
      pessoa» (.geo-esticada) e soltaria o teto de 92% da tela no celular */
@@ -1055,11 +1074,12 @@
   .pedido-card.agora { border-color: var(--green); border-left-color: var(--green); background: color-mix(in srgb, var(--green) 10%, var(--panel2)); }
   .pedido-card.pulado { opacity: 0.6; }
   .pedido-card.destaque { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .pedido-card .ped-topo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; min-width: 0; }
-  .pedido-card .ped-num { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .pedido-card .author { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-  .pedido-card .sc-amount { font-weight: 700; color: var(--yellow); white-space: nowrap; }
-  .pedido-card .ped-resgate { color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+  /* (o topo do cartão é o mesmo na janela que diz de quem é o pedido: .ped-de-quem) */
+  .pedido-card .ped-topo, .ped-de-quem .ped-topo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; min-width: 0; }
+  .pedido-card .ped-num, .ped-de-quem .ped-num { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pedido-card .author, .ped-de-quem .author { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+  .pedido-card .sc-amount, .ped-de-quem .sc-amount { font-weight: 700; color: var(--yellow); white-space: nowrap; }
+  .pedido-card .ped-resgate, .ped-de-quem .ped-resgate { color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
   .pedido-card .msg-text {
     font-size: 13px; line-height: 1.35; color: var(--coment-texto, inherit); white-space: pre-wrap; overflow-wrap: anywhere;
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; cursor: pointer;
@@ -1091,7 +1111,12 @@
   .ped-dialogo-campo { margin-top: 10px; }
   .ped-dialogo-campo > label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
   .ped-dialogo-dica { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
-  .pedido-card .ped-anonimo { font-weight: 600; font-style: italic; }
+  .pedido-card .ped-anonimo, .ped-de-quem .ped-anonimo { font-weight: 600; font-style: italic; }
+  /* 🧾 v0.192.1: de quem é o pedido, na janela que age sobre ele (o topo do cartão) */
+  .ped-de-quem { min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+  .ped-de-quem:not(:last-child) { margin-bottom: 10px; }
+  .ped-de-quem-rotulo { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .ped-de-quem .ped-topo { font-size: 13px; }
 </style>
 </head>
 <body>
@@ -2255,15 +2280,80 @@ const BOTOES_POR_SELETOR = {
 let papelDaConexao = null;
 let ultimaAcaoDaPessoa = 0; // último clique/tecla: separa o «negado» de um clique do que a página manda sozinha
 for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { ultimaAcaoDaPessoa = Date.now(); }, true);
+// 🧱 v0.192.1: as faixas do programa — «versão nova», «componentes com versão nova» e «modo
+// espectador» — entravam no TOPO, sozinhas (a busca automática respondeu; a conexão voltou
+// com outro papel), e empurravam o painel inteiro a altura delas: o clique que a pessoa já
+// vinha dando caía no botão que tinha ido parar embaixo do ponteiro (o «✔ Jogada» virava o
+// «🔓 Liberar» do cartão, e o nome segurado ia para a tela). Segurar o clique por um
+// instante não resolvia quem deixa o ponteiro parado no botão e olha o jogo. Agora elas
+// entram POR BAIXO, presas ao pé da janela, e é a lista que encolhe a altura delas: o
+// cabeçalho, as ferramentas, as abas e os cartões não saem do lugar — nem quando a faixa
+// chega, nem quando ela sai. Só anda o que mora no pé — o rodapé das colunas (a paginação):
+// ele e a própria faixa ficam apagados pela espera curta (a mesma do botão que mudou de
+// lugar), e o toque que vinha a caminho não aperta o link, o ✖ nem a paginação. O lugar de
+// onde a faixa (e o rodapé) saiu também espera: o 2º clique do clique duplo no ✖ não cai
+// no que apareceu ali.
+const FAIXAS_ESPERA_MS = 1000; // a espera curta padrão do botão dos pedidos que mudou de lugar (PEDIDOS_TOQUE_MS); esta é do painel inteiro e não segue a «Espera entre toques» dos Pedidos
+let faixasEspera = null; // a espera curta que está valendo (a de quem mexeu por último)
+function alturaDasFaixasDoPainel() {
+  const caixa = document.getElementById('faixasDoPainel');
+  let altura = 0;
+  if (caixa) for (const faixa of caixa.children) altura += faixa.offsetHeight;
+  document.body.style.setProperty('--faixas-altura', altura + 'px');
+}
+function segurarPeDoPainel(caixa) {
+  const vez = (faixasEspera = {});
+  caixa.classList.add('em-espera');
+  document.body.classList.add('faixas-em-espera');
+  setTimeout(() => {
+    if (faixasEspera !== vez) return; // (outra faixa entrou ou saiu no meio: vale a espera dela)
+    faixasEspera = null;
+    caixa.classList.remove('em-espera');
+    caixa.style.minHeight = '';
+    document.body.classList.remove('faixas-em-espera');
+  }, FAIXAS_ESPERA_MS);
+}
+function porFaixaNoPainel(faixa) {
+  let caixa = document.getElementById('faixasDoPainel');
+  if (!caixa) {
+    caixa = document.createElement('div');
+    caixa.id = 'faixasDoPainel';
+    document.body.appendChild(caixa);
+    // (a altura muda com a largura da janela — a frase quebra em duas linhas — e com o idioma)
+    if (typeof ResizeObserver === 'function') new ResizeObserver(alturaDasFaixasDoPainel).observe(caixa);
+  }
+  caixa.appendChild(faixa);
+  alturaDasFaixasDoPainel();
+  segurarPeDoPainel(caixa);
+}
+function tirarFaixaDoPainel(faixa) {
+  const caixa = document.getElementById('faixasDoPainel');
+  if (!faixa || !caixa || faixa.parentNode !== caixa) return;
+  // (a caixa guarda o lugar pela espera curta, vazia e transparente, do alto do rodapé das
+  // colunas até o pé da janela: a lista já cresceu por baixo dela, e o toque repetido no
+  // lugar do ✖ — ou o que mirava a paginação, que desceu — para nela. A medida é a da
+  // janela; a conta desfaz o 🔍 tamanho da interface)
+  const r = caixa.getBoundingClientRect();
+  let topo = r.top;
+  for (const rodape of document.querySelectorAll('.live-col-foot')) {
+    const rr = rodape.getBoundingClientRect();
+    if (rr.height > 0) topo = Math.min(topo, rr.top);
+  }
+  const escala = caixa.offsetHeight > 0 ? r.height / caixa.offsetHeight : 1;
+  caixa.style.minHeight = Math.ceil((r.bottom - topo) / (escala || 1)) + 'px';
+  faixa.remove();
+  alturaDasFaixasDoPainel();
+  segurarPeDoPainel(caixa);
+}
 function aplicarModoEspectador(papel, podeRede) {
   const espectador = papel === 'viewer';
-  if (!espectador) document.getElementById('viewerBanner')?.remove();
+  if (!espectador) tirarFaixaDoPainel(document.getElementById('viewerBanner'));
   else if (!document.getElementById('viewerBanner')) {
     const banner = document.createElement('div');
     banner.id = 'viewerBanner';
-    banner.style.cssText = 'position:sticky;top:0;z-index:9999;background:#b68a24;color:#141414;text-align:center;padding:8px 14px;font-weight:600;font-size:14px';
+    banner.style.cssText = 'background:#b68a24;color:#141414;padding:8px 14px';
     banner.textContent = '👀 Modo espectador — você pode assistir ao painel e usar o que o streamer liberou nas configurações. O resto só funciona para quem tem a senha (ou no computador do streamer).';
-    document.body.prepend(banner);
+    porFaixaNoPainel(banner);
   }
   const MOTIVO = 'Não liberado pelo streamer para quem entra pela rede';
   for (const [seletor, ids] of Object.entries(BOTOES_POR_SELETOR)) {
@@ -2289,10 +2379,13 @@ function aplicarModoEspectador(papel, podeRede) {
   }
 }
 // 👀 v0.179: o aviso do modo espectador, sem empilhar (um a cada 3 s)
-function avisarEspectador() {
+// 🪟 v0.192.1: `sozinha` quando quem abre é a RESPOSTA do servidor (o «negado»), e não o clique da
+// pessoa: ela já pode estar digitando em outro campo, e o aviso abre «sozinho» (render.js, obsDialog)
+// — o Enter ou o espaço que vinham de fora não o fecham antes de ela ler
+function avisarEspectador(sozinha) {
   if (Date.now() - (window.__negadoEm || 0) < 3000) return;
   window.__negadoEm = Date.now();
-  obsAviso('O streamer não liberou essa função para quem entra pela rede. Ela só funciona com a senha ou no computador do streamer (Configurações → 🔗 URLs para o OBS).', 'Modo espectador', '👀');
+  obsAviso('O streamer não liberou essa função para quem entra pela rede. Ela só funciona com a senha ou no computador do streamer (Configurações → 🔗 URLs para o OBS).', 'Modo espectador', '👀', { sozinha: sozinha === true });
 }
 // Clique/toque num botão apagado: não abre popover nem manda operação — explica o motivo
 document.addEventListener('click', (e) => {
@@ -2612,7 +2705,7 @@ const hub = connectHub((event) => {
       // só quando veio de um clique/tecla da pessoa (o que a página manda sozinha,
       // como o fim de uma mídia, não vira janela) e sem empilhar avisos
       if (Date.now() - ultimaAcaoDaPessoa > 2500) break;
-      avisarEspectador();
+      avisarEspectador(true);
       break;
     }
     case 'settings':
@@ -2791,12 +2884,15 @@ const hub = connectHub((event) => {
 });
 
 
-// Faixa verde no topo: a busca automática achou uma versão nova
+// Faixa verde: a busca automática achou uma versão nova
+// (🧱 v0.192.1: entra por baixo, sem empurrar o painel — porFaixaNoPainel. O ✖ ocupa a altura
+// da faixa, de cima a baixo: com top:6px a caixa dele, da altura da faixa, passava 6 px do pé
+// da janela e perdia a parte de baixo da área de clique)
 function showUpdateBanner(latest) {
   if (document.getElementById('updateBanner')) return;
   const barra = document.createElement('div');
   barra.id = 'updateBanner';
-  barra.style.cssText = 'position:sticky;top:0;z-index:9999;background:#2f7d4f;color:#fff;text-align:center;padding:8px 40px 8px 14px;font-weight:600;font-size:14px';
+  barra.style.cssText = 'background:#2f7d4f;color:#fff';
   const link = document.createElement('a');
   link.href = '/config#sec-sobre';
   link.target = '_blank';
@@ -2806,10 +2902,10 @@ function showUpdateBanner(latest) {
   const fechar = document.createElement('button');
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';
-  fechar.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
-  fechar.onclick = () => barra.remove();
+  fechar.style.cssText = 'position:absolute;right:8px;top:0;bottom:0;padding-top:0;padding-bottom:0;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
+  fechar.onclick = () => tirarFaixaDoPainel(barra);
   barra.appendChild(fechar);
-  document.body.prepend(barra);
+  porFaixaNoPainel(barra);
 }
 
 // 🧩 v0.185: faixa dos componentes com versão nova (Node.js, yt-dlp, biblioteca
@@ -2818,7 +2914,7 @@ function showComponentesBanner(avisos) {
   if (document.getElementById('componentesBanner')) return;
   const barra = document.createElement('div');
   barra.id = 'componentesBanner';
-  barra.style.cssText = 'position:sticky;top:0;z-index:9998;background:#8a5a00;color:#fff;text-align:center;padding:8px 40px 8px 14px;font-weight:600;font-size:14px';
+  barra.style.cssText = 'background:#8a5a00;color:#fff';
   const rotulo = document.createElement('span');
   rotulo.textContent = '🧩 Componentes com versão nova:';
   barra.append(rotulo, ' ');
@@ -2839,10 +2935,10 @@ function showComponentesBanner(avisos) {
   const fechar = document.createElement('button');
   fechar.textContent = '✖';
   fechar.title = 'Dispensar este aviso';
-  fechar.style.cssText = 'position:absolute;right:8px;top:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
-  fechar.onclick = () => barra.remove();
+  fechar.style.cssText = 'position:absolute;right:8px;top:0;bottom:0;padding-top:0;padding-bottom:0;background:none;border:none;color:#fff;cursor:pointer;font-size:14px';
+  fechar.onclick = () => tirarFaixaDoPainel(barra);
   barra.appendChild(fechar);
-  document.body.prepend(barra);
+  porFaixaNoPainel(barra);
 }
 
 const EYE_OPEN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -7897,12 +7993,12 @@ async function clipCopiarEntrada(item, btn) {
     try {
       const r = await fetch('/clip-texto?id=' + encodeURIComponent(item.id));
       if (!r.ok) {
-        obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋');
+        obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋', { sozinha: true });
         return;
       }
       texto = await r.text();
     } catch {
-      obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋');
+      obsAviso('Não consegui pegar o texto inteiro desta entrada.', 'Área de transferência', '📋', { sozinha: true });
       return;
     }
   }
@@ -8031,7 +8127,7 @@ document.getElementById('clipEnviarBtn').onclick = () => {
   clipEcoTimer = setTimeout(() => {
     if (clipEsperandoEco === null) return;
     clipEsperandoEco = null;
-    obsAviso('O texto não entrou no histórico — o streamer pode ter fechado a área de transferência para a rede.', 'Área de transferência', '📋');
+    obsAviso('O texto não entrou no histórico — o streamer pode ter fechado a área de transferência para a rede.', 'Área de transferência', '📋', { sozinha: true });
   }, 4000);
 };
 clipTextEl.addEventListener('keydown', (e) => {
@@ -8053,10 +8149,10 @@ document.getElementById('clipArquivoInput').onchange = async () => {
   try {
     const r = await fetch('/clip-arquivo?name=' + encodeURIComponent(arq.name), { method: 'POST', body: arq });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) obsAviso(j.error || 'Não consegui mandar o arquivo.', 'Área de transferência', '📋');
+    if (!r.ok || !j.ok) obsAviso(j.error || 'Não consegui mandar o arquivo.', 'Área de transferência', '📋', { sozinha: true });
     else { clipPagina = 0; renderClipboard(); }
   } catch {
-    obsAviso('Não consegui mandar o arquivo.', 'Área de transferência', '📋');
+    obsAviso('Não consegui mandar o arquivo.', 'Área de transferência', '📋', { sozinha: true });
   }
   clipEnviandoArquivos = Math.max(0, clipEnviandoArquivos - 1);
   if (!clipEnviandoArquivos) aviso.style.display = 'none';
@@ -8306,7 +8402,15 @@ const RE_PEDIDO_ID = /^p\d{1,12}$/;
 const RE_PEDIDO_IMG = /^\/pedidos-img\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9-]{1,120}\.(?:png|jpg|webp|gif)(?:\?v=[a-z0-9]{1,24})?$/;
 const PEDIDOS_LIMITE = 100;    // cartões por seção de cada vez (o resto, em «Mostrar mais»)
 const PEDIDOS_TRAVA_MS = 1500; // o botão tocado espera o eco do servidor (ou isto)...
-const PEDIDOS_TOQUE_MS = 1000; // ...e, depois do eco, ainda isto: o toque duplo não é outro toque
+const PEDIDOS_TOQUE_MS = 1000; // ...e, depois do eco, ainda isto (o padrão): o toque duplo não é outro toque
+// 👆 v0.192.1: essa espera é a «Espera entre toques» do streamer (settings.pedidos.esperaToqueMs,
+// em 🙋 Pedidos → 📋 Fila e partidas), lida a cada toque: a troca vale na hora, em todas as telas.
+// Só os valores da lista; o resto (ou nada gravado) é o padrão
+const PEDIDOS_ESPERAS_MS = [0, 500, 1000, 1500, 2000];
+function esperaToquePedidos() {
+  const v = settings && settings.pedidos ? settings.pedidos.esperaToqueMs : undefined;
+  return PEDIDOS_ESPERAS_MS.includes(v) ? v : PEDIDOS_TOQUE_MS;
+}
 const PEDIDOS_SECOES = [
   { id: 'agora', titulo: '▶ Agora', vazio: 'Ninguém jogando agora.' },
   { id: 'fila', titulo: '📋 Fila', vazio: 'A fila está vazia.' },
@@ -8449,15 +8553,24 @@ function travarPedidos(chave, op) {
 // milissegundos: só com a espera do eco, o 2º clique de um clique duplo (100 a 300 ms
 // depois) já achava o botão solto e o cartão com o «faltavam» novo — e baixava outra
 // partida de quem pagou. Por isso o eco não solta o botão na hora: ele ainda espera
-// PEDIDOS_TOQUE_MS, apagado (a trava fica no mapa, pela chave, e sobrevive à repintura
-// do cartão); depois disso o toque seguinte vale como sempre. A resposta de erro não
-// mexe nesta espera (op null), e ela só acaba pelo relógio dela.
+// a «Espera entre toques» (esperaToquePedidos), apagado (a trava fica no mapa, pela chave, e
+// sobrevive à repintura do cartão); depois disso o toque seguinte vale como sempre. A
+// resposta de erro não mexe nesta espera (op null), e ela só acaba pelo relógio dela.
+// ⏱️ «Sem espera» (0): nada fica apagado depois do eco — a espera do eco que chegou, e a
+// curta de antes, acabam aqui; o toque desta tela que ainda espera o eco dele continua
+// esperando. Ficam o clique duplo (cliqueRepetidoPedidos) e a tecla segurada (abaixo).
 function segurarPedidos(chave) {
+  const ms = esperaToquePedidos();
+  if (ms <= 0) {
+    const antes = pedidosTravas.get(chave);
+    if (antes && (antes.op === null || antes.eco)) pedidosTravas.delete(chave);
+    return;
+  }
   const t = { op: null, ate: Infinity, eco: false };
   pedidosTravas.set(chave, t);
   setTimeout(() => {
     if (pedidosTravas.get(chave) === t) { pedidosTravas.delete(chave); aplicarTravasPedidos(); }
-  }, PEDIDOS_TOQUE_MS);
+  }, ms);
 }
 // ⌨️ A tecla segurada também não é outro toque: o Enter que fica repetindo com o foco num
 // botão dos pedidos não vira clique de novo (com o eco chegando entre as repetições, cada
@@ -8477,7 +8590,14 @@ const botaoParadoPedidos = (b) => b.disabled || b.getAttribute('aria-disabled') 
 // mesmo botão, ainda apagado. Quem tocou cedo demais, viu o botão acender e tocou de novo
 // tinha o toque recusado (menos de meio segundo depois do anterior, o navegador o conta
 // como repetido) e o botão apagava por mais um segundo — num ritmo constante de cliques,
-// só o primeiro valia. Quando o botão acende, o toque vale.
+// só o primeiro valia. Quando o botão acende, o toque vale. (👆 v0.192.1: também quando o
+// clique anterior foi o repetido que não contou e APAGOU este botão — mostrarToqueCedoPedidos;
+// sem isso, com o clique duplo do sistema mais lento que a espera, cada clique dado quando ele
+// acendia era recusado e o apagava de novo, em laço.)
+// ⏱️ Em «Sem espera» (0) não há essa exceção: o botão tocado acende assim que o eco chega, e o
+// 3º clique de um clique TRIPLO, com o eco chegando entre o 2º e o 3º (tela pela rede, PC
+// carregado), achava o botão aceso logo depois de um clique que caiu nele apagado — e baixava
+// outra partida. Ali o clique repetido nunca é outro toque.
 let pedidosCliqueDeAntes = null; // o que o clique anterior achou: o botão (trava|ação) e se ele estava apagado
 let pedidosCliqueDeAgora = null;
 document.addEventListener('click', (e) => {
@@ -8486,7 +8606,7 @@ document.addEventListener('click', (e) => {
   pedidosCliqueDeAgora = b ? { botao: `${b.dataset.trava}|${b.dataset.acao}`, parado: botaoParadoPedidos(b) } : null;
 }, true);
 const cliqueRepetidoPedidos = (e, b) => !!e && e.detail > 1
-  && !(!!b && !!pedidosCliqueDeAntes && pedidosCliqueDeAntes.parado && pedidosCliqueDeAntes.botao === `${b.dataset.trava}|${b.dataset.acao}`);
+  && !(esperaToquePedidos() > 0 && !!b && !!pedidosCliqueDeAntes && pedidosCliqueDeAntes.parado && pedidosCliqueDeAntes.botao === `${b.dataset.trava}|${b.dataset.acao}`);
 // 👀 ...e quem tocou cedo demais vê que o toque não contou: o botão que estava solto
 // embaixo do ponteiro (o da pessoa seguinte, que subiu para o lugar) fica apagado pela
 // espera curta, como o botão tocado. Sem isto ele ficava aceso e não respondia enquanto
@@ -8496,6 +8616,9 @@ function mostrarToqueCedoPedidos(b) {
   if (!b.dataset.trava) return;
   segurarPedidos(b.dataset.trava);
   aplicarTravasPedidos();
+  // (este clique, que não contou, ficou neste botão apagado: o seguinte, dado quando ele acender, vale)
+  const agora = pedidosCliqueDeAgora;
+  if (agora && agora.botao === `${b.dataset.trava}|${b.dataset.acao}` && botaoParadoPedidos(b)) agora.parado = true;
 }
 function esperarEcoPedidos(b, esperando) {
   if (esperando) b.setAttribute('aria-disabled', 'true');
@@ -9029,16 +9152,12 @@ function abrirMenuDoPedido(e, card) {
   }
   posicionarCtxMenu(e);
 }
-function preencherCartaoPedido(card, p, secao, ctx, assin) {
-  card.__assin = assin;
-  if (!card.__menu) { card.__menu = true; card.addEventListener('contextmenu', (e) => abrirMenuDoPedido(e, card)); }
-  const id = String(p.id).slice(0, 40);
-  card.className = 'pedido-card' + (secao === 'agora' ? ' agora' : '') + (p.estado === 'pulado' ? ' pulado' : '');
-  card.dataset.pedido = id;
-  card.dataset.secao = secao;
-  card.style.setProperty('--platform-color', platformColor(p.platform));
-  const partes = [];
-  // nº e hora (sem letras: o tradutor não mexe), a rede, quem pediu, o resgate e o valor
+// o topo do cartão: nº e hora (sem letras: o tradutor não mexe), a rede, quem pediu, o
+// resgate e o valor — o que ESTA tela recebeu do servidor (quem só assiste pela rede já
+// recebe o primeiro nome do Pix do banco, o «Anônimo» do nome segurado e nenhum valor,
+// a não ser que o streamer deixe). É o mesmo desenho no cartão e na janela que diz de
+// quem é o pedido (linhaDeQuemDoPedido): a janela nunca mostra mais do que o cartão
+function topoDoPedido(p) {
   const topo = pedEl('div', 'ped-topo');
   const hora = horaDoPedido(p.hora);
   topo.append(pedEl('span', 'ped-num', `#${pedInteiro(p.n)}${hora ? ' · ' + hora : ''}`));
@@ -9061,7 +9180,29 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
     const v = p.valor;
     topo.append(pedEl('span', 'sc-amount', v.aproximado && v.original ? `≈ ${v.texto} (${v.original})` : v.texto));
   }
-  partes.push(topo);
+  return topo;
+}
+// 🧾 v0.192.1: a janela que age sobre o pedido de UMA pessoa (✖ Recusar, «Marcar para
+// devolver», «Era só apoio», ✔ Devolvido, ✏ Corrigir, ＋ Montar) diz de quem ele é: o
+// rótulo e o topo do cartão, com os mesmos nós — o nome em .author (o tradutor não mexe e
+// o 🛡️ borra), o rótulo do programa («Anônimo», «Apoiador Pix») que traduz, o valor só
+// onde a tela vê valores. Com dois pagamentos na lista, a pessoa confere antes de confirmar
+function linhaDeQuemDoPedido(p, rotulo) {
+  const linha = pedEl('div', 'ped-de-quem');
+  linha.append(pedEl('div', 'ped-de-quem-rotulo', rotulo), topoDoPedido(p));
+  return linha;
+}
+const confirmarNoPedido = (p, rotulo, texto, opcoes) => obsConfirmar(texto, { ...opcoes, montarExtra: (box) => box.append(linhaDeQuemDoPedido(p, rotulo)) });
+function preencherCartaoPedido(card, p, secao, ctx, assin) {
+  card.__assin = assin;
+  if (!card.__menu) { card.__menu = true; card.addEventListener('contextmenu', (e) => abrirMenuDoPedido(e, card)); }
+  const id = String(p.id).slice(0, 40);
+  card.className = 'pedido-card' + (secao === 'agora' ? ' agora' : '') + (p.estado === 'pulado' ? ' pulado' : '');
+  card.dataset.pedido = id;
+  card.dataset.secao = secao;
+  card.style.setProperty('--platform-color', platformColor(p.platform));
+  const partes = [];
+  partes.push(topoDoPedido(p));
   // a frase (curta: 3 linhas; o clique, o Enter ou o espaço mostram inteira — o Tab
   // chega nela, como num botão)
   if (p.texto) {
@@ -9170,12 +9311,12 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
     acoes.append(botaoDoPedido(ctx, '＋ ', 'Montar o pedido', 'Escolher os itens e mandar para a fila', 'montar', null, () => dialogoItensPedido(p, 'confirmar')));
     if (p.pago === true) {
       acoes.append(botaoDoPedido(ctx, '', 'Marcar para devolver', '', 'devolver', `recusar:${id}`, async () => {
-        if (await obsConfirmar('Marcar este pagamento para devolver? O pedido sai da lista e vai para «a devolver».', { icone: '💸', ok: 'Marcar para devolver' })) {
+        if (await confirmarNoPedido(p, 'Quem pagou', 'Marcar este pagamento para devolver? O pedido sai da lista e vai para «a devolver».', { icone: '💸', ok: 'Marcar para devolver' })) {
           enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
         }
       }));
       acoes.append(botaoDoPedido(ctx, '', 'Era só apoio', '', 'ignorar', `ignorar:${id}`, async () => {
-        if (await obsConfirmar('Era só apoio? O pagamento sai da lista sem ir para «a devolver».', { icone: '🙋', ok: 'Era só apoio' })) {
+        if (await confirmarNoPedido(p, 'Quem pagou', 'Era só apoio? O pagamento sai da lista sem ir para «a devolver».', { icone: '🙋', ok: 'Era só apoio' })) {
           enviarPedidos({ type: 'pedidoIgnorar', id }, `ignorar:${id}`);
         }
       }));
@@ -9184,12 +9325,12 @@ function preencherCartaoPedido(card, p, secao, ctx, assin) {
   if (secao === 'agora' || secao === 'fila' || (secao === 'revisar' && p.pago !== true)) {
     acoes.append(botaoDoPedido(ctx, '✖ ', 'Recusar', '', 'recusar', `recusar:${id}`, async () => {
       const texto = p.pago === true ? 'Recusar este pedido? Ele é pago: vai para a lista «a devolver».' : 'Recusar este pedido?';
-      if (await obsConfirmar(texto, { icone: '🙋', nivel: 'perigo', ok: 'Recusar' })) enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
+      if (await confirmarNoPedido(p, 'Quem pediu', texto, { icone: '🙋', nivel: 'perigo', ok: 'Recusar' })) enviarPedidos({ type: 'pedidoRecusar', id }, `recusar:${id}`);
     }));
   }
   if (secao === 'devolver') {
     acoes.append(botaoDoPedido(ctx, '✔ ', 'Devolvido', '', 'devolvido', `devolvido:${id}`, async () => {
-      if (await obsConfirmar('Já devolveu este pagamento? Ele sai da lista «a devolver».', { icone: '💸', ok: 'Devolvido' })) {
+      if (await confirmarNoPedido(p, 'Quem pagou', 'Já devolveu este pagamento? Ele sai da lista «a devolver».', { icone: '💸', ok: 'Devolvido' })) {
         enviarPedidos({ type: 'pedidoDevolvido', id }, `devolvido:${id}`);
       }
     }));
@@ -9223,6 +9364,7 @@ async function dialogoItensPedido(p, modo, sozinha) {
     ok: modo === 'confirmar' ? 'Enviar para a fila' : 'Confirmar',
     sozinha: sozinha === true,
     montarExtra: (box) => {
+      box.append(linhaDeQuemDoPedido(p, 'Quem pediu')); // 🧾 de quem é o pedido, como no cartão
       if (opcoes.length) {
         const lista = pedEl('div', 'ped-dialogo-itens');
         lista.dataset.noI18n = '1';

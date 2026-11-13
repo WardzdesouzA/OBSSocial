@@ -991,6 +991,18 @@ const OBS_DIALOG_CSS = `
 .obs-dialog.critico { border-color: #c62828; box-shadow: 0 18px 60px rgba(198,40,40,0.35); }
 .obs-dialog.critico .obs-dlg-botoes button.obs-dlg-ok { background: #b71c1c; border-color: #b71c1c; }
 .obs-dialog .obs-dlg-botoes button.obs-dlg-ok:disabled { opacity: 0.45; cursor: not-allowed; }
+/* 💡 A janela aberta «sozinha» não confirma com o Enter enquanto a pessoa não mexer nela com o
+   mouse. Quando um Enter é ignorado, o botão de confirmar ganha um contorno por um instante
+   (obsDialog: lembrarConfirmar). O contorno fica PARADO durante o destaque e a animação só pulsa
+   por cima dele: quem pede menos movimento (prefers-reduced-motion, ♿ «Reduzir animações») vê o
+   mesmo contorno, sem a animação. Só a sombra muda: nada sai do lugar */
+.obs-dialog .obs-dlg-botoes button.obs-dlg-ok.obs-dlg-lembrete {
+  box-shadow: 0 0 0 2px var(--panel2, #1a2233), 0 0 0 5px var(--text, #fff);
+  animation: obsDlgLembrete 0.35s ease-in-out 3;
+}
+@keyframes obsDlgLembrete { 50% { box-shadow: 0 0 0 2px var(--panel2, #1a2233), 0 0 0 8px var(--text, #fff); } }
+@media (prefers-reduced-motion: reduce) { .obs-dialog .obs-dlg-botoes button.obs-dlg-ok.obs-dlg-lembrete { animation: none; } }
+body.a11y-sem-animacao .obs-dialog .obs-dlg-botoes button.obs-dlg-ok.obs-dlg-lembrete { animation: none; }
 `;
 
 function obsDialogGarantirCss() {
@@ -1107,6 +1119,18 @@ function obsDialog(opcoes) {
     btnOk.className = 'obs-dlg-ok';
     btnOk.textContent = obsDlgT(o.ok || (o.somenteOk ? 'Entendi' : 'Confirmar'));
     btnOk.onclick = () => { if (!btnOk.disabled) fechar(true); };
+    // 💡 O Enter ignorado na janela aberta «sozinha» (abaixo) deixa um sinal, sem texto: o botão
+    // de confirmar ganha um contorno por um instante (a classe obs-dlg-lembrete, no CSS acima).
+    // Só a aparência muda: o foco fica onde está, nada é confirmado e o Enter seguinte também
+    // não confirma (o atalho continua valendo só depois de a pessoa mexer na janela com o mouse)
+    let lembrete = 0;
+    const lembrarConfirmar = () => {
+      btnOk.classList.remove('obs-dlg-lembrete');
+      void btnOk.offsetWidth; // (a animação recomeça a cada Enter)
+      btnOk.classList.add('obs-dlg-lembrete');
+      clearTimeout(lembrete);
+      lembrete = setTimeout(() => { btnOk.classList.remove('obs-dlg-lembrete'); }, 1200);
+    };
     botoes.appendChild(btnOk);
     caixa.appendChild(botoes);
 
@@ -1133,6 +1157,12 @@ function obsDialog(opcoes) {
       else if (e.key === 'Enter' && e.repeat) e.preventDefault();
       else if (e.key === 'Enter' && (mexeu || !sozinha) && !btnOk.disabled && document.activeElement !== btnCancelar) {
         e.preventDefault(); fechar(true);
+      } else if (e.key === 'Enter' && sozinha && !e.isComposing && !btnOk.disabled
+        && !(document.activeElement && document.activeElement !== caixa && document.activeElement.matches('button, a[href], summary, textarea'))) {
+        // 💡 o Enter que confirmaria uma janela comum e aqui não vale (a pessoa ainda não mexeu
+        // nela com o mouse): o sinal no botão de confirmar. O Enter num botão em foco (o Tab até
+        // ele) aperta o botão, como sempre, e não entra aqui
+        lembrarConfirmar();
       } else if (sozinha && e.key === 'Tab') {
         // 🔁 O Tab não sai da janela aberta «sozinha». O foco dela começa na caixa (em nenhum
         // botão): o Shift+Tab dali ia para o último botão da página que ficou atrás do fundo
@@ -1179,8 +1209,9 @@ function obsDialog(opcoes) {
 }
 
 // Atalhos no espírito do alert()/confirm(), mas com a cara do OBS Social
-const obsAviso = (texto, titulo, icone) =>
-  obsDialog({ titulo: titulo || 'Aviso', texto, icone: icone || 'ℹ️', somenteOk: true });
+// (`opcoes`: o resto do obsDialog — { sozinha: true } no aviso que a RESPOSTA do servidor abre)
+const obsAviso = (texto, titulo, icone, opcoes) =>
+  obsDialog({ titulo: titulo || 'Aviso', texto, icone: icone || 'ℹ️', somenteOk: true, ...(opcoes || {}) });
 const obsConfirmar = (texto, opcoes) =>
   obsDialog({ titulo: 'Confirmar', icone: '❓', ...(opcoes || {}), texto });
 
